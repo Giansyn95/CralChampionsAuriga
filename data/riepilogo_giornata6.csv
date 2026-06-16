@@ -1,0 +1,34 @@
+Sezione;Giornata;Casa;Trasferta;GolCasa;GolTrasferta;Esito;Squadra;Giocatore;Gol;PuntiMVP;Portiere;PuntiPortiere;Partita;Voce;Valore;Note
+Partita;6;Out Of Office FC;BOT & BALL;4;5;S/V;;;;;;;Out Of Office FC vs BOT & BALL;;;Marcatori: Arena x2, Saracino, Guri x3, Camposeo x2 | MVP: Guri | Riposa: BlackJack
+Partita;6;FC Stealthy Dribblers;Auriga Juniors;4;6;S/V;;;;;;;FC Stealthy Dribblers vs Auriga Juniors;;;Marcatori: Spinola x2, De Toma x2, Iacobellis, Albrizio, Menolascina x3, Turi | MVP: De Toma
+Marcatore;6;;;;;;Out Of Office FC;Arena Michele;2;;;;;;;
+Marcatore;6;;;;;;Out Of Office FC;Saracino Gianvito;1;;;;;;;
+Marcatore;6;;;;;;Auriga Juniors;Spinola Salvatore;2;;;;;;;
+Marcatore;6;;;;;;Auriga Juniors;De Toma Nicola;2;;;;;;;
+Marcatore;6;;;;;;Auriga Juniors;Iacobellis PT;1;;;;;;;
+Marcatore;6;;;;;;Auriga Juniors;Albrizio Gianfranco;1;;;;;;;
+Marcatore;6;;;;;;FC Stealthy Dribblers;Menolascina Nicolandrea;3;;;;;;;
+Marcatore;6;;;;;;FC Stealthy Dribblers;Turi Paolo;1;;;;;;;
+Marcatore;6;;;;;;BOT & BALL;Guri Sabah;3;;;;;;;
+Marcatore;6;;;;;;BOT & BALL;Camposeo Giovanni;2;;;;;;;
+Totale marcatore giornata;6;;;;;;BOT & BALL;Guri Sabah;3;;;;;;;
+Totale marcatore giornata;6;;;;;;FC Stealthy Dribblers;Menolascina Nicolandrea;3;;;;;;;
+Totale marcatore giornata;6;;;;;;Auriga Juniors;De Toma Nicola;2;;;;;;;
+Totale marcatore giornata;6;;;;;;Auriga Juniors;Spinola Salvatore;2;;;;;;;
+Totale marcatore giornata;6;;;;;;BOT & BALL;Camposeo Giovanni;2;;;;;;;
+Totale marcatore giornata;6;;;;;;Out Of Office FC;Arena Michele;2;;;;;;;
+Totale marcatore giornata;6;;;;;;Auriga Juniors;Albrizio Gianfranco;1;;;;;;;
+Totale marcatore giornata;6;;;;;;Auriga Juniors;Iacobellis PT;1;;;;;;;
+Totale marcatore giornata;6;;;;;;FC Stealthy Dribblers;Turi Paolo;1;;;;;;;
+Totale marcatore giornata;6;;;;;;Out Of Office FC;Saracino Gianvito;1;;;;;;;
+MVP;6;;;;;;Auriga Juniors;De Toma Nicola;;4;;;;;;
+MVP;6;;;;;;BOT & BALL;Guri Sabah;;4;;;;;;
+Miglior portiere;6;;;;;;Out Of Office FC;;;;Colangiuli PT;1;Out Of Office FC vs BOT & BALL;;;
+Miglior portiere;6;;;;;;Auriga Juniors;;;;Iacobellis PT;1;FC Stealthy Dribblers vs Auriga Juniors;;;
+Autogoal;6;;;;;;Out Of Office FC;;1;;;;;Autogoal;1;
+Statistica;6;;;;;;;;;;;;;Gol totali;19;
+Statistica;6;;;;;;;;;;;;;Media gol/partita;9.5;
+Statistica;6;;;;;;;;;;;;;Clean sheet;0;
+Statistica;6;;;;;;;;;;;;;Partita con piu gol;FC Stealthy Dribblers 4-6 Auriga Juniors;
+Statistica;6;;;;;;;;;;;;;Miglior marcatore;Menolascina Nicolandrea (3 gol);
+Statistica;6;;;;;;;;;;;;;Partite giocate;2;

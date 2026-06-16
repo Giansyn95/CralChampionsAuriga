@@ -1,0 +1,35 @@
+Sezione;Giornata;Casa;Trasferta;GolCasa;GolTrasferta;Esito;Squadra;Giocatore;Gol;PuntiMVP;Portiere;PuntiPortiere;Partita;Voce;Valore;Note
+Partita;1;BOT & BALL;Out Of Office FC;4;6;S/V;;;;;;;BOT & BALL vs Out Of Office FC;;;Marcatori: Ziri, Eramo x2, Arena x3, Saracino, Di Giovine x2, Camposeo | MVP: Arena | Riposa: BlackJack
+Partita;1;Auriga Juniors;FC Stealthy Dribblers;4;2;V/S;;;;;;;Auriga Juniors vs FC Stealthy Dribblers;;;Marcatori: Spinola x2, Rubino, De Toma, Turi, Grippa | MVP: Rubino
+Marcatore;1;;;;;;BOT & BALL;Ziri Gaetano;1;;;;;;;
+Marcatore;1;;;;;;BOT & BALL;Eramo Gianluca;2;;;;;;;
+Marcatore;1;;;;;;Out Of Office FC;Arena Michele;3;;;;;;;
+Marcatore;1;;;;;;Out Of Office FC;Saracino Gianvito;1;;;;;;;
+Marcatore;1;;;;;;Out Of Office FC;Di Giovine Domenico;2;;;;;;;
+Marcatore;1;;;;;;Auriga Juniors;Spinola Salvatore;2;;;;;;;
+Marcatore;1;;;;;;Auriga Juniors;Rubino Gianluca;1;;;;;;;
+Marcatore;1;;;;;;Auriga Juniors;De Toma Nicola;1;;;;;;;
+Marcatore;1;;;;;;FC Stealthy Dribblers;Turi Paolo;1;;;;;;;
+Marcatore;1;;;;;;FC Stealthy Dribblers;Grippa Michele;1;;;;;;;
+Marcatore;1;;;;;;BOT & BALL;Camposeo Giovanni;1;;;;;;;
+Totale marcatore giornata;1;;;;;;Out Of Office FC;Arena Michele;3;;;;;;;
+Totale marcatore giornata;1;;;;;;Auriga Juniors;Spinola Salvatore;2;;;;;;;
+Totale marcatore giornata;1;;;;;;BOT & BALL;Eramo Gianluca;2;;;;;;;
+Totale marcatore giornata;1;;;;;;Out Of Office FC;Di Giovine Domenico;2;;;;;;;
+Totale marcatore giornata;1;;;;;;Auriga Juniors;De Toma Nicola;1;;;;;;;
+Totale marcatore giornata;1;;;;;;Auriga Juniors;Rubino Gianluca;1;;;;;;;
+Totale marcatore giornata;1;;;;;;BOT & BALL;Camposeo Giovanni;1;;;;;;;
+Totale marcatore giornata;1;;;;;;BOT & BALL;Ziri Gaetano;1;;;;;;;
+Totale marcatore giornata;1;;;;;;FC Stealthy Dribblers;Grippa Michele;1;;;;;;;
+Totale marcatore giornata;1;;;;;;FC Stealthy Dribblers;Turi Paolo;1;;;;;;;
+Totale marcatore giornata;1;;;;;;Out Of Office FC;Saracino Gianvito;1;;;;;;;
+MVP;1;;;;;;Out Of Office FC;Arena Michele;;4;;;;;;
+MVP;1;;;;;;Auriga Juniors;Rubino Gianluca;;4;;;;;;
+Miglior portiere;1;;;;;;BOT & BALL;;;;Mincuzzi PT;1;BOT & BALL vs Out Of Office FC;;;
+Miglior portiere;1;;;;;;Auriga Juniors;;;;Iacobellis PT;1;Auriga Juniors vs FC Stealthy Dribblers;;;
+Statistica;1;;;;;;;;;;;;;Gol totali;16;
+Statistica;1;;;;;;;;;;;;;Media gol/partita;8.0;
+Statistica;1;;;;;;;;;;;;;Clean sheet;0;
+Statistica;1;;;;;;;;;;;;;Partita con piu gol;BOT & BALL 4-6 Out Of Office FC;
+Statistica;1;;;;;;;;;;;;;Miglior marcatore;Arena Michele (3 gol);
+Statistica;1;;;;;;;;;;;;;Partite giocate;2;

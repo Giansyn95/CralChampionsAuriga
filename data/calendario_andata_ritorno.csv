@@ -1,0 +1,50 @@
+﻿GIORNATA 1;;
+Casa;Trasferta;Note
+BOT & BALL;Out Of Office FC;Riposa: BlackJack
+Auriga Juniors;FC Stealthy Dribblers;
+
+GIORNATA 2;;
+Casa;Trasferta;Note
+BOT & BALL;BlackJack;Riposa: Auriga Juniors
+Out Of Office FC;FC Stealthy Dribblers;
+
+GIORNATA 3;;
+Casa;Trasferta;Note
+BlackJack;Auriga Juniors;Riposa: Out Of Office FC
+FC Stealthy Dribblers;BOT & BALL;
+
+GIORNATA 4;;
+Casa;Trasferta;Note
+FC Stealthy Dribblers;BlackJack;Riposa: BOT & BALL
+Auriga Juniors;Out Of Office FC;
+
+GIORNATA 5;;
+Casa;Trasferta;Note
+BlackJack;Out Of Office FC;Riposa: FC Stealthy Dribblers
+BOT & BALL;Auriga Juniors;
+
+GIORNATA 6;;
+Casa;Trasferta;Note
+Out Of Office FC;BOT & BALL;Riposa: BlackJack
+FC Stealthy Dribblers;Auriga Juniors;
+
+GIORNATA 7;;
+Casa;Trasferta;Note
+BlackJack;BOT & BALL;Riposa: Auriga Juniors
+FC Stealthy Dribblers;Out Of Office FC;
+
+GIORNATA 8;;
+Casa;Trasferta;Note
+Auriga Juniors;BlackJack;Riposa: Out Of Office FC
+BOT & BALL;FC Stealthy Dribblers;
+
+GIORNATA 9;;
+Casa;Trasferta;Note
+BlackJack;FC Stealthy Dribblers;Riposa: BOT & BALL
+Out Of Office FC;Auriga Juniors;
+
+GIORNATA 10;;
+Casa;Trasferta;Note
+Out Of Office FC;BlackJack;Riposa: FC Stealthy Dribblers
+Auriga Juniors;BOT & BALL;
+

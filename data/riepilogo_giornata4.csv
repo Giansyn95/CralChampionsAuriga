@@ -1,0 +1,27 @@
+Sezione;Giornata;Casa;Trasferta;GolCasa;GolTrasferta;Esito;Squadra;Giocatore;Gol;PuntiMVP;Portiere;PuntiPortiere;Partita;Voce;Valore;Note
+Partita;4;FC Stealthy Dribblers;BlackJack;1;1;P/P;;;;;;;FC Stealthy Dribblers vs BlackJack;;;Marcatori: Menolascina, Turi | MVP: Fiorella | Riposa: BOT & BALL
+Partita;4;Auriga Juniors;Out Of Office FC;5;3;V/S;;;;;;;Auriga Juniors vs Out Of Office FC;;;Marcatori: Spinola x3, Albrizio, Castellano, Saracino, Arena x2 | MVP: Spinola
+Marcatore;4;;;;;;BlackJack;Menolascina Gerardo;1;;;;;;;
+Marcatore;4;;;;;;FC Stealthy Dribblers;Turi Paolo;1;;;;;;;
+Marcatore;4;;;;;;Auriga Juniors;Spinola Salvatore;3;;;;;;;
+Marcatore;4;;;;;;Auriga Juniors;Albrizio Gianfranco;1;;;;;;;
+Marcatore;4;;;;;;Auriga Juniors;Castellano Graziano;1;;;;;;;
+Marcatore;4;;;;;;Out Of Office FC;Saracino Gianvito;1;;;;;;;
+Marcatore;4;;;;;;Out Of Office FC;Arena Michele;2;;;;;;;
+Totale marcatore giornata;4;;;;;;Auriga Juniors;Spinola Salvatore;3;;;;;;;
+Totale marcatore giornata;4;;;;;;Out Of Office FC;Arena Michele;2;;;;;;;
+Totale marcatore giornata;4;;;;;;Auriga Juniors;Albrizio Gianfranco;1;;;;;;;
+Totale marcatore giornata;4;;;;;;Auriga Juniors;Castellano Graziano;1;;;;;;;
+Totale marcatore giornata;4;;;;;;BlackJack;Menolascina Gerardo;1;;;;;;;
+Totale marcatore giornata;4;;;;;;FC Stealthy Dribblers;Turi Paolo;1;;;;;;;
+Totale marcatore giornata;4;;;;;;Out Of Office FC;Saracino Gianvito;1;;;;;;;
+MVP;4;;;;;;BlackJack;Fiorella Giacomo;;4;;;;;;
+MVP;4;;;;;;Auriga Juniors;Spinola Salvatore;;4;;;;;;
+Miglior portiere;4;;;;;;BlackJack;;;;Schiavone PT;1;FC Stealthy Dribblers vs BlackJack;;;
+Miglior portiere;4;;;;;;Auriga Juniors;;;;Iacobellis PT;1;Auriga Juniors vs Out Of Office FC;;;
+Statistica;4;;;;;;;;;;;;;Gol totali;10;
+Statistica;4;;;;;;;;;;;;;Media gol/partita;5.0;
+Statistica;4;;;;;;;;;;;;;Clean sheet;0;
+Statistica;4;;;;;;;;;;;;;Partita con piu gol;Auriga Juniors 5-3 Out Of Office FC;
+Statistica;4;;;;;;;;;;;;;Miglior marcatore;Spinola Salvatore (3 gol);
+Statistica;4;;;;;;;;;;;;;Partite giocate;2;

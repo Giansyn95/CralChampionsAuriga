@@ -1,0 +1,35 @@
+Sezione;Giornata;Casa;Trasferta;GolCasa;GolTrasferta;Esito;Squadra;Giocatore;Gol;PuntiMVP;Portiere;PuntiPortiere;Partita;Voce;Valore;Note
+Partita;3;BlackJack;Auriga Juniors;5;4;V/S;;;;;;;BlackJack vs Auriga Juniors;;;Marcatori: Menolascina, Lo Riso x2, Fiorella, Cirilli, De Toma x2, Spinola, Rubino | MVP: Lo Riso | Riposa: Out Of Office FC
+Partita;3;FC Stealthy Dribblers;BOT & BALL;6;2;V/S;;;;;;;FC Stealthy Dribblers vs BOT & BALL;;;Marcatori: Turi x5, Menolascina, Camposeo, Ziri | MVP: Turi
+Marcatore;3;;;;;;BlackJack;Menolascina Gerardo;1;;;;;;;
+Marcatore;3;;;;;;BlackJack;Lo Riso Alessandro;2;;;;;;;
+Marcatore;3;;;;;;BlackJack;Fiorella Giacomo;1;;;;;;;
+Marcatore;3;;;;;;BlackJack;Cirilli Michele;1;;;;;;;
+Marcatore;3;;;;;;Auriga Juniors;De Toma Nicola;2;;;;;;;
+Marcatore;3;;;;;;Auriga Juniors;Spinola Salvatore;1;;;;;;;
+Marcatore;3;;;;;;Auriga Juniors;Rubino Gianluca;1;;;;;;;
+Marcatore;3;;;;;;FC Stealthy Dribblers;Turi Paolo;5;;;;;;;
+Marcatore;3;;;;;;FC Stealthy Dribblers;Menolascina Nicolandrea;1;;;;;;;
+Marcatore;3;;;;;;BOT & BALL;Camposeo Giovanni;1;;;;;;;
+Marcatore;3;;;;;;BOT & BALL;Ziri Gaetano;1;;;;;;;
+Totale marcatore giornata;3;;;;;;FC Stealthy Dribblers;Turi Paolo;5;;;;;;;
+Totale marcatore giornata;3;;;;;;Auriga Juniors;De Toma Nicola;2;;;;;;;
+Totale marcatore giornata;3;;;;;;BlackJack;Lo Riso Alessandro;2;;;;;;;
+Totale marcatore giornata;3;;;;;;Auriga Juniors;Rubino Gianluca;1;;;;;;;
+Totale marcatore giornata;3;;;;;;Auriga Juniors;Spinola Salvatore;1;;;;;;;
+Totale marcatore giornata;3;;;;;;BlackJack;Cirilli Michele;1;;;;;;;
+Totale marcatore giornata;3;;;;;;BlackJack;Fiorella Giacomo;1;;;;;;;
+Totale marcatore giornata;3;;;;;;BlackJack;Menolascina Gerardo;1;;;;;;;
+Totale marcatore giornata;3;;;;;;BOT & BALL;Camposeo Giovanni;1;;;;;;;
+Totale marcatore giornata;3;;;;;;BOT & BALL;Ziri Gaetano;1;;;;;;;
+Totale marcatore giornata;3;;;;;;FC Stealthy Dribblers;Menolascina Nicolandrea;1;;;;;;;
+MVP;3;;;;;;FC Stealthy Dribblers;Turi Paolo;;5;;;;;;
+MVP;3;;;;;;BlackJack;Lo Riso Alessandro;;4;;;;;;
+Miglior portiere;3;;;;;;Auriga Juniors;;;;Iacobellis PT;1;BlackJack vs Auriga Juniors;;;
+Miglior portiere;3;FC Stealthy Dribblers;BOT & BALL;;;;FC Stealthy Dribblers;;;;Bruno PT;1;FC Stealthy Dribblers vs BOT & BALL;;;
+Statistica;3;;;;;;;;;;;;;Gol totali;17;
+Statistica;3;;;;;;;;;;;;;Media gol/partita;8.5;
+Statistica;3;;;;;;;;;;;;;Clean sheet;0;
+Statistica;3;;;;;;;;;;;;;Partita con piu gol;BlackJack 5-4 Auriga Juniors;
+Statistica;3;;;;;;;;;;;;;Miglior marcatore;Turi Paolo (5 gol);
+Statistica;3;;;;;;;;;;;;;Partite giocate;2;

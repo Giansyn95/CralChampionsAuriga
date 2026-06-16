@@ -1,0 +1,29 @@
+Sezione;Giornata;Casa;Trasferta;GolCasa;GolTrasferta;Esito;Squadra;Giocatore;Gol;PuntiMVP;Portiere;PuntiPortiere;Partita;Voce;Valore;Note
+Partita;2;BOT & BALL;BlackJack;3;3;P/P;;;;;;;BOT & BALL vs BlackJack;;;Marcatori: Camposeo, Anselmi x2, Fiorella x3 | MVP: Anselmi | Riposa: Auriga Juniors
+Partita;2;Out Of Office FC;FC Stealthy Dribblers;4;4;P/P;;;;;;;Out Of Office FC vs FC Stealthy Dribblers;;;Marcatori: Saracino x3, Arena, Turi x2, Masellis, Menolascina | MVP: Saracino
+Marcatore;2;;;;;;Out Of Office FC;Saracino Gianvito;3;;;;;;;
+Marcatore;2;;;;;;Out Of Office FC;Arena Michele;1;;;;;;;
+Marcatore;2;;;;;;BOT & BALL;Camposeo Giovanni;1;;;;;;;
+Marcatore;2;;;;;;BOT & BALL;Anselmi Biagio;2;;;;;;;
+Marcatore;2;;;;;;FC Stealthy Dribblers;Turi Paolo;2;;;;;;;
+Marcatore;2;;;;;;FC Stealthy Dribblers;Masellis Roberto;1;;;;;;;
+Marcatore;2;;;;;;FC Stealthy Dribblers;Menolascina Nicolandrea;1;;;;;;;
+Marcatore;2;;;;;;BlackJack;Fiorella Giacomo;3;;;;;;;
+Totale marcatore giornata;2;;;;;;BlackJack;Fiorella Giacomo;3;;;;;;;
+Totale marcatore giornata;2;;;;;;Out Of Office FC;Saracino Gianvito;3;;;;;;;
+Totale marcatore giornata;2;;;;;;BOT & BALL;Anselmi Biagio;2;;;;;;;
+Totale marcatore giornata;2;;;;;;FC Stealthy Dribblers;Turi Paolo;2;;;;;;;
+Totale marcatore giornata;2;;;;;;BOT & BALL;Camposeo Giovanni;1;;;;;;;
+Totale marcatore giornata;2;;;;;;FC Stealthy Dribblers;Masellis Roberto;1;;;;;;;
+Totale marcatore giornata;2;;;;;;FC Stealthy Dribblers;Menolascina Nicolandrea;1;;;;;;;
+Totale marcatore giornata;2;;;;;;Out Of Office FC;Arena Michele;1;;;;;;;
+MVP;2;;;;;;BOT & BALL;Anselmi Biagio;;4;;;;;;
+MVP;2;;;;;;Out Of Office FC;Saracino Gianvito;;4;;;;;;
+Miglior portiere;2;;;;;;BOT & BALL;;;;Mincuzzi PT;1;BOT & BALL vs BlackJack;;;
+Miglior portiere;2;;;;;;Out Of Office FC;;;;Colangiuli PT;1;Out Of Office FC vs FC Stealthy Dribblers;;;
+Statistica;2;;;;;;;;;;;;;Gol totali;14;
+Statistica;2;;;;;;;;;;;;;Media gol/partita;7.0;
+Statistica;2;;;;;;;;;;;;;Clean sheet;0;
+Statistica;2;;;;;;;;;;;;;Partita con piu gol;Out Of Office FC 4-4 FC Stealthy Dribblers;
+Statistica;2;;;;;;;;;;;;;Miglior marcatore;Saracino Gianvito (3 gol);
+Statistica;2;;;;;;;;;;;;;Partite giocate;2;

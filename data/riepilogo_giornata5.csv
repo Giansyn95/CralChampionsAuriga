@@ -1,0 +1,32 @@
+Sezione;Giornata;Casa;Trasferta;GolCasa;GolTrasferta;Esito;Squadra;Giocatore;Gol;PuntiMVP;Portiere;PuntiPortiere;Partita;Voce;Valore;Note
+Partita;5;BlackJack;Out Of Office FC;6;4;V/S;;;;;;;BlackJack vs Out Of Office FC;;;Marcatori: Fiorella x2, Cirilli, Lo Riso x2, Mondelli, Arena, Saracino x2 | MVP: Lo Riso | Riposa: FC Stealthy Dribblers
+Partita;5;BOT & BALL;Auriga Juniors;3;1;V/S;;;;;;;BOT & BALL vs Auriga Juniors;;;Marcatori: Guri x2, Ziri, Rubino | MVP: Guri
+Marcatore;5;;;;;;BOT & BALL;Guri Sabah;2;;;;;;;
+Marcatore;5;;;;;;BOT & BALL;Ziri Gaetano;1;;;;;;;
+Marcatore;5;;;;;;Auriga Juniors;Rubino Gianluca;1;;;;;;;
+Marcatore;5;;;;;;BlackJack;Fiorella Giacomo;2;;;;;;;
+Marcatore;5;;;;;;BlackJack;Cirilli Michele;1;;;;;;;
+Marcatore;5;;;;;;BlackJack;Lo Riso Alessandro;2;;;;;;;
+Marcatore;5;;;;;;Out Of Office FC;Mondelli Francesco;1;;;;;;;
+Marcatore;5;;;;;;Out Of Office FC;Arena Michele;1;;;;;;;
+Marcatore;5;;;;;;Out Of Office FC;Saracino Gianvito;2;;;;;;;
+Totale marcatore giornata;5;;;;;;BlackJack;Fiorella Giacomo;2;;;;;;;
+Totale marcatore giornata;5;;;;;;BlackJack;Lo Riso Alessandro;2;;;;;;;
+Totale marcatore giornata;5;;;;;;BOT & BALL;Guri Sabah;2;;;;;;;
+Totale marcatore giornata;5;;;;;;Out Of Office FC;Saracino Gianvito;2;;;;;;;
+Totale marcatore giornata;5;;;;;;Auriga Juniors;Rubino Gianluca;1;;;;;;;
+Totale marcatore giornata;5;;;;;;BlackJack;Cirilli Michele;1;;;;;;;
+Totale marcatore giornata;5;;;;;;BOT & BALL;Ziri Gaetano;1;;;;;;;
+Totale marcatore giornata;5;;;;;;Out Of Office FC;Arena Michele;1;;;;;;;
+Totale marcatore giornata;5;;;;;;Out Of Office FC;Mondelli Francesco;1;;;;;;;
+MVP;5;;;;;;BOT & BALL;Guri Sabah;;4;;;;;;
+MVP;5;;;;;;BlackJack;Lo Riso Alessandro;;4;;;;;;
+Miglior portiere;5;;;;;;Out Of Office FC;;;;Colangiuli PT;1;BlackJack vs Out Of Office FC;;;
+Miglior portiere;5;;;;;;Auriga Juniors;;;;Iacobellis PT;1;BOT & BALL vs Auriga Juniors;;;
+Autogoal;5;;;;;;BlackJack;;1;;;;;Autogoal;1;
+Statistica;5;;;;;;;;;;;;;Gol totali;14;
+Statistica;5;;;;;;;;;;;;;Media gol/partita;7.0;
+Statistica;5;;;;;;;;;;;;;Clean sheet;0;
+Statistica;5;;;;;;;;;;;;;Partita con piu gol;BlackJack 6-4 Out Of Office FC;
+Statistica;5;;;;;;;;;;;;;Miglior marcatore;Guri Sabah (2 gol);
+Statistica;5;;;;;;;;;;;;;Partite giocate;2;
