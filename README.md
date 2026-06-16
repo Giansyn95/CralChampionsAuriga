@@ -1,2 +1,0 @@
-# CralChampionsAuriga
-Tornei
