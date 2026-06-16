@@ -28,16 +28,6 @@
     .hero-logo svg{width:100%;height:100%}
     .hero h1{margin:0;font-size:clamp(24px,4vw,48px);letter-spacing:.02em}
     .hero p{margin:8px 0 0;color:#dbeaff;font-size:17px}
-    /* ── Banner errore avanzato ── */
-    .err-section{margin:6px 0 0}
-    .err-section summary{cursor:pointer;font-weight:700;padding:4px 0;list-style:none}
-    .err-section summary::before{content:'▶ ';font-size:11px}
-    .err-section[open] summary::before{content:'▼ '}
-    .err-item{display:flex;gap:8px;padding:5px 0;border-bottom:1px solid #fecaca;font-size:13px;font-weight:400;align-items:flex-start}
-    .err-item:last-child{border-bottom:0}
-    .err-icon{flex:0 0 18px;text-align:center}
-    .err-detail{color:#6b2020}
-    .err-fix{margin-top:3px;color:#7c3030;font-style:italic}
     /* ── Toolbar ── */
     .toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px;align-items:center}
     .btn,.fileLabel{border:0;border-radius:14px;padding:11px 15px;background:#fff;color:#0f376f;font-weight:700;cursor:pointer;text-decoration:none;display:inline-flex;gap:8px;align-items:center;font-size:14px}
@@ -242,7 +232,6 @@ let state = {
   selectedRiepilogoGiornata: '',
   sortState: {}
 };
-let manualLoadActive = false;
 
 /* ══════════════════════════════════
    UTILITY
@@ -342,10 +331,9 @@ function rowsToObjects(rows){ if(!rows||!rows.length) return []; const h=rows[0]
 function col(obj,names){ const keys=Object.keys(obj||{}); for(const n of names){ const nk=norm(n); const k=keys.find(x=>norm(x)===nk||norm(x).includes(nk)); if(k) return obj[k]; } return ''; }
 function num(x){ const n=parseFloat(String(x||'0').replace(',','.').replace(/[^0-9.-]/g,'')); return Number.isFinite(n)?n:0; }
 
-/* ── FILTRO ESCLUSIONE TOTALE SCONOSCIUTI / ISCRITTI ── */
+/* ── Classificazione originaria ripristinata e pulita ── */
 function fileKind(f){ 
   const n=norm(f);
-  if(n.includes('iscritti')) return 'ignora'; // Esclusione radicale
   if(n.includes('classificasquadre')) return 'classifica_squadre';
   if(n.includes('marcatori')) return 'marcatori';
   if(n.includes('mvp')) return 'mvp';
@@ -453,7 +441,7 @@ function applyTheme(dark,save=true){
   if(window._chart) redrawCharts();
 }
 document.getElementById('btnTheme').addEventListener('click',()=>{
-  applyTheme(document.documentElement.setAttribute('data-theme')!=='dark');
+  applyTheme(document.documentElement.getAttribute('data-theme')!=='dark');
 });
 
 function renderTabs(){
@@ -760,9 +748,10 @@ async function scanDirRecursive(dirHandle, pathPrefix=''){
   for await(const [name,handle] of dirHandle.entries()){
     const relPath = pathPrefix ? pathPrefix+'/'+name : name;
     if(handle.kind==='file'){
+      if(norm(name).includes('iscritti')) continue; // Ignora in modo silente
       const file=await handle.getFile();
       const ext=name.split('.').pop().toLowerCase();
-      if(ext==='csv' && fileKind(name)!=='ignora'){
+      if(ext==='csv'){
         const txt=await file.text(); state.files[name]=txt; state.rows[name]=parseCsv(txt);
       } else if(imageExts().includes(ext)){ rememberImage(relPath,file); }
     } else if(handle.kind==='directory') await scanDirRecursive(handle, relPath);
@@ -785,7 +774,8 @@ async function fallbackDirectoryPicker(e){
   const files=e.target.files;
   for(let i=0;i<files.length;i++){
     const f=files[i]; const ext=f.name.split('.').pop().toLowerCase();
-    if(ext==='csv' && fileKind(f.name)!=='ignora'){
+    if(norm(f.name).includes('iscritti')) continue; // Ignora in modo silente
+    if(ext==='csv'){
       const txt=await f.text(); state.files[f.name]=txt; state.rows[f.name]=parseCsv(txt);
     } else if(imageExts().includes(ext)){ rememberImage(f.webkitRelativePath,f); }
   }
@@ -795,6 +785,7 @@ async function fallbackDirectoryPicker(e){
 async function autoLoadTorneo(){
   let ok=0;
   for(const f of DEFAULT_FILES){
+    if(norm(f).includes('iscritti')) continue;
     try{
       const res=await fetch('data/'+f); if(!res.ok) continue;
       const txt=await res.text(); state.files[f]=txt; state.rows[f]=parseCsv(txt); ok++;
