@@ -1,0 +1,2365 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CRAL Champions</title>
+  <style>
+    /* ── Tema chiaro ── */
+    :root {
+      --bg:#eef3f9;--panel:#fff;--ink:#142033;--muted:#667085;--line:#dbe5f2;
+      --blue:#0f5aa8;--dark:#071d3a;--soft:#f3f7fc;--gold:#f5b942;
+      --green:#12805c;--red:#b42318;--shadow:rgba(7,29,58,.10);
+    }
+    /* ── Tema scuro ── */
+    [data-theme="dark"] {
+      --bg:#0d1520;--panel:#162033;--ink:#e2eaf5;--muted:#8fa4be;--line:#243450;
+      --blue:#3b82f6;--dark:#0a1628;--soft:#1a2d47;--gold:#f5b942;
+      --green:#34d399;--red:#f87171;--shadow:rgba(0,0,0,.35);
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--ink);transition:background .3s,color .3s}
+    .wrap{max-width:1280px;margin:auto;padding:24px}
+    /* ── Hero ── */
+    .hero{background:linear-gradient(135deg,var(--dark),var(--blue));color:#fff;border-radius:26px;padding:30px;margin-bottom:18px;box-shadow:0 14px 36px var(--shadow)}
+    .hero-top{display:flex;gap:20px;align-items:center}
+    .hero-logo{width:72px;height:72px;border-radius:18px;object-fit:contain;background:rgba(255,255,255,.12);padding:6px;flex:0 0 auto;display:flex;align-items:center;justify-content:center}
+    .hero-logo img{width:100%;height:100%;object-fit:contain;border-radius:12px}
+    .hero-logo svg{width:100%;height:100%}
+    .hero h1{margin:0;font-size:clamp(24px,4vw,48px);letter-spacing:.02em}
+    .hero p{margin:8px 0 0;color:#dbeaff;font-size:17px}
+    /* ── Banner errore avanzato ── */
+    .err-section{margin:6px 0 0}
+    .err-section summary{cursor:pointer;font-weight:700;padding:4px 0;list-style:none}
+    .err-section summary::before{content:'▶ ';font-size:11px}
+    .err-section[open] summary::before{content:'▼ '}
+    .err-item{display:flex;gap:8px;padding:5px 0;border-bottom:1px solid #fecaca;font-size:13px;font-weight:400;align-items:flex-start}
+    .err-item:last-child{border-bottom:0}
+    .err-icon{flex:0 0 18px;text-align:center}
+    .err-detail{color:#6b2020}
+    .err-fix{margin-top:3px;color:#7c3030;font-style:italic}
+    /* ── Toolbar ── */
+    .toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px;align-items:center}
+    .btn,.fileLabel{border:0;border-radius:14px;padding:11px 15px;background:#fff;color:#0f376f;font-weight:700;cursor:pointer;text-decoration:none;display:inline-flex;gap:8px;align-items:center;font-size:14px}
+    .btn.secondary{background:rgba(255,255,255,.14);color:#fff;border:1px solid rgba(255,255,255,.28)}
+    .btn.icon-btn{padding:10px 12px;background:rgba(255,255,255,.14);color:#fff;border:1px solid rgba(255,255,255,.28);border-radius:14px;font-size:18px;line-height:1}
+    input[type=file]{display:none}
+    /* ── Banner errore ── */
+    #errorBanner{display:none;background:#fef2f2;border:1px solid #fecaca;border-radius:14px;padding:14px 18px;margin-bottom:14px;color:var(--red);font-weight:600}
+    #errorBanner ul{margin:6px 0 0 18px;font-weight:400;font-size:13px}
+    /* ── Status ── */
+    .status{font-size:13px;color:#dbeaff;margin-left:auto}
+    /* ── Tabs ── */
+    .tabs{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0}
+    .tab{border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:10px 14px;cursor:pointer;font-weight:700;color:var(--blue);transition:background .15s,color .15s}
+    .tab.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+    /* ── Grid ── */
+    .grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+    .card{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:16px;box-shadow:0 8px 22px var(--shadow)}
+    .stat .n{font-size:34px;font-weight:800;color:var(--blue)}
+    .stat .l{color:var(--muted);font-size:13px;text-transform:uppercase;font-weight:800}
+    /* ── Sezioni ── */
+    .section{display:none}.section.active{display:block}
+    h2{margin:0 0 14px;color:var(--blue);font-size:26px}
+    .upper{text-transform:uppercase}
+    .hint{color:var(--muted);font-size:14px;line-height:1.5}
+    /* ── Ricerca ── */
+    .search{width:100%;padding:13px 14px;border:1px solid var(--line);border-radius:14px;margin:0 0 14px;font-size:15px;background:var(--panel);color:var(--ink)}
+    /* ── Tabelle ── */
+    .tableWrap{overflow:auto;border-radius:16px;border:1px solid var(--line);background:var(--panel)}
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+    th{background:var(--soft);font-size:12px;text-transform:none;color:var(--muted);cursor:pointer;user-select:none;position:relative}
+    th:hover{background:var(--line)}
+    th .sort-arrow{margin-left:4px;opacity:.4;font-style:normal}
+    th.sort-asc .sort-arrow,th.sort-desc .sort-arrow{opacity:1}
+    th.sort-asc .sort-arrow::after{content:'▲'}
+    th.sort-desc .sort-arrow::after{content:'▼'}
+    th:not(.sort-asc):not(.sort-desc) .sort-arrow::after{content:'⇅'}
+    tr:hover td{background:var(--soft)}
+    .pill{display:inline-block;border-radius:999px;padding:4px 9px;background:#eef4ff;color:var(--blue);font-weight:800}
+    .tbl-avatar-col{width:1%;white-space:nowrap}
+    .tbl-logo,.tbl-avatar{width:30px;height:30px;border-radius:8px;object-fit:cover;background:#dbe7f6;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:11px;color:var(--blue);flex:0 0 auto}
+    .tbl-avatar{border-radius:50%}
+    .mini-logo{width:26px;height:26px;border-radius:7px;object-fit:cover;background:#dbe7f6;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:10px;color:var(--blue);flex:0 0 auto}
+    .name-cell{display:flex;align-items:center;gap:9px}
+    /* ── Squadre ── */
+    .teams{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+    .teamCard{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:16px}
+    .teamHead{display:flex;gap:12px;align-items:center;margin-bottom:12px}
+    .logo,.avatar{width:58px;height:58px;border-radius:16px;object-fit:cover;background:#dbe7f6;display:flex;align-items:center;justify-content:center;font-weight:900;color:var(--blue);flex:0 0 auto}
+    .avatar{width:44px;height:44px;border-radius:50%;font-size:13px}
+    .player{display:flex;gap:10px;align-items:center;padding:8px 0;border-top:1px solid var(--line)}
+    .player b{display:block}
+    .player-name{font-weight:600}
+    .player.captain .player-name{font-weight:900}
+    .captain-armband{display:inline-flex;align-items:center;justify-content:center;margin-left:7px;width:22px;height:16px;border-radius:4px;background:var(--gold);color:#071d3a;font-size:11px;font-weight:900;line-height:1;box-shadow:inset 0 0 0 2px rgba(7,29,58,.15)}
+    .captain-armband::before{content:'C'}
+    .small{font-size:12px;color:var(--muted)}
+    /* ── Partite ── */
+    .match{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px;border-bottom:1px solid var(--line)}
+    .match:last-child{border-bottom:0}
+    .score{font-weight:900;font-size:18px;color:var(--blue);flex:0 0 auto}
+    .match-teams{display:flex;align-items:center;gap:8px;flex:1 1 auto;min-width:0}
+    .match-team{display:flex;align-items:center;gap:8px;min-width:0}
+    .match-vs{color:var(--muted);font-weight:700;font-size:12px;flex:0 0 auto}
+    .match-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .match-meta{display:flex;flex-direction:column;gap:2px;min-width:0}
+    /* ── Riepilogo giornata: KPI compatti e partite più leggibili ── */
+    .riepilogo-card{padding:18px}
+    .riepilogo-kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:10px;margin:12px 0 16px}
+    .riepilogo-kpi{padding:10px 12px;border-radius:16px;box-shadow:none;min-height:72px;display:flex;flex-direction:column;justify-content:center}
+    .riepilogo-kpi .n{font-size:24px;line-height:1.08;letter-spacing:-.02em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .riepilogo-kpi.is-match-max{grid-column:span 3}
+    .riepilogo-kpi.is-match-max .n{font-size:22px;white-space:normal;overflow:visible;text-overflow:clip;word-break:normal;overflow-wrap:anywhere}
+    .riepilogo-kpi.is-scorer{min-height:72px;display:grid;grid-template-columns:minmax(0,1fr) 64px;gap:12px;align-items:center;justify-content:stretch}
+    .riepilogo-kpi.is-scorer .riepilogo-kpi-text{min-width:0}
+    .riepilogo-kpi.is-scorer .n{font-size:22px;white-space:normal;overflow:visible;text-overflow:clip;word-break:normal;overflow-wrap:anywhere}
+    .riepilogo-kpi-scorer-photo{width:58px;height:58px;border-radius:15px;justify-self:end;object-fit:cover;object-position:center;background:var(--soft);border:1px solid var(--line);box-shadow:0 8px 18px var(--shadow);display:none}
+    .riepilogo-kpi-scorer-photo.is-loaded{display:block}
+    .riepilogo-kpi .l{font-size:11px;letter-spacing:.04em;margin-top:4px}
+    .riepilogo-kpi.is-wide{grid-column:span 2}
+    .riepilogo-matches{border-radius:18px;overflow:hidden}
+    .riepilogo-match{padding:16px 14px;gap:18px;align-items:flex-start;background:var(--panel)}
+    .riepilogo-match .match-teams{gap:10px;margin-bottom:3px}
+    .riepilogo-match .match-team{gap:10px;max-width:45%}
+    .riepilogo-match .mini-logo{width:34px;height:34px;border-radius:10px;font-size:11px}
+    .riepilogo-match .match-name{font-size:18px;font-weight:800;color:var(--ink)}
+    .riepilogo-match .match-vs{font-size:13px;text-transform:uppercase;letter-spacing:.04em}
+    .riepilogo-match .score{font-size:30px;line-height:1;font-variant-numeric:tabular-nums;padding-top:4px;min-width:88px;text-align:right}
+    .riepilogo-match .small{font-size:12px;line-height:1.35}
+    /* ── Grafici ── */
+    .chart-card{position:relative;overflow:hidden;border-radius:22px;background:linear-gradient(145deg,var(--panel),rgba(15,90,168,.06));}
+    .chart-card::before{content:'';position:absolute;inset:-90px -70px auto auto;width:210px;height:210px;border-radius:50%;background:radial-gradient(circle,rgba(15,90,168,.16),transparent 68%);pointer-events:none}
+    .chart-card h2{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+    .chart-card h2::before{content:'✦';font-size:18px;color:var(--gold)}
+    .chart-container{position:relative;width:100%;height:276px;margin-top:4px}
+    .chart-label-strip{position:relative;height:58px;margin-top:2px;padding:0;overflow:visible}
+    .chart-label-item{position:absolute;top:0;transform:translateX(-50%);width:54px;display:flex;justify-content:center;align-items:flex-start}
+    .chart-label-img{width:44px;height:44px;background:#fff;border:2px solid rgba(255,255,255,.95);box-shadow:0 7px 16px var(--shadow);display:block}
+    .chart-label-img.player{border-radius:14px;object-fit:cover;object-position:center center;padding:0}
+    .chart-label-img.team{border-radius:12px;padding:3px;object-fit:contain}
+    .chart-label-text{font-size:10px;color:var(--muted);font-weight:800;text-align:center;line-height:1.05;max-width:54px;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical}
+    canvas{border-radius:14px}
+    /* ── Vuoti / errori ── */
+    .empty{padding:18px;background:var(--panel);border:1px dashed var(--line);border-radius:16px;color:var(--muted)}
+    .error{color:var(--red);font-weight:700}
+    .ok{color:var(--green);font-weight:700}
+    /* ── Responsive ── */
+    @media(max-width:900px){.grid{grid-template-columns:repeat(2,1fr)}.status{margin-left:0;width:100%}.riepilogo-kpi.is-wide,.riepilogo-kpi.is-match-max{grid-column:span 1}}
+    @media(max-width:560px){.wrap{padding:14px}.grid{grid-template-columns:1fr}.hero{padding:22px}.match{display:block}.score{margin:6px 0}.riepilogo-match .match-team{max-width:none}.riepilogo-match .match-name{font-size:16px}.riepilogo-match .score{text-align:left;font-size:26px;min-width:0}.riepilogo-kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    @media print{.toolbar,.tabs,.search,#errorBanner{display:none}.section{display:block}.wrap{max-width:none}.card,.hero{box-shadow:none}}
+    @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <div class="hero-top">
+      <div class="hero-logo" id="heroLogoWrap">
+        <!-- Logo SVG di fallback (stemma CRAL generico) -->
+        <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Logo CRAL">
+          <circle cx="32" cy="32" r="30" fill="rgba(255,255,255,.15)" stroke="rgba(255,255,255,.4)" stroke-width="2"/>
+          <path d="M32 10 L38 24 H54 L42 33 L46 47 L32 38 L18 47 L22 33 L10 24 H26 Z" fill="#f5b942" opacity=".9"/>
+          <text x="32" y="56" text-anchor="middle" font-family="Arial,sans-serif" font-size="8" font-weight="900" fill="rgba(255,255,255,.8)">CRAL</text>
+        </svg>
+      </div>
+      <div>
+        <h1 id="siteTitle">CRAL Champions</h1>
+        <p id="siteSubtitle">Sito statico torneo</p>
+      </div>
+    </div>
+    <div class="toolbar">
+      <button class="btn secondary" onclick="window.print()">🖨 Stampa / PDF</button>
+      <button class="btn icon-btn" id="btnTheme" title="Cambia tema" aria-label="Cambia tema chiaro/scuro">🌙</button>
+      <span class="status" id="status">Avvio...</span>
+    </div>
+  </div>
+
+  <!-- Banner errori di caricamento dettagliato -->
+  <div id="errorBanner" role="alert" aria-live="polite" style="display:none;background:#fef2f2;border:1px solid #fecaca;border-radius:14px;padding:14px 18px;margin-bottom:14px;color:var(--red);font-weight:600">
+    <div>⚠️ Trovati <span id="errCount">0</span> problema/i durante il caricamento dei CSV</div>
+    <div id="errGroups"></div>
+  </div>
+
+  <input class="search" id="search" placeholder="Cerca squadra, giocatore, partita…" aria-label="Ricerca globale" />
+  <div class="tabs" id="tabs" role="tablist"></div>
+
+  <section id="home"        class="section active" role="tabpanel"></section>
+  <section id="classifiche" class="section"        role="tabpanel"></section>
+  <section id="statistiche" class="section"        role="tabpanel"></section>
+  <section id="squadre"     class="section"        role="tabpanel"></section>
+  <section id="calendario"  class="section"        role="tabpanel"></section>
+  <section id="risultati"   class="section"        role="tabpanel"></section>
+  <section id="riepilogo"   class="section"        role="tabpanel"></section>
+</div>
+
+<script>
+/* ════════════════════════════════════════════════
+   CRAL Champions — versione migliorata
+   Miglioramenti:
+   1. XSS fix — nessun template literal con HTML non escaped
+   2. Ricerca ottimizzata — ridisegna solo la sezione attiva
+   3. Banner errori caricamento visibile
+   4. File System Access API (showDirectoryPicker) con fallback
+   5. Dark mode con toggle e memoria in localStorage
+   6. Ordinamento colonne cliccabile nelle tabelle
+   7. Grafici top marcatori e punti squadre (Chart.js inline)
+   8. Tab "Tutti i CSV" spostato in modale Avanzato (rimosso dalla nav)
+   ════════════════════════════════════════════════ */
+
+/* ── Costanti ── */
+const DEFAULT_TITLE    = 'CRAL Champions - Auriga 2026';
+const DEFAULT_SUBTITLE = 'Classifiche, calendario, risultati e statistiche giocatori';
+const DEFAULT_FILES    = [
+  'config.csv','manifest.csv','classifica_squadre.csv','classifica_marcatori.csv',
+  'classifica_mvp.csv','classifica_portieri.csv',
+  'risultati_partite.csv','risultati.csv','partite.csv',
+  'calendario_andata_ritorno.csv','calendario.csv',
+  'riepilogo_giornate.csv'
+];
+const TABS = [
+  ['home','🏠 Home'],['classifiche','🏆 Classifiche'],['statistiche','📊 Statistiche'],
+  ['squadre','👕 Squadre'],['calendario','📅 Calendario'],['risultati','⚽ Risultati'],
+  ['riepilogo','📝 Riepilogo giornate']
+];
+
+/* ── Stato globale ── */
+let state = {
+  config: { titolo: DEFAULT_TITLE, sottotitolo: DEFAULT_SUBTITLE },
+  files: {}, rows: {}, imageFiles: {}, imageURLs: {},
+  search: '', activeTab: 'home',
+  selectedRiepilogoGiornata: '',
+  sortState: {}   // { tableId: { col, dir } }
+};
+let loadErrors = [];
+let manualLoadActive = false; // true dopo che l'utente ha caricato una cartella manualmente:
+                               // impedisce a un autoload tardivo/in corso di sovrascrivere dati più recenti
+
+/* ══════════════════════════════════
+   UTILITY
+   ══════════════════════════════════ */
+function norm(s){ return String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/&/g,'e').replace(/[^a-z0-9]/g,''); }
+
+function fixItalianAccents(s){
+  let out=String(s??'');
+  const replaceWord=(word,repl)=>{
+    out=out.replace(new RegExp('\\b'+word+'\\b','gi'),m=>{
+      if(m===m.toUpperCase()) return repl.toUpperCase();
+      if(m[0]===m[0].toUpperCase()) return repl.charAt(0).toUpperCase()+repl.slice(1);
+      return repl;
+    });
+  };
+  replaceWord('piu','più');
+  replaceWord('perche','perché');
+  replaceWord('poiche','poiché');
+  replaceWord('finche','finché');
+  replaceWord('cosi','così');
+  replaceWord('gia','già');
+  replaceWord('puo','può');
+  replaceWord('cioe','cioè');
+  replaceWord('qualita','qualità');
+  replaceWord('quantita','quantità');
+  replaceWord('citta','città');
+  replaceWord('autogoal','autogol');
+  out=out.replace(/\bgoal\b/gi,m=>m===m.toUpperCase()?'GOL':(m[0]===m[0].toUpperCase()?'Gol':'gol'));
+  out=out.replace(/(^|\s)e'(?=\s|$)/gi,(m,p)=>p+(m.trim()[0]==='E'?'È':'è'));
+  out=out.replace(/n'e/gi, m=>m[0]==='N'?"N'è":"n'è");
+  return out;
+}
+/* Inserisce spazi tra parole unite in stile PascalCase/camelCase (es. "FCStealthyDribblers" -> "FC Stealthy Dribblers"),
+   gestisce anche sequenze di sole maiuscole (sigle) e l'simbolo & senza spazi attorno. */
+function smartSpace(s){
+  return String(s||'')
+    .replace(/&/g,' & ')
+    .replace(/([a-z\u00e0-\u00fc])([A-Z])/g,'$1 $2')
+    .replace(/([A-Z]+)([A-Z][a-z])/g,'$1 $2')
+    .replace(/\s+/g,' ')
+    .trim();
+}
+function prettyFileName(f){ return smartSpace(f.replace(/\.csv$/i,'').replace(/^squadra_/i,'Squadra ').replace(/_/g,' ')); }
+
+function prettyColumnName(header){
+  const raw=String(header||'').trim();
+  if(!raw) return '';
+  const n=norm(raw);
+  const map={
+    // Squadre / partite
+    squadracasa:'Squadra casa', teamcasa:'Squadra casa', casa:'Casa', home:'Casa', squadra1:'Squadra 1',
+    squadratrasferta:'Squadra trasferta', squadraospite:'Squadra ospite', trasferta:'Trasferta', ospite:'Ospite', away:'Trasferta', squadra2:'Squadra 2',
+    golcasa:'Gol casa', reticasa:'Gol casa', goalcasa:'Gol casa', gc:'GC', golsquadracasa:'Gol casa',
+    goltrasferta:'Gol trasferta', retiTrasferta:'Gol trasferta', goaltrasferta:'Gol trasferta', gt:'GT', golsquadratrasferta:'Gol trasferta',
+    risultato:'Risultato', score:'Risultato', esito:'Esito', vincitore:'Vincitore', giornata:'Giornata', turno:'Turno', data:'Data', giorno:'Giorno', note:'Note',
+
+    // Classifiche squadre
+    squadra:'Squadra', team:'Squadra', teamcode:'Squadra', teamname:'Squadra', partitegiocate:'PG', giocate:'PG', pg:'PG', vinte:'V', vittorie:'V', pareggiate:'N', pareggi:'N', perse:'P', sconfitte:'P',
+    golfatti:'GF', golsegnati:'GF', retifatte:'GF', golsquadra:'Gol squadra', golsubiti:'GS', retisubite:'GS', differenzareti:'DR', diffreti:'DR', dr:'DR',
+    punti:'Punti', pts:'Punti', point:'Punti', points:'Punti', puntifinali:'Punti finali', puntitotali:'Punti totali', puntioriginali:'Punti originali', penalita:'Penalità', notapenalita:'Nota penalità', notepenalita:'Note penalità',
+
+    // Portieri / bonus / penalità
+    portiere:'Portiere', migliorportiere:'Miglior portiere', puntiportiere:'Punti PT', puntipt:'Punti PT', ptportiere:'Punti PT',
+    cleansheet:'Clean sheet', cleansheets:'Clean sheet', imbattuto:'Clean sheet', imbattibilita:'Imbattibilità', golsubitiportiere:'Gol subiti PT',
+
+    // Giocatori
+    giocatore:'Giocatore', calciatore:'Giocatore', player:'Giocatore', playername:'Giocatore', playernome:'Giocatore', nomeplayer:'Giocatore', nomegiocatore:'Giocatore', nomecompleto:'Nome completo', cognomeenome:'Cognome e nome',
+    nome:'Nome', cognome:'Cognome', ruolo:'Ruolo', posizione:'Ruolo', numero:'Numero', maglia:'Maglia',
+    gol:'Gol', goal:'Gol', reti:'Gol', golgiornata:'Gol giornata', retigiornata:'Gol giornata', goalgiornata:'Gol giornata',
+    assist:'Assist', autogol:'Autogol', autogoal:'Autogol', autoreti:'Autogol', mvp:'MVP', puntimvp:'Punti MVP',
+    presenze:'Presenze', partite:'Partite', mediagol:'Media gol', mediagolpartita:'Media gol/partita',
+
+    // Riepiloghi
+    sezione:'Sezione', statistica:'Statistica', valore:'Valore', totale:'Totale', categoria:'Categoria', descrizione:'Descrizione',
+    marcatoricasa:'Marcatori casa', marcatoritrasferta:'Marcatori trasferta', marcatore:'Marcatore', marcatori:'Marcatori',
+    totalemarcatoregiornata:'Totale marcatore giornata', voce:'Voce', voci:'Voci', dato:'Dato', etichetta:'Etichetta'
+  };
+  if(map[n]) return map[n];
+
+  // Split controllato per intestazioni tutte attaccate ma non presenti nella mappa.
+  // Lavora sui termini più comuni dei CSV del torneo senza rovinare sigle tipo MVP o PG.
+  const tokens=['player','team','code','squadra','trasferta','ospite','giornata','originali','penalita','penalità','finali','totali','punti','portiere','giocatore','marcatori','marcatore','miglior','differenza','partite','partita','presenze','statistica','valore','cognome','numero','subiti','fatti','clean','sheet','assist','autogol','ruolo','media','goal','casa','note','nota','nome','reti','gol','mvp','pg','gf','gs','dr','pt','v','n','p'];
+  let compact=n;
+  const parts=[];
+  while(compact){
+    const found=tokens.find(t=>compact.startsWith(t));
+    if(found){
+      parts.push(found);
+      compact=compact.slice(found.length);
+      continue;
+    }
+    const nextIndexes=tokens.map(t=>compact.indexOf(t)).filter(i=>i>0);
+    const next=nextIndexes.length ? Math.min(...nextIndexes) : compact.length;
+    parts.push(compact.slice(0,next));
+    compact=compact.slice(next);
+  }
+  if(parts.length>1){
+    let joined=parts.join(' ')
+      .replace(/\bpt\b/gi,'PT')
+      .replace(/\bmvp\b/gi,'MVP')
+      .replace(/\bpg\b/gi,'PG')
+      .replace(/\bgf\b/gi,'GF')
+      .replace(/\bgs\b/gi,'GS')
+      .replace(/\bdr\b/gi,'DR')
+      .replace(/\bpenalita\b/gi,'penalità');
+    return joined.charAt(0).toUpperCase()+joined.slice(1);
+  }
+
+  const spaced=smartSpace(raw.replace(/_/g,' '));
+  return spaced.charAt(0).toUpperCase()+spaced.slice(1);
+}
+
+/* Escape sicuro tramite DOM — previene XSS */
+function esc(s){ const t=document.createElement('span'); t.textContent=String(s??''); return t.innerHTML; }
+function initials(s){ return String(s||'?').split(/\s+/).filter(Boolean).slice(0,2).map(x=>x[0]).join('').toUpperCase()||'?'; }
+function setStatus(msg,good=false){ const el=document.getElementById('status'); el.innerHTML=good?`<span class="ok">${esc(msg)}</span>`:esc(msg); }
+function sepFor(line){ const semi=(line.match(/;/g)||[]).length,comma=(line.match(/,/g)||[]).length; return semi>=comma?';':','; }
+
+/* ══════════════════════════════════
+   CSV PARSER
+   ══════════════════════════════════ */
+function parseCsv(text){
+  text=String(text||'').replace(/^\uFEFF/,''); if(!text.trim()) return [];
+  const sep=sepFor(text.split(/\r?\n/).find(l=>l.trim())||'');
+  const rows=[]; let row=[],val='',q=false;
+  for(let i=0;i<text.length;i++){ const c=text[i],n=text[i+1];
+    if(c==='"'&&q&&n==='"'){ val+='"'; i++; }
+    else if(c==='"'){ q=!q; }
+    else if(c===sep&&!q){ row.push(val.trim()); val=''; }
+    else if((c==='\n'||c==='\r')&&!q){ if(val!==''||row.length){ row.push(val.trim()); rows.push(row); row=[]; val=''; } if(c==='\r'&&n==='\n') i++; }
+    else val+=c;
+  }
+  if(val!==''||row.length){ row.push(val.trim()); rows.push(row); }
+  const filtered=rows.filter(r=>r.some(x=>String(x).trim()!==''));
+  /* Normalizza tutte le righe alla larghezza massima — evita crash su calendari
+     a blocchi dove "GIORNATA 1;;" ha più colonne delle righe dati */
+  const maxCols=Math.max(0,...filtered.map(r=>r.length));
+  return filtered.map(r=>{ while(r.length<maxCols) r.push(''); return r; });
+}
+function rowsToObjects(rows){ if(!rows||!rows.length) return []; const h=rows[0].map(x=>String(x||'').trim()); return rows.slice(1).map(r=>Object.fromEntries(h.map((k,i)=>[k,r[i]??'']))); }
+function col(obj,names){ const keys=Object.keys(obj||{}); for(const n of names){ const nk=norm(n); const k=keys.find(x=>norm(x)===nk||norm(x).includes(nk)); if(k) return obj[k]; } return ''; }
+function num(x){ const n=parseFloat(String(x||'0').replace(',','.').replace(/[^0-9.-]/g,'')); return Number.isFinite(n)?n:0; }
+
+/* ══════════════════════════════════
+   CLASSIFICAZIONE FILE
+   ══════════════════════════════════ */
+function fileKind(f){ const n=norm(f);
+  if(n.includes('classificasquadre')) return 'classifica_squadre';
+  if(n.includes('marcatori')) return 'marcatori';
+  if(n.includes('mvp')) return 'mvp';
+  if(n.includes('portieri')) return 'portieri';
+  // File riepilogo: uno per giornata o un riepilogo unico.
+  // Esempi riconosciuti: giornata_1.csv, riepilogo_giornata_1.csv, referto_giornata_1.csv, riepilogo_giornate.csv.
+  if(n.includes('riepilogogiornata')||n.includes('riepilogogiornate')||n.includes('refertogiornata')||/^giornata\d*csv$/.test(n)||/^giornata\d+/.test(n)) return 'riepilogo';
+  if(n.includes('risultati')||n==='partitecsv'||n.includes('partite')) return 'risultati';
+  if(n.includes('calendario')) return 'calendario';
+  if(/^squadra/i.test(f)) return 'squadra';
+  return 'altro';
+}
+function sectionFiles(kind){ return Object.keys(state.rows).filter(f=>fileKind(f)===kind); }
+
+/* ══════════════════════════════════
+   IMMAGINI
+   ══════════════════════════════════ */
+function imageExts(){ return ['png','jpg','jpeg','webp','gif','svg']; }
+function baseNoExt(path){ return String(path||'').split('/').pop().replace(/\.[^.]+$/,''); }
+function imageFolderToken(type){ return type==='team'?'immaginisquadre':'immaginigiocatori'; }
+
+function rememberImage(relPath,file){
+  const rel=String(relPath||file?.name||'');
+  const url=URL.createObjectURL(file);
+  const fullKey=norm(rel);
+  const baseKey=norm(baseNoExt(rel));
+  const folderKey=rel.toLowerCase().includes('/squadre/')||rel.toLowerCase().includes('\\squadre\\')?'team':
+                  rel.toLowerCase().includes('/giocatori/')||rel.toLowerCase().includes('\\giocatori\\')?'player':'';
+
+  state.imageURLs[fullKey]=url;
+  state.imageAliases=state.imageAliases||{};
+  if(baseKey && !state.imageAliases[baseKey]) state.imageAliases[baseKey]=url;
+  if(baseKey && folderKey) state.imageAliases[folderKey+':'+baseKey]=url;
+  return url;
+}
+
+function imageFor(type,name){
+  const key=norm(name); if(!key) return '';
+  const aliases=state.imageAliases||{};
+  const typed=type==='team'?'team:'+key:'player:'+key;
+  if(aliases[typed]) return aliases[typed];
+  if(aliases[key]) return aliases[key];
+
+  const folder=imageFolderToken(type);
+  const candidates=Object.entries(state.imageURLs||{}).map(([k,url])=>{
+    const rawBase=(k.split('/').pop()||k).replace(/(png|jpg|jpeg|webp|gif|svg)$/i,'');
+    const base=norm(rawBase);
+    let score=999;
+    if(k.includes(folder) && base===key) score=0;
+    else if(base===key) score=1;
+    else if(k.includes(folder) && (base.includes(key)||key.includes(base))) score=2;
+    else if(k.includes(folder) && k.includes(key)) score=3;
+    else if(base.includes(key)||key.includes(base)) score=4;
+    else if(k.includes(key)) score=5;
+    return {score,url};
+  }).filter(x=>x.score<999).sort((a,b)=>a.score-b.score);
+  if(candidates.length) return candidates[0].url;
+
+  const prefix=type==='team'?'immagini/squadre/':'immagini/giocatori/';
+  const dataPrefix=type==='team'?'data/immagini/squadre/':'data/immagini/giocatori/';
+  // Fallback statici: prova prima PNG, poi altri formati. Utile quando apri index.html senza selezionare cartella.
+  return prefix+key+'.png';
+}
+
+/* Crea elemento img o div iniziali — NESSUN innerHTML con dati utente.
+   Accetta anche una lista di nomi alternativi: utile quando nei CSV squadra
+   il giocatore è Cognome Nome, ma negli altri CSV o nei file immagine è Nome Cognome. */
+function imgOrInitialEl(type,name,cls){
+  const names=(Array.isArray(name)?name:[name])
+    .map(x=>smartSpace(x))
+    .filter(Boolean);
+  const mainName=names[0]||'';
+  const img=document.createElement('img');
+  img.className=cls; img.alt=mainName;
+
+  const prefixes=type==='team'?['immagini/squadre/','data/immagini/squadre/']:['immagini/giocatori/','data/immagini/giocatori/'];
+  const candidates=[];
+  const addCandidate=(src)=>{
+    if(src && !candidates.includes(src)) candidates.push(src);
+  };
+
+  // Prima prova gli alias reali caricati dal picker/cartella, poi i fallback statici.
+  names.forEach(n=>addCandidate(imageFor(type,n)));
+  names.forEach(n=>{
+    const key=norm(n);
+    for(const pref of prefixes){
+      for(const ext of imageExts()) addCandidate(pref+key+'.'+ext);
+    }
+  });
+
+  let fallbackIndex=0;
+  img.onerror=function(){
+    if(String(this.src||'').startsWith('blob:')){
+      const d=document.createElement('div'); d.className=cls; d.textContent=initials(mainName); this.replaceWith(d);
+      return;
+    }
+    while(fallbackIndex<candidates.length && candidates[fallbackIndex]===this.src) fallbackIndex++;
+    if(fallbackIndex<candidates.length){
+      this.src=candidates[fallbackIndex++];
+      return;
+    }
+    const d=document.createElement('div'); d.className=cls; d.textContent=initials(mainName); this.replaceWith(d);
+  };
+  img.src=candidates[fallbackIndex++] || '';
+  return img;
+}
+
+/* ══════════════════════════════════
+   LOGO CRAL
+   ══════════════════════════════════ */
+const HERO_LOGO_FALLBACK = document.getElementById('heroLogoWrap')?.innerHTML || '';
+
+function resetHeroLogo(){
+  const wrap=document.getElementById('heroLogoWrap');
+  if(wrap && HERO_LOGO_FALLBACK) wrap.innerHTML=HERO_LOGO_FALLBACK;
+}
+
+function logoPriority(key){
+  const file=key.split('/').pop()||key;
+  if(file.includes('logo')&&file.includes('cral')) return 0;
+  if(file.includes('cral')) return 1;
+  if(file.includes('logo')) return 2;
+  return 99;
+}
+
+function logoCandidates(){
+  const uploaded=Object.keys(state.imageURLs)
+    .filter(k=>k.includes('immagini')&&(k.includes('logo')||k.includes('cral')))
+    .sort((a,b)=>logoPriority(a)-logoPriority(b))
+    .map(k=>state.imageURLs[k]);
+
+  // Fallback statici: funzionano sia con index.html nella root sia con asset dentro data/.
+  return [...uploaded,
+    'immagini/logo_cral.png','immagini/cral.png','immagini/logo.png',
+    'data/immagini/logo_cral.png','data/immagini/cral.png','data/immagini/logo.png'
+  ];
+}
+
+function tryLoadLogo(){
+  const wrap=document.getElementById('heroLogoWrap'); if(!wrap) return;
+  const candidates=logoCandidates();
+  let i=0;
+  resetHeroLogo();
+
+  function tryNext(){
+    if(i>=candidates.length) return; // resta lo SVG di fallback
+    const img=document.createElement('img');
+    img.alt='Logo CRAL';
+    img.onload=()=>{ wrap.innerHTML=''; wrap.appendChild(img); };
+    img.onerror=()=>{ i++; tryNext(); };
+    img.src=candidates[i];
+  }
+  tryNext();
+}
+
+/* ══════════════════════════════════
+   BANNER ERRORI DETTAGLIATO
+   ══════════════════════════════════ */
+/* Analizza un CSV caricato e restituisce lista di problemi specifici */
+function diagnoseCSV(filename, rawText, parsedRows){
+  const problems=[];
+  if(!rawText||!rawText.trim()){
+    problems.push({icon:'📭',msg:'Il file è completamente vuoto.',fix:'Esportalo di nuovo dal gestionale e verifica che contenga dati.'});
+    return problems;
+  }
+  // Encoding BOM anomalo
+  if(rawText.charCodeAt(0)===0xFFFD)
+    problems.push({icon:'🔤',msg:'Encoding non riconosciuto (possibile UTF-16 o Latin-1 corrotto).',fix:'Salva il CSV come UTF-8 dal gestionale prima di esportarlo.'});
+  // Separatore misto
+  const lines=rawText.split(/\r?\n/).filter(l=>l.trim());
+  const semiCounts=lines.map(l=>(l.match(/;/g)||[]).length);
+  const commaCounts=lines.map(l=>(l.match(/,/g)||[]).length);
+  const mainSep=semiCounts[0]>=commaCounts[0]?';':',';
+  const inconsistent=lines.slice(1).filter((l,i)=>{
+    const sc=(l.match(/;/g)||[]).length, cc=(l.match(/,/g)||[]).length;
+    return mainSep===';'?cc>sc:sc>cc;
+  });
+  if(inconsistent.length>0)
+    problems.push({icon:'↔️',msg:`Separatore non uniforme: ${inconsistent.length} riga/e usano il separatore sbagliato (atteso "${mainSep}").`,fix:'Apri il CSV in un editor di testo e uniforma il separatore, oppure riesportalo con le impostazioni corrette.'});
+  // Righe con numero di colonne diverso dall'header
+  if(parsedRows&&parsedRows.length>1){
+    /* I calendari a blocchi (GIORNATA N;;) hanno struttura volutamente
+       disomogenea — saltare i controlli di colonne su questi file */
+    const isBlockFmt=isBlockCalendar(rawText);
+    if(!isBlockFmt){
+      const expectedCols=parsedRows[0].length;
+      const badRows=parsedRows.slice(1).map((r,i)=>({row:i+2,cols:r.length})).filter(x=>x.cols!==expectedCols&&x.cols>1);
+      if(badRows.length){
+        const sample=badRows.slice(0,3).map(x=>`riga ${x.row} (${x.cols} colonne invece di ${expectedCols})`).join(', ');
+        problems.push({icon:'📐',msg:`Numero colonne non uniforme: ${badRows.length} riga/e non corrispondono all'header. Es: ${sample}.`,fix:'Controlla se ci sono virgole/punti e virgola nei valori (devono essere racchiusi tra virgolette) o righe extra in fondo al file.'});
+      }
+      // Header con colonne vuote
+      const emptyHeaders=parsedRows[0].map((h,i)=>({h,i})).filter(x=>!x.h||!x.h.trim());
+      if(emptyHeaders.length)
+        problems.push({icon:'🏷️',msg:`${emptyHeaders.length} colonna/e senza intestazione (posizioni: ${emptyHeaders.map(x=>x.i+1).join(', ')}).`,fix:'Aggiungi un nome a tutte le colonne nella prima riga del CSV.'});
+      // Righe totalmente vuote nel mezzo
+      const midEmpty=parsedRows.slice(1).filter(r=>r.every(c=>!String(c).trim()));
+      if(midEmpty.length)
+        problems.push({icon:'⬜',msg:`${midEmpty.length} riga/e completamente vuota/e nel file.`,fix:'Rimuovi le righe vuote dal CSV prima di caricarlo.'});
+      // Valori numerici attesi (gol, punti) che non sono numeri
+      const numCols=['gol','punti','pts','reti','goal','presenze','partite'];
+      parsedRows[0].forEach((h,hi)=>{
+        if(!numCols.some(nc=>norm(h).includes(norm(nc)))) return;
+        const badVals=parsedRows.slice(1).filter(r=>r[hi]&&r[hi].trim()&&isNaN(parseFloat(String(r[hi]).replace(',','.'))));
+        if(badVals.length)
+          problems.push({icon:'🔢',msg:`Colonna "${h}": ${badVals.length} valore/i non numerici (es: "${String(badVals[0][hi]).slice(0,20)}").`,fix:'Sostituisci testo o celle vuote con 0 o un numero valido nella colonna '+h+'.'});
+      });
+    }
+    // Solo header, nessun dato (vale per tutti i tipi)
+    if(parsedRows.length===1)
+      problems.push({icon:'📋',msg:'Il file contiene solo l\'intestazione ma nessun dato.',fix:'Verifica che l\'esportazione dal gestionale includa anche le righe di dati.'});
+  }
+}
+
+function showErrors(){
+  const banner=document.getElementById('errorBanner');
+  const groups=document.getElementById('errGroups');
+  const count=document.getElementById('errCount');
+  // Raccoglie anche problemi interni ai CSV caricati
+  const csvProblems=[];
+  for(const [f,raw] of Object.entries(state.files)){
+    if(!/\.csv$/i.test(f)) continue;
+    const diag=diagnoseCSV(f,raw,state.rows[f]);
+    if(diag.length) csvProblems.push({file:f,issues:diag});
+  }
+  const totalIssues=loadErrors.length+csvProblems.reduce((s,x)=>s+x.issues.length,0);
+  if(!totalIssues){ banner.style.display='none'; return; }
+  count.textContent=totalIssues;
+  groups.innerHTML='';
+
+  // Gruppo: file non trovati
+  if(loadErrors.length){
+    const det=document.createElement('details'); det.className='err-section'; det.open=true;
+    const sum=document.createElement('summary'); sum.textContent=`File non trovati (${loadErrors.length})`;
+    det.appendChild(sum);
+    loadErrors.forEach(e=>{
+      const div=document.createElement('div'); div.className='err-item';
+      div.innerHTML=`<span class="err-icon">❌</span><div><div>${esc(e)}</div><div class="err-fix">Controlla che il file sia nella stessa cartella di index.html e che il nome corrisponda esattamente a quello in manifest.csv.</div></div>`;
+      det.appendChild(div);
+    });
+    groups.appendChild(det);
+  }
+
+  // Gruppo: problemi nei CSV caricati
+  csvProblems.forEach(({file,issues})=>{
+    const det=document.createElement('details'); det.className='err-section';
+    const sum=document.createElement('summary'); sum.textContent=`${file} — ${issues.length} problema/i nel contenuto`;
+    det.appendChild(sum);
+    issues.forEach(issue=>{
+      const div=document.createElement('div'); div.className='err-item';
+      const icon=document.createElement('span'); icon.className='err-icon'; icon.textContent=issue.icon;
+      const body=document.createElement('div');
+      const msg=document.createElement('div'); msg.textContent=issue.msg;
+      const fix=document.createElement('div'); fix.className='err-fix'; fix.textContent='→ '+issue.fix;
+      body.appendChild(msg); body.appendChild(fix);
+      div.appendChild(icon); div.appendChild(body); det.appendChild(div);
+    });
+    groups.appendChild(det);
+  });
+
+  banner.style.display='block';
+}
+
+/* ══════════════════════════════════
+   DARK MODE
+   ══════════════════════════════════ */
+function initTheme(){
+  const saved=localStorage.getItem('cral_theme');
+  const prefersDark=window.matchMedia('(prefers-color-scheme:dark)').matches;
+  const dark=saved==='dark'||(saved===null&&prefersDark);
+  applyTheme(dark,false);
+}
+function applyTheme(dark,save=true){
+  document.documentElement.setAttribute('data-theme',dark?'dark':'light');
+  document.getElementById('btnTheme').textContent=dark?'☀️':'🌙';
+  document.getElementById('btnTheme').title=dark?'Passa al tema chiaro':'Passa al tema scuro';
+  if(save) localStorage.setItem('cral_theme',dark?'dark':'light');
+  if(window._chart) redrawCharts();
+}
+document.getElementById('btnTheme').addEventListener('click',()=>{
+  const isDark=document.documentElement.getAttribute('data-theme')==='dark';
+  applyTheme(!isDark);
+});
+
+/* ══════════════════════════════════
+   TABS
+   ══════════════════════════════════ */
+function renderTabs(){
+  const el=document.getElementById('tabs'); el.innerHTML='';
+  TABS.forEach(([id,label])=>{
+    const b=document.createElement('button');
+    b.className='tab'+(id===state.activeTab?' active':'');
+    b.dataset.tab=id; b.textContent=label; b.setAttribute('role','tab');
+    b.onclick=()=>showTab(id);
+    el.appendChild(b);
+  });
+}
+function showTab(id){
+  state.activeTab=id;
+  document.querySelectorAll('.section').forEach(s=>s.classList.toggle('active',s.id===id));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===id));
+  renderActiveSection();
+}
+
+/* ══════════════════════════════════
+   CONFIG & TITLE
+   ══════════════════════════════════ */
+function updateTitle(){
+  document.title=state.config.titolo||DEFAULT_TITLE;
+  document.getElementById('siteTitle').textContent=state.config.titolo||DEFAULT_TITLE;
+  document.getElementById('siteSubtitle').textContent=state.config.sottotitolo||DEFAULT_SUBTITLE;
+}
+function applyConfig(){
+  const f=Object.keys(state.rows).find(x=>norm(x)==='configcsv');
+  if(!f) return;
+  for(const r of rowsToObjects(state.rows[f])){
+    const k=norm(col(r,['chiave','key','nome']));
+    const v=col(r,['valore','value','testo']);
+    if(k&&v) state.config[k]=v;
+  }
+  updateTitle();
+}
+
+/* ══════════════════════════════════
+   RICERCA — filtra solo sulla sezione attiva
+   ══════════════════════════════════ */
+function filterRows(rows){
+  const q=norm(state.search); if(!q) return rows;
+  return rows.filter(r=>norm(Array.isArray(r)?r.join(' '):JSON.stringify(r)).includes(q));
+}
+
+/* ══════════════════════════════════
+   TABELLE CON ORDINAMENTO
+   ══════════════════════════════════ */
+let _tableCounter=0;
+/* Nomi di colonna candidati per individuare la colonna "nome" da affiancare a logo/avatar */
+const NAME_COL_CANDIDATES_TEAM   = ['squadra','team','nome squadra','club'];
+const NAME_COL_CANDIDATES_PLAYER = ['giocatore','nome','calciatore','player','cognome e nome','portiere'];
+
+function findNameColIndex(headers, imgType){
+  const candidates = imgType==='team' ? NAME_COL_CANDIDATES_TEAM : NAME_COL_CANDIDATES_PLAYER;
+  const normed = headers.map(h=>norm(h));
+  for(const c of candidates){
+    const nc = norm(c);
+    const idx = normed.findIndex(h=>h===nc||h.includes(nc));
+    if(idx>=0) return idx;
+  }
+  return 0; // fallback: prima colonna
+}
+
+function buildTable(rows, tableId, imgType){
+  if(!rows||!rows.length) return buildEl('div','empty','Nessun dato disponibile.');
+  const fr=filterRows(rows);
+  if(!fr.length) return buildEl('div','empty','Nessun risultato per la ricerca.');
+  const headers=fr[0];
+  const body=fr.slice(1);
+  if(!tableId){ tableId='tbl_'+(++_tableCounter); }
+  const sort=state.sortState[tableId]||{col:-1,dir:'asc'};
+  const nameColIdx = imgType ? findNameColIndex(headers, imgType) : -1;
+
+  let sortedBody=[...body];
+  if(sort.col>=0){
+    sortedBody.sort((a,b)=>{
+      const av=a[sort.col]??'', bv=b[sort.col]??'';
+      const an=num(av),bn=num(bv);
+      const cmp=(an!==0||bn!==0)?(an-bn):String(av).localeCompare(String(bv),'it');
+      return sort.dir==='asc'?cmp:-cmp;
+    });
+  }
+
+  const wrap=document.createElement('div'); wrap.className='tableWrap';
+  const tbl=document.createElement('table');
+  const thead=document.createElement('thead');
+  const hrow=document.createElement('tr');
+  headers.forEach((h,i)=>{
+    const th=document.createElement('th');
+    const span=document.createElement('span'); span.textContent=fixItalianAccents(prettyColumnName(h||''));
+    const arrow=document.createElement('i'); arrow.className='sort-arrow';
+    th.appendChild(span); th.appendChild(arrow);
+    if(sort.col===i) th.classList.add(sort.dir==='asc'?'sort-asc':'sort-desc');
+    th.onclick=()=>{
+      if(sort.col===i){ state.sortState[tableId]={col:i,dir:sort.dir==='asc'?'desc':'asc'}; }
+      else { state.sortState[tableId]={col:i,dir:'asc'}; }
+      renderActiveSection();
+    };
+    hrow.appendChild(th);
+  });
+  thead.appendChild(hrow); tbl.appendChild(thead);
+  const tbody=document.createElement('tbody');
+  sortedBody.forEach(row=>{
+    const tr=document.createElement('tr');
+    headers.forEach((_,i)=>{
+      const td=document.createElement('td');
+      if(imgType && i===nameColIdx){
+        const cell=document.createElement('div'); cell.className='name-cell';
+        const name=row[i]??'';
+        const cls=imgType==='team'?'tbl-logo':'tbl-avatar';
+        cell.appendChild(imgOrInitialEl(imgType,name,cls));
+        const span=document.createElement('span'); span.textContent=name;
+        cell.appendChild(span);
+        td.appendChild(cell);
+      } else {
+        td.textContent=fixItalianAccents(row[i]??'');
+      }
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+  tbl.appendChild(tbody); wrap.appendChild(tbl);
+  return wrap;
+}
+function buildEl(tag,cls,text){ const el=document.createElement(tag); el.className=cls; if(text) el.textContent=fixItalianAccents(text); return el; }
+
+/* ══════════════════════════════════
+   GRAFICI (Chart.js CDN)
+   ══════════════════════════════════ */
+window._chart={};
+function getChartColors(){
+  const dark=document.documentElement.getAttribute('data-theme')==='dark';
+  return {
+    grid:dark?'rgba(255,255,255,.08)':'rgba(7,29,58,.07)',
+    text:dark?'#b8c7da':'#667085',
+    blue1:dark?'rgba(59,130,246,.95)':'rgba(15,90,168,.95)',
+    blue2:dark?'rgba(96,165,250,.72)':'rgba(75,139,204,.72)',
+    gold1:'rgba(245,185,66,.96)',
+    gold2:'rgba(255,217,125,.76)'
+  };
+}
+function redrawCharts(){
+  if(window._chart.chartMarcatori) renderChartMarcatori();
+  if(window._chart.chartPunti) renderChartPunti();
+}
+function renderChartMarcatori(){
+  const f=sectionFiles('marcatori')[0]; if(!f) return;
+  const data=rowsToObjects(state.rows[f]).slice(0,10);
+  if(!data.length) return;
+  const labels=data.map(r=>col(r,['giocatore','nome','calciatore','player'])||Object.values(r)[0]||'');
+  const values=data.map(r=>num(col(r,['gol','reti','goal','g'])));
+  drawBarChart('chartMarcatori',labels,values,'Gol','player','Top marcatori');
+}
+function renderChartPunti(){
+  const f=sectionFiles('classifica_squadre')[0]; if(!f) return;
+  const data=rowsToObjects(state.rows[f]);
+  if(!data.length) return;
+  const labels=data.map(r=>col(r,['squadra','team','nome'])||Object.values(r)[0]||'');
+  const values=data.map(r=>num(col(r,['punti','pts','points'])));
+  drawBarChart('chartPunti',labels,values,'Punti','team','Punti per squadra');
+}
+function chartImageCandidates(type,name){
+  const key=norm(name);
+  const prefixes=type==='team'?['immagini/squadre/','data/immagini/squadre/']:['immagini/giocatori/','data/immagini/giocatori/'];
+  const candidates=[];
+  const add=src=>{ if(src && !candidates.includes(src)) candidates.push(src); };
+  add(imageFor(type,name));
+  prefixes.forEach(pref=>imageExts().forEach(ext=>add(pref+key+'.'+ext)));
+  return candidates;
+}
+function renderChartImageLabels(canvasId,labels,type,chart){
+  const wrap=document.getElementById(canvasId+'Labels');
+  if(!wrap) return;
+  wrap.innerHTML='';
+
+  const xScale=chart && chart.scales ? chart.scales.x : null;
+  const canvas=chart ? chart.canvas : document.getElementById(canvasId);
+  const canvasWidth=canvas ? canvas.clientWidth : 0;
+
+  labels.forEach((label,index)=>{
+    const item=document.createElement('div');
+    item.className='chart-label-item';
+    const x=xScale ? xScale.getPixelForValue(index) : ((index+.5)*(canvasWidth/Math.max(labels.length,1)));
+    item.style.left=Math.round(x)+'px';
+
+    const candidates=chartImageCandidates(type,label);
+    let i=0;
+    const img=document.createElement('img');
+    img.className='chart-label-img '+(type==='team'?'team':'player');
+    img.alt=label;
+    img.title=label;
+    img.style.visibility='hidden';
+    img.onload=function(){ this.style.visibility='visible'; };
+    img.onerror=function(){
+      if(i<candidates.length){ this.src=candidates[i++]; return; }
+      const txt=document.createElement('span');
+      txt.className='chart-label-text';
+      txt.textContent=label;
+      txt.title=label;
+      this.replaceWith(txt);
+    };
+    if(candidates.length) img.src=candidates[i++];
+    else img.onerror();
+    item.appendChild(img);
+    wrap.appendChild(item);
+  });
+}
+function drawBarChart(canvasId,labels,values,label,type,title){
+  const canvas=document.getElementById(canvasId); if(!canvas || !window.Chart) return;
+  if(window._chart[canvasId]){
+    try{ window._chart[canvasId].destroy(); }catch(e){}
+    window._chart[canvasId]=null;
+  }
+  const c=getChartColors();
+  const isTeam=type==='team';
+  const chart=new Chart(canvas,{
+    type:'bar',
+    data:{ labels, datasets:[{
+      label,
+      data:values,
+      backgroundColor:(ctx)=>{
+        const area=ctx.chart.chartArea;
+        if(!area) return isTeam?c.gold1:c.blue1;
+        const g=ctx.chart.ctx.createLinearGradient(0,area.top,0,area.bottom);
+        g.addColorStop(0,isTeam?c.gold2:c.blue2);
+        g.addColorStop(.45,isTeam?c.gold1:c.blue1);
+        g.addColorStop(1,isTeam?'rgba(245,185,66,.82)':'rgba(15,90,168,.82)');
+        return g;
+      },
+      borderColor:isTeam?'rgba(255,255,255,.45)':'rgba(255,255,255,.38)',
+      borderWidth:1,
+      borderRadius:{topLeft:10,topRight:10,bottomLeft:4,bottomRight:4},
+      borderSkipped:false,
+      maxBarThickness:54
+    }] },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      animation:{duration:650,easing:'easeOutQuart'},
+      plugins:{
+        legend:{display:false},
+        title:{display:!!title,text:title,color:c.text,font:{size:14,weight:'800'},padding:{bottom:8}},
+        tooltip:{
+          backgroundColor:'rgba(7,29,58,.92)',
+          titleFont:{weight:'800'},
+          displayColors:false,
+          callbacks:{label:(ctx)=>label+': '+ctx.parsed.y}
+        }
+      },
+      layout:{padding:{top:4,right:8,left:4,bottom:0}},
+      scales:{
+        x:{ ticks:{display:false}, grid:{display:false}, border:{display:false} },
+        y:{ ticks:{color:c.text,stepSize:1,font:{weight:'700'}}, grid:{color:c.grid,drawBorder:false}, border:{display:false}, beginAtZero:true }
+      }
+    }
+  });
+  window._chart[canvasId]=chart;
+  renderChartImageLabels(canvasId,labels,type,chart);
+
+  // Fix Chrome/file picker: a volte il canvas viene inizializzato prima del layout finale
+  // e resta bianco finché non avviene un resize/tab switch. Forziamo resize+update.
+  requestAnimationFrame(()=>{
+    try{ chart.resize(); chart.update('none'); renderChartImageLabels(canvasId,labels,type,chart); }catch(e){}
+    requestAnimationFrame(()=>{ try{ chart.resize(); chart.update('none'); renderChartImageLabels(canvasId,labels,type,chart); }catch(e){} });
+  });
+}
+
+/* ══════════════════════════════════
+   RENDER SEZIONI
+   ══════════════════════════════════ */
+function teamNameFromFile(f){ return prettyFileName(f).replace(/^Squadra\s+/i,''); }
+
+/* Lettura più precisa delle colonne giocatore.
+   Non usa col(...,'nome') perché quella funzione considera anche match parziali:
+   quindi "nome" può finire per prendere la colonna "cognome". */
+function fieldExact(obj,names){
+  const keys=Object.keys(obj||{});
+  for(const n of names){
+    const nk=norm(n);
+    let k=keys.find(x=>norm(x)===nk);
+    if(k) return obj[k];
+  }
+  return '';
+}
+function fieldLoose(obj,names){
+  const exact=fieldExact(obj,names);
+  if(exact) return exact;
+  return col(obj,names);
+}
+function uniqueNameParts(parts){
+  const seen=new Set(), out=[];
+  for(const part of parts){
+    const clean=smartSpace(part);
+    const key=norm(clean);
+    if(clean && !seen.has(key)){ seen.add(key); out.push(clean); }
+  }
+  return out.join(' ');
+}
+
+/* Ricava il nome completo del giocatore anche quando Nome e Cognome sono in colonne separate.
+   Per le immagini usa Nome Cognome, perché è il formato più comune dei file immagine. */
+function playerFullName(obj){
+  const nome = fieldExact(obj,['nome','first name','firstname']);
+  const cognome = fieldExact(obj,['cognome','last name','lastname']);
+  if(nome || cognome) return uniqueNameParts([nome,cognome]);
+
+  const direct = fieldLoose(obj,[
+    'giocatore','nome giocatore','nome completo','calciatore','player','atleta','cognome e nome'
+  ]);
+  if(direct) return smartSpace(direct);
+
+  const fullFromValues = Object.values(obj||{}).filter(Boolean).join(' ').trim();
+  return smartSpace(fullFromValues || Object.values(obj||{})[0] || '');
+}
+
+/* Nome mostrato nel tab Squadre: se il CSV ha Nome e Cognome separati,
+   visualizza Cognome Nome senza duplicazioni. */
+function playerDisplayName(obj){
+  const nome = fieldExact(obj,['nome','first name','firstname']);
+  const cognome = fieldExact(obj,['cognome','last name','lastname']);
+  if(nome || cognome) return uniqueNameParts([cognome,nome]);
+
+  const direct = fieldLoose(obj,[
+    'cognome e nome','giocatore','nome giocatore','nome completo','calciatore','player','atleta'
+  ]);
+  if(direct) return smartSpace(direct);
+
+  return playerFullName(obj);
+}
+
+/* Nomi alternativi da provare per l'immagine del giocatore.
+   Risolve i casi in cui un tab usa "Nome Cognome", il tab Squadre mostra
+   "Cognome Nome" o il CSV contiene una colonna completa diversa. */
+function playerImageNames(obj){
+  const nome = fieldExact(obj,['nome','first name','firstname']);
+  const cognome = fieldExact(obj,['cognome','last name','lastname']);
+  const candidates=[
+    playerFullName(obj),
+    playerDisplayName(obj),
+    uniqueNameParts([nome,cognome]),
+    uniqueNameParts([cognome,nome]),
+    fieldLoose(obj,['giocatore','nome giocatore','nome completo','calciatore','player','atleta','cognome e nome'])
+  ];
+  return candidates.filter(Boolean).filter((v,i,a)=>a.findIndex(x=>norm(x)===norm(v))===i);
+}
+
+function allPlayersFromTeams(){ const out=[]; for(const f of sectionFiles('squadra')){ const sq=teamNameFromFile(f); for(const r of rowsToObjects(state.rows[f])){ const n=playerFullName(r); if(n) out.push({nome:n,squadra:sq,ruolo:col(r,['ruolo','role']),numero:col(r,['numero','n'])}); } } return out; }
+function scorers(){ const f=sectionFiles('marcatori')[0]; return f?rowsToObjects(state.rows[f]):[]; }
+function matchRows(){ return sectionFiles('risultati').flatMap(f=>rowsToObjects(state.rows[f])); }
+function teamMatchCounts(){
+  const counts={};
+  for(const r of matchRows()){
+    const home=col(r,['squadra casa','casa','home','squadra 1']);
+    const away=col(r,['squadra trasferta','trasferta','ospite','away','squadra 2']);
+    const gh=col(r,['gol casa','reti casa','goal casa']);
+    const ga=col(r,['gol trasferta','reti trasferta','goal trasferta']);
+    const played=String(gh||ga||col(r,['risultato','score'])).trim()!=='';
+    if(played){ if(home) counts[norm(home)]=(counts[norm(home)]||0)+1; if(away) counts[norm(away)]=(counts[norm(away)]||0)+1; }
+  }
+  return counts;
+}
+
+function renderHome(){
+  const el=document.getElementById('home'); el.innerHTML='';
+  const players=allPlayersFromTeams(), matches=matchRows();
+  const stats=[
+    [sectionFiles('squadra').length,'Squadre'],
+    [players.length,'Giocatori'],
+    [matches.length,'Partite disputate'],
+    [Object.keys(state.rows).filter(f=>/\.csv$/i.test(f)).length,'CSV caricati']
+  ];
+  const grid=document.createElement('div'); grid.className='grid';
+  stats.forEach(([n,l])=>{
+    const c=document.createElement('div'); c.className='card stat';
+    c.innerHTML=`<div class="n">${n}</div><div class="l">${esc(l)}</div>`;
+    grid.appendChild(c);
+  });
+  el.appendChild(grid);
+  const br=document.createElement('br'); el.appendChild(br);
+
+  // Grafici
+  const chartsWrap=document.createElement('div'); chartsWrap.className='grid';
+  const c1=document.createElement('div'); c1.className='card chart-card'; c1.style.gridColumn='span 2';
+  c1.innerHTML='<h2>Top marcatori</h2><div class="chart-container"><canvas id="chartMarcatori"></canvas></div><div class="chart-label-strip" id="chartMarcatoriLabels" aria-label="Immagini top marcatori"></div>';
+  const c2=document.createElement('div'); c2.className='card chart-card'; c2.style.gridColumn='span 2';
+  c2.innerHTML='<h2>Punti squadre</h2><div class="chart-container"><canvas id="chartPunti"></canvas></div><div class="chart-label-strip" id="chartPuntiLabels" aria-label="Loghi squadre classifica"></div>';
+  chartsWrap.appendChild(c1); chartsWrap.appendChild(c2);
+  el.appendChild(chartsWrap);
+
+  // (guida rimossa)
+
+  // Carica Chart.js e disegna solo quando DOM e canvas sono realmente pronti.
+  scheduleHomeChartsRender();
+}
+
+/* Garantisce un solo tag <script> per Chart.js anche con chiamate concorrenti/ripetute */
+let _chartJsPromise=null;
+let _homeChartRenderToken=0;
+function nextPaint(){
+  return new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+}
+function scheduleHomeChartsRender(){
+  const token=++_homeChartRenderToken;
+  loadChartJs()
+    .then(nextPaint)
+    .then(()=>{
+      if(token!==_homeChartRenderToken) return;
+      const hasHomeCanvas=document.getElementById('chartMarcatori') || document.getElementById('chartPunti');
+      if(!hasHomeCanvas) return;
+      renderChartMarcatori();
+      renderChartPunti();
+      window.dispatchEvent(new Event('resize'));
+    })
+    .catch(()=>{
+      const c1=document.getElementById('chartMarcatori');
+      const c2=document.getElementById('chartPunti');
+      [c1,c2].filter(Boolean).forEach(c=>{
+        const box=c.closest('.chart-container');
+        if(box) box.innerHTML='<div class="empty">Grafico non disponibile: Chart.js non è stato caricato.</div>';
+      });
+    });
+}
+function loadChartJs(){
+  if(window.Chart) return Promise.resolve();
+  if(_chartJsPromise) return _chartJsPromise;
+  _chartJsPromise=new Promise((resolve,reject)=>{
+    const s=document.createElement('script');
+    s.src='https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js';
+    s.onload=()=>resolve();
+    s.onerror=()=>{ _chartJsPromise=null; reject(new Error('Chart.js non caricato')); };
+    document.head.appendChild(s);
+  });
+  return _chartJsPromise;
+}
+
+function renderClassifiche(){
+  const el=document.getElementById('classifiche'); el.innerHTML='';
+  const sections=[
+    ['classifica_squadre','CLASSIFICA SQUADRE','team'],
+    ['marcatori','CLASSIFICA MARCATORI','player'],
+    ['mvp','CLASSIFICA MVP','player'],
+    ['portieri','CLASSIFICA PORTIERI','player']
+  ];
+  let found=false;
+  sections.forEach(([kind,title,imgType])=>{
+    sectionFiles(kind).forEach(f=>{
+      found=true;
+      const card=document.createElement('div'); card.className='card'; card.style.marginBottom='14px';
+      const h=document.createElement('h2'); h.className='upper'; h.textContent=title;
+      card.appendChild(h); card.appendChild(buildTable(state.rows[f],norm(f),imgType));
+      el.appendChild(card);
+    });
+  });
+  if(!found) el.appendChild(buildEl('div','empty','Nessuna classifica trovata.'));
+}
+
+function renderStatistiche(){
+  const el=document.getElementById('statistiche'); el.innerHTML='';
+  const ms=teamMatchCounts(); let rows=[];
+  for(const r of scorers()){
+    const giocatore=col(r,['giocatore','nome','calciatore','player'])||Object.values(r)[0];
+    const squadra=col(r,['squadra','team']);
+    const gol=num(col(r,['gol','reti','goal','g']));
+    const partite=num(col(r,['partite','presenze','pg']))||ms[norm(squadra)]||0;
+    const media=partite?gol/partite:0;
+    if(giocatore) rows.push({giocatore,squadra,gol,partite,media});
+  }
+  rows.sort((a,b)=>b.media-a.media||b.gol-a.gol);
+  const card=document.createElement('div'); card.className='card';
+  const h=document.createElement('h2'); h.textContent='Statistiche giocatori'; card.appendChild(h);
+  if(!rows.length){
+    card.appendChild(buildEl('div','empty','Per calcolare la media gol servono classifica_marcatori.csv e risultati_partite.csv, oppure una colonna Partite nel CSV marcatori.'));
+  } else {
+    const hint=document.createElement('p'); hint.className='hint'; hint.textContent='Media gol per partita = gol del giocatore / partite giocate dalla sua squadra nei risultati caricati.';
+    card.appendChild(hint);
+    const headers=['Giocatore','Squadra','Gol','Partite','Media gol/partita'];
+    const body=rows.map(x=>[x.giocatore,x.squadra,x.gol,x.partite,x.media.toFixed(2).replace('.',',')]);
+    card.appendChild(buildTable([headers,...body],'stats_giocatori'));
+  }
+  el.appendChild(card);
+}
+
+function roleInitial(value){
+  const text=smartSpace(value);
+  if(!text) return '';
+  const key=norm(text);
+  const known={
+    portiere:'P', goalkeeper:'P', goalie:'P',
+    difensore:'D', defender:'D',
+    centrocampista:'C', midfielder:'C',
+    attaccante:'A', forward:'A', striker:'A'
+  };
+  for(const [k,v] of Object.entries(known)){
+    if(key.includes(k)) return v;
+  }
+  return text.charAt(0).toUpperCase();
+}
+
+function isCaptainPlayer(obj){
+  const visible=playerDisplayName(obj);
+  const full=playerFullName(obj);
+  const rawCaptain = fieldLoose(obj,['capitano','captain','fascia','cap','is captain','is_captain']) || exactVal(obj,['C']);
+  const key=norm(rawCaptain);
+  if(['si','s','yes','y','true','1','x','capitano','captain','c'].includes(key)) return true;
+  if(key && (key===norm(visible) || key===norm(full))) return true;
+  const role=fieldLoose(obj,['ruolo','role','posizione','position']);
+  const roleKey=norm(role);
+  return roleKey.includes('capitano') || roleKey.includes('captain');
+}
+
+function renderSquadre(){
+  const el=document.getElementById('squadre'); el.innerHTML='';
+  const files=sectionFiles('squadra');
+  if(!files.length){ el.appendChild(buildEl('div','empty','Nessun CSV squadra trovato. Usa nomi tipo squadra_NomeSquadra.csv.')); return; }
+  const wrap=document.createElement('div'); wrap.className='teams';
+  files.forEach(f=>{
+    const name=teamNameFromFile(f);
+    const players=rowsToObjects(state.rows[f]);
+    const filtered=filterRows(players);
+    const card=document.createElement('div'); card.className='teamCard';
+    const head=document.createElement('div'); head.className='teamHead';
+    head.appendChild(imgOrInitialEl('team',name,'logo'));
+    const info=document.createElement('div');
+    const hn=document.createElement('h2'); hn.textContent=name;
+    const sub=document.createElement('div'); sub.className='small'; sub.textContent=players.length+' giocatori';
+    info.appendChild(hn); info.appendChild(sub); head.appendChild(info); card.appendChild(head);
+    filtered.forEach(p=>{
+      const nome=playerFullName(p);             // usato per trovare l'immagine
+      const nomeVisibile=playerDisplayName(p); // mostrato nel tab Squadre
+      const meta=roleInitial(fieldLoose(p,['ruolo','role','posizione','position']));
+      const capitano=isCaptainPlayer(p);
+      const row=document.createElement('div'); row.className='player'+(capitano?' captain':'');
+      row.appendChild(imgOrInitialEl('player',playerImageNames(p),'avatar'));
+      const txt=document.createElement('div');
+      const b=document.createElement('b'); b.className='player-name'; b.textContent=nomeVisibile;
+      if(capitano){
+        const fascia=document.createElement('span');
+        fascia.className='captain-armband';
+        fascia.title='Capitano';
+        fascia.setAttribute('aria-label','Capitano');
+        b.appendChild(fascia);
+      }
+      const s=document.createElement('span'); s.className='small'; s.textContent=meta;
+      txt.appendChild(b); txt.appendChild(s); row.appendChild(txt); card.appendChild(row);
+    });
+    wrap.appendChild(card);
+  });
+  el.appendChild(wrap);
+}
+
+/* ══════════════════════════════════
+   PARSER CALENDARIO A BLOCCHI
+   Riconosce il formato:
+     GIORNATA N;;
+     Casa;Trasferta;Note
+     SquadraA;SquadraB;...
+     ...
+     [riga vuota]
+     GIORNATA N+1;;
+     ...
+   Gestisce squadre dispari (riga "Riposa: X" nella colonna Note).
+   Funziona anche con calendari piatti (tabella unica senza blocchi).
+   ══════════════════════════════════ */
+function isBlockCalendar(rawText){
+  return /GIORNATA\s+\d+/i.test(rawText);
+}
+
+function parseBlockCalendar(rawText){
+  /* Restituisce array di giornate: { label, partite:[{casa,trasferta,note,riposa}] } */
+  const sep=sepFor(rawText.split('\n')[0]||'');
+  const lines=rawText.replace(/^\uFEFF/,'').split(/\r?\n/);
+  const giornate=[];
+  let current=null;
+
+  for(let i=0;i<lines.length;i++){
+    const raw=lines[i];
+    const cells=raw.split(sep).map(c=>c.trim());
+    const first=cells[0]||'';
+
+    // Nuova giornata
+    const gMatch=first.match(/GIORNATA\s+(\d+)/i);
+    if(gMatch){
+      current={ label:'Giornata '+gMatch[1], partite:[] };
+      giornate.push(current);
+      continue;
+    }
+    // Riga intestazione colonne (Casa;Trasferta;Note) — skip
+    if(/^casa$/i.test(first)||/^squadra\s*(casa|1)/i.test(first)) continue;
+    // Riga completamente vuota
+    if(cells.every(c=>!c)) continue;
+    // Riga di dati
+    if(current){
+      const casa=cells[0]||'';
+      const trasferta=cells[1]||'';
+      const note=cells[2]||'';
+      // Estrae "Riposa: X" dalla colonna Note o da una cella con solo la scritta
+      const riposaCells=cells.join(' ');
+      const riposaMat=riposaCells.match(/riposa[:\s]+(.+)/i);
+      const riposa=riposaMat?riposaMat[1].trim():'';
+      if(casa||trasferta||riposa)
+        current.partite.push({casa,trasferta,note,riposa});
+    }
+  }
+  return giornate;
+}
+
+function renderCalendarioBlock(el, files){
+  try {
+  // Raccoglie tutte le giornate da tutti i file calendario
+  const allGiornate=[];
+  files.forEach(f=>{
+    const raw=state.files[f]||'';
+    parseBlockCalendar(raw).forEach(g=>allGiornate.push(g));
+  });
+
+  if(!allGiornate.length){ el.appendChild(buildEl('div','empty','Nessuna giornata trovata nel calendario.')); return; }
+
+  const q=norm(state.search);
+
+  allGiornate.forEach(g=>{
+    // Filtra partite per ricerca
+    const partiteFiltrate=g.partite.filter(p=>{
+      if(!q) return true;
+      return norm(p.casa).includes(q)||norm(p.trasferta).includes(q)||norm(p.riposa).includes(q)||norm(p.note).includes(q);
+    });
+    // Se la ricerca filtra tutto fuori, salta la giornata
+    if(q&&!partiteFiltrate.length) return;
+
+    const card=document.createElement('div'); card.className='card'; card.style.marginBottom='14px';
+    const h=document.createElement('h3'); h.style.cssText='margin:0 0 10px;color:var(--blue);font-size:18px;text-transform:uppercase;letter-spacing:.04em';
+    h.textContent=g.label; card.appendChild(h);
+
+    const inner=document.createElement('div'); inner.className='tableWrap';
+
+    partiteFiltrate.forEach(p=>{
+      const m=document.createElement('div'); m.className='match';
+
+      if(p.riposa&&!p.casa&&!p.trasferta){
+        // Riga solo riposo
+        const info=document.createElement('div');
+        const b=document.createElement('b'); b.textContent='Riposa: '+p.riposa;
+        const s=document.createElement('span'); s.className='small'; s.textContent='Turno di riposo';
+        info.appendChild(b); info.appendChild(document.createElement('br')); info.appendChild(s);
+        m.appendChild(info);
+        m.style.background='var(--soft)';
+        m.style.fontStyle='italic';
+      } else {
+        // Partita normale con loghi squadra
+        const left=document.createElement('div'); left.style.minWidth='0'; left.style.flex='1';
+        const teamsWrap=document.createElement('div'); teamsWrap.className='match-teams';
+        const homeTeam=document.createElement('div'); homeTeam.className='match-team';
+        homeTeam.appendChild(imgOrInitialEl('team',p.casa||'?','mini-logo'));
+        const homeName=document.createElement('span'); homeName.className='match-name'; homeName.textContent=p.casa||'?';
+        homeTeam.appendChild(homeName);
+        const vsLbl=document.createElement('span'); vsLbl.className='match-vs'; vsLbl.textContent='vs';
+        const awayTeam=document.createElement('div'); awayTeam.className='match-team';
+        awayTeam.appendChild(imgOrInitialEl('team',p.trasferta||'?','mini-logo'));
+        const awayName=document.createElement('span'); awayName.className='match-name'; awayName.textContent=p.trasferta||'?';
+        awayTeam.appendChild(awayName);
+        teamsWrap.appendChild(homeTeam); teamsWrap.appendChild(vsLbl); teamsWrap.appendChild(awayTeam);
+        left.appendChild(teamsWrap);
+        if(p.note&&!/riposa/i.test(p.note)){
+          const n=document.createElement('span'); n.className='small'; n.textContent=p.note;
+          left.appendChild(n);
+        }
+        m.appendChild(left);
+        // Badge riposo accanto alla partita (quando nella stessa riga)
+        if(p.riposa){
+          const badge=document.createElement('span');
+          badge.style.cssText='font-size:12px;background:var(--soft);border:1px solid var(--line);border-radius:999px;padding:3px 9px;color:var(--muted);white-space:nowrap';
+          badge.textContent='Riposa: '+p.riposa;
+          m.appendChild(badge);
+        }
+      }
+      inner.appendChild(m);
+    });
+
+    card.appendChild(inner); el.appendChild(card);
+  });
+  } catch(e){
+    const err=buildEl('div','empty error','Errore nel rendering del calendario: '+String(e.message||e)+'. Controlla che il file CSV sia formattato correttamente.');
+    el.appendChild(err);
+    console.error('renderCalendarioBlock error:',e);
+  }
+}
+
+function giornataNumberFromText(value){
+  const m=String(value||'').match(/giornata[_\s-]*(\d+)/i) || String(value||'').match(/(?:^|\D)(\d+)(?:\D|$)/);
+  return m ? String(parseInt(m[1],10)) : '';
+}
+function giornataLabelFromFile(f){
+  const base=prettyFileName(f).replace(/^Riepilogo\s+/i,'').replace(/^Referto\s+/i,'');
+  const n=giornataNumberFromText(f);
+  return n ? ('Giornata '+n) : base;
+}
+function giornataKeyFromFile(f){
+  return giornataNumberFromText(f) || norm(giornataLabelFromFile(f));
+}
+function firstPresent(obj, groups){
+  for(const g of groups){
+    const v=col(obj,Array.isArray(g)?g:[g]);
+    if(String(v||'').trim()) return v;
+  }
+  return '';
+}
+function exactVal(obj,names){
+  const keys=Object.keys(obj||{});
+  for(const n of names){
+    const k=keys.find(x=>norm(x)===norm(n));
+    if(k && String(obj[k]||'').trim()) return obj[k];
+  }
+  return '';
+}
+function splitPeopleList(value){
+  return String(value||'')
+    .split(/\s*(?:\n|\r|\||,|;|\+| - )\s*/)
+    .map(x=>smartSpace(x))
+    .filter(Boolean);
+}
+function playerNameFromRow(r){
+  const direct=firstPresent(r,[['giocatore','calciatore','player','nome giocatore','nome completo','cognome e nome','mvp','portiere']]);
+  if(direct) return smartSpace(direct);
+  const nome=exactVal(r,['nome']);
+  const cognome=exactVal(r,['cognome']);
+  if(nome&&cognome) return smartSpace(nome+' '+cognome);
+  return smartSpace(Object.values(r||{}).find(Boolean)||'');
+}
+function sectionKeyFromText(value){
+  const n=norm(value);
+  if(!n) return '';
+  // Supporta sia blocchi testuali (PARTITE, MARCATORI, STATISTICHE) sia
+  // CSV piatti generati con colonna Sezione: Partita, Marcatore, Totale marcatore giornata, Statistica.
+  if(n==='partita'||n.includes('partite')||n.includes('risultati')) return 'partite';
+  // IMPORTANTE: controlla i totali prima di "marcatore", altrimenti
+  // "Totale marcatore giornata" finisce dentro la tabella marcatori e crea doppioni.
+  if(n.includes('totalemarcatore')||n.includes('totalimarcatori')||n.includes('classificagiornatamarcatori')) return 'totaliMarcatori';
+  if(n==='marcatore'||n.includes('marcatore')||n.includes('marcatori')||n.includes('classificamarcatori')) return 'marcatori';
+  if(n==='mvp'||n.includes('mvpgiornata')||n.includes('miglioreincampo')||n.includes('manofthematch')) return 'mvp';
+  if(n.includes('migliorportiere')||n.includes('portiere')||n.includes('clean')) return 'portiere';
+  if(n.includes('autogoal')||n.includes('autoreti')||n.includes('autogol')) return 'autogoal';
+  if(n==='statistica'||n.includes('statistiche')||n.includes('statisticagiornata')||n.includes('statistichegiornata')||n.includes('riepilogostatistiche')) return 'statistiche';
+  return '';
+}
+function isLikelySectionLine(cells){
+  const key=sectionKeyFromText(cells[0]||'');
+  if(!key) return '';
+  const rest=cells.slice(1).filter(x=>String(x||'').trim());
+  // Se la riga è quasi solo il titolo del blocco, è una sezione.
+  if(rest.length===0) return key;
+  // Supporta anche righe tipo "PARTITE;Casa;Trasferta;Risultato" come header del blocco.
+  const joined=rest.join(' ');
+  if(/casa|trasferta|giocatore|squadra|statistica|valore|risultato|gol/i.test(joined)) return key;
+  return '';
+}
+function parseCsvLine(line, sep){
+  const out=[]; let val='',q=false;
+  for(let i=0;i<line.length;i++){
+    const c=line[i], n=line[i+1];
+    if(c==='"'&&q&&n==='"'){ val+='"'; i++; }
+    else if(c==='"'){ q=!q; }
+    else if(c===sep&&!q){ out.push(val.trim()); val=''; }
+    else val+=c;
+  }
+  out.push(val.trim());
+  return out;
+}
+function objectsFromHeaderRows(header, rows){
+  return rows.filter(r=>r.some(x=>String(x||'').trim())).map(r=>Object.fromEntries(header.map((h,i)=>[h||('Colonna '+(i+1)),r[i]??''])));
+}
+function parseRiepilogoFile(file){
+  const raw=state.files[file]||'';
+  const empty={partite:[],marcatori:[],totaliMarcatori:[],mvp:[],portiere:[],autogoal:[],statistiche:[]};
+
+  // Caso 1: CSV piatto reale generato dai tuoi file riepilogo_giornataN.csv.
+  // La prima riga contiene la colonna "Sezione" e ogni riga è già classificata
+  // come Partita, Marcatore, Totale marcatore giornata, MVP, Miglior portiere,
+  // Autogol o Statistica. Questo controllo va fatto PRIMA del parser a blocchi:
+  // altrimenti una riga che inizia con "Partita" viene scambiata per titolo di blocco.
+  const flat=rowsToObjects(state.rows[file]||[]);
+  if(flat.length && Object.keys(flat[0]||{}).some(k=>norm(k)==='sezione')){
+    flat.forEach(r=>{
+      const s=sectionKeyFromText(exactVal(r,['sezione']) || firstPresent(r,[['sezione','tipo','blocco','categoria']]));
+      if(s) empty[s].push(r);
+      else empty.partite.push(r);
+    });
+    return empty;
+  }
+
+  // Caso 2: formato a blocchi testuali: PARTITE, MARCATORI, MVP, ecc.
+  const sep=sepFor(raw.split(/\r?\n/).find(l=>l.trim())||'');
+  const lines=raw.replace(/^\uFEFF/,'').split(/\r?\n/);
+  let current='', header=null, data=[];
+  function flush(){
+    if(current && header){ empty[current].push(...objectsFromHeaderRows(header,data)); }
+    current=''; header=null; data=[];
+  }
+  for(const line of lines){
+    if(!String(line||'').trim()){ flush(); continue; }
+    const cells=parseCsvLine(line,sep);
+    const sec=isLikelySectionLine(cells);
+    if(sec){
+      flush(); current=sec;
+      const rest=cells.slice(1).filter(x=>String(x||'').trim());
+      header=rest.length ? cells.slice(1).map(x=>x||'') : null;
+      data=[];
+      continue;
+    }
+    if(current){
+      if(!header){ header=cells.map(x=>x||''); }
+      else data.push(cells);
+    }
+  }
+  flush();
+
+  // Caso 3: CSV senza sezione: trattalo come elenco partite.
+  const hasSections=Object.values(empty).some(arr=>arr.length);
+  if(!hasSections && flat.length){
+    flat.forEach(r=>empty.partite.push(r));
+  }
+  return empty;
+}
+function rowGiornataKey(row,file){
+  const g=firstPresent(row,[['giornata','turno','round']]);
+  const gn=giornataNumberFromText(g);
+  if(gn) return gn;
+  return giornataKeyFromFile(file);
+}
+function rowGiornataLabel(row,file){
+  const g=firstPresent(row,[['giornata','turno','round']]);
+  const gn=giornataNumberFromText(g);
+  if(gn) return 'Giornata '+gn;
+  return giornataLabelFromFile(file);
+}
+function riepilogoGiornateOptions(files){
+  const map=new Map();
+  files.forEach(f=>{
+    const data=parseRiepilogoFile(f);
+    const all=[...data.partite,...data.marcatori,...data.totaliMarcatori,...data.mvp,...data.portiere,...data.autogoal,...data.statistiche];
+    if(!all.length){ map.set(giornataKeyFromFile(f),giornataLabelFromFile(f)); return; }
+    all.forEach(r=>{
+      const key=rowGiornataKey(r,f);
+      const label=rowGiornataLabel(r,f);
+      if(key && label && !map.has(key)) map.set(key,label);
+    });
+  });
+  return [...map.entries()].sort((a,b)=>String(a[1]).localeCompare(String(b[1]),'it',{numeric:true}));
+}
+function renderRiepilogoFilter(parent, files){
+  const options=riepilogoGiornateOptions(files);
+  const bar=document.createElement('div');
+  bar.className='card';
+  bar.style.cssText='margin-bottom:14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap';
+
+  const label=document.createElement('label');
+  label.className='small';
+  label.style.fontWeight='800';
+  label.setAttribute('for','riepilogoGiornataFilter');
+  label.textContent='Filtra giornata';
+  bar.appendChild(label);
+
+  const sel=document.createElement('select');
+  sel.id='riepilogoGiornataFilter';
+  sel.style.cssText='padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--panel);color:var(--ink);font-weight:700';
+  const all=document.createElement('option');
+  all.value=''; all.textContent='Tutte le giornate';
+  sel.appendChild(all);
+  options.forEach(([key,label])=>{
+    const opt=document.createElement('option'); opt.value=key; opt.textContent=fixItalianAccents(label); sel.appendChild(opt);
+  });
+  if(state.selectedRiepilogoGiornata && options.some(([key])=>key===state.selectedRiepilogoGiornata)){
+    sel.value=state.selectedRiepilogoGiornata;
+  } else {
+    state.selectedRiepilogoGiornata='';
+  }
+  sel.onchange=()=>{ state.selectedRiepilogoGiornata=sel.value; renderRiepilogoGiornate(); };
+  bar.appendChild(sel);
+
+  const info=document.createElement('span');
+  info.className='small';
+  info.textContent=options.length ? (options.length+' giornate trovate') : 'Nessuna giornata riconosciuta';
+  bar.appendChild(info);
+  parent.appendChild(bar);
+}
+function addPeopleLine(parent,label,people,withImages){
+  if(!people || !people.length) return;
+  const row=document.createElement('div');
+  row.style.cssText='display:flex;gap:8px;align-items:flex-start;margin-top:8px;flex-wrap:wrap';
+  const strong=document.createElement('b'); strong.className='small'; strong.style.minWidth='92px'; strong.textContent=label;
+  row.appendChild(strong);
+  const list=document.createElement('div'); list.style.cssText='display:flex;gap:6px;flex-wrap:wrap;align-items:center';
+  people.forEach(name=>{
+    const pill=document.createElement('span');
+    pill.style.cssText='display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--soft);border-radius:999px;padding:4px 8px;font-size:12px;font-weight:700';
+    if(withImages) pill.appendChild(imgOrInitialEl('player',name,'mini-logo'));
+    const t=document.createElement('span'); t.textContent=name;
+    pill.appendChild(t); list.appendChild(pill);
+  });
+  row.appendChild(list); parent.appendChild(row);
+}
+function cleanPersonTokenForImage(name){
+  return smartSpace(String(name||'').replace(/\bx\s*\d+\b/ig,'').replace(/\(.*?\)/g,'').trim());
+}
+function cleanPersonTokenForTeamLookup(name){
+  return cleanPersonTokenForImage(String(name||'')
+    .replace(/\s+\d+\s*(?:gol|goal|reti?)\b/ig,'')
+    .replace(/\b(?:gol|goal|reti?)\s*\d+\b/ig,''));
+}
+function playerTeamMap(){
+  const map=new Map();
+  for(const f of sectionFiles('squadra')){
+    const team=teamNameFromFile(f);
+    for(const r of rowsToObjects(state.rows[f])){
+      const names=playerImageNames(r);
+      names.forEach(n=>{
+        const key=norm(cleanPersonTokenForTeamLookup(n));
+        if(key && !map.has(key)) map.set(key,team);
+      });
+    }
+  }
+  // Fallback: alcuni CSV marcatori/MVP contengono già la squadra accanto al giocatore.
+  ['marcatori','mvp'].forEach(kind=>{
+    sectionFiles(kind).forEach(f=>{
+      rowsToObjects(state.rows[f]).forEach(r=>{
+        const name=playerNameFromRow(r);
+        const team=firstPresent(r,[['squadra','team','club']]);
+        const key=norm(cleanPersonTokenForTeamLookup(name));
+        if(key && team && !map.has(key)) map.set(key,smartSpace(team));
+      });
+    });
+  });
+  return map;
+}
+function playerRoleMap(){
+  const map=new Map();
+  for(const f of sectionFiles('squadra')){
+    for(const r of rowsToObjects(state.rows[f])){
+      const role=fieldLoose(r,['ruolo','role','posizione','position']);
+      if(!String(role||'').trim()) continue;
+      const names=playerImageNames(r);
+      names.forEach(n=>{
+        const key=norm(cleanPersonTokenForTeamLookup(n));
+        if(key && !map.has(key)) map.set(key,smartSpace(role));
+      });
+    }
+  }
+  return map;
+}
+function matchPersonTokenToRow(name,row){
+  const key=norm(cleanPersonTokenForTeamLookup(name));
+  if(!key || !row) return false;
+  const candidates=[
+    playerNameFromRow(row),
+    firstPresent(row,[['giocatore','calciatore','player','nome giocatore','nome completo','cognome e nome','mvp','marcatore','portiere']]),
+    exactVal(row,['nome']) && exactVal(row,['cognome']) ? exactVal(row,['nome'])+' '+exactVal(row,['cognome']) : '',
+    exactVal(row,['cognome']) && exactVal(row,['nome']) ? exactVal(row,['cognome'])+' '+exactVal(row,['nome']) : ''
+  ].filter(Boolean).map(x=>norm(cleanPersonTokenForTeamLookup(x)));
+  return candidates.some(k=>k===key || (key.length>=3 && k.includes(key)) || (k.length>=3 && key.includes(k)));
+}
+function teamFromContextRows(name,contextRows){
+  const matches=(contextRows||[]).filter(r=>matchPersonTokenToRow(name,r));
+  for(const r of matches){
+    const team=firstPresent(r,[['squadra','team','club','squadra giocatore','squadra marcatore']]);
+    if(String(team||'').trim()) return smartSpace(team);
+  }
+  return '';
+}
+function roleFromContextRows(name,contextRows){
+  const matches=(contextRows||[]).filter(r=>matchPersonTokenToRow(name,r));
+  for(const r of matches){
+    const role=fieldLoose(r,['ruolo','role','posizione','position']);
+    if(String(role||'').trim()) return smartSpace(role);
+  }
+  return '';
+}
+function roleForPersonToken(name,contextRows){
+  const contextRole=roleFromContextRows(name,contextRows);
+  if(contextRole) return contextRole;
+  const key=norm(cleanPersonTokenForTeamLookup(name));
+  if(!key) return '';
+  const map=playerRoleMap();
+  if(map.has(key)) return map.get(key);
+  // Match morbido per casi con solo cognome o soprannome nel riepilogo.
+  const matches=[...map.entries()].filter(([k])=>k.includes(key)||key.includes(k));
+  if(matches.length===1) return matches[0][1];
+  return '';
+}
+function roleFallbackElForPerson(name,contextRows){
+  const role=roleForPersonToken(name,contextRows);
+  const d=document.createElement('div');
+  d.className='mini-logo';
+  d.textContent=role ? roleInitial(role) : initials(cleanPersonTokenForImage(name));
+  d.title=role ? role : cleanPersonTokenForImage(name);
+  d.setAttribute('aria-label',role ? ('Ruolo: '+role) : cleanPersonTokenForImage(name));
+  return d;
+}
+function teamForPersonToken(name, fallbackTeam, contextRows){
+  const direct=smartSpace(fallbackTeam||'');
+  if(direct) return direct;
+  const contextTeam=teamFromContextRows(name,contextRows);
+  if(contextTeam) return contextTeam;
+  const key=norm(cleanPersonTokenForTeamLookup(name));
+  if(!key) return '';
+  const map=playerTeamMap();
+  if(map.has(key)) return map.get(key);
+  // Match morbido per casi con solo cognome o soprannome nel riepilogo.
+  const matches=[...map.entries()].filter(([k])=>k.includes(key)||key.includes(k));
+  if(matches.length===1) return matches[0][1];
+  return '';
+}
+function extractInlineField(text,label){
+  const source=String(text||'');
+  const labels='Marcatori|MVP|Riposa|Autogol|Autogoal|Note';
+  const re=new RegExp(label+'\\s*:\\s*([\\s\\S]*?)(?=\\s*\\|\\s*(?:'+labels+')\\s*:|$)','i');
+  const m=source.match(re);
+  return m ? m[1].trim() : '';
+}
+function stripInlineField(text,label){
+  const source=String(text||'');
+  if(!source.trim()) return '';
+  const labels='Marcatori|MVP|Riposa|Autogol|Autogoal|Note';
+  const re=new RegExp('(?:^|\\s*\\|\\s*)'+label+'\\s*:\\s*[\\s\\S]*?(?=\\s*\\|\\s*(?:'+labels+')\\s*:|$)','ig');
+  return source
+    .replace(re,'')
+    .replace(/^\\s*\\|\\s*/,'')
+    .replace(/\\s*\\|\\s*$/,'')
+    .replace(/\\s*\\|\\s*\\|\\s*/g,' | ')
+    .trim();
+}
+function splitInlinePeople(value){
+  return String(value||'')
+    .split(/\s*(?:\n|\r|,|;|\+)\s*/)
+    .map(x=>smartSpace(x))
+    .filter(Boolean);
+}
+function labelEmoji(label){
+  const k=norm(label);
+  if(k.startsWith('marcatori')) return '⚽';
+  if(k==='mvp' || k.includes('miglioreincampo')) return '⭐';
+  return label;
+}
+function addPeopleLineSmart(parent,label,people,withImages,teamHint,contextRows){
+  if(!people || !people.length) return;
+  const row=document.createElement('div');
+  row.style.cssText='display:flex;gap:8px;align-items:flex-start;margin-top:8px;flex-wrap:wrap';
+  const strong=document.createElement('b');
+  strong.className='small';
+  strong.style.minWidth='28px';
+  strong.style.fontSize='16px';
+  strong.textContent=labelEmoji(label);
+  strong.title=label;
+  strong.setAttribute('aria-label',label);
+  row.appendChild(strong);
+  const list=document.createElement('div'); list.style.cssText='display:flex;gap:6px;flex-wrap:wrap;align-items:center';
+  people.forEach(name=>{
+    const pill=document.createElement('span');
+    pill.style.cssText='display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--soft);border-radius:999px;padding:4px 8px;font-size:12px;font-weight:700';
+    if(withImages){
+      const team=teamForPersonToken(name,teamHint,contextRows);
+      if(team){
+        const logo=imgOrInitialEl('team',team,'mini-logo');
+        logo.title=team;
+        logo.alt=team;
+        pill.appendChild(logo);
+      } else {
+        pill.appendChild(roleFallbackElForPerson(name,contextRows));
+      }
+    }
+    const t=document.createElement('span'); t.textContent=name;
+    pill.appendChild(t); list.appendChild(pill);
+  });
+  row.appendChild(list); parent.appendChild(row);
+}
+function resultText(r){
+  const direct=firstPresent(r,[['risultato','score']]);
+  if(direct) return direct;
+  const gh=firstPresent(r,[['gol casa','reti casa','goal casa','gc','gol squadra casa']]);
+  const ga=firstPresent(r,[['gol trasferta','reti trasferta','goal trasferta','gt','gol squadra trasferta']]);
+  if(String(gh||'').trim() || String(ga||'').trim()) return (gh||'0')+' - '+(ga||'0');
+  return '-';
+}
+function esitoText(r){ return firstPresent(r,[['esito','vincitore','outcome']]); }
+function goalsFromResult(res){
+  const nums=String(res||'').match(/\d+/g)||[];
+  return nums.length>=2 ? nums.slice(0,2).reduce((s,x)=>s+parseInt(x,10),0) : 0;
+}
+function filteredRiepilogoRows(rows,file){
+  const selected=state.selectedRiepilogoGiornata;
+  return filterRows(rows.filter(r=>!selected || rowGiornataKey(r,file)===selected));
+}
+function statValue(stats,names){
+  for(const r of stats){
+    const k=firstPresent(r,[['statistica','voce','dato','nome','metrica','campo']]) || Object.values(r)[0];
+    if(names.some(n=>norm(k).includes(norm(n)))){
+      return firstPresent(r,[['valore','value','totale','numero']]) || Object.values(r)[1] || '';
+    }
+  }
+  return '';
+}
+function riepilogoScorerPhotoEl(value){
+  const name=cleanPersonTokenForImage(value);
+  const img=document.createElement('img');
+  img.className='riepilogo-kpi-scorer-photo';
+  img.alt=name||'Miglior marcatore';
+  if(!name) return img;
+  const key=norm(name);
+  const candidates=[];
+  const add=(src)=>{ if(src && !candidates.includes(src)) candidates.push(src); };
+  add(imageFor('player',name));
+  ['immagini/giocatori/','data/immagini/giocatori/'].forEach(prefix=>{
+    imageExts().forEach(ext=>add(prefix+key+'.'+ext));
+  });
+  let i=0;
+  img.onload=()=>img.classList.add('is-loaded');
+  img.onerror=()=>{
+    img.classList.remove('is-loaded');
+    if(i<candidates.length){ img.src=candidates[i++]; }
+  };
+  if(candidates.length) img.src=candidates[i++];
+  return img;
+}
+
+function deriveStats(partite, marcatori, stats){
+  const partiteGiocate=statValue(stats,['partite giocate','partite']) || partite.length;
+  const golTotali=statValue(stats,['gol totali','goal totali']) || partite.reduce((s,r)=>s+goalsFromResult(resultText(r)),0);
+  const media=statValue(stats,['media gol','media goal']) || (partiteGiocate? (Number(golTotali)/Number(partiteGiocate)).toFixed(2).replace('.',',') : '');
+  const clean=statValue(stats,['clean sheet','cleansheet']) || partite.reduce((s,r)=>{
+    const nums=String(resultText(r)).match(/\d+/g)||[];
+    return s + (nums.slice(0,2).filter(x=>parseInt(x,10)===0).length);
+  },0);
+  let maxMatch=statValue(stats,['partita con più gol','partita con piu gol']);
+  if(!maxMatch && partite.length){
+    const best=[...partite].sort((a,b)=>goalsFromResult(resultText(b))-goalsFromResult(resultText(a)))[0];
+    const casa=firstPresent(best,[['squadra casa','casa','home','squadra 1','team casa']]);
+    const trasferta=firstPresent(best,[['squadra trasferta','trasferta','ospite','away','squadra 2','team trasferta']]);
+    maxMatch=[casa,trasferta].filter(Boolean).join(' - ')+' ('+resultText(best)+')';
+  }
+  let migliorMarcatore=statValue(stats,['miglior marcatore','top scorer']);
+  if(!migliorMarcatore && marcatori.length){
+    const sorted=[...marcatori].sort((a,b)=>num(firstPresent(b,[['gol giornata','gol','reti','goal']]))-num(firstPresent(a,[['gol giornata','gol','reti','goal']])));
+    const top=sorted[0];
+    migliorMarcatore=playerNameFromRow(top)+(firstPresent(top,[['gol giornata','gol','reti','goal']])?' ('+firstPresent(top,[['gol giornata','gol','reti','goal']])+' gol)':'');
+  }
+  return [
+    ['Partite giocate',partiteGiocate],
+    ['Gol totali',golTotali],
+    ['Media gol',media],
+    ['Clean sheet',clean],
+    ['Partita con più gol',maxMatch],
+    ['Miglior marcatore',migliorMarcatore]
+  ].filter(x=>String(x[1]||'').trim()!=='' && x[1]!==0);
+}
+function renderKpiGrid(parent, items){
+  if(!items.length) return;
+  const priority=['partite giocate','gol totali','media gol','clean sheet','miglior marcatore','partita con più gol','partita con piu gol'];
+  const ordered=[...items].sort((a,b)=>{
+    const ai=priority.findIndex(x=>norm(a[0]).includes(norm(x)));
+    const bi=priority.findIndex(x=>norm(b[0]).includes(norm(x)));
+    return (ai<0?99:ai)-(bi<0?99:bi);
+  });
+  const grid=document.createElement('div'); grid.className='riepilogo-kpi-grid';
+  ordered.forEach(([label,value])=>{
+    const c=document.createElement('div');
+    const isMatchMax=norm(label).includes('partitaconpiugol') || norm(label).includes('partitaconpiugoal');
+    const isScorer=norm(label).includes('migliormarcatore');
+    const isWide=String(value||'').length>18 || isScorer;
+    c.className='card stat riepilogo-kpi'+(isWide?' is-wide':'')+(isMatchMax?' is-match-max':'')+(isScorer?' is-scorer':'');
+    const textWrap=document.createElement('div');
+    textWrap.className='riepilogo-kpi-text';
+    const n=document.createElement('div'); n.className='n'; n.textContent=fixItalianAccents(value);
+    const l=document.createElement('div'); l.className='l'; l.textContent=fixItalianAccents(label);
+    textWrap.appendChild(n); textWrap.appendChild(l);
+    c.appendChild(textWrap);
+    if(isScorer) c.appendChild(riepilogoScorerPhotoEl(value));
+    grid.appendChild(c);
+  });
+  parent.appendChild(grid);
+}
+function objectsToRows(objs){
+  if(!objs.length) return [];
+  const allHeaders=[...new Set(objs.flatMap(o=>Object.keys(o).filter(k=>!/^_/.test(k))))];
+  // Mostra solo colonne realmente valorizzate almeno in una riga.
+  // Nei CSV riepilogo molte colonne sono presenti nell'header globale ma vuote
+  // per quella sezione specifica; nasconderle rende le tabelle leggibili.
+  const headers=allHeaders.filter(h=>objs.some(o=>String(o[h]??'').trim()!==''));
+  if(!headers.length) return [];
+  return [headers,...objs.map(o=>headers.map(h=>o[h]??''))];
+}
+
+function teamNameFromMatchRow(r, names){
+  return firstPresent(r,[names]) || '';
+}
+function parseTeamsFromPartitaText(text){
+  const raw=String(text||'').trim();
+  if(!raw) return [];
+  const parts=raw.split(/\s+(?:-|–|—|vs\.?|contro)\s+/i).map(x=>smartSpace(x)).filter(Boolean);
+  return parts.length>=2 ? [parts[0],parts.slice(1).join(' - ')] : [];
+}
+function opponentForFavoredTeam(favoredTeam, autogoalRow, partite){
+  const favored=smartSpace(favoredTeam);
+  if(!favored) return '';
+  const favoredKey=norm(favored);
+
+  // Prima prova dal campo "Partita" della riga autogoal, se presente.
+  const matchText=firstPresent(autogoalRow,[['partita','match','gara','incontro']]);
+  const parsed=parseTeamsFromPartitaText(matchText);
+  if(parsed.length>=2){
+    const a=parsed[0], b=parsed[1];
+    if(norm(a)===favoredKey) return b;
+    if(norm(b)===favoredKey) return a;
+  }
+
+  // Poi prova dalle partite della stessa giornata: nel CSV la squadra in Autogol
+  // indica chi ha beneficiato dell'autorete; per mostrare chi l'ha fatta serve l'avversaria.
+  const day=String(firstPresent(autogoalRow,[['giornata','turno','round']])||'').trim();
+  const candidates=partite.filter(p=>{
+    const pd=String(firstPresent(p,[['giornata','turno','round']])||'').trim();
+    if(day && pd && day!==pd) return false;
+    const casa=firstPresent(p,[['squadra casa','casa','home','squadra 1','team casa']]);
+    const trasferta=firstPresent(p,[['squadra trasferta','trasferta','ospite','away','squadra 2','team trasferta']]);
+    return norm(casa)===favoredKey || norm(trasferta)===favoredKey;
+  });
+  if(candidates.length===1){
+    const p=candidates[0];
+    const casa=firstPresent(p,[['squadra casa','casa','home','squadra 1','team casa']]);
+    const trasferta=firstPresent(p,[['squadra trasferta','trasferta','ospite','away','squadra 2','team trasferta']]);
+    if(norm(casa)===favoredKey) return trasferta;
+    if(norm(trasferta)===favoredKey) return casa;
+  }
+  return '';
+}
+function autogoalRowsForDisplay(rows, partite){
+  return rows.map(r=>{
+    const out={...r};
+    const favored=firstPresent(r,[['squadra','team','squadra beneficiaria','a favore di']]);
+    const ownTeam=opponentForFavoredTeam(favored,r,partite);
+    if(ownTeam){
+      // Sostituisce la squadra indicata dal CSV, che è quella favorita dall'evento,
+      // con la squadra del giocatore/autorete, cioè l'informazione utile in tabella.
+      const key=Object.keys(out).find(k=>['squadra','team'].includes(norm(k))) || 'Squadra';
+      out[key]=ownTeam;
+    }
+    return out;
+  });
+}
+
+function renderMiniSection(parent,title,rows,imgType,emptyText,tableId){
+  // Se non ci sono righe e non è richiesto un messaggio vuoto, non mostra proprio la sezione.
+  if(!rows.length && !emptyText) return;
+
+  const card=document.createElement('div'); card.className='card'; card.style.marginTop='14px';
+  const h=document.createElement('h3'); h.style.cssText='margin:0 0 10px;color:var(--blue);font-size:18px;text-transform:uppercase'; h.textContent=fixItalianAccents(title);
+  card.appendChild(h);
+  if(rows.length){
+    const tableRows=objectsToRows(rows);
+    if(tableRows.length) card.appendChild(buildTable(tableRows,tableId||norm(title),imgType));
+    else if(emptyText) card.appendChild(buildEl('div','empty',emptyText));
+  }
+  else if(emptyText){ card.appendChild(buildEl('div','empty',emptyText)); }
+  parent.appendChild(card);
+}
+function renderPartiteRiepilogo(parent,rows,file,contextRows){
+  if(!rows.length) return;
+  const wrap=document.createElement('div'); wrap.className='tableWrap riepilogo-matches'; wrap.style.marginTop='10px';
+  rows.forEach(r=>{
+    const giornata=rowGiornataLabel(r,file);
+    const data=firstPresent(r,[['data','giorno','date']]);
+    const casa=firstPresent(r,[['squadra casa','casa','home','squadra 1','team casa']]) || Object.values(r)[0] || '';
+    const trasferta=firstPresent(r,[['squadra trasferta','trasferta','ospite','away','squadra 2','team trasferta']]) || Object.values(r)[1] || '';
+    const note=firstPresent(r,[['note','commento','descrizione']]);
+    const inlineMarcatori=extractInlineField(note,'Marcatori');
+    const inlineMvp=extractInlineField(note,'MVP');
+    const inlineRiposa=extractInlineField(note,'Riposa');
+    const marcatoriCasa=splitPeopleList(firstPresent(r,[['marcatori casa','marcatori squadra casa','gol casa marcatori','scorer casa']]) || firstPresent(r,[['marcatori home']]));
+    const marcatoriTrasferta=splitPeopleList(firstPresent(r,[['marcatori trasferta','marcatori ospite','marcatori squadra trasferta','gol trasferta marcatori','scorer trasferta']]) || firstPresent(r,[['marcatori away']]));
+    const marcatoriGenerici=splitInlinePeople(firstPresent(r,[['marcatori','scorers','reti']]) || inlineMarcatori);
+    const mvp=splitInlinePeople(firstPresent(r,[['mvp','migliore in campo','man of the match','motm']]) || inlineMvp);
+    const esito=esitoText(r);
+    const res=resultText(r);
+
+    const m=document.createElement('div'); m.className='match riepilogo-match';
+    const left=document.createElement('div'); left.style.cssText='min-width:0;flex:1';
+    const teamsWrap=document.createElement('div'); teamsWrap.className='match-teams';
+    const homeTeam=document.createElement('div'); homeTeam.className='match-team';
+    homeTeam.appendChild(imgOrInitialEl('team',casa,'mini-logo'));
+    const homeName=document.createElement('span'); homeName.className='match-name'; homeName.textContent=casa;
+    homeTeam.appendChild(homeName);
+    const vs=document.createElement('span'); vs.className='match-vs'; vs.textContent='vs';
+    const awayTeam=document.createElement('div'); awayTeam.className='match-team';
+    awayTeam.appendChild(imgOrInitialEl('team',trasferta,'mini-logo'));
+    const awayName=document.createElement('span'); awayName.className='match-name'; awayName.textContent=trasferta;
+    awayTeam.appendChild(awayName);
+    teamsWrap.appendChild(homeTeam); teamsWrap.appendChild(vs); teamsWrap.appendChild(awayTeam);
+    left.appendChild(teamsWrap);
+
+    const metaParts=[giornata,data,esito?('Esito: '+esito):'',inlineRiposa?('Riposa: '+inlineRiposa):''].filter(Boolean);
+    if(metaParts.length){ const meta=document.createElement('div'); meta.className='small'; meta.textContent=metaParts.join(' · '); left.appendChild(meta); }
+    addPeopleLineSmart(left,'Marcatori casa',marcatoriCasa,true,casa,contextRows);
+    addPeopleLineSmart(left,'Marcatori trasf.',marcatoriTrasferta,true,trasferta,contextRows);
+    if(!marcatoriCasa.length && !marcatoriTrasferta.length) addPeopleLineSmart(left,'Marcatori',marcatoriGenerici,true,'',contextRows);
+    addPeopleLineSmart(left,'MVP',mvp,true,'',contextRows);
+    const notePulita=stripInlineField(note,'Riposa');
+    if(notePulita){ const n=document.createElement('div'); n.className='small'; n.style.marginTop='8px'; n.textContent=notePulita; left.appendChild(n); }
+
+    const sc=document.createElement('div'); sc.className='score'; sc.textContent=res;
+    m.appendChild(left); m.appendChild(sc); wrap.appendChild(m);
+  });
+  parent.appendChild(wrap);
+}
+function renderRiepilogoGiornate(){
+  const el=document.getElementById('riepilogo'); el.innerHTML='';
+  const files=sectionFiles('riepilogo');
+  if(!files.length){
+    const box=buildEl('div','empty','Nessun CSV riepilogo trovato. Usa file tipo giornata_1.csv, riepilogo_giornata_1.csv o referto_giornata_1.csv e inseriscili nel manifest per l\'autocaricamento.');
+    el.appendChild(box);
+    const guide=document.createElement('div'); guide.className='card'; guide.style.marginTop='14px';
+    guide.innerHTML='<h2>Formato CSV referto giornata</h2><p class="hint">Sono supportati sia i blocchi <b>PARTITE</b>, <b>MARCATORI</b>, <b>MVP</b>, <b>MIGLIOR PORTIERE</b>, <b>AUTOGOL</b>, <b>STATISTICHE</b>, sia il formato piatto generato con colonna <b>Sezione</b> e valori come <b>Partita</b>, <b>Marcatore</b>, <b>Totale marcatore giornata</b>, <b>MVP</b>, <b>Miglior portiere</b>, <b>Statistica</b>. I <b>Totale marcatore giornata</b> vengono letti ma non mostrati come scheda separata, per evitare doppioni.</p>';
+    el.appendChild(guide);
+    return;
+  }
+
+  renderRiepilogoFilter(el, files);
+  const content=document.createElement('div');
+  el.appendChild(content);
+  let rendered=0;
+
+  files.sort((a,b)=>giornataLabelFromFile(a).localeCompare(giornataLabelFromFile(b),'it',{numeric:true})).forEach(f=>{
+    const parsed=parseRiepilogoFile(f);
+    const partite=filteredRiepilogoRows(parsed.partite,f);
+    let marcatori=filteredRiepilogoRows(parsed.marcatori,f);
+    const totaliMarcatori=filteredRiepilogoRows(parsed.totaliMarcatori||[],f);
+    // Una sola scheda: se mancano i marcatori dettagliati, usa i totali come fallback.
+    if(!marcatori.length && totaliMarcatori.length) marcatori=totaliMarcatori;
+    const mvp=filteredRiepilogoRows(parsed.mvp,f);
+    const portiere=filteredRiepilogoRows(parsed.portiere,f);
+    const autogoalRaw=filteredRiepilogoRows(parsed.autogoal,f);
+    const autogoal=autogoalRowsForDisplay(autogoalRaw,partite);
+    const statistiche=filteredRiepilogoRows(parsed.statistiche,f);
+    if(!partite.length && !marcatori.length && !totaliMarcatori.length && !mvp.length && !portiere.length && !autogoal.length && !statistiche.length) return;
+
+    const allRows=[...partite,...marcatori,...totaliMarcatori,...mvp,...portiere,...autogoal,...statistiche];
+    const labels=[...new Set(allRows.map(r=>rowGiornataLabel(r,f)).filter(Boolean))];
+    const title=labels.length===1 ? labels[0] : giornataLabelFromFile(f);
+    const card=document.createElement('div'); card.className='card riepilogo-card'; card.style.marginBottom='14px';
+    const h=document.createElement('h2'); h.textContent=title; card.appendChild(h);
+    renderKpiGrid(card,deriveStats(partite,marcatori,statistiche));
+
+    const ph=document.createElement('h3'); ph.style.cssText='margin:14px 0 0;color:var(--blue);font-size:18px;text-transform:uppercase'; ph.textContent='Partite della giornata';
+    card.appendChild(ph);
+    renderPartiteRiepilogo(card,partite,f,[...marcatori,...totaliMarcatori,...mvp,...portiere,...autogoal]);
+
+    content.appendChild(card);
+    const tablePrefix='riepilogo_'+norm(f)+'_'+rowGiornataKey(allRows[0]||{},f);
+    renderMiniSection(content,'Marcatori della giornata',marcatori,'player','Nessun marcatore indicato.',tablePrefix+'_marcatori');
+    renderMiniSection(content,'MVP della giornata',mvp,'player','Nessun MVP indicato.',tablePrefix+'_mvp');
+    renderMiniSection(content,'Miglior portiere',portiere,'player','Nessun miglior portiere indicato.',tablePrefix+'_portiere');
+    renderMiniSection(content,'Autogol',autogoal,'player','',tablePrefix+'_autogoal');
+    if(statistiche.length) renderMiniSection(content,'Statistiche complete',statistiche,null,'',tablePrefix+'_statistiche');
+    rendered++;
+  });
+
+  if(!rendered) content.appendChild(buildEl('div','empty','Nessun risultato per il filtro selezionato o per la ricerca.'));
+}
+
+
+function renderMatchSection(sectionId, kind){
+  const el=document.getElementById(sectionId); el.innerHTML='';
+  const files=sectionFiles(kind);
+  if(!files.length){ el.appendChild(buildEl('div','empty','Nessuna partita trovata.')); return; }
+
+  // Calendario: usa parser dedicato se il formato è a blocchi
+  if(kind==='calendario'){
+    const hasBlock=files.some(f=>isBlockCalendar(state.files[f]||''));
+    if(hasBlock){ renderCalendarioBlock(el,files); return; }
+  }
+
+  // Fallback: tabella piatta (risultati o calendario semplice)
+  const rows=files.flatMap(f=>rowsToObjects(state.rows[f]).map(r=>({...r,_file:f})));
+  const filtered=filterRows(rows);
+  const card=document.createElement('div'); card.className='card';
+  const h=document.createElement('h2'); h.textContent=kind==='risultati'?'RISULTATI PARTITE':'CALENDARIO'; card.appendChild(h);
+  const inner=document.createElement('div'); inner.className='tableWrap';
+  filtered.forEach(r=>{
+    const data=col(r,['data','giorno','date']);
+    const home=col(r,['squadra casa','casa','home','squadra 1'])||Object.values(r)[0]||'';
+    const away=col(r,['squadra trasferta','trasferta','ospite','away','squadra 2'])||Object.values(r)[1]||'';
+    const score=col(r,['risultato','score'])||[col(r,['gol casa','reti casa']),col(r,['gol trasferta','reti trasferta'])].filter(x=>x!==''&&x!=null).join(' - ');
+    const m=document.createElement('div'); m.className='match';
+
+    const teamsWrap=document.createElement('div'); teamsWrap.className='match-teams';
+    const homeTeam=document.createElement('div'); homeTeam.className='match-team';
+    homeTeam.appendChild(imgOrInitialEl('team',home,'mini-logo'));
+    const homeName=document.createElement('span'); homeName.className='match-name'; homeName.textContent=home;
+    homeTeam.appendChild(homeName);
+
+    const vs=document.createElement('span'); vs.className='match-vs'; vs.textContent='vs';
+
+    const awayTeam=document.createElement('div'); awayTeam.className='match-team';
+    awayTeam.appendChild(imgOrInitialEl('team',away,'mini-logo'));
+    const awayName=document.createElement('span'); awayName.className='match-name'; awayName.textContent=away;
+    awayTeam.appendChild(awayName);
+
+    const meta=document.createElement('div'); meta.className='match-meta';
+    const ds=document.createElement('span'); ds.className='small'; ds.textContent=data;
+    meta.appendChild(ds); meta.appendChild(teamsWrap);
+    teamsWrap.appendChild(homeTeam); teamsWrap.appendChild(vs); teamsWrap.appendChild(awayTeam);
+
+    const left=document.createElement('div'); left.style.minWidth='0'; left.style.flex='1';
+    left.appendChild(meta);
+
+    const sc=document.createElement('div'); sc.className='score'; sc.textContent=score||'-';
+    m.appendChild(left); m.appendChild(sc); inner.appendChild(m);
+  });
+  card.appendChild(inner); el.appendChild(card);
+}
+
+/* Renderizza SOLO la sezione attiva per efficienza */
+function renderActiveSection(){
+  switch(state.activeTab){
+    case 'home':        renderHome(); break;
+    case 'classifiche': renderClassifiche(); break;
+    case 'statistiche': renderStatistiche(); break;
+    case 'squadre':     renderSquadre(); break;
+    case 'calendario':  renderMatchSection('calendario','calendario'); break;
+    case 'risultati':   renderMatchSection('risultati','risultati'); break;
+    case 'riepilogo':   renderRiepilogoGiornate(); break;
+  }
+}
+function renderAll(){ updateTitle(); renderTabs(); renderActiveSection(); }
+
+/* ══════════════════════════════════
+   CARICAMENTO FILE
+   ══════════════════════════════════ */
+async function fetchText(path){
+  try{ const r=await fetch('data/'+path+'?t='+Date.now()); if(r.ok) return await r.text(); }catch(e){}
+  const r2=await fetch(path+'?t='+Date.now());
+  if(!r2.ok) throw new Error(path);
+  return await r2.text();
+}
+
+async function loadAuto(){
+  setStatus('Caricamento automatico…');
+  state.files={}; state.rows={}; loadErrors=[];
+  let list=[...DEFAULT_FILES];
+  try{
+    const mt=await fetchText('manifest.csv');
+    const mr=parseCsv(mt);
+    const objs=rowsToObjects(mr);
+    const files=objs.length?objs.map(o=>col(o,['file','nome','filename'])).filter(Boolean):mr.flat().filter(x=>x&&x.toLowerCase()!=='file');
+    list=[...new Set([...list,...files])];
+    state.rows['manifest.csv']=mr; state.files['manifest.csv']=mt;
+  }catch(e){}
+
+  let ok=0;
+  for(const f of list.filter(x=>/\.csv$/i.test(x))){
+    if(state.rows[f]) continue;
+    try{ const txt=await fetchText(f); state.files[f]=txt; state.rows[f]=parseCsv(txt); ok++; }
+    catch(e){ if(!DEFAULT_FILES.includes(f)) loadErrors.push(f+' — non trovato'); }
+  }
+  /* Se nel frattempo l'utente ha già caricato manualmente una cartella (es. ha cliccato
+     "Seleziona cartella" prima che l'autoload finisse), questo risultato è superato:
+     non sovrascrivere i dati più recenti già mostrati. */
+  if(manualLoadActive) return;
+  applyConfig(); showErrors(); renderAll(); tryLoadLogo();
+  if(ok) setStatus('Caricati '+ok+' CSV dalla cartella',true);
+  else setStatus('Autocaricamento bloccato — usa Seleziona cartella');
+}
+
+/* File System Access API (Chrome 86+) con fallback al picker classico */
+async function tryDirectoryPicker(){
+  if('showDirectoryPicker' in window){
+    try{
+      const dir=await window.showDirectoryPicker({mode:'read'});
+      await loadFromDirectoryHandle(dir);
+      return true;
+    }catch(e){ if(e.name==='AbortError') return true; /* utente ha annullato */ }
+  }
+  return false;
+}
+/* Scansiona una cartella ricorsivamente, raccogliendo CSV e immagini a qualsiasi profondità.
+   pathPrefix accumula il percorso relativo (es. "immagini/squadre") usato come chiave per imageURLs. */
+async function scanDirRecursive(dirHandle, pathPrefix=''){
+  for await(const [name,handle] of dirHandle.entries()){
+    const relPath = pathPrefix ? pathPrefix+'/'+name : name;
+    if(handle.kind==='file'){
+      try{
+        const file=await handle.getFile();
+        await ingestPickedFile(file, relPath, name);
+      }catch(e){
+        loadErrors.push(relPath+' — errore di lettura sul dispositivo');
+      }
+    } else if(handle.kind==='directory'){
+      try{ await scanDirRecursive(handle, relPath); }catch(e){}
+    }
+  }
+}
+
+/* Timeout generico: su Chrome/file:// alcuni file dentro cartelle selezionate possono
+   restare in pending. Non devono bloccare tutto il torneo. */
+function withTimeout(promise, ms, label){
+  let t;
+  const timeout=new Promise((_,reject)=>{
+    t=setTimeout(()=>reject(new Error((label||'Operazione')+' scaduta dopo '+ms+' ms')),ms);
+  });
+  return Promise.race([promise,timeout]).finally(()=>clearTimeout(t));
+}
+
+async function safeFileText(file, relPath){
+  // Prima via moderna, più veloce; timeout breve per non restare appesi.
+  try{ return await withTimeout(file.text(), 2500, relPath||file.name); }
+  catch(e1){
+    // Fallback FileReader con timeout: utile su alcune combinazioni Chrome + disco di rete/lettera Z:.
+    return await withTimeout(new Promise((resolve,reject)=>{
+      const rd=new FileReader();
+      rd.onload=()=>resolve(String(rd.result||''));
+      rd.onerror=()=>reject(rd.error||new Error('FileReader error'));
+      rd.readAsText(file,'UTF-8');
+    }), 2500, relPath||file.name);
+  }
+}
+
+/* Lettura robusta per Chrome: immagini senza await, CSV con timeout e fallback. */
+async function ingestPickedFile(file, relPath, basename){
+  const name=basename||file.name;
+  if(/\.(jpg|jpeg|png|webp|gif|svg)$/i.test(name)){
+    rememberImage(relPath||name,file);
+    state._imgCount=(state._imgCount||0)+1;
+    return true;
+  }
+  if(!/\.csv$/i.test(name)) return false;
+  const txt=await safeFileText(file, relPath||name);
+  // La chiave resta il nome file puro (senza percorso) per compatibilità con fileKind/sectionFiles.
+  // Se esistono duplicati con stesso nome in sottocartelle diverse, l'ultimo letto vince.
+  state.files[name]=txt;
+  state.rows[name]=parseCsv(txt);
+  state._csvCount=(state._csvCount||0)+1;
+  return true;
+}
+
+function refreshAfterManualLoad(csv,img){
+  applyConfig();
+  showErrors();
+
+  // Ricostruzione esplicita della UI. Non ci affidiamo solo a renderAll(): in Chrome,
+  // dopo il file/directory picker, il primo repaint può essere saltato finché non cambi tab.
+  updateTitle();
+  renderTabs();
+  document.querySelectorAll('.section').forEach(s=>s.classList.toggle('active',s.id===state.activeTab));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===state.activeTab));
+  renderActiveSection();
+
+  tryLoadLogo();
+  if(csv>0) setStatus(`Caricati ${csv} CSV e ${img} immagini`,true);
+  else setStatus(`Nessun CSV trovato nella cartella selezionata (${img} immagini). Seleziona la cartella principale del torneo o la cartella che contiene i CSV.`);
+
+  const forcePass=()=>{
+    // Forza reflow + ridisegno + resize, equivalente al cambio scheda ma automatico.
+    document.body.offsetHeight;
+    renderActiveSection();
+    tryLoadLogo();
+    if(document.getElementById('chartMarcatori') || document.getElementById('chartPunti')){
+      scheduleHomeChartsRender();
+    }
+    window.dispatchEvent(new Event('resize'));
+  };
+
+  requestAnimationFrame(()=>requestAnimationFrame(forcePass));
+  setTimeout(forcePass,50);
+  setTimeout(forcePass,200);
+}
+
+async function loadFromDirectoryHandle(dir){
+  manualLoadActive = true;
+  state.files={}; state.rows={}; state.imageURLs={}; state.imageAliases={}; loadErrors=[];
+  state._csvCount=0; state._imgCount=0;
+  setStatus('Caricamento cartella…');
+  await scanDirRecursive(dir);
+  refreshAfterManualLoad(state._csvCount,state._imgCount);
+}
+
+function processImageFilesLater(imageFiles){
+  // Le immagini non devono mai bloccare l'aggiornamento dei CSV/Home.
+  // Su Chrome con file:// e cartelle su unità Z: alcune PNG possono congelare il picker
+  // se elaborate dentro lo stesso flusso dei CSV. Le carichiamo dopo, a piccoli lotti.
+  let i=0;
+  function step(){
+    const start=i;
+    while(i<imageFiles.length && i<start+5){
+      const file=imageFiles[i++];
+      const rel=file.webkitRelativePath||file.name;
+      try{
+        rememberImage(rel,file);
+        state._imgCount=(state._imgCount||0)+1;
+      }catch(e){
+        loadErrors.push(rel+' — immagine saltata: '+String((e&&e.message)||e||'errore'));
+      }
+    }
+    tryLoadLogo();
+    // Aggiorna la sezione attiva così loghi/avatar compaiono senza cambiare tab.
+    renderActiveSection();
+    if(i<imageFiles.length){
+      setStatus(`Caricati ${state._csvCount||0} CSV. Immagini ${i}/${imageFiles.length}…`,true);
+      setTimeout(step,0);
+    }else{
+      showErrors();
+      setStatus(`Caricati ${state._csvCount||0} CSV e ${state._imgCount||0} immagini`,true);
+      forceHomeRefreshPasses();
+    }
+  }
+  if(imageFiles.length) setTimeout(step,0);
+}
+
+function forceHomeRefreshPasses(){
+  const forcePass=()=>{
+    document.body.offsetHeight;
+    renderActiveSection();
+    tryLoadLogo();
+    if(document.getElementById('chartMarcatori') || document.getElementById('chartPunti')){
+      scheduleHomeChartsRender();
+    }
+    window.dispatchEvent(new Event('resize'));
+  };
+  forcePass();
+  requestAnimationFrame(()=>requestAnimationFrame(forcePass));
+  setTimeout(forcePass,50);
+  setTimeout(forcePass,200);
+}
+
+async function loadFolder(fileList){
+  manualLoadActive = true;
+  const files=[...fileList]; // snapshot: l'input viene svuotato subito dopo la selezione
+  state.files={}; state.rows={}; state.imageURLs={}; state.imageAliases={}; loadErrors=[];
+  state._csvCount=0; state._imgCount=0;
+
+  if(!files.length){
+    setStatus('Nessun file selezionato.');
+    return;
+  }
+
+  // Separazione netta: i CSV aggiornano subito la pagina; le immagini vengono elaborate dopo.
+  // Questo evita il blocco visto in Chrome su file come "outofofficefc.png".
+  const csvFiles=files
+    .filter(file=>/\.csv$/i.test(file.name))
+    .sort((a,b)=>String(a.webkitRelativePath||a.name).localeCompare(String(b.webkitRelativePath||b.name),'it'));
+  const imageFiles=files
+    .filter(file=>/\.(jpg|jpeg|png|webp|gif|svg)$/i.test(file.name))
+    .sort((a,b)=>String(a.webkitRelativePath||a.name).localeCompare(String(b.webkitRelativePath||b.name),'it'));
+
+  if(!csvFiles.length){
+    setStatus(`Nessun CSV trovato. Trovate ${imageFiles.length} immagini: seleziona la cartella principale che contiene i CSV, non solo la cartella immagini.`);
+    // Carica comunque le immagini, ma non bloccare la UI.
+    processImageFilesLater(imageFiles);
+    refreshAfterManualLoad(0,0);
+    return;
+  }
+
+  for(let i=0;i<csvFiles.length;i++){
+    const file=csvFiles[i];
+    const rel=file.webkitRelativePath||file.name;
+    setStatus(`Caricamento CSV… ${i+1}/${csvFiles.length} — ${rel.split('/').pop()}`);
+    try{
+      const txt=await safeFileText(file, rel);
+      state.files[file.name]=txt;
+      state.rows[file.name]=parseCsv(txt);
+      state._csvCount++;
+    }catch(e){
+      loadErrors.push(rel+' — CSV saltato: '+String((e&&e.message)||e||'errore di lettura'));
+    }
+    // Aggiorna già durante il caricamento: anche se un file successivo dà problemi, la pagina non resta a zero.
+    applyConfig();
+    updateTitle();
+    renderTabs();
+    renderActiveSection();
+    if(i%2===0) await new Promise(resolve=>setTimeout(resolve,0));
+  }
+
+  // Prima aggiorna definitivamente Home/classifiche con i CSV.
+  refreshAfterManualLoad(state._csvCount,0);
+
+  // Poi immagini in background, senza bloccare il refresh dati.
+  processImageFilesLater(imageFiles);
+}
+
+/* ══════════════════════════════════
+   EVENTI
+   ══════════════════════════════════ */
+document.getElementById('search').addEventListener('input',e=>{
+  state.search=e.target.value;
+  renderActiveSection(); // solo sezione attiva, non tutto
+});
+
+/* ── Avvio ── */
+initTheme(); renderTabs(); updateTitle(); loadAuto();
+</script>
+</body>
+</html>
