@@ -4,6 +4,12 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>CRAL Champions</title>
+  <!-- Preconnect: risparmia DNS/TLS quando Chart.js viene richiesto al volo nella Home -->
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+  <!-- Preload: il browser inizia a scaricare il file più critico (manifest) subito,
+       in parallelo col parsing dell'HTML, invece di aspettare che lo script in fondo
+       alla pagina venga eseguito ed esegua la fetch() -->
+  <link rel="preload" href="data/manifest.csv" as="fetch">
   <style>
     /* ── Tema chiaro ── */
     :root {
@@ -66,9 +72,24 @@
     /* ── Ricerca ── */
     .search{width:100%;padding:13px 14px;border:1px solid var(--line);border-radius:14px;margin:0 0 14px;font-size:15px;background:var(--panel);color:var(--ink)}
     /* ── Tabelle ── */
-    .tableWrap{overflow:auto;border-radius:16px;border:1px solid var(--line);background:var(--panel)}
+    /* Le colonne importanti (posizione, nome, valore principale) restano sempre
+       leggibili per intero e fisse a sinistra; il resto si legge scorrendo verso
+       destra: .tableWrap diventa scrollabile invece di schiacciare ogni colonna
+       nello schermo (niente più sigle illeggibili tipo "P.." o "9..."). */
+    .tableWrap{position:relative;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;border-radius:16px;border:1px solid var(--line);background:var(--panel)}
     table{width:100%;border-collapse:collapse}
-    th,td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+    th,td{padding:10px 13px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+    table.tbl-aligned th,table.tbl-aligned td{overflow:hidden;text-overflow:ellipsis}
+    table.tbl-aligned th[data-col-role=rank],table.tbl-aligned td[data-col-role=rank]{min-width:46px;max-width:60px;text-align:center}
+    table.tbl-aligned th[data-col-role=metric],table.tbl-aligned td[data-col-role=metric]{min-width:54px;max-width:80px;text-align:center;font-variant-numeric:tabular-nums}
+    table.tbl-aligned th[data-col-role=round],table.tbl-aligned td[data-col-role=round]{min-width:64px;max-width:100px;text-align:center}
+    table.tbl-aligned th[data-col-role=team],table.tbl-aligned td[data-col-role=team],
+    table.tbl-aligned th[data-col-role=person],table.tbl-aligned td[data-col-role=person]{min-width:130px;max-width:220px}
+    table.tbl-aligned th[data-col-role=date],table.tbl-aligned td[data-col-role=date]{min-width:84px;max-width:120px}
+    table.tbl-aligned th[data-col-role=match],table.tbl-aligned td[data-col-role=match]{min-width:150px;max-width:230px}
+    table.tbl-aligned th[data-col-role=section],table.tbl-aligned td[data-col-role=section]{min-width:100px;max-width:160px}
+    table.tbl-aligned th[data-col-role=note],table.tbl-aligned td[data-col-role=note]{min-width:130px;max-width:230px}
+    table.tbl-aligned th[data-col-role=text],table.tbl-aligned td[data-col-role=text]{min-width:90px;max-width:170px}
     th{background:var(--soft);font-size:12px;text-transform:none;color:var(--muted);cursor:pointer;user-select:none;position:relative}
     th:hover{background:var(--line)}
     th .sort-arrow{margin-left:4px;opacity:.4;font-style:normal}
@@ -76,19 +97,74 @@
     th.sort-asc .sort-arrow::after{content:'▲'}
     th.sort-desc .sort-arrow::after{content:'▼'}
     th:not(.sort-asc):not(.sort-desc) .sort-arrow::after{content:'⇅'}
-    tr:hover td{background:var(--soft)}
+    tbody tr:nth-child(even) td{background:var(--soft)}
+    tr:hover td{background:var(--line)}
+    /* Colonne NON fisse: tutte scorrono normalmente.
+       Il colore evidenzia il dato principale ma non blocca lo scorrimento. */
+    .tbl-aligned .col-sticky-1,.tbl-aligned .col-sticky-2,.tbl-aligned .col-sticky-3{position:static;background:inherit}
+    .tbl-aligned .col-sticky-1{left:auto}
+    .tbl-aligned thead .col-sticky-1,.tbl-aligned thead .col-sticky-2,.tbl-aligned thead .col-sticky-3{background:inherit}
+    .tbl-aligned tr:hover .col-sticky-1,.tbl-aligned tr:hover .col-sticky-2,.tbl-aligned tr:hover .col-sticky-3{background:inherit}
+    .tbl-aligned .col-sticky-edge{box-shadow:none}
+    /* Colonna con il valore che decide la classifica (es. Punti, Gol): resta in evidenza */
+    .tbl-aligned th.col-highlight{color:var(--blue);background:rgba(15,90,168,.12)}
+    .tbl-aligned td.col-highlight{font-weight:800;color:var(--blue);background:rgba(15,90,168,.07)}
+    [data-theme="dark"] .tbl-aligned th.col-highlight{background:rgba(59,130,246,.18)}
+    [data-theme="dark"] .tbl-aligned td.col-highlight{background:rgba(59,130,246,.13)}
+    
+    /* Miglioramenti scroll mobile */
+    .tableWrap{
+      scroll-behavior:smooth;
+      -webkit-overflow-scrolling:touch;
+      scrollbar-width:thin;
+    }
+    .tableWrap.has-overflow::after{
+      position:sticky;
+      right:8px;
+      float:right;
+      bottom:8px;
+      z-index:5;
+      font-size:11px;
+      font-weight:700;
+      padding:4px 8px;
+      border-radius:999px;
+      background:rgba(15,90,168,.12);
+      color:var(--blue);
+      pointer-events:none;
+    }
+    @media(max-width:560px){
+      .tableWrap{
+        border-radius:14px;
+      }
+      .tableWrap.has-overflow{
+        background:
+          linear-gradient(to left, rgba(15,90,168,.10), transparent 24px) right center/24px 100% no-repeat,
+          var(--panel);
+      }
+    }
+
+    /* Suggerimento "scorri", mostrato solo quando la tabella è più larga dello schermo */
+    .scroll-hint{display:none;align-items:center;gap:6px;justify-content:center;font-size:12px;color:var(--muted);padding:7px 2px 0}
+    .tableWrap.has-overflow + .scroll-hint{display:flex}
     .pill{display:inline-block;border-radius:999px;padding:4px 9px;background:#eef4ff;color:var(--blue);font-weight:800}
     .tbl-avatar-col{width:1%;white-space:nowrap}
     .tbl-logo,.tbl-avatar{width:30px;height:30px;border-radius:8px;object-fit:cover;background:#dbe7f6;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:11px;color:var(--blue);flex:0 0 auto}
     .tbl-avatar{border-radius:50%}
     .mini-logo{width:26px;height:26px;border-radius:7px;object-fit:cover;background:#dbe7f6;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:10px;color:var(--blue);flex:0 0 auto}
-    .name-cell{display:flex;align-items:center;gap:9px}
+    .name-cell{display:flex;align-items:center;gap:9px;min-width:0}
+    .name-cell span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
     /* ── Squadre ── */
     .teams{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
     .teamCard{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:16px}
     .teamHead{display:flex;gap:12px;align-items:center;margin-bottom:12px}
     .logo,.avatar{width:58px;height:58px;border-radius:16px;object-fit:cover;background:#dbe7f6;display:flex;align-items:center;justify-content:center;font-weight:900;color:var(--blue);flex:0 0 auto}
     .avatar{width:44px;height:44px;border-radius:50%;font-size:13px}
+    .img-placeholder{position:relative;overflow:hidden;color:transparent}
+    .img-placeholder::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.42),transparent);transform:translateX(-100%);animation:imgLoading 1.15s infinite}
+
+    .is-empty-fallback{color:transparent}
+    .is-empty-fallback::before{content:'';display:block;width:38%;height:38%;border-radius:50%;background:rgba(15,90,168,.18)}
+    @keyframes imgLoading{to{transform:translateX(100%)}}
     .player{display:flex;gap:10px;align-items:center;padding:8px 0;border-top:1px solid var(--line)}
     .player b{display:block}
     .player-name{font-weight:600}
@@ -132,7 +208,7 @@
     .chart-card{position:relative;overflow:hidden;border-radius:22px;background:linear-gradient(145deg,var(--panel),rgba(15,90,168,.06));}
     .chart-card::before{content:'';position:absolute;inset:-90px -70px auto auto;width:210px;height:210px;border-radius:50%;background:radial-gradient(circle,rgba(15,90,168,.16),transparent 68%);pointer-events:none}
     .chart-card h2{display:flex;align-items:center;gap:8px;margin-bottom:8px}
-    .chart-card h2::before{content:'✦';font-size:18px;color:var(--gold)}
+    .chart-card h2::before{content:attr(data-icon);font-size:18px;color:var(--gold)}
     .chart-container{position:relative;width:100%;height:276px;margin-top:4px}
     .chart-label-strip{position:relative;height:58px;margin-top:2px;padding:0;overflow:visible}
     .chart-label-item{position:absolute;top:0;transform:translateX(-50%);width:54px;display:flex;justify-content:center;align-items:flex-start}
@@ -147,7 +223,7 @@
     .ok{color:var(--green);font-weight:700}
     /* ── Responsive ── */
     @media(max-width:900px){.grid{grid-template-columns:repeat(2,1fr)}.status{margin-left:0;width:100%}.riepilogo-kpi.is-wide,.riepilogo-kpi.is-match-max{grid-column:span 1}}
-    @media(max-width:560px){.wrap{padding:14px}.grid{grid-template-columns:1fr}.hero{padding:22px}.match{display:block}.score{margin:6px 0}.riepilogo-match .match-team{max-width:none}.riepilogo-match .match-name{font-size:16px}.riepilogo-match .score{text-align:left;font-size:26px;min-width:0}.riepilogo-kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.riepilogo-kpi.is-wide,.riepilogo-kpi.is-match-max,.riepilogo-kpi.is-scorer{grid-column:1/-1}.tableWrap{font-size:13px}th,td{padding:8px 8px}.tbl-logo,.tbl-avatar{width:24px;height:24px}.mini-logo{width:22px;height:22px}.name-cell{gap:7px}}
+    @media(max-width:560px){.wrap{padding:14px}.grid{grid-template-columns:1fr}.hero{padding:22px}.match{display:block}.score{margin:6px 0}.riepilogo-match .match-team{max-width:none}.riepilogo-match .match-name{font-size:16px}.riepilogo-match .score{text-align:left;font-size:26px;min-width:0}.riepilogo-kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.riepilogo-kpi.is-wide,.riepilogo-kpi.is-match-max,.riepilogo-kpi.is-scorer{grid-column:1/-1}.tableWrap{font-size:13px}th,td{padding:9px 9px}table.tbl-aligned th[data-col-role=rank],table.tbl-aligned td[data-col-role=rank]{min-width:40px;max-width:54px}table.tbl-aligned th[data-col-role=section],table.tbl-aligned td[data-col-role=section]{min-width:70px;max-width:110px}table.tbl-aligned th[data-col-role=team],table.tbl-aligned td[data-col-role=team],table.tbl-aligned th[data-col-role=person],table.tbl-aligned td[data-col-role=person]{min-width:118px;max-width:150px}table.tbl-aligned th[data-col-role=metric],table.tbl-aligned td[data-col-role=metric]{min-width:48px;max-width:68px}.tbl-logo,.tbl-avatar{width:24px;height:24px}.mini-logo{width:22px;height:22px}.name-cell{gap:7px}}
     @media print{.toolbar,.tabs,.search,#errorBanner{display:none}.section{display:block}.wrap{max-width:none}.card,.hero{box-shadow:none}}
     @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
   </style>
@@ -171,6 +247,7 @@
     </div>
     <div class="toolbar">
       <button class="btn secondary" onclick="window.print()">🖨 Stampa / PDF</button>
+      <button class="btn icon-btn" id="btnRefresh" title="Ricarica dati aggiornati" aria-label="Ricarica dati aggiornati" onclick="loadAuto(true)">🔄</button>
       <button class="btn icon-btn" id="btnTheme" title="Cambia tema" aria-label="Cambia tema chiaro/scuro">🌙</button>
       <span class="status" id="status">Avvio...</span>
     </div>
@@ -227,7 +304,8 @@ const TABS = [
 /* ── Stato globale ── */
 let state = {
   config: { titolo: DEFAULT_TITLE, sottotitolo: DEFAULT_SUBTITLE },
-  files: {}, rows: {}, imageFiles: {}, imageURLs: {},
+  files: {}, rows: {}, imageFiles: {}, imageURLs: {}, imageAliases: {},
+  imagesReady: true, // false durante il caricamento manuale differito delle immagini
   search: '', activeTab: 'home',
   selectedRiepilogoGiornata: '',
   sortState: {}   // { tableId: { col, dir } }
@@ -349,8 +427,33 @@ function prettyColumnName(header){
 
 /* Escape sicuro tramite DOM — previene XSS */
 function esc(s){ const t=document.createElement('span'); t.textContent=String(s??''); return t.innerHTML; }
-function initials(s){ return String(s||'?').split(/\s+/).filter(Boolean).slice(0,2).map(x=>x[0]).join('').toUpperCase()||'?'; }
+function initials(s){
+  // Non mostrare mai "?" come fallback visivo.
+  // Usa iniziali di nome e cognome; se c'è una sola parola usa le prime 2 lettere.
+  const raw = Array.isArray(s)
+    ? (s.find(x=>String(x||'').trim() && String(x||'').trim()!=='?') || '')
+    : String(s||'');
+  const text = smartSpace(raw)
+    .replace(/\?/g,' ')
+    .replace(/\([^)]*\)/g,' ')
+    .replace(/\b\d+\b/g,' ')
+    .trim();
+  if(!text) return '';
+  const stop = new Set(['di','de','del','della','dei','degli','da','dal','dallo','la','lo','le','il','i','gli']);
+  const parts = text.split(/\s+/).filter(x=>x && !stop.has(x.toLowerCase()));
+  if(!parts.length) return '';
+  if(parts.length===1) return parts[0].slice(0,2).toUpperCase();
+  return (parts[0][0] + parts[parts.length-1][0]).toUpperCase();
+}
 function setStatus(msg,good=false){ const el=document.getElementById('status'); el.innerHTML=good?`<span class="ok">${esc(msg)}</span>`:esc(msg); }
+function cleanLoadErrorName(err){ return String(err||'').split(' — ')[0].trim(); }
+function dataLoadStatus(csvCount){
+  const missing=[...new Set(loadErrors.map(cleanLoadErrorName).filter(Boolean))];
+  if(missing.length){
+    return `Caricamento dati completato da ${csvCount} file; verificare file ${missing.join(', ')}`;
+  }
+  return 'Caricamento dati completato';
+}
 function sepFor(line){ const semi=(line.match(/;/g)||[]).length,comma=(line.match(/,/g)||[]).length; return semi>=comma?';':','; }
 
 /* ══════════════════════════════════
@@ -446,6 +549,13 @@ function imageFor(type,name){
   return prefix+key+'.png';
 }
 
+function imagePlaceholderEl(cls,name){
+  const d=document.createElement('div');
+  d.className=cls+' img-placeholder';
+  d.setAttribute('aria-label','Caricamento immagine '+String(name||''));
+  return d;
+}
+
 /* Crea elemento img o div iniziali — NESSUN innerHTML con dati utente.
    Accetta anche una lista di nomi alternativi: utile quando nei CSV squadra
    il giocatore è Cognome Nome, ma negli altri CSV o nei file immagine è Nome Cognome. */
@@ -453,9 +563,14 @@ function imgOrInitialEl(type,name,cls){
   const names=(Array.isArray(name)?name:[name])
     .map(x=>smartSpace(x))
     .filter(Boolean);
-  const mainName=names[0]||'';
+  const mainName=names.find(n=>String(n||'').trim() && String(n||'').trim()!=='?') || '';
+  // Durante il caricamento manuale delle immagini non mostrare iniziali/? temporanei:
+  // renderizziamo placeholder neutri e facciamo un solo refresh quando gli alias sono pronti.
+  if(manualLoadActive && state.imagesReady===false){
+    return imagePlaceholderEl(cls,mainName);
+  }
   const img=document.createElement('img');
-  img.className=cls; img.alt=mainName;
+  img.className=cls; img.alt=mainName; img.loading='lazy'; img.decoding='async';
 
   const prefixes=type==='team'?['immagini/squadre/','data/immagini/squadre/']:['immagini/giocatori/','data/immagini/giocatori/'];
   const candidates=[];
@@ -475,7 +590,7 @@ function imgOrInitialEl(type,name,cls){
   let fallbackIndex=0;
   img.onerror=function(){
     if(String(this.src||'').startsWith('blob:')){
-      const d=document.createElement('div'); d.className=cls; d.textContent=initials(mainName); this.replaceWith(d);
+      const d=document.createElement('div'); d.className=cls; d.textContent=initials(mainName); if(!d.textContent) d.classList.add('is-empty-fallback'); this.replaceWith(d);
       return;
     }
     while(fallbackIndex<candidates.length && candidates[fallbackIndex]===this.src) fallbackIndex++;
@@ -483,7 +598,7 @@ function imgOrInitialEl(type,name,cls){
       this.src=candidates[fallbackIndex++];
       return;
     }
-    const d=document.createElement('div'); d.className=cls; d.textContent=initials(mainName); this.replaceWith(d);
+    const d=document.createElement('div'); d.className=cls; d.textContent=initials(mainName); if(!d.textContent) d.classList.add('is-empty-fallback'); this.replaceWith(d);
   };
   img.src=candidates[fallbackIndex++] || '';
   return img;
@@ -493,6 +608,7 @@ function imgOrInitialEl(type,name,cls){
    LOGO CRAL
    ══════════════════════════════════ */
 const HERO_LOGO_FALLBACK = document.getElementById('heroLogoWrap')?.innerHTML || '';
+let heroLogoLoaded=false;
 
 function resetHeroLogo(){
   const wrap=document.getElementById('heroLogoWrap');
@@ -524,6 +640,7 @@ function logoCandidates(){
 }
 
 function tryLoadLogo(){
+  if(heroLogoLoaded) return; // già caricato: evita di azzerarlo e riprovare inutilmente
   const wrap=document.getElementById('heroLogoWrap'); if(!wrap) return;
   const candidates=logoCandidates();
   let i=0;
@@ -533,7 +650,7 @@ function tryLoadLogo(){
     if(i>=candidates.length) return; // resta lo SVG di fallback
     const img=document.createElement('img');
     img.alt='Logo CRAL';
-    img.onload=()=>{ wrap.innerHTML=''; wrap.appendChild(img); };
+    img.onload=()=>{ wrap.innerHTML=''; wrap.appendChild(img); heroLogoLoaded=true; };
     img.onerror=()=>{ i++; tryNext(); };
     img.src=candidates[i];
   }
@@ -712,9 +829,169 @@ function applyConfig(){
 /* ══════════════════════════════════
    RICERCA — filtra solo sulla sezione attiva
    ══════════════════════════════════ */
+let _searchTermsCache={ key:'', terms:[], playerMatched:false };
+function nameSearchVariants(value){
+  const clean=smartSpace(String(value||'')
+    .replace(/\bx\s*\d+\b/ig,'')
+    .replace(/\(.*?\)/g,' ')
+    .replace(/\s+\d+\s*(?:gol|goal|reti?)\b/ig,'')
+    .replace(/\b(?:gol|goal|reti?)\s*\d+\b/ig,'')
+    // Nei CSV i portieri possono essere scritti come "Nome PT": PT/P è ruolo,
+    // non deve diventare un termine di ricerca, altrimenti filtrando un portiere
+    // vengono agganciati tutti gli altri portieri.
+    .replace(/\b(?:pt|p|portiere|goalkeeper)\b/ig,' ')
+    .trim());
+  if(!clean) return [];
+  const variants=new Set([norm(clean)]);
+  const parts=clean.split(/\s+/).map(norm).filter(x=>x && x.length>=3);
+  parts.forEach(x=>variants.add(x));
+  if(parts.length>1){
+    variants.add(parts.slice().reverse().join(''));
+    variants.add(parts.join(''));
+  }
+  return [...variants].filter(Boolean);
+}
+function collectKnownPlayerSearchGroups(){
+  const groups=[];
+  const addNames=(names)=>{
+    const variants=new Set();
+    (Array.isArray(names)?names:[names]).forEach(n=>nameSearchVariants(n).forEach(v=>variants.add(v)));
+    if(variants.size) groups.push([...variants]);
+  };
+
+  // Rosa squadre: è la sorgente migliore per collegare nome e cognome anche
+  // quando nei riepiloghi compare solo uno dei due.
+  for(const f of sectionFiles('squadra')){
+    rowsToObjects(state.rows[f]).forEach(r=>addNames(playerImageNames(r)));
+  }
+
+  // Fallback sui CSV riepilogo/classifiche: copre nomi non presenti nei file squadra.
+  ['marcatori','mvp','portieri'].forEach(kind=>{
+    sectionFiles(kind).forEach(f=>rowsToObjects(state.rows[f]).forEach(r=>addNames(playerNameFromRow(r))));
+  });
+  sectionFiles('riepilogo').forEach(f=>{
+    const parsed=parseRiepilogoFile(f);
+    [...parsed.marcatori,...(parsed.totaliMarcatori||[]),...parsed.mvp,...parsed.portiere,...parsed.autogoal]
+      .forEach(r=>addNames(playerNameFromRow(r)));
+  });
+  return groups;
+}
+function searchTermsForCurrentQuery(){
+  const q=norm(state.search);
+  const key=q+'|'+Object.keys(state.rows).sort().join('|');
+  if(_searchTermsCache.key===key) return _searchTermsCache;
+  const terms=new Set();
+  let playerMatched=false;
+  if(q){
+    terms.add(q);
+    collectKnownPlayerSearchGroups().forEach(group=>{
+      if(group.some(v=>v.includes(q)||q.includes(v))){
+        playerMatched=true;
+        group.forEach(v=>terms.add(v));
+      }
+    });
+  }
+  _searchTermsCache={ key, terms:[...terms].filter(Boolean), playerMatched };
+  return _searchTermsCache;
+}
+function isPlayerSearchActive(){
+  const q=norm(state.search);
+  return !!q && searchTermsForCurrentQuery().playerMatched;
+}
+function isGoalkeeperRow(row){
+  const role=fieldLoose(row,['ruolo','role','posizione','position']);
+  const roleKey=norm(role);
+  if(roleKey==='p'||roleKey==='pt'||roleKey.includes('portiere')||roleKey.includes('goalkeeper')) return true;
+  if(roleInitial(role)==='P') return true;
+  const name=playerNameFromRow(row);
+  return /\bPT\b/i.test(String(name||''));
+}
+function isGoalkeeperSearchActive(){
+  if(!isPlayerSearchActive()) return false;
+
+  for(const f of sectionFiles('squadra')){
+    const matched=rowsToObjects(state.rows[f]).filter(rowMatchesPersonSearch);
+    if(matched.length) return matched.some(isGoalkeeperRow);
+  }
+
+  for(const f of sectionFiles('portieri')){
+    if(rowsToObjects(state.rows[f]).some(rowMatchesPersonSearch)) return true;
+  }
+
+  for(const f of sectionFiles('riepilogo')){
+    const parsed=parseRiepilogoFile(f);
+    if((parsed.portiere||[]).some(rowMatchesPersonSearch)) return true;
+  }
+
+  return false;
+}
+function personValuesFromRow(row){
+  const values=[];
+  const add=(v)=>{
+    const clean=smartSpace(v);
+    if(clean && !values.some(x=>norm(x)===norm(clean))) values.push(clean);
+  };
+
+  const directFields=[
+    ['giocatore','marcatore','calciatore','player','nome giocatore','nome completo','cognome e nome','mvp','portiere','autore','autorete'],
+    ['miglior marcatore','top scorer','migliore in campo','man of the match','motm']
+  ];
+  directFields.forEach(names=>add(firstPresent(row,[names])));
+
+  const nome=exactVal(row,['nome','first name','firstname']);
+  const cognome=exactVal(row,['cognome','last name','lastname']);
+  if(nome || cognome){
+    add(uniqueNameParts([nome,cognome]));
+    add(uniqueNameParts([cognome,nome]));
+  }
+
+  Object.keys(row||{}).forEach(k=>{
+    const nk=norm(k);
+    if(
+      nk==='giocatore' || nk==='marcatore' || nk==='player' || nk==='calciatore' ||
+      nk==='mvp' || nk==='portiere' || nk==='nome' || nk==='cognome' ||
+      nk.includes('nomegiocatore') || nk.includes('nomecompleto') || nk.includes('cognomeenome') ||
+      nk.includes('marcatore') || nk.includes('miglioreincampo') || nk.includes('manofthematch')
+    ){
+      add(row[k]);
+    }
+  });
+
+  return values;
+}
+function rowMatchesPersonSearch(row){
+  const q=norm(state.search);
+  if(!q) return false;
+  const terms=searchTermsForCurrentQuery().terms;
+  const variants=[];
+  personValuesFromRow(row).forEach(v=>{
+    nameSearchVariants(v).forEach(x=>{ if(x && !variants.includes(x)) variants.push(x); });
+  });
+  return variants.some(v=>terms.some(t=>v.includes(t)||t.includes(v)));
+}
+function isRiepilogoPlayerSearch(parsed,file){
+  const q=norm(state.search);
+  if(!q) return false;
+  if(isPlayerSearchActive()) return true;
+  const selected=state.selectedRiepilogoGiornata;
+  const rows=[
+    ...(parsed.marcatori||[]),
+    ...(parsed.totaliMarcatori||[]),
+    ...(parsed.mvp||[]),
+    ...(parsed.portiere||[]),
+    ...(parsed.autogoal||[])
+  ].filter(r=>!selected || rowGiornataKey(r,file)===selected);
+  return rows.some(rowMatchesPersonSearch);
+}
+function rowMatchesSearch(r){
+  const q=norm(state.search);
+  if(!q) return true;
+  const terms=searchTermsForCurrentQuery().terms;
+  const hay=norm(Array.isArray(r)?r.join(' '):JSON.stringify(r));
+  return terms.some(t=>hay.includes(t));
+}
 function filterRows(rows){
-  const q=norm(state.search); if(!q) return rows;
-  return rows.filter(r=>norm(Array.isArray(r)?r.join(' '):JSON.stringify(r)).includes(q));
+  return rows.filter(rowMatchesSearch);
 }
 
 /* ══════════════════════════════════
@@ -723,7 +1000,7 @@ function filterRows(rows){
 let _tableCounter=0;
 /* Nomi di colonna candidati per individuare la colonna "nome" da affiancare a logo/avatar */
 const NAME_COL_CANDIDATES_TEAM   = ['squadra','team','nome squadra','club'];
-const NAME_COL_CANDIDATES_PLAYER = ['giocatore','nome','calciatore','player','cognome e nome','portiere'];
+const NAME_COL_CANDIDATES_PLAYER = ['giocatore','marcatore','nome','calciatore','player','cognome e nome','portiere'];
 
 function findNameColIndex(headers, imgType){
   const candidates = imgType==='team' ? NAME_COL_CANDIDATES_TEAM : NAME_COL_CANDIDATES_PLAYER;
@@ -753,17 +1030,87 @@ function reorderIndices(headers, priorityNames){
   headers.forEach((_,i)=>{ if(!used.has(i)) order.push(i); });
   return order;
 }
-function buildTable(rows, tableId, imgType, priorityNames){
+function tableColumnRole(header,index,imgType,nameColIdx){
+  const n=norm(header);
+  if(imgType && index===nameColIdx) return imgType==='team' ? 'team' : 'person';
+  if(['pos','posizione','rank','classifica'].includes(n)) return 'rank';
+  if(['sezione','tipo','categoria'].includes(n)) return 'section';
+  if(['giocatore','marcatore','calciatore','player','nomegiocatore','nomecompleto','cognomeenome','portiere'].includes(n)) return 'person';
+  if(n.includes('giocatore') || n.includes('marcatore') || n.includes('portiere')) return 'person';
+  if(['squadra','team','club'].includes(n) || n.includes('squadra')) return 'team';
+  if(['giornata','turno','round'].includes(n)) return 'round';
+  if(['data','giorno','date'].includes(n)) return 'date';
+  if(['partita','match','gara','incontro'].includes(n)) return 'match';
+  if(n.includes('punti') || n.includes('gol') || n.includes('goal') || n.includes('reti') || ['pts','pg','gf','gs','dr','pt','mvp'].includes(n)) return 'metric';
+  if(n.includes('note') || n.includes('descrizione') || n.includes('commento')) return 'note';
+  return 'text';
+}
+function findHighlightIndex(headers, highlightCandidates){
+  if(!highlightCandidates) return -1;
+  const list=Array.isArray(highlightCandidates)?highlightCandidates:[highlightCandidates];
+  const normed=headers.map(h=>norm(h));
+  for(const name of list){
+    const nc=norm(name);
+    const idx=normed.findIndex(h=>h===nc||h.includes(nc));
+    if(idx>=0) return idx;
+  }
+  return -1;
+}
+/* Quante colonne iniziali restano fisse a sinistra durante lo scroll.
+   La 1ª (posizione/sezione) è sempre fissa. La 2ª lo è se è il nome
+   (squadra/giocatore) subito dopo, oppure se è lei il valore evidenziato.
+   La 3ª lo è solo se è il valore evidenziato (es. Punti, Gol) e arriva
+   subito dopo posizione+nome: così le colonne davvero importanti restano
+   sempre leggibili per intero, e si scorre solo per leggere il resto. */
+function stickyColumnCount(roles, highlightIdx){
+  let count=1;
+  if(roles.length>1){
+    const leadIsLabel=roles[0]==='rank'||roles[0]==='section';
+    const nameFollows=roles[1]==='team'||roles[1]==='person';
+    if((leadIsLabel && nameFollows) || highlightIdx===1) count=2;
+  }
+  if(count===2 && roles.length>2 && highlightIdx===2) count=3;
+  return count;
+}
+/* Misura la larghezza reale della 1ª (e 2ª) colonna fissa per posizionare
+   esattamente di fianco quelle successive, e segnala se la tabella è più
+   larga dello schermo (per mostrare il suggerimento "scorri"). */
+function refreshTableScrollState(wrap){
+  if(!wrap) return;
+  const col1=wrap.querySelector('thead .col-sticky-1');
+  const w1=col1?Math.ceil(col1.getBoundingClientRect().width):0;
+  wrap.querySelectorAll('.col-sticky-2').forEach(c=>{ c.style.left=w1+'px'; });
+  const col2=wrap.querySelector('thead .col-sticky-2');
+  if(col2){
+    const w2=Math.ceil(col2.getBoundingClientRect().width);
+    wrap.querySelectorAll('.col-sticky-3').forEach(c=>{ c.style.left=(w1+w2)+'px'; });
+  }
+  const tbl=wrap.querySelector('table');
+  if(tbl) wrap.classList.toggle('has-overflow', tbl.scrollWidth>wrap.clientWidth+1);
+}
+function refreshAllTablesScrollState(){
+  document.querySelectorAll('.tableWrap').forEach(refreshTableScrollState);
+}
+let _tableResizeRaf=null;
+window.addEventListener('resize',()=>{
+  if(_tableResizeRaf) return;
+  _tableResizeRaf=requestAnimationFrame(()=>{ _tableResizeRaf=null; refreshAllTablesScrollState(); });
+});
+function buildTable(rows, tableId, imgType, priorityNames, highlightName){
   if(!rows||!rows.length) return buildEl('div','empty','Nessun dato disponibile.');
-  const fr=filterRows(rows);
-  if(!fr.length) return buildEl('div','empty','Nessun risultato per la ricerca.');
-  let headers=fr[0];
-  let body=fr.slice(1);
+  let headers=rows[0];
+  let body=rows.slice(1);
+  const hasSearch=!!norm(state.search);
+  if(hasSearch) body=body.filter(rowMatchesSearch);
+  if(!body.length) return buildEl('div','empty',hasSearch?'Nessun risultato per la ricerca.':'Nessun dato disponibile.');
   const order=reorderIndices(headers,priorityNames);
   if(order){ headers=order.map(i=>headers[i]); body=body.map(r=>order.map(i=>r[i])); }
   if(!tableId){ tableId='tbl_'+(++_tableCounter); }
   const sort=state.sortState[tableId]||{col:-1,dir:'asc'};
   const nameColIdx = imgType ? findNameColIndex(headers, imgType) : -1;
+  const columnRoles=headers.map((h,i)=>tableColumnRole(h,i,imgType,nameColIdx));
+  const highlightIdx=findHighlightIndex(headers,highlightName);
+  const stickyCount=stickyColumnCount(columnRoles,highlightIdx);
 
   let sortedBody=[...body];
   if(sort.col>=0){
@@ -775,12 +1122,18 @@ function buildTable(rows, tableId, imgType, priorityNames){
     });
   }
 
+  const outer=document.createElement('div');
   const wrap=document.createElement('div'); wrap.className='tableWrap';
   const tbl=document.createElement('table');
+  tbl.className='tbl-aligned';
   const thead=document.createElement('thead');
   const hrow=document.createElement('tr');
   headers.forEach((h,i)=>{
     const th=document.createElement('th');
+    th.dataset.colRole=columnRoles[i];
+    if(i<stickyCount) th.classList.add('col-sticky-'+(i+1));
+    if(i===stickyCount-1) th.classList.add('col-sticky-edge');
+    if(i===highlightIdx) th.classList.add('col-highlight');
     const span=document.createElement('span'); span.textContent=fixItalianAccents(prettyColumnName(h||''));
     const arrow=document.createElement('i'); arrow.className='sort-arrow';
     th.appendChild(span); th.appendChild(arrow);
@@ -798,6 +1151,10 @@ function buildTable(rows, tableId, imgType, priorityNames){
     const tr=document.createElement('tr');
     headers.forEach((_,i)=>{
       const td=document.createElement('td');
+      td.dataset.colRole=columnRoles[i];
+      if(i<stickyCount) td.classList.add('col-sticky-'+(i+1));
+      if(i===stickyCount-1) td.classList.add('col-sticky-edge');
+      if(i===highlightIdx) td.classList.add('col-highlight');
       if(imgType && i===nameColIdx){
         const cell=document.createElement('div'); cell.className='name-cell';
         const name=row[i]??'';
@@ -813,8 +1170,11 @@ function buildTable(rows, tableId, imgType, priorityNames){
     });
     tbody.appendChild(tr);
   });
-  tbl.appendChild(tbody); wrap.appendChild(tbl);
-  return wrap;
+  tbl.appendChild(tbody); wrap.appendChild(tbl); outer.appendChild(wrap);
+  const hint=document.createElement('div'); hint.className='scroll-hint'; hint.textContent='⟷ Scorri per leggere altri dati';
+  outer.appendChild(hint);
+  requestAnimationFrame(()=>refreshTableScrollState(wrap));
+  return outer;
 }
 function buildEl(tag,cls,text){ const el=document.createElement(tag); el.className=cls; if(text) el.textContent=fixItalianAccents(text); return el; }
 
@@ -998,7 +1358,7 @@ function playerFullName(obj){
   if(nome || cognome) return uniqueNameParts([nome,cognome]);
 
   const direct = fieldLoose(obj,[
-    'giocatore','nome giocatore','nome completo','calciatore','player','atleta','cognome e nome'
+    'giocatore','marcatore','nome giocatore','nome completo','calciatore','player','atleta','cognome e nome'
   ]);
   if(direct) return smartSpace(direct);
 
@@ -1014,7 +1374,7 @@ function playerDisplayName(obj){
   if(nome || cognome) return uniqueNameParts([cognome,nome]);
 
   const direct = fieldLoose(obj,[
-    'cognome e nome','giocatore','nome giocatore','nome completo','calciatore','player','atleta'
+    'cognome e nome','giocatore','marcatore','nome giocatore','nome completo','calciatore','player','atleta'
   ]);
   if(direct) return smartSpace(direct);
 
@@ -1032,7 +1392,7 @@ function playerImageNames(obj){
     playerDisplayName(obj),
     uniqueNameParts([nome,cognome]),
     uniqueNameParts([cognome,nome]),
-    fieldLoose(obj,['giocatore','nome giocatore','nome completo','calciatore','player','atleta','cognome e nome'])
+    fieldLoose(obj,['giocatore','marcatore','nome giocatore','nome completo','calciatore','player','atleta','cognome e nome'])
   ];
   return candidates.filter(Boolean).filter((v,i,a)=>a.findIndex(x=>norm(x)===norm(v))===i);
 }
@@ -1053,6 +1413,60 @@ function teamMatchCounts(){
   return counts;
 }
 
+function maxNumericGiornata(entries){
+  const nums=(entries||[])
+    .map(x=>Array.isArray(x)?(giornataNumberFromText(x[0])||giornataNumberFromText(x[1])):giornataNumberFromText(x))
+    .map(x=>parseInt(x,10))
+    .filter(Number.isFinite);
+  return nums.length ? Math.max(...nums) : 0;
+}
+function calendarioGiornateOptions(){
+  const map=new Map();
+  sectionFiles('calendario').forEach(f=>{
+    const raw=state.files[f]||'';
+
+    // Calendario a blocchi: GIORNATA 1, GIORNATA 2, ecc.
+    const block=parseBlockCalendar(raw);
+    block.forEach(g=>{
+      const key=giornataNumberFromText(g.label)||norm(g.label);
+      if(key && !map.has(key)) map.set(key,g.label);
+    });
+
+    // Calendario piatto: colonna Giornata/Turno/Round.
+    rowsToObjects(state.rows[f]||[]).forEach(r=>{
+      const g=firstPresent(r,[['giornata','turno','round']]);
+      const key=giornataNumberFromText(g)||norm(g);
+      if(key && !map.has(key)) map.set(key, giornataNumberFromText(g)?('Giornata '+giornataNumberFromText(g)):String(g));
+    });
+
+    // Fallback robusto sul testo grezzo, utile anche se il CSV ha righe non tabellari.
+    const re=/giornata[_\s-]*(\d+)/gi;
+    let m;
+    while((m=re.exec(raw))!==null){
+      const key=String(parseInt(m[1],10));
+      if(key && !map.has(key)) map.set(key,'Giornata '+key);
+    }
+  });
+  return [...map.entries()].sort((a,b)=>String(a[1]).localeCompare(String(b[1]),'it',{numeric:true}));
+}
+function totalCalendarioGiornate(){
+  const options=calendarioGiornateOptions();
+  return maxNumericGiornata(options) || options.length;
+}
+function latestRiepilogoGiornata(){
+  const options=riepilogoGiornateOptions(sectionFiles('riepilogo'));
+  return maxNumericGiornata(options) || options.length;
+}
+function homeProgressStatus(){
+  const total=totalCalendarioGiornate();
+  const latest=latestRiepilogoGiornata();
+  if(!total && !latest) return null;
+  return {
+    value: total ? ((latest||0)+'/'+total) : String(latest||0),
+    label: 'Dati aggiornati a giornata'
+  };
+}
+
 function renderHome(){
   const el=document.getElementById('home'); el.innerHTML='';
   const players=allPlayersFromTeams(), matches=matchRows();
@@ -1061,6 +1475,8 @@ function renderHome(){
     [players.length,'Giocatori'],
     [matches.length,'Partite disputate']
   ];
+  const progress=homeProgressStatus();
+  if(progress) stats.push([progress.value,progress.label]);
   const grid=document.createElement('div'); grid.className='grid';
   stats.forEach(([n,l])=>{
     const c=document.createElement('div'); c.className='card stat';
@@ -1073,9 +1489,9 @@ function renderHome(){
   // Grafici
   const chartsWrap=document.createElement('div'); chartsWrap.className='grid';
   const c1=document.createElement('div'); c1.className='card chart-card'; c1.style.gridColumn='span 2';
-  c1.innerHTML='<h2>Top marcatori</h2><div class="chart-container"><canvas id="chartMarcatori"></canvas></div><div class="chart-label-strip" id="chartMarcatoriLabels" aria-label="Immagini top marcatori"></div>';
+  c1.innerHTML='<h2 data-icon="💣">Top marcatori</h2><div class="chart-container"><canvas id="chartMarcatori"></canvas></div><div class="chart-label-strip" id="chartMarcatoriLabels" aria-label="Immagini top marcatori"></div>';
   const c2=document.createElement('div'); c2.className='card chart-card'; c2.style.gridColumn='span 2';
-  c2.innerHTML='<h2>Punti squadre</h2><div class="chart-container"><canvas id="chartPunti"></canvas></div><div class="chart-label-strip" id="chartPuntiLabels" aria-label="Loghi squadre classifica"></div>';
+  c2.innerHTML='<h2 data-icon="🏆">Punti squadre</h2><div class="chart-container"><canvas id="chartPunti"></canvas></div><div class="chart-label-strip" id="chartPuntiLabels" aria-label="Loghi squadre classifica"></div>';
   chartsWrap.appendChild(c1); chartsWrap.appendChild(c2);
   el.appendChild(chartsWrap);
 
@@ -1127,23 +1543,41 @@ function loadChartJs(){
 
 function renderClassifiche(){
   const el=document.getElementById('classifiche'); el.innerHTML='';
+  const playerSearch=isPlayerSearchActive();
+  const goalkeeperSearch=isGoalkeeperSearchActive();
   const sections=[
-    ['classifica_squadre','CLASSIFICA SQUADRE','team',['posizione','squadra','puntifinali']],
-    ['marcatori','CLASSIFICA MARCATORI','player',['posizione','pos','rank','giocatore','gol','goal','reti']],
-    ['mvp','CLASSIFICA MVP','player',['posizione','pos','rank','giocatore','puntimvp','punti']],
-    ['portieri','CLASSIFICA PORTIERI','player',['posizione','pos','rank','giocatore','portiere','player','punti']]
+    ['classifica_squadre','CLASSIFICA SQUADRE','team',['posizione','squadra','puntifinali'],['puntifinali']],
+    ['marcatori','CLASSIFICA MARCATORI','player',['posizione','pos','rank','giocatore','gol','goal','reti'],['gol','goal','reti']],
+    ['mvp','CLASSIFICA MVP','player',['posizione','pos','rank','giocatore','puntimvp','punti'],['puntimvp','punti']],
+    ['portieri','CLASSIFICA PORTIERI','player',['posizione','pos','rank','giocatore','portiere','player','punti'],['punti']]
   ];
   let found=false;
-  sections.forEach(([kind,title,imgType,priority])=>{
+  sections.forEach(([kind,title,imgType,priority,highlight])=>{
+    // Con filtro su un giocatore non mostrare classifiche non pertinenti.
+    if(playerSearch && kind==='classifica_squadre') return;
+    // Se il giocatore filtrato è un portiere, la classifica MVP non è pertinente.
+    if(playerSearch && goalkeeperSearch && kind==='mvp') return;
+
     sectionFiles(kind).forEach(f=>{
+      let tableRows=state.rows[f];
+
+      // In ricerca giocatore non mostrare card vuote: se quel giocatore non è
+      // presente in Marcatori/MVP/Portieri, la relativa sezione sparisce.
+      if(playerSearch){
+        const headers=(state.rows[f]&&state.rows[f][0]) ? state.rows[f][0] : [];
+        const matchedObjects=rowsToObjects(state.rows[f]).filter(rowMatchesPersonSearch);
+        if(!matchedObjects.length) return;
+        tableRows=[headers,...matchedObjects.map(r=>headers.map(h=>r[h]??''))];
+      }
+
       found=true;
       const card=document.createElement('div'); card.className='card'; card.style.marginBottom='14px';
       const h=document.createElement('h2'); h.className='upper'; h.textContent=title;
-      card.appendChild(h); card.appendChild(buildTable(state.rows[f],norm(f),imgType,priority));
+      card.appendChild(h); card.appendChild(buildTable(tableRows,norm(f),imgType,priority,highlight));
       el.appendChild(card);
     });
   });
-  if(!found) el.appendChild(buildEl('div','empty','Nessuna classifica trovata.'));
+  if(!found) el.appendChild(buildEl('div','empty',playerSearch?'Nessun dato classifica trovato per il giocatore filtrato.':'Nessuna classifica trovata.'));
 }
 
 function renderStatistiche(){
@@ -1167,7 +1601,7 @@ function renderStatistiche(){
     card.appendChild(hint);
     const headers=['Giocatore','Media gol/partita','Squadra','Gol','Partite'];
     const body=rows.map(x=>[x.giocatore,x.media.toFixed(2).replace('.',','),x.squadra,x.gol,x.partite]);
-    card.appendChild(buildTable([headers,...body],'stats_giocatori'));
+    card.appendChild(buildTable([headers,...body],'stats_giocatori',null,null,'media gol/partita'));
   }
   el.appendChild(card);
 }
@@ -1204,11 +1638,17 @@ function renderSquadre(){
   const el=document.getElementById('squadre'); el.innerHTML='';
   const files=sectionFiles('squadra');
   if(!files.length){ el.appendChild(buildEl('div','empty','Nessun CSV squadra trovato. Usa nomi tipo squadra_NomeSquadra.csv.')); return; }
+  const playerSearch=isPlayerSearchActive();
   const wrap=document.createElement('div'); wrap.className='teams';
   files.forEach(f=>{
     const name=teamNameFromFile(f);
     const players=rowsToObjects(state.rows[f]);
-    const filtered=filterRows(players);
+    const filtered=playerSearch ? players.filter(rowMatchesPersonSearch) : filterRows(players);
+
+    // Se il filtro è riconosciuto come ricerca giocatore, mostra solo la squadra
+    // che contiene quel giocatore. Le altre card spariscono invece di restare vuote.
+    if(playerSearch && !filtered.length) return;
+
     const card=document.createElement('div'); card.className='teamCard';
     const head=document.createElement('div'); head.className='teamHead';
     head.appendChild(imgOrInitialEl('team',name,'logo'));
@@ -1237,6 +1677,7 @@ function renderSquadre(){
     });
     wrap.appendChild(card);
   });
+  if(playerSearch && !wrap.children.length) return;
   el.appendChild(wrap);
 }
 
@@ -1410,7 +1851,7 @@ function splitPeopleList(value){
     .filter(Boolean);
 }
 function playerNameFromRow(r){
-  const direct=firstPresent(r,[['giocatore','calciatore','player','nome giocatore','nome completo','cognome e nome','mvp','portiere']]);
+  const direct=firstPresent(r,[['giocatore','marcatore','calciatore','player','nome giocatore','nome completo','cognome e nome','mvp','portiere']]);
   if(direct) return smartSpace(direct);
   const nome=exactVal(r,['nome']);
   const cognome=exactVal(r,['cognome']);
@@ -1935,7 +2376,7 @@ function autogoalRowsForDisplay(rows, partite){
   });
 }
 
-function renderMiniSection(parent,title,rows,imgType,emptyText,tableId,priorityNames){
+function renderMiniSection(parent,title,rows,imgType,emptyText,tableId,priorityNames,highlightName){
   // Se non ci sono righe e non è richiesto un messaggio vuoto, non mostra proprio la sezione.
   if(!rows.length && !emptyText) return;
 
@@ -1944,7 +2385,7 @@ function renderMiniSection(parent,title,rows,imgType,emptyText,tableId,priorityN
   card.appendChild(h);
   if(rows.length){
     const tableRows=objectsToRows(rows);
-    if(tableRows.length) card.appendChild(buildTable(tableRows,tableId||norm(title),imgType,priorityNames));
+    if(tableRows.length) card.appendChild(buildTable(tableRows,tableId||norm(title),imgType,priorityNames,highlightName));
     else if(emptyText) card.appendChild(buildEl('div','empty',emptyText));
   }
   else if(emptyText){ card.appendChild(buildEl('div','empty',emptyText)); }
@@ -2017,7 +2458,9 @@ function renderRiepilogoGiornate(){
 
   files.sort((a,b)=>giornataLabelFromFile(a).localeCompare(giornataLabelFromFile(b),'it',{numeric:true})).forEach(f=>{
     const parsed=parseRiepilogoFile(f);
-    const partite=filteredRiepilogoRows(parsed.partite,f);
+    const dayPartite=parsed.partite.filter(r=>!state.selectedRiepilogoGiornata || rowGiornataKey(r,f)===state.selectedRiepilogoGiornata);
+    const playerSearch=isRiepilogoPlayerSearch(parsed,f);
+    const partite=playerSearch ? [] : filteredRiepilogoRows(parsed.partite,f);
     let marcatori=filteredRiepilogoRows(parsed.marcatori,f);
     const totaliMarcatori=filteredRiepilogoRows(parsed.totaliMarcatori||[],f);
     // Una sola scheda: se mancano i marcatori dettagliati, usa i totali come fallback.
@@ -2025,27 +2468,33 @@ function renderRiepilogoGiornate(){
     const mvp=filteredRiepilogoRows(parsed.mvp,f);
     const portiere=filteredRiepilogoRows(parsed.portiere,f);
     const autogoalRaw=filteredRiepilogoRows(parsed.autogoal,f);
-    const autogoal=autogoalRowsForDisplay(autogoalRaw,partite);
-    const statistiche=filteredRiepilogoRows(parsed.statistiche,f);
+    const autogoal=autogoalRowsForDisplay(autogoalRaw,dayPartite);
+    const statistiche=playerSearch ? [] : filteredRiepilogoRows(parsed.statistiche,f);
     if(!partite.length && !marcatori.length && !totaliMarcatori.length && !mvp.length && !portiere.length && !autogoal.length && !statistiche.length) return;
 
     const allRows=[...partite,...marcatori,...totaliMarcatori,...mvp,...portiere,...autogoal,...statistiche];
     const labels=[...new Set(allRows.map(r=>rowGiornataLabel(r,f)).filter(Boolean))];
     const title=labels.length===1 ? labels[0] : giornataLabelFromFile(f);
-    const card=document.createElement('div'); card.className='card riepilogo-card'; card.style.marginBottom='14px';
-    const h=document.createElement('h2'); h.textContent=title; card.appendChild(h);
-    renderKpiGrid(card,deriveStats(partite,marcatori,statistiche));
+    if(!playerSearch){
+      const card=document.createElement('div'); card.className='card riepilogo-card'; card.style.marginBottom='14px';
+      const h=document.createElement('h2'); h.textContent=title; card.appendChild(h);
+      renderKpiGrid(card,deriveStats(partite,marcatori,statistiche));
 
-    const ph=document.createElement('h3'); ph.style.cssText='margin:14px 0 0;color:var(--blue);font-size:18px;text-transform:uppercase'; ph.textContent='Partite della giornata';
-    card.appendChild(ph);
-    renderPartiteRiepilogo(card,partite,f,[...marcatori,...totaliMarcatori,...mvp,...portiere,...autogoal]);
+      const ph=document.createElement('h3'); ph.style.cssText='margin:14px 0 0;color:var(--blue);font-size:18px;text-transform:uppercase'; ph.textContent='Partite della giornata';
+      card.appendChild(ph);
+      renderPartiteRiepilogo(card,partite,f,[...marcatori,...totaliMarcatori,...mvp,...portiere,...autogoal]);
 
-    content.appendChild(card);
+      content.appendChild(card);
+    }
     const tablePrefix='riepilogo_'+norm(f)+'_'+rowGiornataKey(allRows[0]||{},f);
-    renderMiniSection(content,'Marcatori della giornata',marcatori,'player','Nessun marcatore indicato.',tablePrefix+'_marcatori',['sezione','giocatore','gol','goal','reti']);
-    renderMiniSection(content,'MVP della giornata',mvp,'player','Nessun MVP indicato.',tablePrefix+'_mvp',['sezione','giocatore','punti']);
-    renderMiniSection(content,'Miglior portiere',portiere,'player','Nessun miglior portiere indicato.',tablePrefix+'_portiere',['sezione','giocatore','portiere','punti']);
-    renderMiniSection(content,'Autogol',autogoal,'player','',tablePrefix+'_autogoal',['giocatore']);
+    renderMiniSection(content,'Marcatori della giornata',marcatori,'player',playerSearch?'':'Nessun marcatore indicato.',tablePrefix+'_marcatori',['sezione','giocatore','marcatore','gol','goal','reti'],['gol','goal','reti']);
+    renderMiniSection(content,'MVP della giornata',mvp,'player',playerSearch?'':'Nessun MVP indicato.',tablePrefix+'_mvp',['sezione','giocatore','mvp','punti'],['punti']);
+    // Durante una ricerca testuale non mostrare la scheda vuota del miglior portiere:
+    // se il giocatore filtrato non è portiere, la sezione scompare invece di mostrare
+    // "Nessun miglior portiere indicato.".
+    const portiereEmptyText=(playerSearch||norm(state.search))?'':'Nessun miglior portiere indicato.';
+    renderMiniSection(content,'Miglior portiere',portiere,'player',portiereEmptyText,tablePrefix+'_portiere',['sezione','giocatore','portiere','punti'],['punti']);
+    renderMiniSection(content,'Autogol',autogoal,'player','',tablePrefix+'_autogol',['giocatore']);
     if(statistiche.length) renderMiniSection(content,'Statistiche complete',statistiche,null,'',tablePrefix+'_statistiche');
     rendered++;
   });
@@ -2056,6 +2505,11 @@ function renderRiepilogoGiornate(){
 
 function renderMatchSection(sectionId, kind){
   const el=document.getElementById(sectionId); el.innerHTML='';
+
+  // Con un filtro riconosciuto come giocatore, i risultati partita non sono
+  // dati del singolo giocatore: lascia il tab vuoto, come gia avviene per il calendario.
+  if(kind==='risultati' && isPlayerSearchActive()) return;
+
   const files=sectionFiles(kind);
   if(!files.length){ el.appendChild(buildEl('div','empty','Nessuna partita trovata.')); return; }
 
@@ -2122,19 +2576,24 @@ function renderAll(){ updateTitle(); renderTabs(); renderActiveSection(); }
 /* ══════════════════════════════════
    CARICAMENTO FILE
    ══════════════════════════════════ */
-async function fetchText(path){
-  try{ const r=await fetch('data/'+path+'?t='+Date.now()); if(r.ok) return await r.text(); }catch(e){}
-  const r2=await fetch(path+'?t='+Date.now());
+/* fresh=true forza un bypass della cache del browser/CDN (usato solo dal pulsante
+   "Aggiorna dati"). Nei caricamenti normali NON aggiungiamo alcun cache-buster:
+   così il browser e la CDN di GitHub Pages possono servire i CSV dalla cache,
+   invece di riscaricare tutto a ogni visita. */
+async function fetchText(path,fresh){
+  const bust=fresh?('?t='+Date.now()):'';
+  try{ const r=await fetch('data/'+path+bust); if(r.ok) return await r.text(); }catch(e){}
+  const r2=await fetch(path+bust);
   if(!r2.ok) throw new Error(path);
   return await r2.text();
 }
 
-async function loadAuto(){
-  setStatus('Caricamento automatico…');
-  state.files={}; state.rows={}; loadErrors=[];
+async function loadAuto(fresh){
+  setStatus('Caricamento in corso…');
+  state.files={}; state.rows={}; loadErrors=[]; state.imagesReady=true;
   let list=[...DEFAULT_FILES];
   try{
-    const mt=await fetchText('manifest.csv');
+    const mt=await fetchText('manifest.csv',fresh);
     const mr=parseCsv(mt);
     const objs=rowsToObjects(mr);
     const files=objs.length?objs.map(o=>col(o,['file','nome','filename'])).filter(Boolean):mr.flat().filter(x=>x&&x.toLowerCase()!=='file');
@@ -2142,22 +2601,28 @@ async function loadAuto(){
     state.rows['manifest.csv']=mr; state.files['manifest.csv']=mt;
   }catch(e){}
 
+  /* Tutti i CSV vengono richiesti in parallelo (Promise.allSettled) invece che
+     uno alla volta: con ~15-20 file, in sequenza si accumulava la latenza di
+     ogni singola richiesta una dopo l'altra. */
+  const csvList=list.filter(x=>/\.csv$/i.test(x) && !state.rows[x]);
+  const results=await Promise.allSettled(csvList.map(f=>fetchText(f,fresh).then(txt=>({f,txt}))));
   let ok=0;
-  for(const f of list.filter(x=>/\.csv$/i.test(x))){
-    if(state.rows[f]) continue;
-    try{ const txt=await fetchText(f); state.files[f]=txt; state.rows[f]=parseCsv(txt); ok++; }
-    catch(e){
+  results.forEach((res,i)=>{
+    const f=csvList[i];
+    if(res.status==='fulfilled'){
+      state.files[f]=res.value.txt; state.rows[f]=parseCsv(res.value.txt); ok++;
+    }else{
       // I file di riepilogo possono essere già presenti nel manifest anche se
       // non esistono ancora perché il torneo è in corso: non mostrarli come alert.
       if(!DEFAULT_FILES.includes(f) && fileKind(f)!=='riepilogo') loadErrors.push(f+' — non trovato');
     }
-  }
+  });
   /* Se nel frattempo l'utente ha già caricato manualmente una cartella (es. ha cliccato
      "Seleziona cartella" prima che l'autoload finisse), questo risultato è superato:
      non sovrascrivere i dati più recenti già mostrati. */
   if(manualLoadActive) return;
   applyConfig(); showErrors(); renderAll(); tryLoadLogo();
-  if(ok) setStatus('Caricati '+ok+' CSV dalla cartella',true);
+  if(ok) setStatus(dataLoadStatus(ok),true);
   else setStatus('Autocaricamento bloccato — usa Seleziona cartella');
 }
 
@@ -2245,7 +2710,7 @@ function refreshAfterManualLoad(csv,img){
   renderActiveSection();
 
   tryLoadLogo();
-  if(csv>0) setStatus(`Caricati ${csv} CSV e ${img} immagini`,true);
+  if(csv>0) setStatus(dataLoadStatus(csv),true);
   else setStatus(`Nessun CSV trovato nella cartella selezionata (${img} immagini). Seleziona la cartella principale del torneo o la cartella che contiene i CSV.`);
 
   const forcePass=()=>{
@@ -2266,14 +2731,20 @@ function refreshAfterManualLoad(csv,img){
 
 async function loadFromDirectoryHandle(dir){
   manualLoadActive = true;
-  state.files={}; state.rows={}; state.imageURLs={}; state.imageAliases={}; loadErrors=[];
+  state.files={}; state.rows={}; state.imageURLs={}; state.imageAliases={}; loadErrors=[]; state.imagesReady=false;
   state._csvCount=0; state._imgCount=0;
   setStatus('Caricamento cartella…');
   await scanDirRecursive(dir);
+  state.imagesReady=true;
   refreshAfterManualLoad(state._csvCount,state._imgCount);
 }
 
 function processImageFilesLater(imageFiles){
+  if(!imageFiles.length){
+    state.imagesReady=true;
+    forceHomeRefreshPasses();
+    return;
+  }
   // Le immagini non devono mai bloccare l'aggiornamento dei CSV/Home.
   // Su Chrome con file:// e cartelle su unità Z: alcune PNG possono congelare il picker
   // se elaborate dentro lo stesso flusso dei CSV. Le carichiamo dopo, a piccoli lotti.
@@ -2297,8 +2768,9 @@ function processImageFilesLater(imageFiles){
       setStatus(`Caricati ${state._csvCount||0} CSV. Immagini ${i}/${imageFiles.length}…`,true);
       setTimeout(step,0);
     }else{
+      state.imagesReady=true;
       showErrors();
-      setStatus(`Caricati ${state._csvCount||0} CSV e ${state._imgCount||0} immagini`,true);
+      setStatus(dataLoadStatus(state._csvCount||0),true);
       forceHomeRefreshPasses();
     }
   }
@@ -2324,7 +2796,7 @@ function forceHomeRefreshPasses(){
 async function loadFolder(fileList){
   manualLoadActive = true;
   const files=[...fileList]; // snapshot: l'input viene svuotato subito dopo la selezione
-  state.files={}; state.rows={}; state.imageURLs={}; state.imageAliases={}; loadErrors=[];
+  state.files={}; state.rows={}; state.imageURLs={}; state.imageAliases={}; loadErrors=[]; state.imagesReady=false;
   state._csvCount=0; state._imgCount=0;
 
   if(!files.length){
@@ -2385,7 +2857,7 @@ document.getElementById('search').addEventListener('input',e=>{
 });
 
 /* ── Avvio ── */
-initTheme(); renderTabs(); updateTitle(); loadAuto();
+initTheme(); renderTabs(); updateTitle(); tryLoadLogo(); loadAuto();
 </script>
 </body>
 </html>
