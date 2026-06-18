@@ -502,7 +502,7 @@ function sectionFiles(kind){ return Object.keys(state.rows).filter(f=>fileKind(f
 /* ══════════════════════════════════
    IMMAGINI
    ══════════════════════════════════ */
-function imageExts(){ return ['png','jpg','jpeg','webp','gif','svg']; }
+function imageExts(){ return ['png','jpg','jpeg']; }
 function baseNoExt(path){ return String(path||'').split('/').pop().replace(/\.[^.]+$/,''); }
 function imageFolderToken(type){ return type==='team'?'immaginisquadre':'immaginigiocatori'; }
 
@@ -530,7 +530,7 @@ function imageFor(type,name){
 
   const folder=imageFolderToken(type);
   const candidates=Object.entries(state.imageURLs||{}).map(([k,url])=>{
-    const rawBase=(k.split('/').pop()||k).replace(/(png|jpg|jpeg|webp|gif|svg)$/i,'');
+    const rawBase=(k.split('/').pop()||k).replace(/(png|jpg|jpeg)$/i,'');
     const base=norm(rawBase);
     let score=999;
     if(k.includes(folder) && base===key) score=0;
@@ -545,7 +545,7 @@ function imageFor(type,name){
 
   const prefix=type==='team'?'immagini/squadre/':'immagini/giocatori/';
   const dataPrefix=type==='team'?'data/immagini/squadre/':'data/immagini/giocatori/';
-  // Fallback statici: prova prima PNG, poi altri formati. Utile quando apri index.html senza selezionare cartella.
+  // Fallback statici: prova solo PNG/JPG/JPEG. Utile quando apri index.html senza selezionare cartella.
   return prefix+key+'.png';
 }
 
@@ -554,6 +554,86 @@ function imagePlaceholderEl(cls,name){
   d.className=cls+' img-placeholder';
   d.setAttribute('aria-label','Caricamento immagine '+String(name||''));
   return d;
+}
+
+/* Prova tutte le candidate IN PARALLELO e risolve con la prima che carica con successo
+   (o null se nessuna esiste). Molto più rapido del tentativo sequenziale uno alla volta:
+   il tempo totale è quello della richiesta più lenta, non la somma di tutte.
+   La cache evita che lo stesso grafico/avatar riesegua gli stessi probe quando Chart.js
+   forza resize/update ravvicinati o quando si cambia tab e si torna indietro. */
+const _imageProbeCache=new Map();
+/* Cache sincrona degli URL immagine già risolti.
+   Serve soprattutto quando si cambia tab: gli elementi <img> vengono ricreati,
+   ma il src già trovato può essere assegnato subito senza mostrare placeholder/probe. */
+const _resolvedImageURLCache=new Map();
+function imageCacheCompositeKey(type,names){
+  return type+':'+(names||[]).map(norm).filter(Boolean).join('|');
+}
+function cachedResolvedImage(type,names){
+  const composite=imageCacheCompositeKey(type,names);
+  const keys=[composite,...(names||[]).map(n=>type+':'+norm(n)).filter(Boolean)];
+  for(const key of keys){
+    if(_resolvedImageURLCache.has(key)){
+      const value=_resolvedImageURLCache.get(key);
+      if(value) return value;
+    }
+  }
+  // Il fallimento viene memorizzato solo per la combinazione esatta di nomi,
+  // così un alias più completo può ancora trovare l'immagine in un'altra scheda.
+  return _resolvedImageURLCache.get(composite);
+}
+function rememberResolvedImage(type,names,src){
+  const composite=imageCacheCompositeKey(type,names);
+  if(!composite) return;
+  if(src){
+    _resolvedImageURLCache.set(composite,src);
+    (names||[]).forEach(n=>{ const key=norm(n); if(key) _resolvedImageURLCache.set(type+':'+key,src); });
+  }else{
+    _resolvedImageURLCache.set(composite,null);
+  }
+}
+function clearImageProbeCache(){
+  _imageProbeCache.clear();
+  _resolvedImageURLCache.clear();
+}
+function probeFirstWorkingImage(candidates){
+  const unique=[...new Set((candidates||[]).filter(Boolean))];
+  if(!unique.length) return Promise.resolve(null);
+  const cacheKey=unique.join('\\n');
+  if(_imageProbeCache.has(cacheKey)) return _imageProbeCache.get(cacheKey);
+  const promise=new Promise(resolve=>{
+    let pending=unique.length, settled=false;
+    unique.forEach(src=>{
+      const probe=new Image();
+      probe.decoding='async';
+      probe.onload=()=>{ if(!settled){ settled=true; resolve(src); } };
+      probe.onerror=()=>{ pending--; if(!settled && pending<=0) resolve(null); };
+      probe.src=src;
+    });
+  }).catch(()=>null);
+  _imageProbeCache.set(cacheKey,promise);
+  return promise;
+}
+
+/* Observer condiviso: avvia il probe delle immagini solo quando l'elemento è vicino al
+   viewport, così non scarichiamo centinaia di candidate per avatar non ancora visibili. */
+let _avatarIO=null;
+function avatarObserver(){
+  if(_avatarIO) return _avatarIO;
+  if(!('IntersectionObserver' in window)){
+    _avatarIO={ observe(el){ const cb=el._onAvatarVisible; if(cb) cb(); }, unobserve(){} };
+    return _avatarIO;
+  }
+  _avatarIO=new IntersectionObserver(entries=>{
+    entries.forEach(entry=>{
+      if(entry.isIntersecting){
+        _avatarIO.unobserve(entry.target);
+        const cb=entry.target._onAvatarVisible;
+        if(cb) cb();
+      }
+    });
+  },{rootMargin:'250px'});
+  return _avatarIO;
 }
 
 /* Crea elemento img o div iniziali — NESSUN innerHTML con dati utente.
@@ -569,8 +649,12 @@ function imgOrInitialEl(type,name,cls){
   if(manualLoadActive && state.imagesReady===false){
     return imagePlaceholderEl(cls,mainName);
   }
+
   const img=document.createElement('img');
-  img.className=cls; img.alt=mainName; img.loading='lazy'; img.decoding='async';
+  img.className=cls;
+  img.alt=mainName;
+  img.decoding='async';
+  img.loading='lazy';
 
   const prefixes=type==='team'?['immagini/squadre/','data/immagini/squadre/']:['immagini/giocatori/','data/immagini/giocatori/'];
   const candidates=[];
@@ -587,32 +671,59 @@ function imgOrInitialEl(type,name,cls){
     }
   });
 
-  let fallbackIndex=0;
-  img.onerror=function(){
-    if(String(this.src||'').startsWith('blob:')){
-      const d=document.createElement('div'); d.className=cls; d.textContent=initials(mainName); if(!d.textContent) d.classList.add('is-empty-fallback'); this.replaceWith(d);
-      return;
-    }
-    while(fallbackIndex<candidates.length && candidates[fallbackIndex]===this.src) fallbackIndex++;
-    if(fallbackIndex<candidates.length){
-      this.src=candidates[fallbackIndex++];
-      return;
-    }
-    const d=document.createElement('div'); d.className=cls; d.textContent=initials(mainName); if(!d.textContent) d.classList.add('is-empty-fallback'); this.replaceWith(d);
+  // Caso importante per Classifiche/Squadre/Riepilogo:
+  // se l'immagine era già stata trovata in una scheda precedente, assegna subito src
+  // senza attendere Promise/IntersectionObserver e senza mostrare il caricamento.
+  const cached=cachedResolvedImage(type,names);
+  if(cached){
+    img.src=cached;
+    return img;
+  }
+  if(cached===null){
+    const d=document.createElement('div');
+    d.className=cls;
+    d.textContent=initials(mainName);
+    if(!d.textContent) d.classList.add('is-empty-fallback');
+    return d;
+  }
+
+  /* Quando l'avatar diventa visibile (o subito, se IntersectionObserver non è
+     supportato), prova tutte le candidate in parallelo invece che una alla volta.
+     La prima URL valida viene salvata in _resolvedImageURLCache, così i successivi
+     cambi tab riusano subito la stessa immagine. */
+  img._onAvatarVisible=()=>{
+    probeFirstWorkingImage(candidates).then(src=>{
+      rememberResolvedImage(type,names,src);
+      if(!img.isConnected) return; // la sezione è cambiata nel frattempo
+      if(src){
+        img.src=src; // stessa referenza: eventuali title/alt impostati dal chiamante restano validi
+      }else{
+        const d=document.createElement('div');
+        d.className=cls;
+        d.textContent=initials(mainName);
+        if(!d.textContent) d.classList.add('is-empty-fallback');
+        img.replaceWith(d);
+      }
+    });
   };
-  img.src=candidates[fallbackIndex++] || '';
+  avatarObserver().observe(img);
   return img;
 }
-
 /* ══════════════════════════════════
    LOGO CRAL
    ══════════════════════════════════ */
 const HERO_LOGO_FALLBACK = document.getElementById('heroLogoWrap')?.innerHTML || '';
 let heroLogoLoaded=false;
+let _heroLogoLoadToken=0;
 
 function resetHeroLogo(){
   const wrap=document.getElementById('heroLogoWrap');
   if(wrap && HERO_LOGO_FALLBACK) wrap.innerHTML=HERO_LOGO_FALLBACK;
+}
+function invalidateHeroLogo(){
+  heroLogoLoaded=false;
+  _heroLogoLoadToken++;
+  resetHeroLogo();
 }
 
 function logoPriority(key){
@@ -632,7 +743,7 @@ function logoCandidates(){
   // Fallback statici: funzionano sia con index.html nella root sia con asset dentro data/,
   // provando più nomi/estensioni comuni nel caso il file non si chiami esattamente logo_cral.png.
   const names=['logo_cral','logo-cral','logocral','cral_logo','cral-logo','cral','logo'];
-  const exts=['png','jpg','jpeg','webp','svg'];
+  const exts=['png','jpg','jpeg'];
   const dirs=['immagini/','data/immagini/','./immagini/','./data/immagini/'];
   const generated=[];
   dirs.forEach(d=>names.forEach(n=>exts.forEach(e=>generated.push(d+n+'.'+e))));
@@ -643,18 +754,21 @@ function tryLoadLogo(){
   if(heroLogoLoaded) return; // già caricato: evita di azzerarlo e riprovare inutilmente
   const wrap=document.getElementById('heroLogoWrap'); if(!wrap) return;
   const candidates=logoCandidates();
-  let i=0;
+  const token=++_heroLogoLoadToken;
   resetHeroLogo();
 
-  function tryNext(){
-    if(i>=candidates.length) return; // resta lo SVG di fallback
+  // Stessa logica veloce degli avatar: niente catena logo_1 -> logo_2 -> ...
+  // Se nessuna candidata esiste, resta lo SVG di fallback già presente nell'header.
+  probeFirstWorkingImage(candidates).then(src=>{
+    if(!src || token!==_heroLogoLoadToken || heroLogoLoaded || !wrap.isConnected) return;
     const img=document.createElement('img');
     img.alt='Logo CRAL';
-    img.onload=()=>{ wrap.innerHTML=''; wrap.appendChild(img); heroLogoLoaded=true; };
-    img.onerror=()=>{ i++; tryNext(); };
-    img.src=candidates[i];
-  }
-  tryNext();
+    img.decoding='async';
+    img.src=src;
+    wrap.innerHTML='';
+    wrap.appendChild(img);
+    heroLogoLoaded=true;
+  });
 }
 
 /* ══════════════════════════════════
@@ -1227,6 +1341,8 @@ function renderChartImageLabels(canvasId,labels,type,chart){
   if(!wrap) return;
   wrap.innerHTML='';
 
+  const renderToken=String(Date.now())+'_'+Math.random();
+  wrap.dataset.renderToken=renderToken;
   const xScale=chart && chart.scales ? chart.scales.x : null;
   const canvas=chart ? chart.canvas : document.getElementById(canvasId);
   const canvasWidth=canvas ? canvas.clientWidth : 0;
@@ -1237,26 +1353,28 @@ function renderChartImageLabels(canvasId,labels,type,chart){
     const x=xScale ? xScale.getPixelForValue(index) : ((index+.5)*(canvasWidth/Math.max(labels.length,1)));
     item.style.left=Math.round(x)+'px';
 
-    const candidates=chartImageCandidates(type,label);
-    let i=0;
     const img=document.createElement('img');
     img.className='chart-label-img '+(type==='team'?'team':'player');
     img.alt=label;
     img.title=label;
-    img.style.visibility='hidden';
-    img.onload=function(){ this.style.visibility='visible'; };
-    img.onerror=function(){
-      if(i<candidates.length){ this.src=candidates[i++]; return; }
-      const txt=document.createElement('span');
-      txt.className='chart-label-text';
-      txt.textContent=label;
-      txt.title=label;
-      this.replaceWith(txt);
-    };
-    if(candidates.length) img.src=candidates[i++];
-    else img.onerror();
-    item.appendChild(img);
+    img.decoding='async';
+
+    const txt=document.createElement('span');
+    txt.className='chart-label-text';
+    txt.textContent=label;
+    txt.title=label;
+
+    // Mostra subito un testo leggibile e sostituiscilo con la miniatura appena
+    // una candidata valida viene trovata. Il probe è parallelo e cache-ato.
+    item.appendChild(txt);
     wrap.appendChild(item);
+
+    const candidates=chartImageCandidates(type,label);
+    probeFirstWorkingImage(candidates).then(src=>{
+      if(!src || !item.isConnected || wrap.dataset.renderToken!==renderToken) return;
+      img.src=src;
+      txt.replaceWith(img);
+    });
   });
 }
 function drawBarChart(canvasId,labels,values,label,type,title){
@@ -2234,6 +2352,8 @@ function riepilogoScorerPhotoEl(value){
   const img=document.createElement('img');
   img.className='riepilogo-kpi-scorer-photo';
   img.alt=name||'Miglior marcatore';
+  img.decoding='async';
+  img.loading='lazy';
   if(!name) return img;
   const key=norm(name);
   const candidates=[];
@@ -2242,13 +2362,24 @@ function riepilogoScorerPhotoEl(value){
   ['immagini/giocatori/','data/immagini/giocatori/'].forEach(prefix=>{
     imageExts().forEach(ext=>add(prefix+key+'.'+ext));
   });
-  let i=0;
-  img.onload=()=>img.classList.add('is-loaded');
-  img.onerror=()=>{
-    img.classList.remove('is-loaded');
-    if(i<candidates.length){ img.src=candidates[i++]; }
-  };
-  if(candidates.length) img.src=candidates[i++];
+
+  const cached=cachedResolvedImage('player',[name]);
+  if(cached){
+    img.src=cached;
+    img.classList.add('is-loaded');
+    return img;
+  }
+  if(cached===null) return img;
+
+  // Anche qui niente retry sequenziale: risolvi una volta la candidata valida
+  // e memorizzala, così il KPI non lampeggia quando rientri nel tab Riepilogo.
+  probeFirstWorkingImage(candidates).then(src=>{
+    rememberResolvedImage('player',[name],src);
+    if(!src || !img.isConnected) return;
+    img.onload=()=>img.classList.add('is-loaded');
+    img.onerror=()=>img.classList.remove('is-loaded');
+    img.src=src;
+  });
   return img;
 }
 
@@ -2591,21 +2722,41 @@ async function fetchText(path,fresh){
 async function loadAuto(fresh){
   setStatus('Caricamento in corso…');
   state.files={}; state.rows={}; loadErrors=[]; state.imagesReady=true;
+  clearImageProbeCache();
+  invalidateHeroLogo();
+
+  // Avvia SUBITO i CSV base noti nel codice, incluso manifest.csv.
+  // Prima si aspettava manifest.csv e solo dopo partivano classifica/marcatori/calendario:
+  // così si pagava un giro di rete in più sul percorso critico del primo caricamento.
+  const defaultCsvList=[...new Set(DEFAULT_FILES.filter(x=>/\.csv$/i.test(x)))];
+  const defaultFetches=new Map(defaultCsvList.map(f=>[
+    f,
+    fetchText(f,fresh)
+      .then(txt=>({status:'fulfilled',value:{f,txt}}))
+      .catch(reason=>({status:'rejected',reason,f}))
+  ]));
+
   let list=[...DEFAULT_FILES];
-  try{
-    const mt=await fetchText('manifest.csv',fresh);
+  const manifestResult=await defaultFetches.get('manifest.csv');
+  if(manifestResult && manifestResult.status==='fulfilled'){
+    const mt=manifestResult.value.txt;
     const mr=parseCsv(mt);
     const objs=rowsToObjects(mr);
     const files=objs.length?objs.map(o=>col(o,['file','nome','filename'])).filter(Boolean):mr.flat().filter(x=>x&&x.toLowerCase()!=='file');
     list=[...new Set([...list,...files])];
     state.rows['manifest.csv']=mr; state.files['manifest.csv']=mt;
-  }catch(e){}
+  }
 
-  /* Tutti i CSV vengono richiesti in parallelo (Promise.allSettled) invece che
-     uno alla volta: con ~15-20 file, in sequenza si accumulava la latenza di
-     ogni singola richiesta una dopo l'altra. */
-  const csvList=list.filter(x=>/\.csv$/i.test(x) && !state.rows[x]);
-  const results=await Promise.allSettled(csvList.map(f=>fetchText(f,fresh).then(txt=>({f,txt}))));
+  /* Tutti i CSV vengono richiesti in parallelo. I CSV base erano già in volo
+     mentre attendevamo il manifest; qui aggiungiamo solo eventuali extra trovati
+     nel manifest e aspettiamo il completamento di tutto. */
+  const csvList=[...new Set(list.filter(x=>/\.csv$/i.test(x) && !state.rows[x]))];
+  const results=await Promise.all(csvList.map(f=>{
+    const started=defaultFetches.get(f);
+    return started || fetchText(f,fresh)
+      .then(txt=>({status:'fulfilled',value:{f,txt}}))
+      .catch(reason=>({status:'rejected',reason,f}));
+  }));
   let ok=0;
   results.forEach((res,i)=>{
     const f=csvList[i];
@@ -2622,7 +2773,7 @@ async function loadAuto(fresh){
      non sovrascrivere i dati più recenti già mostrati. */
   if(manualLoadActive) return;
   applyConfig(); showErrors(); renderAll(); tryLoadLogo();
-  if(ok) setStatus(dataLoadStatus(ok),true);
+  if(ok || state.rows['manifest.csv']) setStatus(dataLoadStatus(ok+(state.rows['manifest.csv']?1:0)),true);
   else setStatus('Autocaricamento bloccato — usa Seleziona cartella');
 }
 
@@ -2682,7 +2833,7 @@ async function safeFileText(file, relPath){
 /* Lettura robusta per Chrome: immagini senza await, CSV con timeout e fallback. */
 async function ingestPickedFile(file, relPath, basename){
   const name=basename||file.name;
-  if(/\.(jpg|jpeg|png|webp|gif|svg)$/i.test(name)){
+  if(/\.(jpg|jpeg|png)$/i.test(name)){
     rememberImage(relPath||name,file);
     state._imgCount=(state._imgCount||0)+1;
     return true;
@@ -2732,6 +2883,8 @@ function refreshAfterManualLoad(csv,img){
 async function loadFromDirectoryHandle(dir){
   manualLoadActive = true;
   state.files={}; state.rows={}; state.imageURLs={}; state.imageAliases={}; loadErrors=[]; state.imagesReady=false;
+  clearImageProbeCache();
+  invalidateHeroLogo();
   state._csvCount=0; state._imgCount=0;
   setStatus('Caricamento cartella…');
   await scanDirRecursive(dir);
@@ -2797,6 +2950,8 @@ async function loadFolder(fileList){
   manualLoadActive = true;
   const files=[...fileList]; // snapshot: l'input viene svuotato subito dopo la selezione
   state.files={}; state.rows={}; state.imageURLs={}; state.imageAliases={}; loadErrors=[]; state.imagesReady=false;
+  clearImageProbeCache();
+  invalidateHeroLogo();
   state._csvCount=0; state._imgCount=0;
 
   if(!files.length){
@@ -2810,7 +2965,7 @@ async function loadFolder(fileList){
     .filter(file=>/\.csv$/i.test(file.name))
     .sort((a,b)=>String(a.webkitRelativePath||a.name).localeCompare(String(b.webkitRelativePath||b.name),'it'));
   const imageFiles=files
-    .filter(file=>/\.(jpg|jpeg|png|webp|gif|svg)$/i.test(file.name))
+    .filter(file=>/\.(jpg|jpeg|png)$/i.test(file.name))
     .sort((a,b)=>String(a.webkitRelativePath||a.name).localeCompare(String(b.webkitRelativePath||b.name),'it'));
 
   if(!csvFiles.length){
