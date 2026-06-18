@@ -429,7 +429,7 @@ function prettyColumnName(header){
 function esc(s){ const t=document.createElement('span'); t.textContent=String(s??''); return t.innerHTML; }
 function initials(s){
   // Non mostrare mai "?" come fallback visivo.
-  // Usa iniziali di nome e cognome; se c'è una sola parola usa le prime 2 lettere.
+  // Usa sempre l'ordine Nome + Cognome; se c'è una sola parola usa le prime 2 lettere.
   const raw = Array.isArray(s)
     ? (s.find(x=>String(x||'').trim() && String(x||'').trim()!=='?') || '')
     : String(s||'');
@@ -444,6 +444,29 @@ function initials(s){
   if(!parts.length) return '';
   if(parts.length===1) return parts[0].slice(0,2).toUpperCase();
   return (parts[0][0] + parts[parts.length-1][0]).toUpperCase();
+}
+function canonicalPlayerInitialName(name){
+  const names=(Array.isArray(name)?name:[name])
+    .map(x=>smartSpace(x))
+    .filter(x=>String(x||'').trim() && String(x||'').trim()!=='?');
+  if(!names.length) return '';
+
+  // Se il giocatore è presente nei CSV squadra, usa sempre Nome + Cognome
+  // come sorgente delle iniziali, anche quando una tabella mostra Cognome + Nome.
+  const keys=names.map(n=>norm(cleanPersonTokenForTeamLookup(n))).filter(Boolean);
+  for(const f of sectionFiles('squadra')){
+    for(const row of rowsToObjects(state.rows[f]||[])){
+      const rowNames=playerImageNames(row);
+      const rowKeys=rowNames.map(n=>norm(cleanPersonTokenForTeamLookup(n))).filter(Boolean);
+      const match=rowKeys.some(rowKey=>keys.some(key=>
+        rowKey===key ||
+        (key.length>=3 && rowKey.includes(key)) ||
+        (rowKey.length>=3 && key.includes(rowKey))
+      ));
+      if(match) return playerFullName(row) || names[0];
+    }
+  }
+  return names[0];
 }
 function setStatus(msg,good=false){ const el=document.getElementById('status'); el.innerHTML=good?`<span class="ok">${esc(msg)}</span>`:esc(msg); }
 function cleanLoadErrorName(err){ return String(err||'').split(' — ')[0].trim(); }
@@ -643,7 +666,7 @@ function imgOrInitialEl(type,name,cls){
   const names=(Array.isArray(name)?name:[name])
     .map(x=>smartSpace(x))
     .filter(Boolean);
-  const mainName=names.find(n=>String(n||'').trim() && String(n||'').trim()!=='?') || '';
+  const mainName=(type==='player' ? canonicalPlayerInitialName(names) : '') || names.find(n=>String(n||'').trim() && String(n||'').trim()!=='?') || '';
   // Durante il caricamento manuale delle immagini non mostrare iniziali/? temporanei:
   // renderizziamo placeholder neutri e facciamo un solo refresh quando gli alias sono pronti.
   if(manualLoadActive && state.imagesReady===false){
@@ -1210,6 +1233,14 @@ window.addEventListener('resize',()=>{
   if(_tableResizeRaf) return;
   _tableResizeRaf=requestAnimationFrame(()=>{ _tableResizeRaf=null; refreshAllTablesScrollState(); });
 });
+function removeColumnsByNorm(tableRows, blockedNames){
+  if(!tableRows || !tableRows.length) return tableRows;
+  const blocked=new Set((blockedNames||[]).map(norm));
+  const headers=tableRows[0]||[];
+  const keep=headers.map((h,i)=>blocked.has(norm(h)) ? -1 : i).filter(i=>i>=0);
+  if(keep.length===headers.length) return tableRows;
+  return tableRows.map(row=>keep.map(i=>row[i]??''));
+}
 function buildTable(rows, tableId, imgType, priorityNames, highlightName){
   if(!rows||!rows.length) return buildEl('div','empty','Nessun dato disponibile.');
   let headers=rows[0];
@@ -1678,6 +1709,9 @@ function renderClassifiche(){
 
     sectionFiles(kind).forEach(f=>{
       let tableRows=state.rows[f];
+      if(kind==='classifica_squadre'){
+        tableRows=removeColumnsByNorm(tableRows,['punti originali','puntioriginali']);
+      }
 
       // In ricerca giocatore non mostrare card vuote: se quel giocatore non è
       // presente in Marcatori/MVP/Portieri, la relativa sezione sparisce.
