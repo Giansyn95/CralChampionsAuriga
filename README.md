@@ -10,8 +10,9 @@ Il progetto è composto principalmente da un unico file `index.html`, pensato pe
   - numero squadre;
   - numero giocatori;
   - partite disputate;
-  - grafico top marcatori;
-  - grafico punti squadre.
+  - dati aggiornati a giornata `X/Y`, dove `X` è l'ultima giornata con riepilogo caricato e `Y` è il totale giornate previsto dal calendario;
+  - grafico 💣 top marcatori;
+  - grafico 🏆 punti squadre.
 - Scheda **Classifiche**:
   - classifica squadre;
   - classifica marcatori;
@@ -38,7 +39,7 @@ Il progetto è composto principalmente da un unico file `index.html`, pensato pe
   - miglior portiere;
   - autogol;
   - statistiche complete, se presenti.
-- Ricerca globale per squadra, giocatore o partita.
+- Ricerca globale per squadra, giocatore o partita, con riconoscimento coerente di nome e cognome dei giocatori.
 - Tema chiaro/scuro con salvataggio della preferenza in `localStorage`.
 - Ordinamento cliccabile delle colonne nelle tabelle.
 - Stampa / esportazione PDF tramite pulsante dedicato.
@@ -300,7 +301,18 @@ Giornata;Squadra casa;Squadra trasferta;Risultato
 
 La barra di ricerca filtra la sezione attiva. Cerca tra squadre, giocatori, partite e valori contenuti nei CSV.
 
-Le tabelle sono ordinabili cliccando sulle intestazioni delle colonne.
+Per i giocatori, la ricerca prova ad allineare nome e cognome anche quando i CSV usano formati diversi, ad esempio `Nome Cognome`, `Cognome Nome` oppure solo nome o solo cognome. Questo evita risultati diversi tra una ricerca per nome e una ricerca per cognome.
+
+Quando il filtro viene riconosciuto come ricerca giocatore, alcune sezioni vengono ridotte ai soli dati pertinenti:
+
+- in **Squadre** viene mostrata solo la squadra a cui appartiene il giocatore filtrato;
+- in **Risultati** non vengono mostrate schede partita, perché il tab è legato alle squadre e non al singolo giocatore;
+- in **Classifiche** non viene mostrata la classifica squadre; vengono mostrate solo le classifiche in cui il giocatore è presente;
+- in **Riepilogo giornate** non vengono mostrate le card generali della giornata, come partite giocate, gol totali, media gol, partita con più gol o partite della giornata; restano solo Marcatori, MVP, Miglior portiere o Autogol se il giocatore ha righe effettive in quelle sezioni.
+
+Le sezioni vuote non pertinenti vengono nascoste, quindi non vengono mostrate card con messaggi come `Nessun risultato per la ricerca` quando il filtro riguarda un giocatore.
+
+Le tabelle sono ordinabili cliccando sulle intestazioni delle colonne. Le tabelle di Marcatori, MVP e Portieri usano larghezze coerenti tra loro, così i risultati restano allineati anche durante il filtro.
 
 ## Tema scuro
 
@@ -316,8 +328,8 @@ https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js
 
 Sono presenti:
 
-- grafico top marcatori;
-- grafico punti squadre.
+- grafico 💣 top marcatori;
+- grafico 🏆 punti squadre.
 
 Se Chart.js non viene caricato, il sito continua a funzionare ma i grafici non vengono mostrati.
 
@@ -357,11 +369,21 @@ Per usare lo stesso progetto in un nuovo torneo basta aggiornare i CSV, le immag
 
 - Rimossa dalla Home la voce **CSV Caricati**.
 - Rimosso l'alert per i file di riepilogo mancanti indicati nel manifest.
+- Aggiunta nella Home la card **Dati aggiornati a giornata X/Y**, calcolata confrontando l'ultima giornata con riepilogo caricato con il numero totale di giornate del calendario.
+- Aggiunte le emoji nei grafici Home: 💣 per **Top marcatori** e 🏆 per **Punti squadre**.
+- Corretto il filtro tabellare per evitare che una riga dati venga interpretata come intestazione quando la ricerca restituisce un solo risultato.
+- Migliorata la ricerca giocatore: nome e cognome vengono riconosciuti in modo coerente anche con formati `Nome Cognome` e `Cognome Nome`.
 - Nelle classifiche Marcatori, MVP e Portieri, la posizione viene mostrata come prima colonna quando disponibile.
+- Nel tab **Classifiche**, quando si filtra un giocatore, la classifica squadre viene nascosta e restano solo le classifiche realmente pertinenti. Per i portieri viene evitata la visualizzazione di sezioni non collegate, come MVP, se non pertinenti.
+- Nel tab **Squadre**, quando si filtra un giocatore, viene mostrata solo la squadra associata al giocatore filtrato.
+- Nel tab **Risultati**, quando si filtra un giocatore, non viene mostrata una card partita vuota.
+- Nel **Riepilogo giornate**, quando si filtra un giocatore, vengono nascoste le card generali di giornata e restano solo i dati effettivamente relativi al giocatore.
+- Nel **Riepilogo giornate**, le sezioni vuote come MVP, Marcatori o Miglior portiere vengono nascoste quando non hanno righe per il giocatore filtrato.
 - Nel Riepilogo giornate, le tabelle principali mostrano prima le colonne richieste:
   - `Sezione`, `Giocatore`, `Gol/Goal/Reti` per i marcatori;
   - `Sezione`, `Giocatore`, `Punti` per MVP;
   - `Sezione`, `Giocatore/Portiere`, `Punti` per miglior portiere.
+- Allineate le larghezze delle colonne nelle tabelle Marcatori, MVP e Portieri, sia nelle classifiche sia nel riepilogo giornate.
 
 ## Licenza
 
