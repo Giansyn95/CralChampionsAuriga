@@ -6,6 +6,10 @@
   <title>CRAL Champions</title>
   <!-- Preconnect: risparmia DNS/TLS quando Chart.js viene richiesto al volo nella Home -->
   <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+  <!-- Font: Oswald per titoli/hero/tab (stile scoreboard sportivo), Inter per corpo testo e tabelle (leggibilità e cifre tabellari allineate) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@600;700&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
   <!-- Preload: il browser inizia a scaricare il file più critico (manifest) subito,
        in parallelo col parsing dell'HTML, invece di aspettare che lo script in fondo
        alla pagina venga eseguito ed esegua la fetch() -->
@@ -24,7 +28,7 @@
       --green:#34d399;--red:#f87171;--shadow:rgba(0,0,0,.35);
     }
     *{box-sizing:border-box}
-    body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--ink);transition:background .3s,color .3s}
+    body{margin:0;font-family:'Inter',Arial,Helvetica,sans-serif;background:var(--bg);color:var(--ink);transition:background .3s,color .3s}
     .wrap{max-width:1280px;margin:auto;padding:24px}
     /* ── Hero ── */
     .hero{background:linear-gradient(135deg,var(--dark),var(--blue));color:#fff;border-radius:26px;padding:30px;margin-bottom:18px;box-shadow:0 14px 36px var(--shadow)}
@@ -32,7 +36,7 @@
     .hero-logo{width:72px;height:72px;border-radius:18px;object-fit:contain;background:rgba(255,255,255,.12);padding:6px;flex:0 0 auto;display:flex;align-items:center;justify-content:center}
     .hero-logo img{width:100%;height:100%;object-fit:contain;border-radius:12px}
     .hero-logo svg{width:100%;height:100%}
-    .hero h1{margin:0;font-size:clamp(24px,4vw,48px);letter-spacing:.02em}
+    .hero h1{margin:0;font-size:clamp(24px,4vw,48px);letter-spacing:.02em;font-family:'Oswald',Arial,Helvetica,sans-serif}
     .hero p{margin:8px 0 0;color:#dbeaff;font-size:17px}
     /* ── Banner errore avanzato ── */
     .err-section{margin:6px 0 0}
@@ -57,7 +61,7 @@
     .status{font-size:13px;color:#dbeaff;margin-left:auto}
     /* ── Tabs ── */
     .tabs{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0}
-    .tab{border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:10px 14px;cursor:pointer;font-weight:700;color:var(--blue);transition:background .15s,color .15s}
+    .tab{border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:10px 14px;cursor:pointer;font-weight:700;color:var(--blue);transition:background .15s,color .15s;font-family:'Oswald',Arial,Helvetica,sans-serif}
     .tab.active{background:var(--blue);color:#fff;border-color:var(--blue)}
     /* ── Grid ── */
     .grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
@@ -66,7 +70,7 @@
     .stat .l{color:var(--muted);font-size:13px;text-transform:uppercase;font-weight:800}
     /* ── Sezioni ── */
     .section{display:none}.section.active{display:block}
-    h2{margin:0 0 14px;color:var(--blue);font-size:26px}
+    h2{margin:0 0 14px;color:var(--blue);font-size:26px;font-family:'Oswald',Arial,Helvetica,sans-serif}
     .upper{text-transform:uppercase}
     .hint{color:var(--muted);font-size:14px;line-height:1.5}
     /* ── Ricerca ── */
