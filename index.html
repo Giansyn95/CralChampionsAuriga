@@ -372,7 +372,7 @@ function prettyColumnName(header){
     // Classifiche squadre
     squadra:'Squadra', team:'Squadra', teamcode:'Squadra', teamname:'Squadra', partitegiocate:'PG', giocate:'PG', pg:'PG', vinte:'V', vittorie:'V', pareggiate:'N', pareggi:'N', perse:'P', sconfitte:'P',
     golfatti:'GF', golsegnati:'GF', retifatte:'GF', golsquadra:'Gol squadra', golsubiti:'GS', retisubite:'GS', differenzareti:'DR', diffreti:'DR', dr:'DR',
-    punti:'Punti', pts:'Punti', point:'Punti', points:'Punti', puntifinali:'Punti finali', puntitotali:'Punti totali', puntioriginali:'Punti originali', penalita:'Penalità', notapenalita:'Nota penalità', notepenalita:'Note penalità',
+    punti:'Punti', pts:'Punti', point:'Punti', points:'Punti', puntifinali:'Punti', puntitotali:'Punti totali', puntioriginali:'Punti originali', penalita:'Penalità', notapenalita:'Nota penalità', notepenalita:'Note penalità',
 
     // Portieri / bonus / penalità
     portiere:'Portiere', migliorportiere:'Miglior portiere', puntiportiere:'Punti PT', puntipt:'Punti PT', ptportiere:'Punti PT',
@@ -1749,7 +1749,7 @@ function renderStatistiche(){
   if(!rows.length){
     card.appendChild(buildEl('div','empty','Per calcolare la media gol servono classifica_marcatori.csv e risultati_partite.csv, oppure una colonna Partite nel CSV marcatori.'));
   } else {
-    const hint=document.createElement('p'); hint.className='hint'; hint.textContent='Media gol per partita = gol del giocatore / partite giocate dalla sua squadra nei risultati caricati.';
+    const hint=document.createElement('p'); hint.className='hint'; hint.textContent='Media gol per partita = gol del giocatore / partite disputate.';
     card.appendChild(hint);
     const headers=['Giocatore','Media gol/partita','Squadra','Gol','Partite'];
     const body=rows.map(x=>[x.giocatore,x.media.toFixed(2).replace('.',','),x.squadra,x.gol,x.partite]);
@@ -2417,7 +2417,173 @@ function riepilogoScorerPhotoEl(value){
   return img;
 }
 
-function deriveStats(partite, marcatori, stats){
+function riepilogoGoalNumberFromText(value){
+  const text=String(value||'').trim();
+  if(!text) return null;
+  if(/^[-+]?\d+(?:[,.]\d+)?$/.test(text)) return num(text);
+  const patterns=[
+    /(?:^|\s)(?:x|×)\s*(\d+(?:[,.]\d+)?)(?=\s|$)/i,
+    /\(\s*(\d+(?:[,.]\d+)?)\s*(?:gol|goal|reti?)?\s*\)/i,
+    /(\d+(?:[,.]\d+)?)\s*(?:gol|goal|reti?)\b/i,
+    /\b(?:gol|goal|reti?)\s*(\d+(?:[,.]\d+)?)/i,
+    /[:=\-]\s*(\d+(?:[,.]\d+)?)\s*$/,
+    /\s+(\d+(?:[,.]\d+)?)\s*$/
+  ];
+  for(const re of patterns){
+    const m=text.match(re);
+    if(m) return num(m[1]);
+  }
+  return null;
+}
+function cleanRiepilogoScorerName(value){
+  return cleanPersonTokenForImage(String(value||'')
+    .replace(/\(\s*\d+(?:[,.]\d+)?\s*(?:gol|goal|reti?)?\s*\)/ig,'')
+    .replace(/\b(?:x|×)\s*\d+(?:[,.]\d+)?\b/ig,'')
+    .replace(/\b\d+(?:[,.]\d+)?\s*(?:gol|goal|reti?)\b/ig,'')
+    .replace(/\b(?:gol|goal|reti?)\s*\d+(?:[,.]\d+)?\b/ig,'')
+    .replace(/[:=\-]\s*\d+(?:[,.]\d+)?\s*$/,'')
+    .replace(/\s+\d+(?:[,.]\d+)?\s*$/,'')
+    .trim());
+}
+function riepilogoSplitScorerTokens(value){
+  return String(value||'')
+    .split(/\s*(?:\n|\r|\||,|;|\+|\/|\s+-\s+)\s*/)
+    .map(x=>smartSpace(x))
+    .filter(Boolean);
+}
+function riepilogoAddScore(map,name,goals){
+  const clean=cleanRiepilogoScorerName(name);
+  const key=norm(cleanPersonTokenForTeamLookup(clean));
+  const g=Number(goals);
+  if(!clean || !key || !Number.isFinite(g) || g<=0) return false;
+  const current=map.get(key) || {name:clean, goals:0};
+  current.goals += g;
+  map.set(key,current);
+  return true;
+}
+function riepilogoGoalValueFromRow(row){
+  const keys=Object.keys(row||{});
+  const exactNames=['gol giornata','goal giornata','reti giornata','gol','goal','reti','numero gol','n gol','n. gol','n° gol','totale gol','totale goal','totale reti','gol totali','goal totali','reti totali','marcature','conteggio','totale','valore','value'];
+  for(const n of exactNames){
+    const k=keys.find(x=>norm(x)===norm(n));
+    if(k && String(row[k]||'').trim()) return row[k];
+  }
+  // Fallback controllato: accetta colonne che parlano esplicitamente di gol/reti del marcatore,
+  // ma evita gol casa/trasferta e risultato partita.
+  const k=keys.find(x=>{
+    const nk=norm(x);
+    if(nk.includes('casa') || nk.includes('trasferta') || nk.includes('ospite') || nk.includes('risultato') || nk.includes('score')) return false;
+    return (nk.includes('gol') || nk.includes('goal') || nk.includes('reti')) && (nk.includes('marcatore') || nk.includes('giocatore') || nk.includes('giornata') || nk.includes('totale'));
+  });
+  return k ? row[k] : '';
+}
+function riepilogoSourceValues(row,mode){
+  const keys=Object.keys(row||{});
+  const values=[];
+  const seen=new Set();
+  const add=(v)=>{
+    const text=String(v||'').trim();
+    const key=norm(text);
+    if(!text || !key || seen.has(key)) return;
+    seen.add(key); values.push(text);
+  };
+  const nome=exactVal(row,['nome']);
+  const cognome=exactVal(row,['cognome']);
+  if(nome || cognome) add(uniqueNameParts([nome,cognome]));
+
+  const directNames=['giocatore','marcatore','calciatore','player','nome giocatore','nome completo','cognome e nome','autore','autorete'];
+  directNames.forEach(n=>{
+    const k=keys.find(x=>norm(x)===norm(n));
+    if(k) add(row[k]);
+  });
+
+  keys.forEach(k=>{
+    const nk=norm(k);
+    if(['sezione','giornata','turno','round','squadra','team','club','note','data','giorno','risultato','score'].includes(nk)) return;
+    if(nk.includes('squadra') || nk.includes('team') || nk.includes('giornata') || nk.includes('risultato')) return;
+
+    if(mode==='totali'){
+      // Nei CSV piatti dei riepiloghi i totali spesso sono: Sezione=Totale marcatore giornata, Statistica=Nome, Valore=Gol.
+      if(['statistica','voce','dato','etichetta','nome','giocatore','marcatore','player'].includes(nk) || nk.includes('nomegiocatore') || nk.includes('marcatore')) add(row[k]);
+    } else {
+      if(nk==='giocatore' || nk==='marcatore' || nk==='player' || nk==='calciatore' ||
+         nk.includes('nomegiocatore') || nk.includes('nomecompleto') || nk.includes('cognomeenome') ||
+         nk.includes('marcatore') || nk.includes('marcatori') || nk.includes('scorer')) add(row[k]);
+    }
+  });
+  return values;
+}
+function riepilogoScoresFromRows(rows,mode){
+  const totals=new Map();
+  let explicitCount=0;
+  for(const row of (rows||[])){
+    const values=riepilogoSourceValues(row,mode);
+    if(!values.length) continue;
+    const explicitGoals=riepilogoGoalNumberFromText(riepilogoGoalValueFromRow(row));
+    if(mode==='totali' && explicitGoals===null) continue;
+
+    const rawTokens=[];
+    values.forEach(value=>riepilogoSplitScorerTokens(value).forEach(token=>rawTokens.push(token)));
+    if(!rawTokens.length) continue;
+
+    if(explicitGoals!==null && rawTokens.length===1){
+      if(riepilogoAddScore(totals,rawTokens[0],explicitGoals)) explicitCount++;
+      continue;
+    }
+
+    rawTokens.forEach(token=>{
+      const tokenGoals=riepilogoGoalNumberFromText(token);
+      const goals=tokenGoals!==null ? tokenGoals : 1;
+      if(riepilogoAddScore(totals,token,goals) && tokenGoals!==null) explicitCount++;
+    });
+  }
+  return {totals,explicitCount};
+}
+function riepilogoScoresFromPartite(partite){
+  const totals=new Map();
+  let explicitCount=0;
+  for(const row of (partite||[])){
+    const fields=[
+      firstPresent(row,[['marcatori casa','marcatori squadra casa','gol casa marcatori','scorer casa','marcatori home']]),
+      firstPresent(row,[['marcatori trasferta','marcatori ospite','marcatori squadra trasferta','gol trasferta marcatori','scorer trasferta','marcatori away']]),
+      firstPresent(row,[['marcatori','scorers','reti']]),
+      extractInlineField(firstPresent(row,[['note','commento','descrizione']]),'Marcatori')
+    ];
+    fields.filter(Boolean).forEach(value=>{
+      riepilogoSplitScorerTokens(value).forEach(token=>{
+        const tokenGoals=riepilogoGoalNumberFromText(token);
+        const goals=tokenGoals!==null ? tokenGoals : 1;
+        if(riepilogoAddScore(totals,token,goals) && tokenGoals!==null) explicitCount++;
+      });
+    });
+  }
+  return {totals,explicitCount};
+}
+function riepilogoTopScorerLabelFromScores(scoreData){
+  const scorers=[...(scoreData?.totals||new Map()).values()].filter(x=>Number.isFinite(x.goals) && x.goals>0);
+  if(!scorers.length) return '';
+  const maxGoals=Math.max(...scorers.map(x=>x.goals));
+  const top=scorers.filter(x=>x.goals===maxGoals);
+  if(top.length>1) return 'Pari merito tra '+top.length+' giocatori';
+  const goalText=Number.isInteger(maxGoals) ? String(maxGoals) : String(maxGoals).replace('.',',');
+  return top[0].name+(goalText ? ' ('+goalText+' gol)' : '');
+}
+function riepilogoTopScorerLabel(partite, marcatori, totaliMarcatori){
+  // 1) Preferisce i totali solo se hanno un numero gol esplicito.
+  // 2) Poi usa i marcatori della giornata, contando anche nomi ripetuti nella stessa cella.
+  // 3) Infine ricade sui marcatori scritti direttamente nelle partite.
+  const sources=[
+    riepilogoScoresFromRows(totaliMarcatori||[],'totali'),
+    riepilogoScoresFromRows(marcatori||[],'marcatori'),
+    riepilogoScoresFromPartite(partite||[])
+  ];
+  for(const source of sources){
+    const label=riepilogoTopScorerLabelFromScores(source);
+    if(label) return label;
+  }
+  return '';
+}
+function deriveStats(partite, marcatori, stats, totaliMarcatori){
   const partiteGiocate=statValue(stats,['partite giocate','partite']) || partite.length;
   const golTotali=statValue(stats,['gol totali','goal totali']) || partite.reduce((s,r)=>s+goalsFromResult(resultText(r)),0);
   const media=statValue(stats,['media gol','media goal']) || (partiteGiocate? (Number(golTotali)/Number(partiteGiocate)).toFixed(2).replace('.',',') : '');
@@ -2432,12 +2598,9 @@ function deriveStats(partite, marcatori, stats){
     const trasferta=firstPresent(best,[['squadra trasferta','trasferta','ospite','away','squadra 2','team trasferta']]);
     maxMatch=[casa,trasferta].filter(Boolean).join(' - ')+' ('+resultText(best)+')';
   }
-  let migliorMarcatore=statValue(stats,['miglior marcatore','top scorer']);
-  if(!migliorMarcatore && marcatori.length){
-    const sorted=[...marcatori].sort((a,b)=>num(firstPresent(b,[['gol giornata','gol','reti','goal']]))-num(firstPresent(a,[['gol giornata','gol','reti','goal']])));
-    const top=sorted[0];
-    migliorMarcatore=playerNameFromRow(top)+(firstPresent(top,[['gol giornata','gol','reti','goal']])?' ('+firstPresent(top,[['gol giornata','gol','reti','goal']])+' gol)':'');
-  }
+  // Ricalcola il miglior marcatore dai marcatori della giornata: la riga statistica
+  // precompilata viene usata solo come fallback se non ci sono dati marcatori leggibili.
+  let migliorMarcatore=riepilogoTopScorerLabel(partite,marcatori,totaliMarcatori) || statValue(stats,['miglior marcatore','top scorer']);
   return [
     ['Partite giocate',partiteGiocate],
     ['Gol totali',golTotali],
@@ -2446,6 +2609,42 @@ function deriveStats(partite, marcatori, stats){
     ['Partita con più gol',maxMatch],
     ['Miglior marcatore',migliorMarcatore]
   ].filter(x=>String(x[1]||'').trim()!=='' && x[1]!==0);
+}
+
+function riepilogoStatisticheWithTopScorerTie(stats,partite,marcatori,totaliMarcatori){
+  const topScorerLabel=riepilogoTopScorerLabel(partite,marcatori,totaliMarcatori);
+  if(!topScorerLabel || !norm(topScorerLabel).startsWith('parimeritotra')) return stats||[];
+
+  const rows=(stats||[]).map(r=>({...r}));
+  const isStatNameKey=k=>['statistica','voce','dato','nome','metrica','campo'].some(n=>norm(k)===norm(n)||norm(k).includes(norm(n)));
+  const isValueKey=k=>['valore','value','totale','numero'].some(n=>norm(k)===norm(n)||norm(k).includes(norm(n)));
+  const findKey=(obj,predicate,fallback)=>Object.keys(obj||{}).find(predicate)||fallback;
+  const isTopScorerRow=r=>{
+    const label=firstPresent(r,[['statistica','voce','dato','nome','metrica','campo']]) || Object.values(r||{})[0] || '';
+    const key=norm(label);
+    return key.includes('migliormarcatore') || key.includes('topscorer');
+  };
+
+  let target=rows.find(isTopScorerRow);
+  if(target){
+    const valueKey=findKey(target,isValueKey,Object.keys(target)[1]||'Valore');
+    target[valueKey]=topScorerLabel;
+    return rows;
+  }
+
+  const sample=rows[0] || {};
+  const statKey=findKey(sample,isStatNameKey,'Statistica');
+  const valueKey=findKey(sample,isValueKey,'Valore');
+  const sectionKey=findKey(sample,k=>norm(k)==='sezione','');
+  const dayKey=findKey(sample,k=>['giornata','turno','round'].includes(norm(k)),'');
+  const source=[...(stats||[]),...(partite||[]),...(marcatori||[]),...(totaliMarcatori||[])].find(r=>r&&Object.keys(r).length) || {};
+  const added={};
+  if(sectionKey) added[sectionKey]='Statistica';
+  if(dayKey && source[dayKey]) added[dayKey]=source[dayKey];
+  added[statKey]='Miglior marcatore';
+  added[valueKey]=topScorerLabel;
+  rows.push(added);
+  return rows;
 }
 function renderKpiGrid(parent, items){
   if(!items.length) return;
@@ -2460,15 +2659,16 @@ function renderKpiGrid(parent, items){
     const c=document.createElement('div');
     const isMatchMax=norm(label).includes('partitaconpiugol') || norm(label).includes('partitaconpiugoal');
     const isScorer=norm(label).includes('migliormarcatore');
+    const isTieScorer=isScorer && norm(value).startsWith('parimeritotra');
     const isWide=String(value||'').length>18 || isScorer;
-    c.className='card stat riepilogo-kpi'+(isWide?' is-wide':'')+(isMatchMax?' is-match-max':'')+(isScorer?' is-scorer':'');
+    c.className='card stat riepilogo-kpi'+(isWide?' is-wide':'')+(isMatchMax?' is-match-max':'')+((isScorer&&!isTieScorer)?' is-scorer':'');
     const textWrap=document.createElement('div');
     textWrap.className='riepilogo-kpi-text';
     const n=document.createElement('div'); n.className='n'; n.textContent=fixItalianAccents(value);
     const l=document.createElement('div'); l.className='l'; l.textContent=fixItalianAccents(label);
     textWrap.appendChild(n); textWrap.appendChild(l);
     c.appendChild(textWrap);
-    if(isScorer) c.appendChild(riepilogoScorerPhotoEl(value));
+    if(isScorer && !isTieScorer) c.appendChild(riepilogoScorerPhotoEl(value));
     grid.appendChild(c);
   });
   parent.appendChild(grid);
@@ -2635,15 +2835,16 @@ function renderRiepilogoGiornate(){
     const autogoalRaw=filteredRiepilogoRows(parsed.autogoal,f);
     const autogoal=autogoalRowsForDisplay(autogoalRaw,dayPartite);
     const statistiche=playerSearch ? [] : filteredRiepilogoRows(parsed.statistiche,f);
-    if(!partite.length && !marcatori.length && !totaliMarcatori.length && !mvp.length && !portiere.length && !autogoal.length && !statistiche.length) return;
+    const statisticheRiepilogo=playerSearch ? [] : riepilogoStatisticheWithTopScorerTie(statistiche,partite,marcatori,totaliMarcatori);
+    if(!partite.length && !marcatori.length && !totaliMarcatori.length && !mvp.length && !portiere.length && !autogoal.length && !statisticheRiepilogo.length) return;
 
-    const allRows=[...partite,...marcatori,...totaliMarcatori,...mvp,...portiere,...autogoal,...statistiche];
+    const allRows=[...partite,...marcatori,...totaliMarcatori,...mvp,...portiere,...autogoal,...statisticheRiepilogo];
     const labels=[...new Set(allRows.map(r=>rowGiornataLabel(r,f)).filter(Boolean))];
     const title=labels.length===1 ? labels[0] : giornataLabelFromFile(f);
     if(!playerSearch){
       const card=document.createElement('div'); card.className='card riepilogo-card'; card.style.marginBottom='14px';
       const h=document.createElement('h2'); h.textContent=title; card.appendChild(h);
-      renderKpiGrid(card,deriveStats(partite,marcatori,statistiche));
+      renderKpiGrid(card,deriveStats(partite,marcatori,statisticheRiepilogo,totaliMarcatori));
 
       const ph=document.createElement('h3'); ph.style.cssText='margin:14px 0 0;color:var(--blue);font-size:18px;text-transform:uppercase'; ph.textContent='Partite della giornata';
       card.appendChild(ph);
@@ -2660,7 +2861,7 @@ function renderRiepilogoGiornate(){
     const portiereEmptyText=(playerSearch||norm(state.search))?'':'Nessun miglior portiere indicato.';
     renderMiniSection(content,'Miglior portiere',portiere,'player',portiereEmptyText,tablePrefix+'_portiere',['sezione','giocatore','portiere','punti'],['punti']);
     renderMiniSection(content,'Autogol',autogoal,'player','',tablePrefix+'_autogol',['giocatore']);
-    if(statistiche.length) renderMiniSection(content,'Statistiche complete',statistiche,null,'',tablePrefix+'_statistiche');
+    // Sezione "Statistiche complete" nascosta dal riepilogo: i dati restano disponibili solo per i KPI in alto.
     rendered++;
   });
 
