@@ -194,6 +194,7 @@
     .player-profile-sub{display:flex;gap:8px;align-items:center;flex-wrap:wrap;color:#dbeaff;font-weight:800}
     .player-profile-sub .mini-logo{background:#fff;color:var(--blue);border:1px solid rgba(255,255,255,.72)}
     .player-profile-badge{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:6px 10px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);color:#fff;font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.04em}
+    .player-profile-role-emoji{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:999px;background:rgba(255,255,255,.18);font-size:14px;line-height:1;letter-spacing:0}
     .player-profile-close{position:absolute;top:14px;right:14px;z-index:3;width:42px;height:42px;border-radius:14px;border:1px solid rgba(255,255,255,.32);background:rgba(255,255,255,.14);color:#fff;font-size:22px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center}
     .player-profile-body{position:relative;padding:18px 20px 22px}
     .player-profile-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:14px}
@@ -2207,14 +2208,56 @@ function roleInitial(value){
   return text.charAt(0).toUpperCase();
 }
 
+function roleKind(value){
+  const text=String(value||'').trim();
+  const key=norm(text);
+  if(!key) return '';
+  if(key==='p'||key==='pt'||key.includes('portiere')||key.includes('goalkeeper')||key.includes('goalie')) return 'keeper';
+  if(key==='a'||key==='att'||key.includes('attaccante')||key.includes('forward')||key.includes('striker')) return 'attacker';
+  if(key==='c'||key==='cc'||key.includes('centrocampista')||key.includes('midfielder')) return 'midfielder';
+  if(key==='d'||key==='dc'||key.includes('difensore')||key.includes('defender')) return 'defender';
+  return '';
+}
+function roleNameForKind(kind){
+  return {keeper:'Portiere',attacker:'Attaccante',midfielder:'Centrocampista',defender:'Difensore'}[kind] || '';
+}
+function roleEmojiForKind(kind){
+  return {keeper:'🧤',attacker:'💣',midfielder:'🧠',defender:'🛡️'}[kind] || '';
+}
 function roleDisplayLabel(value){
+  const kind=roleKind(value);
+  if(kind) return roleEmojiForKind(kind)+' '+roleNameForKind(kind);
   const initial=roleInitial(value);
   let text=smartSpace(value);
   if(!text) return initial || '';
-  text=text.replace(new RegExp('^'+initial+'(?:\\s*[-·.]\\s*|\\s+)','i'),'').trim() || text;
-  if(!initial) return text;
-  if(norm(text)===norm(initial) || text.length<=2) return initial;
-  return initial+' · '+text;
+  if(initial) text=text.replace(new RegExp('^'+initial+'(?:\\s*[-·.]\\s*|\\s+)','i'),'').trim() || text;
+  if(initial && (norm(text)===norm(initial) || text.length<=2)) return initial;
+  return text;
+}
+function roleBadgeText(value,isKeeper){
+  const kind=isKeeper ? 'keeper' : roleKind(value);
+  if(kind) return roleEmojiForKind(kind)+' '+roleNameForKind(kind);
+  return roleDisplayLabel(value);
+}
+function roleBadgeElement(value,isKeeper){
+  const label=roleBadgeText(value,isKeeper);
+  if(!label) return null;
+  const badge=document.createElement('span');
+  badge.className='player-profile-badge player-profile-role-badge';
+  const kind=isKeeper ? 'keeper' : roleKind(value);
+  if(kind){
+    const emoji=document.createElement('span');
+    emoji.className='player-profile-role-emoji';
+    emoji.textContent=roleEmojiForKind(kind);
+    emoji.setAttribute('aria-hidden','true');
+    const text=document.createElement('span');
+    text.textContent=roleNameForKind(kind);
+    badge.appendChild(emoji);
+    badge.appendChild(text);
+  }else{
+    badge.textContent=label;
+  }
+  return badge;
 }
 
 function isCaptainPlayer(obj){
@@ -2318,45 +2361,22 @@ function playerGoalProfile(name,candidates){
   const entries=[];
   sectionFiles('riepilogo').forEach(f=>{
     const parsed=parseRiepilogoFile(f);
-    const allRows=[...(parsed.totaliMarcatori||[]),...(parsed.marcatori||[]),...(parsed.partite||[])];
-    const groups=new Map();
-    if(allRows.length){
-      allRows.forEach(r=>{
-        const key=rowGiornataKey(r,f) || giornataKeyFromFile(f);
-        if(!groups.has(key)) groups.set(key,{label:rowGiornataLabel(r,f),totali:[],marcatori:[],partite:[]});
-      });
-    }else{
-      groups.set(giornataKeyFromFile(f),{label:giornataLabelFromFile(f),totali:[],marcatori:[],partite:[]});
-    }
-    const addRows=(target,rows)=>{
-      (rows||[]).forEach(r=>{
-        const key=rowGiornataKey(r,f) || giornataKeyFromFile(f);
-        if(!groups.has(key)) groups.set(key,{label:rowGiornataLabel(r,f),totali:[],marcatori:[],partite:[]});
-        groups.get(key)[target].push(r);
-      });
-    };
-    addRows('totali',parsed.totaliMarcatori||[]);
-    addRows('marcatori',parsed.marcatori||[]);
-    addRows('partite',parsed.partite||[]);
-
-    groups.forEach(group=>{
-      // Priorità corretta:
-      // 1) Totale marcatore giornata, se presente (es. Saracino Gianvito = 3).
-      // 2) Righe marcatori aggregate: nomi ripetuti o token con x2/x3 vengono sommati.
-      // 3) Marcatori scritti nelle note/partite.
-      const sources=[
-        riepilogoScoresFromRows(group.totali,'totali'),
-        riepilogoScoresFromRows(group.marcatori,'marcatori'),
-        riepilogoScoresFromPartite(group.partite)
-      ];
-      for(const source of sources){
-        const goals=profileScoreForCandidate(source,name,candidates);
-        if(goals>0){
-          entries.push({giornata:group.label,value:goals,label:'gol'});
-          break;
-        }
+    // Priorità corretta:
+    // 1) Totale marcatore giornata, se presente (es. Saracino Gianvito = 3).
+    // 2) Righe marcatori aggregate: nomi ripetuti o token con x2/x3 vengono sommati.
+    // 3) Marcatori scritti nelle note/partite.
+    const sources=[
+      riepilogoScoresFromRows(parsed.totaliMarcatori||[],'totali'),
+      riepilogoScoresFromRows(parsed.marcatori||[],'marcatori'),
+      riepilogoScoresFromPartite(parsed.partite||[])
+    ];
+    for(const source of sources){
+      const goals=profileScoreForCandidate(source,name,candidates);
+      if(goals>0){
+        entries.push({giornata:rowGiornataLabel((parsed.totaliMarcatori||parsed.marcatori||parsed.partite||[])[0]||{},f),value:goals,label:'gol'});
+        break;
       }
-    });
+    }
   });
   const totalFromEntries=entries.reduce((s,e)=>s+num(e.value),0);
   const totalFromClassifica=profileTotalFromClassifica('marcatori',name,candidates,['gol','goal','reti','g','totale','punti']);
@@ -2414,8 +2434,7 @@ function teamGoalsConceded(team){
 }
 function isGoalkeeperProfile(base,keeperData){
   if(base.record && isGoalkeeperRow(base.record.row)) return true;
-  const roleKey=norm(base.role);
-  if(roleInitial(base.role)==='P' || roleKey.includes('portiere') || roleKey.includes('goalkeeper')) return true;
+  if(roleKind(base.role)==='keeper') return true;
   return (keeperData.entries.length>0 || keeperData.total>0) && !base.role;
 }
 function buildPlayerProfileData(name,contextRow){
@@ -2445,6 +2464,23 @@ function profileStatTile(label,value,sub,isGold){
   box.appendChild(n); box.appendChild(l);
   if(sub){ const s=document.createElement('div'); s.className='s'; s.textContent=sub; box.appendChild(s); }
   return box;
+}
+function profileShortGiornataLabel(value){
+  const n=giornataNumberFromText(value);
+  return n ? ('G'+n) : fixItalianAccents(String(value||'Giornata'));
+}
+function profileGiornateText(entries){
+  const labels=[...(entries||[])]
+    .map(e=>profileShortGiornataLabel(e.giornata))
+    .filter(Boolean);
+  return labels.length ? labels.join(', ') : '—';
+}
+function profileKeeperSubText(keeper){
+  const count=(keeper.entries||[]).length;
+  const points=formatProfileNumber(keeper.total);
+  if(count) return count+' giornat'+(count===1?'a':'e')+' · '+points+' punti';
+  if(num(keeper.total)>0) return points+' punti totali';
+  return 'Nessuna giornata';
 }
 function profileTimelineSection(title,icon,entries,unit,emptyText){
   const section=document.createElement('div'); section.className='player-profile-section';
@@ -2498,24 +2534,28 @@ function openPlayerProfile(name,contextRow){
     const teamSpan=document.createElement('span'); teamSpan.className='player-profile-team-name'; teamSpan.textContent=data.team;
     teamBadge.appendChild(teamSpan); sub.appendChild(teamBadge);
   }
-  if(data.role){ const role=document.createElement('span'); role.className='player-profile-badge player-profile-role-badge'; role.textContent=roleDisplayLabel(data.role); sub.appendChild(role); }
-  if(data.isKeeper){ const badge=document.createElement('span'); badge.className='player-profile-badge'; badge.textContent='🧤 Portiere'; sub.appendChild(badge); }
+  const roleBadge=roleBadgeElement(data.role,data.isKeeper);
+  if(roleBadge) sub.appendChild(roleBadge);
   title.appendChild(sub); hero.appendChild(title); card.appendChild(hero);
 
   const body=document.createElement('div'); body.className='player-profile-body';
   const stats=document.createElement('div'); stats.className='player-profile-stats';
   if(!data.isKeeper || data.goals.total>0) stats.appendChild(profileStatTile('Gol segnati',formatProfileNumber(data.goals.total),data.goals.entries.length ? data.goals.entries.length+' giornate registrate' : 'Totale classifica',true));
-  stats.appendChild(profileStatTile('Punti MVP',formatProfileNumber(data.mvp.total),data.mvp.entries.length ? data.mvp.entries.length+' giornate MVP' : 'Totale classifica',false));
   if(data.isKeeper){
-    stats.appendChild(profileStatTile('Punti miglior portiere',formatProfileNumber(data.keeper.total),data.keeper.entries.length ? data.keeper.entries.length+' giornate' : 'Totale portieri',true));
+    stats.appendChild(profileStatTile('Miglior portiere',profileGiornateText(data.keeper.entries),profileKeeperSubText(data.keeper),true));
     stats.appendChild(profileStatTile('Gol subiti squadra',data.conceded===null?'—':formatProfileNumber(data.conceded),data.team||'Squadra non indicata',false));
+  } else {
+    stats.appendChild(profileStatTile('Punti MVP',formatProfileNumber(data.mvp.total),data.mvp.entries.length ? data.mvp.entries.length+' giornate MVP' : 'Totale classifica',false));
   }
   body.appendChild(stats);
 
   const panels=document.createElement('div'); panels.className='player-profile-panels';
   if(!data.isKeeper || data.goals.total>0) panels.appendChild(profileTimelineSection('Gol per giornata','⚽',data.goals.entries,'gol','Nessun dettaglio giornata disponibile per i gol.'));
-  panels.appendChild(profileTimelineSection('MVP per giornata','⭐',data.mvp.entries,'punti MVP','Nessun MVP registrato nelle giornate.'));
-  if(data.isKeeper) panels.appendChild(profileTimelineSection('Miglior portiere','🧤',data.keeper.entries,'punti miglior portiere','Nessuna giornata da miglior portiere registrata.'));
+  if(data.isKeeper){
+    panels.appendChild(profileTimelineSection('Giornate miglior portiere','🧤',data.keeper.entries,'punti','Nessuna giornata da miglior portiere registrata.'));
+  } else {
+    panels.appendChild(profileTimelineSection('MVP per giornata','⭐',data.mvp.entries,'punti MVP','Nessun MVP registrato nelle giornate.'));
+  }
   body.appendChild(panels);
   card.appendChild(body);
   backdrop.appendChild(card);
