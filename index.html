@@ -1432,17 +1432,17 @@ function renderChartPunti(){
 }
 
 function teamDisplayNameForChart(value){
-  // Nel grafico Home il nome deve essere quello esatto della classifica.
-  // Non applicare smartSpace: nomi ufficiali come "BlackJack" non devono diventare "Black Jack".
-  return String(value||'').trim().replace(/\s+/g,' ');
+  // I nomi squadra devono rimanere come arrivano dai CSV/file: non applicare smartSpace,
+  // così nomi ufficiali come "BlackJack" non diventano "Black Jack".
+  return String(value||'').trim();
 }
 function teamNamesForCharts(){
   const names=[];
-  const add=(name,preserveExact=false)=>{
-    const clean=preserveExact ? teamDisplayNameForChart(name) : smartSpace(name);
+  const add=(name)=>{
+    const clean=teamDisplayNameForChart(name);
     if(clean && !names.some(x=>norm(x)===norm(clean))) names.push(clean);
   };
-  sectionFiles('classifica_squadre').forEach(f=>rowsToObjects(state.rows[f]).forEach(r=>add(firstPresent(r,[['squadra','team','nome','club']])||Object.values(r)[0]||'',true)));
+  sectionFiles('classifica_squadre').forEach(f=>rowsToObjects(state.rows[f]).forEach(r=>add(firstPresent(r,[['squadra','team','nome','club']])||Object.values(r)[0]||'')));
   // Fonte principale: classifica squadre. Fallback solo se manca la classifica.
   if(names.length) return names;
   sectionFiles('squadra').forEach(f=>add(teamNameFromFile(f)));
@@ -1457,7 +1457,7 @@ function parseScorePair(value){
 function matchTeamsFromRow(r){
   const home=firstPresent(r,[['squadra casa','casa','home','squadra 1','team casa']]) || Object.values(r||{})[0] || '';
   const away=firstPresent(r,[['squadra trasferta','trasferta','ospite','away','squadra 2','team trasferta']]) || Object.values(r||{})[1] || '';
-  return [smartSpace(home),smartSpace(away)];
+  return [teamDisplayNameForChart(home),teamDisplayNameForChart(away)];
 }
 function matchRoundNumberFromRow(r,file,index){
   const explicit=firstPresent(r,[['giornata','turno','round']]);
@@ -1901,7 +1901,28 @@ function drawBarChart(canvasId,labels,values,label,type,title){
 /* ══════════════════════════════════
    RENDER SEZIONI
    ══════════════════════════════════ */
-function teamNameFromFile(f){ return prettyFileName(f).replace(/^Squadra\s+/i,''); }
+function teamNameFromStandings(name){
+  // Nel tab Squadre il nome deve essere identico a quello mostrato in
+  // Classifiche > Classifica Squadre. Il file squadra può chiamarsi, per esempio,
+  // squadra_FCStealthyDribblers.csv, mentre in classifica il nome corretto può essere
+  // "FC Stealthy Dribblers": usiamo la classifica come fonte ufficiale del display.
+  const key=norm(name);
+  if(!key) return '';
+  for(const f of sectionFiles('classifica_squadre')){
+    for(const r of rowsToObjects(state.rows[f]||[])){
+      const candidate=firstPresent(r,[['squadra','team','nome','club']]) || Object.values(r||{})[0] || '';
+      if(candidate && norm(candidate)===key) return teamDisplayNameForChart(candidate);
+    }
+  }
+  return teamDisplayNameForChart(name);
+}
+
+function teamNameFromFile(f){
+  // Deriva una chiave dal nome del CSV squadra e poi la converte nel nome ufficiale
+  // presente nella Classifica Squadre.
+  const base=String(f||'').split('/').pop().replace(/\.csv$/i,'').replace(/^squadra[_\s-]*/i,'');
+  return teamNameFromStandings(base.replace(/_/g,' '));
+}
 
 /* Lettura più precisa delle colonne giocatore.
    Non usa col(...,'nome') perché quella funzione considera anche match parziali:
@@ -2998,7 +3019,7 @@ function playerTeamMap(){
         const name=playerNameFromRow(r);
         const team=firstPresent(r,[['squadra','team','club']]);
         const key=norm(cleanPersonTokenForTeamLookup(name));
-        if(key && team && !map.has(key)) map.set(key,smartSpace(team));
+        if(key && team && !map.has(key)) map.set(key,teamDisplayNameForChart(team));
       });
     });
   });
@@ -3034,7 +3055,7 @@ function teamFromContextRows(name,contextRows){
   const matches=(contextRows||[]).filter(r=>matchPersonTokenToRow(name,r));
   for(const r of matches){
     const team=firstPresent(r,[['squadra','team','club','squadra giocatore','squadra marcatore']]);
-    if(String(team||'').trim()) return smartSpace(team);
+    if(String(team||'').trim()) return teamDisplayNameForChart(team);
   }
   return '';
 }
@@ -3068,7 +3089,7 @@ function roleFallbackElForPerson(name,contextRows){
   return d;
 }
 function teamForPersonToken(name, fallbackTeam, contextRows){
-  const direct=smartSpace(fallbackTeam||'');
+  const direct=teamDisplayNameForChart(fallbackTeam||'');
   if(direct) return direct;
   const contextTeam=teamFromContextRows(name,contextRows);
   if(contextTeam) return contextTeam;
@@ -3491,11 +3512,11 @@ function teamNameFromMatchRow(r, names){
 function parseTeamsFromPartitaText(text){
   const raw=String(text||'').trim();
   if(!raw) return [];
-  const parts=raw.split(/\s+(?:-|–|—|vs\.?|contro)\s+/i).map(x=>smartSpace(x)).filter(Boolean);
+  const parts=raw.split(/\s+(?:-|–|—|vs\.?|contro)\s+/i).map(x=>teamDisplayNameForChart(x)).filter(Boolean);
   return parts.length>=2 ? [parts[0],parts.slice(1).join(' - ')] : [];
 }
 function opponentForFavoredTeam(favoredTeam, autogoalRow, partite){
-  const favored=smartSpace(favoredTeam);
+  const favored=teamDisplayNameForChart(favoredTeam);
   if(!favored) return '';
   const favoredKey=norm(favored);
 
