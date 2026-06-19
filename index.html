@@ -1419,7 +1419,7 @@ function renderChartMarcatori(){
   if(!data.length) return;
   const labels=data.map(r=>col(r,['giocatore','nome','calciatore','player'])||Object.values(r)[0]||'');
   const values=data.map(r=>num(col(r,['gol','reti','goal','g'])));
-  drawBarChart('chartMarcatori',labels,values,'Gol','player','Top marcatori');
+  drawBarChart('chartMarcatori',labels,values,'Gol','player','');
 }
 function renderChartPunti(){
   const f=sectionFiles('classifica_squadre')[0]; if(!f) return;
@@ -1427,7 +1427,7 @@ function renderChartPunti(){
   if(!data.length) return;
   const labels=data.map(r=>col(r,['squadra','team','nome'])||Object.values(r)[0]||'');
   const values=data.map(r=>num(col(r,['punti','pts','points'])));
-  drawBarChart('chartPunti',labels,values,'Punti','team','Punti per squadra');
+  drawBarChart('chartPunti',labels,values,'Punti','team','');
 }
 
 function teamDisplayNameForChart(value){
@@ -2483,6 +2483,7 @@ function profileKeeperSubText(keeper){
   return 'Nessuna giornata';
 }
 function profileTimelineSection(title,icon,entries,unit,emptyText){
+  const opts=typeof unit==='object' && unit ? unit : {detail:unit,valueSuffix:''};
   const section=document.createElement('div'); section.className='player-profile-section';
   const h=document.createElement('h3'); h.textContent=icon+' '+title; section.appendChild(h);
   const list=document.createElement('div'); list.className='player-profile-timeline';
@@ -2491,9 +2492,15 @@ function profileTimelineSection(title,icon,entries,unit,emptyText){
       const row=document.createElement('div'); row.className='player-profile-entry';
       const left=document.createElement('div');
       const g=document.createElement('b'); g.textContent=fixItalianAccents(e.giornata||'Giornata');
-      const detail=document.createElement('span'); detail.textContent=unit;
-      left.appendChild(g); left.appendChild(document.createElement('br')); left.appendChild(detail);
-      const value=document.createElement('div'); value.className='value'; value.textContent=formatProfileNumber(e.value);
+      left.appendChild(g);
+      if(opts.detail){
+        const detail=document.createElement('span'); detail.textContent=fixItalianAccents(opts.detail);
+        left.appendChild(document.createElement('br'));
+        left.appendChild(detail);
+      }
+      const value=document.createElement('div'); value.className='value';
+      const formatted=formatProfileNumber(e.value);
+      value.textContent=opts.valueSuffix ? (formatted+' '+opts.valueSuffix) : formatted;
       row.appendChild(left); row.appendChild(value); list.appendChild(row);
     });
   } else {
@@ -2550,11 +2557,11 @@ function openPlayerProfile(name,contextRow){
   body.appendChild(stats);
 
   const panels=document.createElement('div'); panels.className='player-profile-panels';
-  if(!data.isKeeper || data.goals.total>0) panels.appendChild(profileTimelineSection('Gol per giornata','⚽',data.goals.entries,'gol','Nessun dettaglio giornata disponibile per i gol.'));
+  if(!data.isKeeper || data.goals.total>0) panels.appendChild(profileTimelineSection('Gol per giornata','⚽',data.goals.entries,{detail:'',valueSuffix:''},'Nessun dettaglio giornata disponibile per i gol.'));
   if(data.isKeeper){
     panels.appendChild(profileTimelineSection('Giornate miglior portiere','🧤',data.keeper.entries,'punti','Nessuna giornata da miglior portiere registrata.'));
   } else {
-    panels.appendChild(profileTimelineSection('MVP per giornata','⭐',data.mvp.entries,'punti MVP','Nessun MVP registrato nelle giornate.'));
+    panels.appendChild(profileTimelineSection('MVP DELLA GIORNATA','⭐',data.mvp.entries,{detail:'',valueSuffix:'pt'},'Nessun MVP registrato nelle giornate.'));
   }
   body.appendChild(panels);
   card.appendChild(body);
