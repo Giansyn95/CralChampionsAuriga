@@ -3297,8 +3297,25 @@ function matchPersonTokenToRow(name,row,teamHint){
   const leftTeam=teamHint || '';
   return rowValues.some(value=>personTokensReferToSamePlayer(name,value,leftTeam,rowTeam));
 }
-function teamFromContextRows(name,contextRows,usedRows){
-  const matches=(contextRows||[]).filter(r=>matchPersonTokenToRow(name,r,teamHintFromRow(r)));
+function teamFromContextRows(name,contextRows,usedRows,candidateTeams){
+  const candidateKeys = candidateTeams && candidateTeams.length
+    ? new Set(candidateTeams.map(t=>teamMatchKey(t)))
+    : null;
+  const matches=(contextRows||[]).filter(r=>{
+    if(!matchPersonTokenToRow(name,r,teamHintFromRow(r))) return false;
+    // Se conosciamo le squadre della partita corrente, scartiamo righe di contesto
+    // che appartengono a UN'ALTRA partita della stessa giornata (es. la riga
+    // "Marcatore" di un omonimo che gioca nella partita parallela). Senza questo
+    // vincolo, una lista di marcatori che mescola più partite della giornata può
+    // far scegliere la riga sbagliata anche quando la squadra giusta sarebbe
+    // facilmente determinabile.
+    if(candidateKeys){
+      const rowTeam=teamHintFromRow(r) || firstPresent(r,[['squadra','team','club','squadra giocatore','squadra marcatore']]);
+      const rowTeamKey=teamMatchKey(rowTeam||'');
+      if(rowTeamKey && !candidateKeys.has(rowTeamKey)) return false;
+    }
+    return true;
+  });
   // Se la stessa lista di marcatori ripete più volte lo stesso cognome (es. due
   // "Menolascina" di squadre diverse che segnano entrambi nella stessa partita),
   // ogni token va abbinato a una riga contesto DIVERSA, non sempre alla prima che
@@ -3373,9 +3390,14 @@ function teamForPersonToken(name, fallbackTeam, contextRows, usedRows){
 // invece di ricadere sulla mappa globale (che tiene una sola voce per cognome e
 // quindi può assegnare il logo della squadra sbagliata, es. due "Menolascina").
 function teamForPersonTokenAmongTeams(name, candidateTeams, contextRows, usedRows){
-  const contextTeam=teamFromContextRows(name,contextRows,usedRows);
-  if(contextTeam) return contextTeam;
   const teams=[...new Set((candidateTeams||[]).map(t=>teamDisplayNameForChart(t||'')).filter(Boolean))];
+  // Passiamo le squadre candidate a teamFromContextRows così non sceglie per errore
+  // la riga "Marcatore" di un omonimo che gioca nella partita PARALLELA della stessa
+  // giornata (es. un altro "Menolascina" in una partita diversa): tra le righe di
+  // contesto, consideriamo solo quelle delle due squadre che stanno giocando QUESTA
+  // partita.
+  const contextTeam=teamFromContextRows(name,contextRows,usedRows,teams);
+  if(contextTeam) return contextTeam;
   if(teams.length){
     // Importante: prendiamo i match grezzi SENZA passare un teamHint a
     // rosterMatchesForPersonToken. Quella funzione, se il filtro per squadra non
