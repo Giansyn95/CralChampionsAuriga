@@ -2381,9 +2381,10 @@ function personIdentityValuesFromRow(row){
 }
 function rosterIdentityRecords(){
   if(_rosterIdentityCache) return _rosterIdentityCache;
+  const squadraFiles=sectionFiles('squadra');
   const records=[];
   const seen=new Set();
-  for(const f of sectionFiles('squadra')){
+  for(const f of squadraFiles){
     const team=teamNameFromFile(f);
     for(const row of rowsToObjects(state.rows[f]||[])){
       const aliases=[];
@@ -2411,7 +2412,15 @@ function rosterIdentityRecords(){
       records.push({row,team,teamKey,aliases,aliasKeys,aliasWords,identityKey});
     }
   }
-  _rosterIdentityCache=records;
+  // Importante: NON mettere in cache un risultato vuoto se esistono file squadra
+  // ma non hanno ancora prodotto nessun record (es. durante un caricamento manuale
+  // file-per-file, quando un render intermedio interroga la rosa prima che tutti i
+  // CSV squadra siano stati letti). Un array vuoto è "truthy" in JS: se lo mettessimo
+  // sempre in cache, la riga sopra (if(_rosterIdentityCache) return ...) lo
+  // restituirebbe per sempre anche dopo che i dati completi arrivano, finché la
+  // pagina non viene ricaricata da zero. Mettiamo in cache [] solo quando non ci sono
+  // affatto file squadra: quello è un "vuoto" legittimo e stabile, non transitorio.
+  if(records.length || !squadraFiles.length) _rosterIdentityCache=records;
   return records;
 }
 function teamMatchKey(value){
@@ -3234,8 +3243,9 @@ function cleanPersonTokenForTeamLookup(name){
 }
 function playerTeamMap(){
   if(_playerTeamMapCache.value) return _playerTeamMapCache.value;
+  const squadraFiles=sectionFiles('squadra');
   const map=new Map();
-  for(const f of sectionFiles('squadra')){
+  for(const f of squadraFiles){
     const team=teamNameFromFile(f);
     for(const r of rowsToObjects(state.rows[f])){
       const names=playerImageNames(r);
@@ -3256,13 +3266,16 @@ function playerTeamMap(){
       });
     });
   });
-  _playerTeamMapCache.value=map;
+  // Stesso motivo di rosterIdentityRecords: non bloccare in cache una mappa vuota
+  // se esistono file squadra che semplicemente non sono ancora stati letti del tutto.
+  if(map.size || !squadraFiles.length) _playerTeamMapCache.value=map;
   return map;
 }
 function playerRoleMap(){
   if(_playerRoleMapCache.value) return _playerRoleMapCache.value;
+  const squadraFiles=sectionFiles('squadra');
   const map=new Map();
-  for(const f of sectionFiles('squadra')){
+  for(const f of squadraFiles){
     for(const r of rowsToObjects(state.rows[f])){
       const role=fieldLoose(r,['ruolo','role','posizione','position']);
       if(!String(role||'').trim()) continue;
@@ -3273,7 +3286,7 @@ function playerRoleMap(){
       });
     }
   }
-  _playerRoleMapCache.value=map;
+  if(map.size || !squadraFiles.length) _playerRoleMapCache.value=map;
   return map;
 }
 function matchPersonTokenToRow(name,row,teamHint){
@@ -3284,11 +3297,23 @@ function matchPersonTokenToRow(name,row,teamHint){
   const leftTeam=teamHint || '';
   return rowValues.some(value=>personTokensReferToSamePlayer(name,value,leftTeam,rowTeam));
 }
-function teamFromContextRows(name,contextRows){
+function teamFromContextRows(name,contextRows,usedRows){
   const matches=(contextRows||[]).filter(r=>matchPersonTokenToRow(name,r,teamHintFromRow(r)));
-  for(const r of matches){
+  // Se la stessa lista di marcatori ripete più volte lo stesso cognome (es. due
+  // "Menolascina" di squadre diverse che segnano entrambi nella stessa partita),
+  // ogni token va abbinato a una riga contesto DIVERSA, non sempre alla prima che
+  // matcha. usedRows tiene traccia delle righe già "consumate" da token precedenti
+  // nella stessa chiamata di addPeopleLineSmart, cosicché il secondo "Menolascina"
+  // trovi la riga di Gerardo (BlackJack) invece di riprendere quella di Nicolandrea
+  // (FC Stealthy Dribblers) già usata per il primo.
+  const fresh = usedRows ? matches.filter(r=>!usedRows.has(r)) : matches;
+  const pool = fresh.length ? fresh : matches;
+  for(const r of pool){
     const team=firstPresent(r,[['squadra','team','club','squadra giocatore','squadra marcatore']]);
-    if(String(team||'').trim()) return teamDisplayNameForChart(team);
+    if(String(team||'').trim()){
+      if(usedRows) usedRows.add(r);
+      return teamDisplayNameForChart(team);
+    }
   }
   return '';
 }
@@ -3309,7 +3334,8 @@ function roleForPersonToken(name,contextRows){
   if(map.has(key)) return map.get(key);
   // Match morbido per casi con solo cognome o soprannome nel riepilogo.
   const matches=[...map.entries()].filter(([k])=>k.includes(key)||key.includes(k));
-  if(matches.length===1) return matches[0][1];
+  const distinctRoles=[...new Set(matches.map(([,role])=>role))];
+  if(distinctRoles.length===1) return distinctRoles[0];
   return '';
 }
 function roleFallbackElForPerson(name,contextRows){
@@ -3321,18 +3347,22 @@ function roleFallbackElForPerson(name,contextRows){
   d.setAttribute('aria-label',role ? ('Ruolo: '+role) : cleanPersonTokenForImage(name));
   return d;
 }
-function teamForPersonToken(name, fallbackTeam, contextRows){
+function teamForPersonToken(name, fallbackTeam, contextRows, usedRows){
   const direct=teamDisplayNameForChart(fallbackTeam||'');
   if(direct) return direct;
-  const contextTeam=teamFromContextRows(name,contextRows);
+  const contextTeam=teamFromContextRows(name,contextRows,usedRows);
   if(contextTeam) return contextTeam;
   const key=norm(cleanPersonTokenForTeamLookup(name));
   if(!key) return '';
   const map=playerTeamMap();
   if(map.has(key)) return map.get(key);
   // Match morbido per casi con solo cognome o soprannome nel riepilogo.
+  // Dedup per squadra risultante: lo stesso giocatore spesso ha due chiavi nella
+  // mappa (es. "nomecognome" e "cognomenome"), che altrimenti farebbero sembrare
+  // ambiguo un match in realtà univoco.
   const matches=[...map.entries()].filter(([k])=>k.includes(key)||key.includes(k));
-  if(matches.length===1) return matches[0][1];
+  const distinctTeams=[...new Set(matches.map(([,team])=>team))];
+  if(distinctTeams.length===1) return distinctTeams[0];
   return '';
 }
 // Come teamForPersonToken, ma per i marcatori scritti in un'unica lista generica
@@ -3342,13 +3372,21 @@ function teamForPersonToken(name, fallbackTeam, contextRows){
 // la rosa per restringere il match alle sole squadre che stanno realmente giocando,
 // invece di ricadere sulla mappa globale (che tiene una sola voce per cognome e
 // quindi può assegnare il logo della squadra sbagliata, es. due "Menolascina").
-function teamForPersonTokenAmongTeams(name, candidateTeams, contextRows){
-  const contextTeam=teamFromContextRows(name,contextRows);
+function teamForPersonTokenAmongTeams(name, candidateTeams, contextRows, usedRows){
+  const contextTeam=teamFromContextRows(name,contextRows,usedRows);
   if(contextTeam) return contextTeam;
   const teams=[...new Set((candidateTeams||[]).map(t=>teamDisplayNameForChart(t||'')).filter(Boolean))];
   if(teams.length){
-    const matchesByTeam=teams
-      .map(team=>({team,recs:uniqueRosterRecords(rosterMatchesForPersonToken(name,team))}))
+    // Importante: prendiamo i match grezzi SENZA passare un teamHint a
+    // rosterMatchesForPersonToken. Quella funzione, se il filtro per squadra non
+    // trova nulla, ricade silenziosamente su TUTTI gli omonimi di qualsiasi squadra
+    // (comportamento corretto per altri usi, ma qui ci servirebbe l'opposto: sapere
+    // con certezza se una squadra NON ha quel giocatore). Filtriamo quindi noi stessi
+    // sui risultati grezzi, per squadra candidata.
+    const rawMatches=uniqueRosterRecords(rosterMatchesForPersonToken(name,''));
+    const teamKeys=teams.map(t=>teamMatchKey(t));
+    const matchesByTeam=teamKeys
+      .map((teamKey,idx)=>({team:teams[idx],recs:rawMatches.filter(rec=>rec.teamKey===teamKey)}))
       .filter(x=>x.recs.length);
     // Caso normale: il cognome appartiene chiaramente a una sola delle due squadre in campo.
     if(matchesByTeam.length===1) return matchesByTeam[0].team;
@@ -3358,7 +3396,7 @@ function teamForPersonTokenAmongTeams(name, candidateTeams, contextRows){
     // meglio nessun logo che quello sbagliato.
     if(matchesByTeam.length>1) return '';
   }
-  return teamForPersonToken(name,'',contextRows);
+  return teamForPersonToken(name,'',contextRows,usedRows);
 }
 function extractInlineField(text,label){
   const source=String(text||'');
@@ -3415,6 +3453,11 @@ function addPeopleLineSmart(parent,label,people,withImages,teamHint,contextRows,
   strong.setAttribute('aria-label',label);
   row.appendChild(strong);
   const list=document.createElement('div'); list.style.cssText='display:flex;gap:6px;flex-wrap:wrap;align-items:center';
+  // Set condiviso tra tutti i marcatori di QUESTA lista: se due token uguali (stesso
+  // cognome) compaiono entrambi (es. due "Menolascina" che segnano nella stessa
+  // partita), ogni token consuma la propria riga di contesto invece di riusare sempre
+  // la prima trovata, altrimenti finirebbero entrambi assegnati alla stessa squadra.
+  const usedRows=new Set();
   people.forEach(name=>{
     const pill=document.createElement('span');
     pill.style.cssText='display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--soft);border-radius:999px;padding:4px 8px;font-size:12px;font-weight:700';
@@ -3423,8 +3466,8 @@ function addPeopleLineSmart(parent,label,people,withImages,teamHint,contextRows,
       // squadre della partita (candidateTeams), restringiamo il match a quelle per
       // evitare di prendere il logo di un omonimo di un'altra partita/giornata.
       const team=teamHint
-        ? teamForPersonToken(name,teamHint,contextRows)
-        : teamForPersonTokenAmongTeams(name,candidateTeams,contextRows);
+        ? teamForPersonToken(name,teamHint,contextRows,usedRows)
+        : teamForPersonTokenAmongTeams(name,candidateTeams,contextRows,usedRows);
       if(team){
         const logo=imgOrInitialEl('team',team,'mini-logo');
         logo.title=team;
