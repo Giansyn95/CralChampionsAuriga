@@ -87,6 +87,18 @@
     .card{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:16px;box-shadow:0 8px 22px var(--shadow)}
     .stat .n{font-size:34px;font-weight:800;color:var(--blue)}
     .stat .l{color:var(--muted);font-size:13px;text-transform:uppercase;font-weight:800}
+
+    /* ── KPI raggruppati: 1 card unica con griglia 2x2 fissa, anche su mobile,
+       per ridurre lo spazio verticale prima della card MotM e dei grafici ── */
+    .kpi-quad{padding:14px}
+    .kpi-quad-grid{display:grid;grid-template-columns:1fr 1fr;gap:0}
+    .kpi-quad-cell{padding:10px 8px;text-align:center}
+    .kpi-quad-cell:nth-child(1),.kpi-quad-cell:nth-child(2){border-bottom:1px solid var(--line)}
+    .kpi-quad-cell:nth-child(odd){border-right:1px solid var(--line)}
+    .kpi-quad-cell .n{font-size:22px;font-weight:800;color:var(--blue);line-height:1.1}
+    .kpi-quad-cell .l{display:block;color:var(--muted);font-size:10.5px;text-transform:uppercase;font-weight:800;letter-spacing:.02em;margin-top:3px}
+    @media(max-width:560px){.kpi-quad-cell .n{font-size:19px}.kpi-quad-cell{padding:9px 6px}}
+
     /* ── Sezioni ── */
     .section{display:none}.section.active{display:block}
     h2{margin:0 0 14px;color:var(--blue);font-size:26px;font-family:'Oswald',Arial,Helvetica,sans-serif}
@@ -2300,13 +2312,16 @@ function renderHome(){
   ];
   const progress=homeProgressStatus();
   if(progress) stats.push([progress.value,progress.label]);
-  const grid=document.createElement('div'); grid.className='grid';
+
+  const quad=document.createElement('div'); quad.className='card kpi-quad';
+  const quadGrid=document.createElement('div'); quadGrid.className='kpi-quad-grid';
   stats.forEach(([n,l])=>{
-    const c=document.createElement('div'); c.className='card stat';
-    c.innerHTML=`<div class="n">${n}</div><div class="l">${esc(l)}</div>`;
-    grid.appendChild(c);
+    const cell=document.createElement('div'); cell.className='kpi-quad-cell';
+    cell.innerHTML=`<div class="n">${n}</div><span class="l">${esc(l)}</span>`;
+    quadGrid.appendChild(cell);
   });
-  el.appendChild(grid);
+  quad.appendChild(quadGrid);
+  el.appendChild(quad);
 
   const motmCard=renderMotmCard();
   if(motmCard) el.appendChild(motmCard);
