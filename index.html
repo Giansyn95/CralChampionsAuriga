@@ -1443,7 +1443,9 @@ function redrawCharts(){
 }
 function renderChartMarcatori(){
   const f=sectionFiles('marcatori')[0]; if(!f) return;
-  const data=sortMarcatoriRowsByGoalsThenTeamRank(rowsToObjects(state.rows[f])).slice(0,5);
+  const rows=rowsToObjects(state.rows[f]);
+  const sorted=csvHasAnyNote(state.rows[f]) ? rows : sortMarcatoriRowsByGoalsThenTeamRank(rows);
+  const data=sorted.slice(0,5);
   if(!data.length) return;
   const labels=data.map(r=>col(r,['giocatore','nome','calciatore','player'])||Object.values(r)[0]||'');
   const values=data.map(r=>num(col(r,['gol','reti','goal','g'])));
@@ -1562,6 +1564,20 @@ function teamRankMap(){
   }
   _teamRankMapCache=map;
   return map;
+}
+function csvHasAnyNote(tableRows){
+  // Se il CSV ha una colonna Nota/Note/Commento e almeno una riga la valorizza,
+  // significa che chi ha compilato il file ha già gestito a mano un caso
+  // particolare (es. pareggio deciso a voce). In quel caso si rispetta
+  // l'ordine già scritto nel CSV invece di applicare il riordino automatico.
+  if(!tableRows||!tableRows.length) return false;
+  const headers=tableRows[0];
+  const noteIdx=headers.findIndex(h=>{
+    const n=norm(h);
+    return n==='nota'||n==='note'||n.includes('nota')||n.includes('commento')||n.includes('descrizione');
+  });
+  if(noteIdx<0) return false;
+  return tableRows.slice(1).some(row=>String(row[noteIdx]??'').trim()!=='');
 }
 function sortPortieriRowsByPointsThenTeamRank(objRows){
   // Spareggio tra portieri a pari Punti, in ordine:
@@ -2307,25 +2323,26 @@ function renderClassifiche(){
       if(kind==='classifica_squadre'){
         tableRows=removeColumnsByNorm(tableRows,['punti originali','puntioriginali']);
       }
-      if(kind==='marcatori' && !playerSearch){
+      if(kind==='marcatori' && !playerSearch && !csvHasAnyNote(state.rows[f])){
         // A pari gol, ordina per posizione della squadra in classifica_squadre.csv
-        // (chi gioca nella squadra messa meglio viene prima).
+        // (chi gioca nella squadra messa meglio viene prima). Se c'è una Nota
+        // compilata, si rispetta l'ordine del CSV.
         const headers=(state.rows[f]&&state.rows[f][0]) ? state.rows[f][0] : [];
         const sortedObjs=sortMarcatoriRowsByGoalsThenTeamRank(rowsToObjects(state.rows[f]));
         tableRows=[headers,...sortedObjs.map(r=>headers.map(h=>r[h]??''))];
         tableRows=renumberPositionColumn(tableRows);
       }
-      if(kind==='mvp' && !playerSearch){
+      if(kind==='mvp' && !playerSearch && !csvHasAnyNote(state.rows[f])){
         // A pari Punti MVP, ordina per posizione della squadra in classifica_squadre.csv,
-        // poi alfabetico.
+        // poi alfabetico. Se c'è una Nota compilata, si rispetta l'ordine del CSV.
         const headers=(state.rows[f]&&state.rows[f][0]) ? state.rows[f][0] : [];
         const sortedObjs=sortMvpRowsByPointsThenTeamRank(rowsToObjects(state.rows[f]));
         tableRows=[headers,...sortedObjs.map(r=>headers.map(h=>r[h]??''))];
         tableRows=renumberPositionColumn(tableRows);
       }
-      if(kind==='portieri' && !playerSearch){
+      if(kind==='portieri' && !playerSearch && !csvHasAnyNote(state.rows[f])){
         // A pari Punti, ordina per posizione della squadra in classifica_squadre.csv,
-        // poi alfabetico.
+        // poi alfabetico. Se c'è una Nota compilata, si rispetta l'ordine del CSV.
         const headers=(state.rows[f]&&state.rows[f][0]) ? state.rows[f][0] : [];
         const sortedObjs=sortPortieriRowsByPointsThenTeamRank(rowsToObjects(state.rows[f]));
         tableRows=[headers,...sortedObjs.map(r=>headers.map(h=>r[h]??''))];
