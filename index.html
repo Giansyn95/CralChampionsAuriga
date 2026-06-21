@@ -224,7 +224,13 @@
     .motm-card{position:relative;overflow:hidden;border-radius:26px;padding:22px 20px;display:flex;align-items:center;gap:18px;
       background:linear-gradient(150deg,var(--dark) 0%,#0f5aa8 55%,var(--dark) 100%);
       border:1px solid rgba(245,185,66,.45);box-shadow:0 18px 46px rgba(0,0,0,.38);color:#fff;
-      animation:motmEnter .65s cubic-bezier(.2,.9,.25,1.1) both}
+      animation:motmEnter .65s cubic-bezier(.2,.9,.25,1.1) both;
+      will-change:transform;transform-style:preserve-3d}
+    .motm-card.is-tilting{transition:none}
+    .motm-card.is-resetting{transition:transform .45s cubic-bezier(.2,.85,.3,1)}
+    .motm-card-glare{position:absolute;inset:0;pointer-events:none;border-radius:inherit;
+      background:radial-gradient(circle at 50% 50%,rgba(255,255,255,.22),transparent 60%);
+      opacity:0;transition:opacity .25s}
     .motm-card::after{content:'';position:absolute;top:0;left:-60%;width:45%;height:100%;
       background:linear-gradient(75deg,transparent,rgba(255,255,255,.35),transparent);
       transform:skewX(-18deg);animation:motmShine 2.6s ease-in-out .5s 1}
@@ -241,7 +247,7 @@
     .motm-stat .l{font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,.65);margin-top:3px}
     @keyframes motmEnter{0%{opacity:0;transform:scale(.85) rotateY(12deg) translateY(14px)}100%{opacity:1;transform:scale(1) rotateY(0) translateY(0)}}
     @keyframes motmShine{0%{left:-60%}100%{left:130%}}
-    @media(prefers-reduced-motion:reduce){.motm-card{animation:none}.motm-card::after{animation:none;display:none}}
+    @media(prefers-reduced-motion:reduce){.motm-card{animation:none}.motm-card::after{animation:none;display:none}.motm-card-glare{display:none}}
     @media(max-width:560px){
       .motm-card{flex-direction:column;text-align:center;padding:28px 18px 20px;gap:10px;border-radius:22px}
       .motm-eyebrow{position:static;margin-bottom:6px;justify-content:center}
@@ -2872,8 +2878,59 @@ function renderMotmCard(){
   }
   info.appendChild(statsRow);
   card.appendChild(info);
+
+  const glare=document.createElement('div'); glare.className='motm-card-glare';
+  card.appendChild(glare);
+
   wrap.appendChild(card);
+  card.addEventListener('animationend',()=>{ card.style.animation='none'; },{once:true});
+  attachCardTilt(card,glare);
   return wrap;
+}
+function attachCardTilt(card,glare){
+  // Tilt 3D al tocco/mouse: la card ruota leggermente seguendo la posizione
+  // del dito/puntatore, come una carta fisica vista in prospettiva. Niente
+  // librerie esterne: solo transform CSS aggiornato con requestAnimationFrame
+  // per restare fluido. Disattivato per chi preferisce animazioni ridotte.
+  if(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const MAX_DEG=9;
+  let rafId=null;
+
+  function applyTilt(clientX,clientY){
+    const rect=card.getBoundingClientRect();
+    const px=(clientX-rect.left)/rect.width;  // 0..1
+    const py=(clientY-rect.top)/rect.height;  // 0..1
+    const rotY=(px-0.5)*2*MAX_DEG;
+    const rotX=(0.5-py)*2*MAX_DEG;
+    if(rafId) cancelAnimationFrame(rafId);
+    rafId=requestAnimationFrame(()=>{
+      card.style.transform=`perspective(800px) scale3d(1.015,1.015,1.015) rotateX(${rotX.toFixed(2)}deg) rotateY(${rotY.toFixed(2)}deg)`;
+      glare.style.opacity='1';
+      glare.style.background=`radial-gradient(circle at ${(px*100).toFixed(0)}% ${(py*100).toFixed(0)}%, rgba(255,255,255,.25), transparent 60%)`;
+    });
+  }
+  function resetTilt(){
+    if(rafId) cancelAnimationFrame(rafId);
+    card.classList.remove('is-tilting'); card.classList.add('is-resetting');
+    card.style.transform='';
+    glare.style.opacity='0';
+  }
+
+  // Desktop: segue il mouse mentre è sopra la card.
+  card.addEventListener('mousemove',ev=>{
+    card.classList.remove('is-resetting'); card.classList.add('is-tilting');
+    applyTilt(ev.clientX,ev.clientY);
+  });
+  card.addEventListener('mouseleave',resetTilt);
+
+  // Mobile: segue il dito solo mentre tocca la card; torna piatta al rilascio.
+  card.addEventListener('touchmove',ev=>{
+    if(!ev.touches||!ev.touches.length) return;
+    card.classList.remove('is-resetting'); card.classList.add('is-tilting');
+    applyTilt(ev.touches[0].clientX,ev.touches[0].clientY);
+  },{passive:true});
+  card.addEventListener('touchend',resetTilt);
+  card.addEventListener('touchcancel',resetTilt);
 }
 function profileTotalFromClassifica(kind,name,candidates,columns,teamHint){
   for(const f of sectionFiles(kind)){
@@ -3188,15 +3245,14 @@ function comparablePlayersForRole(isKeeper,excludeName){
 function compareRadarDataset(data){
   if(data.isKeeper){
     return {
-      labels:['Gol subiti squadra','Punti Miglior Portiere','Punti MVP'],
+      labels:['Gol subiti squadra','Punti Miglior Portiere'],
       values:[
         data.conceded===null?0:num(data.conceded),
-        num(data.keeper.total),
-        num(data.mvp.total)
+        num(data.keeper.total)
       ],
       // Per "Gol subiti" un numero PIÙ BASSO è meglio: lo segnaliamo nel tooltip,
       // il valore resta quello reale (nessuna inversione che falsifichi il dato).
-      invertHints:[true,false,false]
+      invertHints:[true,false]
     };
   }
   return {
@@ -3220,7 +3276,7 @@ function openCompareModal(playerAData){
   const title=document.createElement('h3'); title.className='compare-title'; title.textContent='Confronta giocatori';
   card.appendChild(title);
   const sub=document.createElement('p'); sub.className='compare-sub';
-  sub.textContent=isKeeper ? 'Confronto tra portieri: gol subiti, punti miglior portiere, punti MVP.' : 'Confronto tra giocatori di movimento: gol, media gol/partita, punti MVP.';
+  sub.textContent=isKeeper ? 'Confronto tra portieri: gol subiti e punti miglior portiere.' : 'Confronto tra giocatori di movimento: gol, media gol/partita, punti MVP.';
   card.appendChild(sub);
 
   if(!roster.length){
@@ -3268,6 +3324,7 @@ function openCompareModal(playerAData){
     const playerBData=buildPlayerProfileData(playerBName,null);
     const dsA=compareRadarDataset(playerAData);
     const dsB=compareRadarDataset(playerBData);
+    const isKeeperChart=!!playerAData.isKeeper;
 
     playersRow.innerHTML='';
     const chipA=document.createElement('div'); chipA.className='compare-player-chip';
@@ -3281,15 +3338,35 @@ function openCompareModal(playerAData){
       if(!document.getElementById('compareRadarCanvas')) return; // modal chiuso nel frattempo
       if(window._chart.compareRadar){ try{ window._chart.compareRadar.destroy(); }catch(e){} }
       const c=getChartColors();
-      window._chart.compareRadar=new Chart(canvas,{
+      const tooltipLabel=(ctx)=>{
+        const inv=(ctx.datasetIndex===0?dsA:dsB).invertHints[ctx.dataIndex];
+        const val=isKeeperChart?ctx.parsed.y:ctx.parsed.r;
+        return ctx.dataset.label+': '+val+(inv?' (più basso è meglio)':'');
+      };
+      const datasets=[
+        {label:playerAData.name,data:dsA.values,backgroundColor:isKeeperChart?c.blue1:'rgba(15,90,168,.28)',borderColor:c.blue1,borderWidth:2,pointBackgroundColor:c.blue1,borderRadius:isKeeperChart?8:0},
+        {label:playerBData.name,data:dsB.values,backgroundColor:isKeeperChart?c.gold1:'rgba(245,185,66,.28)',borderColor:c.gold1,borderWidth:2,pointBackgroundColor:c.gold1,borderRadius:isKeeperChart?8:0}
+      ];
+      window._chart.compareRadar=new Chart(canvas, isKeeperChart ? {
+        // Portieri: solo 2 assi (Gol subiti, Punti Miglior Portiere) → grafico a barre 2D,
+        // più leggibile di un radar con così pochi punti.
+        type:'bar',
+        data:{ labels:dsA.labels, datasets },
+        options:{
+          responsive:true, maintainAspectRatio:false,
+          animation:{duration:550,easing:'easeOutQuart'},
+          scales:{
+            x:{ ticks:{color:c.text,font:{weight:'700'}}, grid:{display:false} },
+            y:{ beginAtZero:true, ticks:{color:c.text}, grid:{color:c.grid} }
+          },
+          plugins:{
+            legend:{position:'bottom',labels:{color:c.text,font:{weight:'700'}}},
+            tooltip:{ backgroundColor:'rgba(7,29,58,.92)', displayColors:true, callbacks:{label:tooltipLabel} }
+          }
+        }
+      } : {
         type:'radar',
-        data:{
-          labels:dsA.labels,
-          datasets:[
-            {label:playerAData.name,data:dsA.values,backgroundColor:'rgba(15,90,168,.28)',borderColor:c.blue1,borderWidth:2,pointBackgroundColor:c.blue1},
-            {label:playerBData.name,data:dsB.values,backgroundColor:'rgba(245,185,66,.28)',borderColor:c.gold1,borderWidth:2,pointBackgroundColor:c.gold1}
-          ]
-        },
+        data:{ labels:dsA.labels, datasets },
         options:{
           responsive:true, maintainAspectRatio:false,
           animation:{duration:550,easing:'easeOutQuart'},
@@ -3301,15 +3378,7 @@ function openCompareModal(playerAData){
           }},
           plugins:{
             legend:{position:'bottom',labels:{color:c.text,font:{weight:'700'}}},
-            tooltip:{
-              backgroundColor:'rgba(7,29,58,.92)', displayColors:true,
-              callbacks:{
-                label:(ctx)=>{
-                  const inv=(ctx.datasetIndex===0?dsA:dsB).invertHints[ctx.dataIndex];
-                  return ctx.dataset.label+': '+ctx.parsed.r+(inv?' (più basso è meglio)':'');
-                }
-              }
-            }
+            tooltip:{ backgroundColor:'rgba(7,29,58,.92)', displayColors:true, callbacks:{label:tooltipLabel} }
           }
         }
       });
