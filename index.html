@@ -218,6 +218,59 @@
     .player-profile-body{position:relative;padding:18px 20px 22px}
     .player-profile-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:14px}
     .player-profile-stat{position:relative;overflow:hidden;border-radius:20px;border:1px solid var(--line);background:linear-gradient(145deg,var(--panel),rgba(15,90,168,.08));padding:14px;min-height:96px;box-shadow:0 8px 20px var(--shadow)}
+
+    /* ── Player of the Match: card stile "carta" con animazione di ingresso ── */
+    .motm-wrap{margin-bottom:18px}
+    .motm-card{position:relative;overflow:hidden;border-radius:26px;padding:22px 20px;display:flex;align-items:center;gap:18px;
+      background:linear-gradient(150deg,var(--dark) 0%,#0f5aa8 55%,var(--dark) 100%);
+      border:1px solid rgba(245,185,66,.45);box-shadow:0 18px 46px rgba(0,0,0,.38);color:#fff;
+      animation:motmEnter .65s cubic-bezier(.2,.9,.25,1.1) both}
+    .motm-card::after{content:'';position:absolute;top:0;left:-60%;width:45%;height:100%;
+      background:linear-gradient(75deg,transparent,rgba(255,255,255,.35),transparent);
+      transform:skewX(-18deg);animation:motmShine 2.6s ease-in-out .5s 1}
+    .motm-eyebrow{position:absolute;top:14px;left:20px;font-family:'Oswald',Arial,sans-serif;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);font-weight:700;display:flex;align-items:center;gap:6px}
+    .motm-photo{width:96px;height:96px;border-radius:22px;flex:0 0 auto;object-fit:cover;object-position:center;
+      background:rgba(255,255,255,.14);border:2px solid var(--gold);box-shadow:0 10px 26px rgba(0,0,0,.35);
+      display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:900;color:#fff}
+    .motm-info{min-width:0;padding-top:8px}
+    .motm-name{font-family:'Oswald',Arial,sans-serif;font-size:clamp(20px,5vw,28px);font-weight:800;line-height:1.05;margin:0 0 4px;text-transform:uppercase;letter-spacing:.01em}
+    .motm-team{display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(255,255,255,.85);font-weight:600;margin-bottom:10px}
+    .motm-stats{display:flex;gap:18px;flex-wrap:wrap}
+    .motm-stat{display:flex;flex-direction:column}
+    .motm-stat .n{font-size:20px;font-weight:900;color:var(--gold);line-height:1}
+    .motm-stat .l{font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,.65);margin-top:3px}
+    @keyframes motmEnter{0%{opacity:0;transform:scale(.85) rotateY(12deg) translateY(14px)}100%{opacity:1;transform:scale(1) rotateY(0) translateY(0)}}
+    @keyframes motmShine{0%{left:-60%}100%{left:130%}}
+    @media(prefers-reduced-motion:reduce){.motm-card{animation:none}.motm-card::after{animation:none;display:none}}
+    @media(max-width:560px){.motm-card{padding:18px 14px;gap:13px;border-radius:20px}.motm-photo{width:74px;height:74px;border-radius:18px;font-size:24px}.motm-stats{gap:12px}}
+
+    /* ── Confronto due giocatori: bottone + modal con radar ── */
+    .compare-trigger-row{margin-top:16px;display:flex;justify-content:center}
+    .compare-trigger-btn{display:inline-flex;align-items:center;gap:8px;padding:11px 18px;border-radius:999px;
+      border:1px solid var(--line);background:var(--soft);color:var(--blue);font-weight:800;font-size:14px;
+      cursor:pointer;transition:background .15s,transform .15s}
+    .compare-trigger-btn:hover{background:var(--line);transform:translateY(-1px)}
+    .compare-backdrop{position:fixed;inset:0;background:rgba(7,16,30,.62);backdrop-filter:blur(3px);
+      display:flex;align-items:flex-start;justify-content:center;padding:18px;overflow-y:auto;z-index:90;
+      opacity:0;transition:opacity .18s}
+    .compare-backdrop.is-open{opacity:1}
+    .compare-card{position:relative;width:min(720px,100%);border-radius:26px;border:1px solid var(--line);
+      background:var(--panel);box-shadow:0 26px 80px rgba(0,0,0,.4);padding:20px;color:var(--ink);margin-top:24px}
+    .compare-close{position:absolute;top:14px;right:14px;width:36px;height:36px;border-radius:12px;border:1px solid var(--line);
+      background:var(--soft);color:var(--ink);font-size:20px;line-height:1;cursor:pointer}
+    .compare-title{font-family:'Oswald',Arial,sans-serif;font-size:20px;font-weight:800;margin:0 0 4px;padding-right:40px}
+    .compare-sub{font-size:13px;color:var(--muted);margin:0 0 16px}
+    .compare-picker{margin-bottom:18px}
+    .compare-picker label{display:block;font-size:12px;font-weight:800;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em}
+    .compare-picker select{width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:var(--soft);color:var(--ink);font-size:15px;font-weight:600}
+    .compare-players-row{display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:14px}
+    .compare-player-chip{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;min-width:0;flex:1}
+    .compare-player-chip img,.compare-player-chip .placeholder-avatar{width:56px;height:56px;border-radius:16px;object-fit:cover}
+    .compare-player-chip .pname{font-size:13px;font-weight:800;line-height:1.15;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .compare-vs{font-family:'Oswald',Arial,sans-serif;font-size:13px;font-weight:800;color:var(--gold);flex:0 0 auto}
+    .compare-chart-wrap{height:300px;position:relative}
+    .compare-empty{padding:20px;text-align:center;color:var(--muted);font-size:14px}
+    @media(max-width:560px){.compare-card{padding:16px;border-radius:20px}.compare-chart-wrap{height:260px}}
     .player-profile-stat.is-gold{background:linear-gradient(145deg,rgba(245,185,66,.23),var(--panel));border-color:rgba(245,185,66,.48)}
     .player-profile-stat .n{font-size:32px;line-height:1;font-weight:900;color:var(--blue);font-variant-numeric:tabular-nums}
     .player-profile-stat.is-gold .n{color:#b77900}
@@ -2225,6 +2278,8 @@ function homeProgressStatus(){
 
 function renderHome(){
   const el=document.getElementById('home'); el.innerHTML='';
+  const motmCard=renderMotmCard();
+  if(motmCard) el.appendChild(motmCard);
   const players=allPlayersFromTeams(), matches=matchRows();
   const stats=[
     [sectionFiles('squadra').length,'Squadre'],
@@ -2747,6 +2802,69 @@ function profileGoalsFromRow(row){
 function profilePointsFromRow(row){
   return statNumberFromRow(row,['punti mvp','puntimvp','punti miglior portiere','punti portiere','punti pt','puntipt','punti','pts','points','valore','totale'],1);
 }
+function isTournamentComplete(){
+  // Stessa fonte della card "Dati aggiornati a giornata X/Y" in Home:
+  // il torneo è concluso quando X (ultima giornata con riepilogo) raggiunge
+  // Y (totale giornate da calendario).
+  const total=totalCalendarioGiornate();
+  const latest=latestRiepilogoGiornata();
+  return !!total && !!latest && latest>=total;
+}
+function currentMvpOfTournament(){
+  // Prende il primo della classifica MVP, con gli stessi identici criteri
+  // di ordinamento già usati nel tab Classifiche → MVP (punti → squadra →
+  // alfabetico, oppure ordine del CSV se è presente una Nota compilata).
+  // Così la card in Home è sempre coerente con quello che si vede in tabella.
+  const f=sectionFiles('mvp')[0];
+  if(!f) return null;
+  const rows=state.rows[f];
+  if(!rows||rows.length<2) return null;
+  const objRows=rowsToObjects(rows);
+  const sorted=csvHasAnyNote(rows) ? objRows : sortMvpRowsByPointsThenTeamRank(objRows);
+  const top=sorted[0];
+  if(!top) return null;
+  const giocatore=col(top,['giocatore','nome','calciatore','player'])||Object.values(top)[0]||'';
+  if(!giocatore) return null;
+  const squadra=col(top,['squadra','team'])||'';
+  const punti=num(col(top,['punti mvp','puntimvp','punti','pts','points']));
+  return { name:giocatore, team:squadra, points:punti, imageNames:[giocatore] };
+}
+function renderMotmCard(){
+  const motm=currentMvpOfTournament();
+  if(!motm) return null;
+  const complete=isTournamentComplete();
+  const wrap=document.createElement('div'); wrap.className='motm-wrap';
+  const card=document.createElement('div'); card.className='motm-card';
+
+  const eyebrow=document.createElement('div'); eyebrow.className='motm-eyebrow';
+  eyebrow.innerHTML='⭐ '+(complete ? 'MVP Torneo' : 'MVP attuale del torneo');
+  card.appendChild(eyebrow);
+
+  card.appendChild(imgOrInitialEl('player',motm.imageNames,'motm-photo'));
+
+  const info=document.createElement('div'); info.className='motm-info';
+  const name=document.createElement('div'); name.className='motm-name'; name.textContent=motm.name;
+  info.appendChild(name);
+
+  if(motm.team){
+    const teamRow=document.createElement('div'); teamRow.className='motm-team';
+    teamRow.appendChild(imgOrInitialEl('team',motm.team,'mini-logo'));
+    const teamName=document.createElement('span'); teamName.textContent=motm.team;
+    teamRow.appendChild(teamName);
+    info.appendChild(teamRow);
+  }
+
+  const statsRow=document.createElement('div'); statsRow.className='motm-stats';
+  if(motm.points){
+    const s=document.createElement('div'); s.className='motm-stat';
+    s.innerHTML=`<span class="n">${esc(formatProfileNumber(motm.points))}</span><span class="l">Punti MVP</span>`;
+    statsRow.appendChild(s);
+  }
+  info.appendChild(statsRow);
+  card.appendChild(info);
+  wrap.appendChild(card);
+  return wrap;
+}
 function profileTotalFromClassifica(kind,name,candidates,columns,teamHint){
   for(const f of sectionFiles(kind)){
     for(const r of rowsToObjects(state.rows[f])){
@@ -2971,7 +3089,7 @@ function closePlayerProfile(){
   document.body.classList.remove('player-modal-open');
   document.removeEventListener('keydown',playerProfileEscHandler);
 }
-function playerProfileEscHandler(ev){ if(ev.key==='Escape') closePlayerProfile(); }
+function playerProfileEscHandler(ev){ if(ev.key==='Escape' && !document.getElementById('compareBackdrop')) closePlayerProfile(); }
 function openPlayerProfile(name,contextRow){
   const data=buildPlayerProfileData(name,contextRow);
   closePlayerProfile();
@@ -3018,6 +3136,14 @@ function openPlayerProfile(name,contextRow){
     panels.appendChild(profileTimelineSection('MVP DELLA GIORNATA','⭐',data.mvp.entries,{detail:'',valueSuffix:'pt'},'Nessun MVP registrato nelle giornate.'));
   }
   if(panels.children.length) body.appendChild(panels);
+
+  const compareRow=document.createElement('div'); compareRow.className='compare-trigger-row';
+  const compareBtn=document.createElement('button'); compareBtn.type='button'; compareBtn.className='compare-trigger-btn';
+  compareBtn.innerHTML='📊 Confronta con...';
+  compareBtn.onclick=()=>openCompareModal(data);
+  compareRow.appendChild(compareBtn);
+  body.appendChild(compareRow);
+
   card.appendChild(body);
   backdrop.appendChild(card);
   document.body.appendChild(backdrop);
@@ -3027,6 +3153,162 @@ function openPlayerProfile(name,contextRow){
 }
 
 
+function closeCompareModal(){
+  const old=document.getElementById('compareBackdrop');
+  if(old) old.remove();
+  document.removeEventListener('keydown',compareEscHandler);
+  if(window._chart && window._chart.compareRadar){
+    try{ window._chart.compareRadar.destroy(); }catch(e){}
+    window._chart.compareRadar=null;
+  }
+}
+function compareEscHandler(ev){ if(ev.key==='Escape') closeCompareModal(); }
+function comparablePlayersForRole(isKeeper,excludeName){
+  // Stessa lista usata per la ricerca giocatori, filtrata per ruolo coerente
+  // (un confronto ha senso solo tra giocatori dello stesso ruolo: i portieri
+  // usano metriche diverse dagli altri giocatori).
+  return allPlayersFromTeams()
+    .filter(p=>{
+      if(norm(p.nome)===norm(excludeName||'')) return false;
+      const data=buildPlayerProfileData(p.nome,null);
+      return !!data.isKeeper===!!isKeeper;
+    })
+    .sort((a,b)=>a.nome.localeCompare(b.nome,'it'));
+}
+function compareRadarDataset(data){
+  if(data.isKeeper){
+    return {
+      labels:['Gol subiti squadra','Punti Miglior Portiere','Punti MVP'],
+      values:[
+        data.conceded===null?0:num(data.conceded),
+        num(data.keeper.total),
+        num(data.mvp.total)
+      ],
+      // Per "Gol subiti" un numero PIÙ BASSO è meglio: lo segnaliamo nel tooltip,
+      // il valore resta quello reale (nessuna inversione che falsifichi il dato).
+      invertHints:[true,false,false]
+    };
+  }
+  return {
+    labels:['Gol','Media gol/partita','Punti MVP'],
+    values:[num(data.goals.total), data.mediaGol?Number(data.mediaGol.media.toFixed(2)):0, num(data.mvp.total)],
+    invertHints:[false,false,false]
+  };
+}
+function openCompareModal(playerAData){
+  closeCompareModal();
+  const isKeeper=playerAData.isKeeper;
+  const roster=comparablePlayersForRole(isKeeper,playerAData.fullName||playerAData.name);
+
+  const backdrop=document.createElement('div'); backdrop.id='compareBackdrop'; backdrop.className='compare-backdrop';
+  backdrop.addEventListener('click',ev=>{ if(ev.target===backdrop) closeCompareModal(); });
+
+  const card=document.createElement('div'); card.className='compare-card'; card.setAttribute('role','dialog'); card.setAttribute('aria-modal','true'); card.setAttribute('aria-label','Confronto giocatori');
+  const close=document.createElement('button'); close.type='button'; close.className='compare-close'; close.innerHTML='×'; close.setAttribute('aria-label','Chiudi confronto'); close.onclick=closeCompareModal;
+  card.appendChild(close);
+
+  const title=document.createElement('h3'); title.className='compare-title'; title.textContent='Confronta giocatori';
+  card.appendChild(title);
+  const sub=document.createElement('p'); sub.className='compare-sub';
+  sub.textContent=isKeeper ? 'Confronto tra portieri: gol subiti, punti miglior portiere, punti MVP.' : 'Confronto tra giocatori di movimento: gol, media gol/partita, punti MVP.';
+  card.appendChild(sub);
+
+  if(!roster.length){
+    const empty=document.createElement('div'); empty.className='compare-empty';
+    empty.textContent='Non ci sono altri giocatori dello stesso ruolo da confrontare.';
+    card.appendChild(empty);
+    backdrop.appendChild(card); document.body.appendChild(backdrop);
+    document.addEventListener('keydown',compareEscHandler);
+    requestAnimationFrame(()=>backdrop.classList.add('is-open'));
+    return;
+  }
+
+  const picker=document.createElement('div'); picker.className='compare-picker';
+  const label=document.createElement('label'); label.setAttribute('for','comparePlayerSelect'); label.textContent='Confronta '+playerAData.name+' con';
+  picker.appendChild(label);
+  const select=document.createElement('select'); select.id='comparePlayerSelect';
+  roster.forEach(p=>{
+    const opt=document.createElement('option'); opt.value=p.nome; opt.textContent=p.nome+(p.squadra?' · '+p.squadra:'');
+    select.appendChild(opt);
+  });
+  picker.appendChild(select);
+  card.appendChild(picker);
+
+  const playersRow=document.createElement('div'); playersRow.className='compare-players-row';
+  card.appendChild(playersRow);
+
+  const chartWrap=document.createElement('div'); chartWrap.className='compare-chart-wrap';
+  const canvas=document.createElement('canvas'); canvas.id='compareRadarCanvas';
+  chartWrap.appendChild(canvas);
+  card.appendChild(chartWrap);
+
+  backdrop.appendChild(card);
+  document.body.appendChild(backdrop);
+  document.addEventListener('keydown',compareEscHandler);
+  requestAnimationFrame(()=>backdrop.classList.add('is-open'));
+
+  function renderChip(container,personData){
+    container.innerHTML='';
+    container.appendChild(imgOrInitialEl('player',personData.imageNames,'placeholder-avatar'));
+    const n=document.createElement('div'); n.className='pname'; n.textContent=personData.name;
+    container.appendChild(n);
+  }
+
+  function drawCompare(playerBName){
+    const playerBData=buildPlayerProfileData(playerBName,null);
+    const dsA=compareRadarDataset(playerAData);
+    const dsB=compareRadarDataset(playerBData);
+
+    playersRow.innerHTML='';
+    const chipA=document.createElement('div'); chipA.className='compare-player-chip';
+    renderChip(chipA,playerAData);
+    const vs=document.createElement('div'); vs.className='compare-vs'; vs.textContent='VS';
+    const chipB=document.createElement('div'); chipB.className='compare-player-chip';
+    renderChip(chipB,playerBData);
+    playersRow.appendChild(chipA); playersRow.appendChild(vs); playersRow.appendChild(chipB);
+
+    loadChartJs().then(()=>{
+      if(!document.getElementById('compareRadarCanvas')) return; // modal chiuso nel frattempo
+      if(window._chart.compareRadar){ try{ window._chart.compareRadar.destroy(); }catch(e){} }
+      const c=getChartColors();
+      window._chart.compareRadar=new Chart(canvas,{
+        type:'radar',
+        data:{
+          labels:dsA.labels,
+          datasets:[
+            {label:playerAData.name,data:dsA.values,backgroundColor:'rgba(15,90,168,.28)',borderColor:c.blue1,borderWidth:2,pointBackgroundColor:c.blue1},
+            {label:playerBData.name,data:dsB.values,backgroundColor:'rgba(245,185,66,.28)',borderColor:c.gold1,borderWidth:2,pointBackgroundColor:c.gold1}
+          ]
+        },
+        options:{
+          responsive:true, maintainAspectRatio:false,
+          animation:{duration:550,easing:'easeOutQuart'},
+          scales:{ r:{
+            beginAtZero:true,
+            grid:{color:c.grid}, angleLines:{color:c.grid},
+            pointLabels:{color:c.text,font:{size:11,weight:'700'}},
+            ticks:{color:c.text,backdropColor:'transparent'}
+          }},
+          plugins:{
+            legend:{position:'bottom',labels:{color:c.text,font:{weight:'700'}}},
+            tooltip:{
+              backgroundColor:'rgba(7,29,58,.92)', displayColors:true,
+              callbacks:{
+                label:(ctx)=>{
+                  const inv=(ctx.datasetIndex===0?dsA:dsB).invertHints[ctx.dataIndex];
+                  return ctx.dataset.label+': '+ctx.parsed.r+(inv?' (più basso è meglio)':'');
+                }
+              }
+            }
+          }
+        }
+      });
+    });
+  }
+
+  select.addEventListener('change',()=>drawCompare(select.value));
+  drawCompare(roster[0].nome);
+}
 function renderSquadre(){
   const el=document.getElementById('squadre'); el.innerHTML='';
   const files=sectionFiles('squadra');
