@@ -1443,7 +1443,7 @@ function redrawCharts(){
 }
 function renderChartMarcatori(){
   const f=sectionFiles('marcatori')[0]; if(!f) return;
-  const data=rowsToObjects(state.rows[f]).slice(0,5);
+  const data=sortMarcatoriRowsByGoalsThenTeamRank(rowsToObjects(state.rows[f])).slice(0,5);
   if(!data.length) return;
   const labels=data.map(r=>col(r,['giocatore','nome','calciatore','player'])||Object.values(r)[0]||'');
   const values=data.map(r=>num(col(r,['gol','reti','goal','g'])));
@@ -1517,6 +1517,21 @@ function pointsFromScore(goalsFor,goalsAgainst){
   if(goalsFor===goalsAgainst) return 1;
   return 0;
 }
+function renumberPositionColumn(tableRows){
+  // Dopo aver riordinato le righe lato JS, se il CSV ha una colonna
+  // Posizione/Pos/Rank con numeri, va riscritta in base al nuovo ordine,
+  // altrimenti resterebbero i vecchi numeri del CSV originale, disallineati.
+  if(!tableRows||!tableRows.length) return tableRows;
+  const headers=tableRows[0];
+  const posIdx=headers.findIndex(h=>['pos','posizione','rank','classifica'].includes(norm(h)));
+  if(posIdx<0) return tableRows;
+  const body=tableRows.slice(1).map((row,i)=>{
+    const newRow=[...row];
+    if(String(row[posIdx]??'').trim()!=='') newRow[posIdx]=String(i+1);
+    return newRow;
+  });
+  return [headers,...body];
+}
 function teamCurrentPointsFromStandings(team){
   const key=norm(team);
   for(const f of sectionFiles('classifica_squadre')){
@@ -1529,6 +1544,57 @@ function teamCurrentPointsFromStandings(team){
     }
   }
   return null;
+}
+let _teamRankMapCache=null;
+function teamRankMap(){
+  // Mappa squadra→posizione, basata sull'ORDINE delle righe in classifica_squadre.csv
+  // (non sui punti ricalcolati): è la classifica ufficiale, già corretta con eventuali
+  // criteri di spareggio tra squadre (differenza reti ecc.), quindi è la fonte più
+  // affidabile per decidere chi viene prima tra due marcatori a pari gol.
+  if(_teamRankMapCache) return _teamRankMapCache;
+  const map={};
+  const f=sectionFiles('classifica_squadre')[0];
+  if(f){
+    rowsToObjects(state.rows[f]).forEach((r,i)=>{
+      const team=firstPresent(r,[['squadra','team','nome','club']]) || Object.values(r)[0] || '';
+      if(team && !(norm(team) in map)) map[norm(team)]=i;
+    });
+  }
+  _teamRankMapCache=map;
+  return map;
+}
+function sortMarcatoriRowsByGoalsThenTeamRank(objRows){
+  // Spareggio tra marcatori a pari gol, in ordine:
+  // 1) media gol/partita più alta (stessa formula di renderStatistiche:
+  //    gol/partite, con teamMatchCounts() come stima delle partite quando
+  //    il CSV non ha una colonna Partite dedicata)
+  // 2) se ancora pari: squadra meglio piazzata in classifica_squadre.csv
+  // 3) se ancora pari: ordine alfabetico per nome giocatore
+  const ranks=teamRankMap();
+  const ms=teamMatchCounts();
+  const mediaGolFor=(r)=>{
+    const gol=num(col(r,['gol','reti','goal','g']));
+    const squadra=col(r,['squadra','team']);
+    const partite=num(col(r,['partite','presenze','pg']))||ms[norm(squadra)]||0;
+    return partite?gol/partite:0;
+  };
+  const nameFor=(r)=>String(col(r,['giocatore','nome','calciatore','player'])||Object.values(r)[0]||'');
+  const withIdx=objRows.map((r,i)=>({r,i}));
+  withIdx.sort((a,b)=>{
+    const golA=num(col(a.r,['gol','reti','goal','g']));
+    const golB=num(col(b.r,['gol','reti','goal','g']));
+    if(golB!==golA) return golB-golA;
+    const mediaA=mediaGolFor(a.r), mediaB=mediaGolFor(b.r);
+    if(mediaB!==mediaA) return mediaB-mediaA;
+    const teamA=col(a.r,['squadra','team']);
+    const teamB=col(b.r,['squadra','team']);
+    const rankA=ranks[norm(teamA)]; const rankB=ranks[norm(teamB)];
+    if(rankA!==undefined && rankB!==undefined && rankA!==rankB) return rankA-rankB;
+    const cmpName=nameFor(a.r).localeCompare(nameFor(b.r),'it');
+    if(cmpName!==0) return cmpName;
+    return a.i-b.i;
+  });
+  return withIdx.map(x=>x.r);
 }
 function teamTrendProjectionData(){
   const teams=teamNamesForCharts();
@@ -2195,6 +2261,14 @@ function renderClassifiche(){
       if(kind==='classifica_squadre'){
         tableRows=removeColumnsByNorm(tableRows,['punti originali','puntioriginali']);
       }
+      if(kind==='marcatori' && !playerSearch){
+        // A pari gol, ordina per posizione della squadra in classifica_squadre.csv
+        // (chi gioca nella squadra messa meglio viene prima).
+        const headers=(state.rows[f]&&state.rows[f][0]) ? state.rows[f][0] : [];
+        const sortedObjs=sortMarcatoriRowsByGoalsThenTeamRank(rowsToObjects(state.rows[f]));
+        tableRows=[headers,...sortedObjs.map(r=>headers.map(h=>r[h]??''))];
+        tableRows=renumberPositionColumn(tableRows);
+      }
 
       // In ricerca giocatore non mostrare card vuote: se quel giocatore non è
       // presente in Marcatori/MVP/Portieri, la relativa sezione sparisce.
@@ -2338,6 +2412,7 @@ function clearDerivedDataCaches(){
   _playerRoleMapCache.value = null;
   _parsedRiepilogoCache.clear();
   _profileDataCache.clear();
+  _teamRankMapCache = null;
 }
 function stableRowKey(row){
   if(!row) return '';
