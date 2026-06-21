@@ -1563,6 +1563,29 @@ function teamRankMap(){
   _teamRankMapCache=map;
   return map;
 }
+function sortMvpRowsByPointsThenTeamRank(objRows){
+  // Spareggio tra giocatori a pari Punti MVP, in ordine:
+  // 1) squadra meglio piazzata in classifica_squadre.csv
+  // 2) se ancora pari: ordine alfabetico per nome giocatore
+  // (Niente "media", a differenza dei marcatori: i Punti MVP non hanno un
+  // denominatore oggettivo tipo "partite" nel CSV, quindi non si calcola.)
+  const ranks=teamRankMap();
+  const nameFor=(r)=>String(col(r,['giocatore','nome','calciatore','player'])||Object.values(r)[0]||'');
+  const pointsFor=(r)=>num(col(r,['punti mvp','puntimvp','punti','pts','points']));
+  const withIdx=objRows.map((r,i)=>({r,i}));
+  withIdx.sort((a,b)=>{
+    const ptsA=pointsFor(a.r), ptsB=pointsFor(b.r);
+    if(ptsB!==ptsA) return ptsB-ptsA;
+    const teamA=col(a.r,['squadra','team']);
+    const teamB=col(b.r,['squadra','team']);
+    const rankA=ranks[norm(teamA)]; const rankB=ranks[norm(teamB)];
+    if(rankA!==undefined && rankB!==undefined && rankA!==rankB) return rankA-rankB;
+    const cmpName=nameFor(a.r).localeCompare(nameFor(b.r),'it');
+    if(cmpName!==0) return cmpName;
+    return a.i-b.i;
+  });
+  return withIdx.map(x=>x.r);
+}
 function sortMarcatoriRowsByGoalsThenTeamRank(objRows){
   // Spareggio tra marcatori a pari gol, in ordine:
   // 1) media gol/partita più alta (stessa formula di renderStatistiche:
@@ -2266,6 +2289,14 @@ function renderClassifiche(){
         // (chi gioca nella squadra messa meglio viene prima).
         const headers=(state.rows[f]&&state.rows[f][0]) ? state.rows[f][0] : [];
         const sortedObjs=sortMarcatoriRowsByGoalsThenTeamRank(rowsToObjects(state.rows[f]));
+        tableRows=[headers,...sortedObjs.map(r=>headers.map(h=>r[h]??''))];
+        tableRows=renumberPositionColumn(tableRows);
+      }
+      if(kind==='mvp' && !playerSearch){
+        // A pari Punti MVP, ordina per posizione della squadra in classifica_squadre.csv,
+        // poi alfabetico.
+        const headers=(state.rows[f]&&state.rows[f][0]) ? state.rows[f][0] : [];
+        const sortedObjs=sortMvpRowsByPointsThenTeamRank(rowsToObjects(state.rows[f]));
         tableRows=[headers,...sortedObjs.map(r=>headers.map(h=>r[h]??''))];
         tableRows=renumberPositionColumn(tableRows);
       }
