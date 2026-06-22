@@ -430,6 +430,74 @@
     @media(max-width:560px){.wrap{padding:14px}.grid{grid-template-columns:1fr}.hero{padding:22px}.match{display:block}.score{margin:6px 0}.riepilogo-match .match-team{max-width:none}.riepilogo-match .match-name{font-size:16px}.riepilogo-match .score{text-align:left;font-size:26px;min-width:0}.riepilogo-kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.riepilogo-kpi.is-wide,.riepilogo-kpi.is-match-max,.riepilogo-kpi.is-scorer{grid-column:1/-1}.tableWrap{font-size:13px}th,td{padding:9px 9px}table.tbl-aligned th[data-col-role=rank],table.tbl-aligned td[data-col-role=rank]{min-width:40px;max-width:54px}table.tbl-aligned th[data-col-role=section],table.tbl-aligned td[data-col-role=section]{min-width:70px;max-width:110px}table.tbl-aligned th[data-col-role=team],table.tbl-aligned td[data-col-role=team],table.tbl-aligned th[data-col-role=person],table.tbl-aligned td[data-col-role=person]{min-width:118px;max-width:150px}table.tbl-aligned th[data-col-role=metric],table.tbl-aligned td[data-col-role=metric]{min-width:48px;max-width:68px}.tbl-logo,.tbl-avatar{width:24px;height:24px}.mini-logo{width:22px;height:22px}.name-cell{gap:7px}.player{gap:9px}.player-link-inline{display:inline-block;line-height:1.18}.chart-container.is-tall{height:380px}}
     @media print{.toolbar,.tabs,.search,#errorBanner{display:none}.section{display:block}.wrap{max-width:none}.card,.hero{box-shadow:none}}
     @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+    /* ── Wrapped 2.0: story/poster premium testabile ── */
+    .wrapped-overlay{
+      background:
+        radial-gradient(circle at 18% 12%, rgba(245,185,66,.22), transparent 30%),
+        radial-gradient(circle at 82% 18%, rgba(147,51,234,.34), transparent 34%),
+        radial-gradient(circle at 50% 100%, rgba(15,90,168,.42), transparent 42%),
+        linear-gradient(160deg,#050816 0%,#10112a 48%,#060713 100%);
+      overflow:hidden;
+    }
+    .wrapped-overlay::before,.wrapped-overlay::after{content:'';position:absolute;border-radius:50%;pointer-events:none;filter:blur(4px);opacity:.78;animation:wrappedOrbFloat 7s ease-in-out infinite alternate}
+    .wrapped-overlay::before{width:280px;height:280px;left:-90px;top:18%;background:radial-gradient(circle,rgba(245,185,66,.28),transparent 68%)}
+    .wrapped-overlay::after{width:360px;height:360px;right:-150px;bottom:8%;background:radial-gradient(circle,rgba(59,130,246,.30),transparent 70%);animation-delay:-2.5s}
+    .wrapped-bars{position:relative;z-index:5;gap:6px;padding:14px 16px 0}
+    .wrapped-bar{height:5px;background:rgba(255,255,255,.18);box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
+    .wrapped-bar i{background:linear-gradient(90deg,#f5b942,#ffffff,#60a5fa);box-shadow:0 0 16px rgba(245,185,66,.75)}
+    .wrapped-close{z-index:8;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.24);backdrop-filter:blur(12px);box-shadow:0 10px 30px rgba(0,0,0,.28)}
+    .wrapped-stage{perspective:1100px;padding:16px}
+    .wrapped-slide{
+      --accent:#f5b942;--accent-rgb:245,185,66;--accent2-rgb:96,165,250;
+      inset:18px;width:min(430px,calc(100vw - 28px));min-height:min(720px,calc(100svh - 132px));margin:auto;overflow:hidden;
+      border-radius:34px;border:1px solid rgba(255,255,255,.20);
+      background:
+        radial-gradient(circle at 50% 0%, rgba(var(--accent-rgb),.32), transparent 38%),
+        linear-gradient(155deg,rgba(255,255,255,.13),rgba(255,255,255,.035)),
+        linear-gradient(155deg,#111827,#050816);
+      box-shadow:0 34px 90px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.20);
+      backdrop-filter:blur(18px);transform:translateY(24px) scale(.94) rotateX(8deg);padding:26px;
+    }
+    .wrapped-slide.is-current{animation:wrappedCardIn .58s cubic-bezier(.18,.9,.2,1.12) both}
+    .wrapped-slide::before{content:'';position:absolute;inset:-40%;background:linear-gradient(115deg,transparent 38%,rgba(255,255,255,.16) 49%,transparent 60%),repeating-linear-gradient(135deg,rgba(255,255,255,.055) 0 1px,transparent 1px 14px);transform:rotate(8deg);opacity:.85;animation:wrappedShimmer 5.5s ease-in-out infinite;pointer-events:none}
+    .wrapped-slide::after{content:'✦';position:absolute;right:28px;top:70px;color:var(--accent);font-size:42px;text-shadow:0 0 20px rgba(var(--accent-rgb),.70),0 0 44px rgba(var(--accent2-rgb),.45);animation:wrappedStarPulse 1.7s ease-in-out infinite alternate;pointer-events:none}
+    .wrapped-slide > *{position:relative;z-index:2}
+    .wrapped-slide .ws-eyebrow{display:inline-flex;align-items:center;justify-content:center;padding:8px 13px;margin-bottom:18px;border-radius:999px;color:#071d3a;background:linear-gradient(120deg,var(--accent),#fff2bf);box-shadow:0 10px 28px rgba(var(--accent-rgb),.34);letter-spacing:.13em}
+    .wrapped-slide .ws-photo,.wrapped-slide .ws-logo{width:138px;height:138px;border-radius:32px;margin-bottom:20px;border:3px solid rgba(255,255,255,.82);box-shadow:0 22px 46px rgba(0,0,0,.46),0 0 0 8px rgba(var(--accent-rgb),.22),0 0 46px rgba(var(--accent-rgb),.35);transform:rotate(-2deg)}
+    .wrapped-slide .ws-logo{object-fit:contain;padding:10px;background:rgba(255,255,255,.92)}
+    .wrapped-slide .ws-name{max-width:360px;margin-bottom:10px;font-size:clamp(28px,8vw,46px);line-height:.98;text-shadow:0 10px 26px rgba(0,0,0,.42)}
+    .wrapped-slide .ws-sub{color:var(--accent);font-size:15px;letter-spacing:.04em;text-transform:uppercase;text-shadow:0 8px 18px rgba(0,0,0,.32)}
+    .wrapped-slide .ws-big{font-size:clamp(74px,22vw,146px);line-height:.88;margin:8px 0 12px;color:#fff;text-shadow:0 0 28px rgba(var(--accent-rgb),.55),0 18px 34px rgba(0,0,0,.48)}
+    .wrapped-slide .ws-big-word{font-size:clamp(48px,13vw,82px);letter-spacing:.015em}
+    .wrapped-slide .ws-big-emoji{font-size:clamp(74px,20vw,126px);line-height:1;filter:drop-shadow(0 18px 30px rgba(0,0,0,.45))}
+    .wrapped-slide .ws-detail{max-width:330px;padding:0 8px;font-size:16px;color:rgba(255,255,255,.82)}
+    .wrapped-slide .ws-stats-row{margin-top:18px;gap:10px}
+    .wrapped-slide .ws-stat{min-width:86px;padding:11px 12px;border-radius:18px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.10);backdrop-filter:blur(10px);box-shadow:inset 0 1px 0 rgba(255,255,255,.14)}
+    .wrapped-slide .ws-stat .n{color:var(--accent);font-size:30px}
+    .wrapped-cover{--accent:#f5b942;--accent-rgb:245,185,66;--accent2-rgb:147,51,234}
+
+    .wrapped-slide.wrapped-cover{background:
+      radial-gradient(circle at 50% 0%, rgba(var(--accent-rgb),.32), transparent 38%),
+      linear-gradient(155deg,rgba(255,255,255,.13),rgba(255,255,255,.035)),
+      linear-gradient(155deg,#111827,#050816)}
+    .wrapped-scorer{--accent:#ffcf4a;--accent-rgb:255,207,74;--accent2-rgb:239,68,68}
+    .wrapped-average{--accent:#34d399;--accent-rgb:52,211,153;--accent2-rgb:34,197,94}
+    .wrapped-mvp{--accent:#f5b942;--accent-rgb:245,185,66;--accent2-rgb:168,85,247}
+    .wrapped-keeper{--accent:#60a5fa;--accent-rgb:96,165,250;--accent2-rgb:6,182,212}
+    .wrapped-champion{--accent:#f5b942;--accent-rgb:245,185,66;--accent2-rgb:34,197,94}
+    .wrapped-crazy{--accent:#fb7185;--accent-rgb:251,113,133;--accent2-rgb:249,115,22}
+    .wrapped-totals{--accent:#a78bfa;--accent-rgb:167,139,250;--accent2-rgb:56,189,248}
+    .wrapped-closing{--accent:#f5b942;--accent-rgb:245,185,66;--accent2-rgb:255,255,255}
+    .wrapped-footer{position:relative;z-index:6}
+    .wrapped-replay,.wrapped-share{backdrop-filter:blur(12px);box-shadow:0 12px 32px rgba(0,0,0,.28)}
+    @keyframes wrappedCardIn{0%{opacity:0;transform:translateY(32px) scale(.90) rotateX(12deg)}100%{opacity:1;transform:translateY(0) scale(1) rotateX(0)}}
+    @keyframes wrappedShimmer{0%,100%{transform:translateX(-5%) rotate(8deg)}50%{transform:translateX(5%) rotate(8deg)}}
+    @keyframes wrappedStarPulse{from{transform:scale(.92) rotate(-8deg);opacity:.65}to{transform:scale(1.12) rotate(8deg);opacity:1}}
+    @keyframes wrappedOrbFloat{from{transform:translate3d(0,0,0) scale(1)}to{transform:translate3d(22px,-28px,0) scale(1.12)}}
+    @media(max-width:560px){.wrapped-slide{inset:12px;width:calc(100vw - 24px);min-height:calc(100svh - 128px);border-radius:28px;padding:20px}.wrapped-slide .ws-photo,.wrapped-slide .ws-logo{width:112px;height:112px;border-radius:26px}.wrapped-slide .ws-detail{font-size:14.5px}}
+    @media(prefers-reduced-motion:reduce){.wrapped-overlay::before,.wrapped-overlay::after,.wrapped-slide::before,.wrapped-slide::after,.wrapped-slide.is-current{animation:none}.wrapped-slide{transform:none}}
+
   </style>
 </head>
 <body>
@@ -3010,7 +3078,7 @@ function wrappedSlidesData(){
   return slides;
 }
 function buildWrappedSlideEl(slide){
-  const el=document.createElement('div'); el.className='wrapped-slide';
+  const el=document.createElement('div'); el.className='wrapped-slide wrapped-'+slide.type;
   const d=slide.data;
   if(slide.type==='cover'){
     el.classList.add('cover');
@@ -3018,42 +3086,43 @@ function buildWrappedSlideEl(slide){
     el.innerHTML=`
       <div class="ws-eyebrow">🎉 Torneo concluso</div>
       <div class="ws-name" style="font-size:clamp(28px,8vw,44px)">CRAL Champions</div>
+      <div class="ws-big ws-big-word">WRAPPED</div>
       <div class="ws-detail">${total?esc(total.played)+' partite giocate, pronti a scoprire i numeri del torneo?':'Ecco i numeri del torneo!'}</div>`;
   } else if(slide.type==='scorer'){
     el.appendChild(imgOrInitialEl('player',[d.name],'ws-photo'));
-    el.innerHTML+=`
+    el.insertAdjacentHTML('beforeend', `
       <div class="ws-eyebrow">💣 Capocannoniere</div>
       <div class="ws-name">${esc(d.name)}</div>
       <div class="ws-sub">${esc(d.team)}</div>
       <div class="ws-big">${esc(d.goals)}</div>
-      <div class="ws-detail">gol segnati nel torneo</div>`;
+      <div class="ws-detail">gol segnati nel torneo</div>`);
   } else if(slide.type==='average'){
     el.appendChild(imgOrInitialEl('player',[d.name],'ws-photo'));
-    el.innerHTML+=`
+    el.insertAdjacentHTML('beforeend', `
       <div class="ws-eyebrow">📈 Miglior media gol</div>
       <div class="ws-name">${esc(d.name)}</div>
       <div class="ws-sub">${esc(d.team)}</div>
       <div class="ws-big">${esc(d.media.toFixed(2).replace('.',','))}</div>
-      <div class="ws-detail">gol a partita (${esc(d.gol)} gol in ${esc(d.partite)} partite)</div>`;
+      <div class="ws-detail">gol a partita (${esc(d.gol)} gol in ${esc(d.partite)} partite)</div>`);
   } else if(slide.type==='mvp'){
     el.appendChild(imgOrInitialEl('player',d.imageNames||[d.name],'ws-photo'));
-    el.innerHTML+=`
+    el.insertAdjacentHTML('beforeend', `
       <div class="ws-eyebrow">⭐ MVP del torneo</div>
       <div class="ws-name">${esc(d.name)}</div>
       <div class="ws-sub">${esc(d.team)}</div>
       <div class="ws-big">${esc(formatProfileNumber(d.points))}</div>
-      <div class="ws-detail">punti MVP totalizzati</div>`;
+      <div class="ws-detail">punti MVP totalizzati</div>`);
   } else if(slide.type==='keeper'){
     el.appendChild(imgOrInitialEl('player',[d.name],'ws-photo'));
-    el.innerHTML+=`
+    el.insertAdjacentHTML('beforeend', `
       <div class="ws-eyebrow">🧤 Miglior portiere</div>
       <div class="ws-name">${esc(d.name)}</div>
       <div class="ws-sub">${esc(d.team)}</div>
       <div class="ws-big">${esc(formatProfileNumber(d.points))}</div>
-      <div class="ws-detail">punti come miglior portiere</div>`;
+      <div class="ws-detail">punti come miglior portiere</div>`);
   } else if(slide.type==='champion'){
     el.appendChild(imgOrInitialEl('team',[d.team],'ws-logo'));
-    el.innerHTML+=`
+    el.insertAdjacentHTML('beforeend', `
       <div class="ws-eyebrow">🏆 Squadra campione</div>
       <div class="ws-name">${esc(d.team)}</div>
       <div class="ws-big">${esc(formatProfileNumber(d.points))}</div>
@@ -3062,7 +3131,7 @@ function buildWrappedSlideEl(slide){
         <div class="ws-stat"><div class="n">${esc(d.v)}</div><div class="l">Vittorie</div></div>
         <div class="ws-stat"><div class="n">${esc(d.n)}</div><div class="l">Pareggi</div></div>
         <div class="ws-stat"><div class="n">${esc(d.p)}</div><div class="l">Sconfitte</div></div>
-      </div>`;
+      </div>`);
   } else if(slide.type==='crazy'){
     el.innerHTML=`
       <div class="ws-eyebrow">🔥 Partita più pazza</div>
@@ -3080,6 +3149,7 @@ function buildWrappedSlideEl(slide){
   } else if(slide.type==='closing'){
     el.innerHTML=`
       <div class="ws-eyebrow">🙌 Grazie per esserci stati</div>
+      <div class="ws-big ws-big-emoji">🏁</div>
       <div class="ws-name" style="font-size:clamp(24px,7vw,36px)">Alla prossima edizione!</div>
       <div class="ws-detail">CRAL Champions</div>`;
   }
