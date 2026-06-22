@@ -701,13 +701,20 @@
     }
 
     function renderCurrent(torneo) {
+      // Mantiene l'anno pulito per la scritta gigante (es: 2026)
       document.getElementById('currentYear').textContent = escapeText(torneo.anno || '2026');
       document.getElementById('currentTitle').textContent = escapeText(torneo.titolo || `CRAL Champions - Auriga ${torneo.anno || '2026'}`);
       document.getElementById('currentDescription').textContent = escapeText(torneo.descrizione || 'Classifiche, calendario, risultati, squadre e statistiche giocatori.');
 
       const btn = document.getElementById('currentButton');
       btn.href = torneo.url || 'tornei/2026/';
-      btn.textContent = `Vai al torneo ${torneo.anno || 'attuale'} ›`;
+      
+      // Controllo dinamico sul campo "edizione" del JSON
+      if (torneo.edizione) {
+        btn.textContent = `Vai all'edizione ${torneo.edizione} ›`;
+      } else {
+        btn.textContent = `Vai al torneo ${torneo.anno || 'attuale'} ›`;
+      }
     }
 
     function createArchiveCard(torneo) {
@@ -715,9 +722,10 @@
       link.className = 'year-card';
       link.href = torneo.url || '#';
 
+      // Mostra la combinazione di anno ed edizione nell'archivio per distinguerli
       const year = document.createElement('div');
       year.className = 'year';
-      year.textContent = torneo.anno || '';
+      year.textContent = torneo.edizione ? `${torneo.anno} ${torneo.edizione}` : (torneo.anno || '');
 
       const badge = document.createElement('span');
       badge.className = 'badge';
@@ -739,8 +747,10 @@
     }
 
     function renderArchive(tornei, current) {
+      // Se hanno lo stesso anno solare ma ID diverso (es: 2026-summer e 2026-winter), 
+      // l'edizione passata deve comunque comparire in archivio
       const archive = tornei
-        .filter(t => String(t.anno) !== String(current.anno))
+        .filter(t => String(t.id) !== String(current.id))
         .sort((a, b) => Number(b.anno || 0) - Number(a.anno || 0));
 
       const container = document.getElementById('archiveYears');
