@@ -1,0 +1,35 @@
+Sezione;Giornata;Casa;Trasferta;GolCasa;GolTrasferta;Esito;Squadra;Giocatore;Gol;PuntiMVP;Portiere;PuntiPortiere;Partita;Voce;Valore;Note
+Partita;7;BlackJack;BOT & BALL;4;6;S/V;;;;;;;BlackJack vs BOT & BALL;;;Marcatori: Cirilli, Todisco, Lo Riso x2, Anselmi x2, Guri, Eramo x2, Camposeo | MVP: Anselmi | Riposa: Auriga Juniors
+Partita;7;FC Stealthy Dribblers;Out Of Office FC;2;4;S/V;;;;;;;FC Stealthy Dribblers vs Out Of Office FC;;;Marcatori: Menolascina, Masellis, Arena x2, Saracino x2 | MVP: Arena
+Marcatore;7;;;;;;BlackJack;Cirilli Michele;1;;;;;;;
+Marcatore;7;;;;;;BlackJack;Todisco Giovanni;1;;;;;;;
+Marcatore;7;;;;;;BlackJack;Lo Riso Alessandro;2;;;;;;;
+Marcatore;7;;;;;;BOT & BALL;Anselmi Biagio;2;;;;;;;
+Marcatore;7;;;;;;BOT & BALL;Guri Sabah;1;;;;;;;
+Marcatore;7;;;;;;BOT & BALL;Eramo Gianluca;2;;;;;;;
+Marcatore;7;;;;;;BOT & BALL;Camposeo Giovanni;1;;;;;;;
+Marcatore;7;;;;;;FC Stealthy Dribblers;Menolascina Nicolandrea;1;;;;;;;
+Marcatore;7;;;;;;FC Stealthy Dribblers;Masellis Roberto;1;;;;;;;
+Marcatore;7;;;;;;Out Of Office FC;Arena Michele;2;;;;;;;
+Marcatore;7;;;;;;Out Of Office FC;Saracino Gianvito;2;;;;;;;
+Totale marcatore giornata;7;;;;;;BlackJack;Lo Riso Alessandro;2;;;;;;;
+Totale marcatore giornata;7;;;;;;BOT & BALL;Anselmi Biagio;2;;;;;;;
+Totale marcatore giornata;7;;;;;;BOT & BALL;Eramo Gianluca;2;;;;;;;
+Totale marcatore giornata;7;;;;;;Out Of Office FC;Arena Michele;2;;;;;;;
+Totale marcatore giornata;7;;;;;;Out Of Office FC;Saracino Gianvito;2;;;;;;;
+Totale marcatore giornata;7;;;;;;BlackJack;Cirilli Michele;1;;;;;;;
+Totale marcatore giornata;7;;;;;;BlackJack;Todisco Giovanni;1;;;;;;;
+Totale marcatore giornata;7;;;;;;BOT & BALL;Camposeo Giovanni;1;;;;;;;
+Totale marcatore giornata;7;;;;;;BOT & BALL;Guri Sabah;1;;;;;;;
+Totale marcatore giornata;7;;;;;;FC Stealthy Dribblers;Masellis Roberto;1;;;;;;;
+Totale marcatore giornata;7;;;;;;FC Stealthy Dribblers;Menolascina Nicolandrea;1;;;;;;;
+MVP;7;;;;;;Out Of Office FC;Arena Michele;;5;;;;;;
+MVP;7;;;;;;BOT & BALL;Anselmi Biagio;;4;;;;;;
+Miglior portiere;7;;;;;;FC Stealthy Dribblers;;;;Bruno PT;1;FC Stealthy Dribblers vs Out Of Office FC;;;
+Miglior portiere;7;;;;;;BOT & BALL;;;;Mincuzzi PT;1;BlackJack vs BOT & BALL;;;
+Statistica;7;;;;;;;;;;;;;Gol totali;16;
+Statistica;7;;;;;;;;;;;;;Media gol/partita;8.0;
+Statistica;7;;;;;;;;;;;;;Clean sheet;0;
+Statistica;7;;;;;;;;;;;;;Partita con piu gol;BlackJack 4-6 BOT & BALL;
+Statistica;7;;;;;;;;;;;;;Miglior marcatore;Lo Riso Alessandro (2 gol);
+Statistica;7;;;;;;;;;;;;;Partite giocate;2;

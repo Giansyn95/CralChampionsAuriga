@@ -1,24 +1,25 @@
-Posizione;Squadra;Giocatore;Gol
-1;FC Stealthy Dribblers;Turi Paolo;10
-2;Out Of Office FC;Arena Michele;9
-3;Auriga Juniors;Spinola Salvatore;8
-4;Out Of Office FC;Saracino Gianvito;8
-5;BlackJack;Fiorella Giacomo;6
-6;Auriga Juniors;De Toma Nicola;5
-7;BOT & BALL;Camposeo Giovanni;5
-8;BOT & BALL;Guri Sabah;5
-9;FC Stealthy Dribblers;Menolascina Nicolandrea;5
-10;BlackJack;Lo Riso Alessandro;4
-11;Auriga Juniors;Rubino Gianluca;3
-12;BOT & BALL;Ziri Gaetano;3
-13;Auriga Juniors;Albrizio Gianfranco;2
-14;BlackJack;Cirilli Michele;2
-15;BlackJack;Menolascina Gerardo;2
-16;BOT & BALL;Anselmi Biagio;2
-17;BOT & BALL;Eramo Gianluca;2
-18;Out Of Office FC;Di Giovine Domenico;2
-19;Auriga Juniors;Castellano Graziano;1
-20;Auriga Juniors;Iacobellis PT;1
-21;FC Stealthy Dribblers;Grippa Michele;1
-22;FC Stealthy Dribblers;Masellis Roberto;1
-23;Out Of Office FC;Mondelli Francesco;1
+Posizione;Squadra;Giocatore;Gol;Presenze
+1;Out Of Office FC;Arena Michele;11;6
+2;FC Stealthy Dribblers;Turi Paolo;10;6
+3;Out Of Office FC;Saracino Gianvito;10;6
+4;Auriga Juniors;Spinola Salvatore;8;5
+5;BlackJack;Fiorella Giacomo;6;4
+6;BlackJack;Lo Riso Alessandro;6;5
+7;BOT & BALL;Camposeo Giovanni;6;6
+8;BOT & BALL;Guri Sabah;6;6
+9;FC Stealthy Dribblers;Menolascina Nicolandrea;6;6
+10;Auriga Juniors;De Toma Nicola;5;5
+11;BOT & BALL;Anselmi Biagio;4;6
+12;BOT & BALL;Eramo Gianluca;4;2
+13;Auriga Juniors;Rubino Gianluca;3;5
+14;BlackJack;Cirilli Michele;3;5
+15;BOT & BALL;Ziri Gaetano;3;6
+16;Auriga Juniors;Albrizio Gianfranco;2;5
+17;BlackJack;Menolascina Gerardo;2;5
+18;FC Stealthy Dribblers;Masellis Roberto;2;4
+19;Out Of Office FC;Di Giovine Domenico;2;2
+20;Auriga Juniors;Castellano Graziano;1;5
+21;Auriga Juniors;Iacobellis PT;1;5
+22;BlackJack;Todisco Giovanni;1;5
+23;FC Stealthy Dribblers;Grippa Michele;1;6
+24;Out Of Office FC;Mondelli Francesco;1;6
