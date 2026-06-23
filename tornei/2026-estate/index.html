@@ -273,6 +273,13 @@
       .motm-stat .n{font-size:24px}
       .motm-eyebrow{top:18px;left:34px}
     }
+    @media(max-width:720px), (hover:none) and (pointer:coarse){
+      .motm-card{will-change:transform;transform-style:preserve-3d;touch-action:pan-y}
+      .motm-card.is-resetting{transition:transform .45s cubic-bezier(.2,.85,.3,1),box-shadow .25s ease}
+      .motm-card-glare{display:block;position:absolute;inset:0;pointer-events:none;border-radius:inherit;z-index:2;
+        background:radial-gradient(circle at 50% 50%,rgba(255,255,255,.22),transparent 60%);
+        opacity:0;transition:opacity .25s}
+    }
     @media(max-width:560px){
       .motm-card{flex-direction:column;text-align:center;padding:28px 18px 20px;gap:10px;border-radius:22px}
       .motm-eyebrow{position:static;margin-bottom:6px;justify-content:center}
@@ -3704,13 +3711,61 @@ function renderMotmCard(){
   return wrap;
 }
 function attachCardTilt(card,glare){
-  // Disattivato: il tilt 3D su desktop rasterizzava la card e poteva farla
-  // apparire sfocata al passaggio del mouse. Restano solo shine e ombra leggera.
   if(card._tiltAttached) return;
   card._tiltAttached=true;
-  card.classList.remove('is-tilting','is-resetting');
-  card.style.transform='';
-  if(glare) glare.style.opacity='0';
+  if(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+  // Il tilt 3D resta attivo solo su mobile/touch: su desktop rimane stabile
+  // per evitare la sfocatura vista al passaggio del mouse.
+  const canUseMobileTilt = !window.matchMedia || window.matchMedia('(hover: none), (pointer: coarse), (max-width: 720px)').matches;
+  if(!canUseMobileTilt){
+    card.classList.remove('is-tilting','is-resetting');
+    card.style.transform='';
+    if(glare) glare.style.opacity='0';
+    return;
+  }
+
+  const MAX_DEG=11;
+  let rafId=null;
+
+  function applyTilt(clientX,clientY){
+    const rect=card.getBoundingClientRect();
+    if(!rect.width||!rect.height) return;
+    const px=Math.max(0,Math.min(1,(clientX-rect.left)/rect.width));
+    const py=Math.max(0,Math.min(1,(clientY-rect.top)/rect.height));
+    const rotY=(px-0.5)*2*MAX_DEG;
+    const rotX=(0.5-py)*2*MAX_DEG;
+    if(rafId) cancelAnimationFrame(rafId);
+    rafId=requestAnimationFrame(()=>{
+      card.style.transform=`perspective(700px) scale3d(1.015,1.015,1.015) rotateX(${rotX.toFixed(2)}deg) rotateY(${rotY.toFixed(2)}deg)`;
+      if(glare){
+        glare.style.opacity='1';
+        glare.style.background=`radial-gradient(circle at ${(px*100).toFixed(0)}% ${(py*100).toFixed(0)}%, rgba(255,255,255,.28), transparent 58%)`;
+      }
+    });
+  }
+  function resetTilt(){
+    if(rafId) cancelAnimationFrame(rafId);
+    card.classList.remove('is-tilting');
+    card.classList.add('is-resetting');
+    card.style.transform='';
+    if(glare) glare.style.opacity='0';
+  }
+
+  card.addEventListener('touchstart',ev=>{
+    if(!ev.touches||!ev.touches.length) return;
+    card.classList.remove('is-resetting');
+    card.classList.add('is-tilting');
+    applyTilt(ev.touches[0].clientX,ev.touches[0].clientY);
+  },{passive:true});
+  card.addEventListener('touchmove',ev=>{
+    if(!ev.touches||!ev.touches.length) return;
+    card.classList.remove('is-resetting');
+    card.classList.add('is-tilting');
+    applyTilt(ev.touches[0].clientX,ev.touches[0].clientY);
+  },{passive:true});
+  card.addEventListener('touchend',resetTilt);
+  card.addEventListener('touchcancel',resetTilt);
 }
 function profileTotalFromClassifica(kind,name,candidates,columns,teamHint){
   for(const f of sectionFiles(kind)){
