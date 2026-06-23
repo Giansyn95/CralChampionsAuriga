@@ -768,6 +768,47 @@
       .fanta-table-full th:nth-child(15),.fanta-table-full td:nth-child(15){min-width:170px;max-width:280px}
     }
 
+
+
+    /* Fantacalcio final: colonne leggibili, tabella ordinabile e popup rosa */
+    .fanta-table-full table{min-width:1120px;table-layout:auto}
+    .fanta-table-full th,.fanta-table-full td{white-space:nowrap!important;word-break:normal!important;overflow:visible!important;text-overflow:clip!important;vertical-align:middle;line-height:1.2}
+    .fanta-table-full th{font-size:11px;letter-spacing:0;line-height:1.15}
+    .fanta-table-full th[data-col-role=rank],.fanta-table-full td[data-col-role=rank]{min-width:62px;max-width:none;text-align:center}
+    .fanta-table-full th[data-col-role=round],.fanta-table-full td[data-col-role=round]{min-width:86px;max-width:none;text-align:center}
+    .fanta-table-full th[data-col-role=person],.fanta-table-full td[data-col-role=person]{min-width:210px;max-width:none}
+    .fanta-table-full th[data-col-role=metric],.fanta-table-full td[data-col-role=metric]{min-width:72px;max-width:none;text-align:center;font-variant-numeric:tabular-nums}
+    .fanta-table-full th[data-col-role=action],.fanta-table-full td[data-col-role=action]{min-width:130px;max-width:none;text-align:center}
+    .fanta-name-medal{display:inline-flex;align-items:center;gap:7px;font-weight:900;color:var(--ink)}
+    .fanta-medal{font-size:17px;line-height:1;filter:drop-shadow(0 2px 6px rgba(0,0,0,.22))}
+    .fanta-squad-btn{border:1px solid rgba(15,90,168,.30);border-radius:999px;background:rgba(15,90,168,.12);color:var(--blue);font-weight:900;padding:7px 11px;cursor:pointer;white-space:nowrap;font-size:12px}
+    .fanta-squad-btn:hover{background:rgba(15,90,168,.20)}
+    [data-theme="dark"] .fanta-squad-btn{border-color:rgba(59,130,246,.36);background:rgba(59,130,246,.18);color:#93c5fd}
+    .fanta-squad-backdrop{position:fixed;inset:0;z-index:10020;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(7,16,35,.72);backdrop-filter:blur(10px);opacity:0;transition:opacity .16s ease}
+    .fanta-squad-backdrop.is-open{opacity:1}
+    .fanta-squad-modal{position:relative;width:min(640px,100%);max-height:90vh;overflow:auto;border-radius:24px;border:1px solid var(--line);background:var(--panel);box-shadow:0 24px 70px rgba(0,0,0,.42);color:var(--ink);padding:18px}
+    .fanta-squad-modal h3{margin:0;color:var(--blue);font-family:'Oswald',Arial,sans-serif;font-size:24px;line-height:1.1;text-transform:uppercase}
+    .fanta-squad-modal .sub{margin:5px 44px 14px 0;color:var(--muted);font-size:13px;line-height:1.35}
+    .fanta-squad-close{position:absolute;top:12px;right:12px;width:38px;height:38px;border-radius:13px;border:1px solid var(--line);background:var(--soft);color:var(--ink);font-size:20px;font-weight:900;cursor:pointer}
+    .fanta-squad-list{display:flex;flex-direction:column;gap:9px}
+    .fanta-squad-player{display:flex;align-items:center;gap:11px;border:1px solid var(--line);border-radius:16px;background:var(--soft);padding:10px}
+    .fanta-squad-player .tbl-avatar{width:42px;height:42px;flex:0 0 42px}
+    .fanta-squad-info{min-width:0;flex:1}
+    .fanta-squad-name{font-weight:900;color:var(--ink);line-height:1.15;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .fanta-squad-meta{margin-top:3px;color:var(--muted);font-size:12px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .fanta-role-pill{display:inline-flex;align-items:center;justify-content:center;min-width:36px;border-radius:999px;padding:5px 8px;background:rgba(245,185,66,.18);border:1px solid rgba(245,185,66,.35);color:#a66c00;font-size:11px;font-weight:900}
+    [data-theme="dark"] .fanta-role-pill{color:var(--gold)}
+    @media(max-width:720px){
+      .fanta-table-full table{min-width:1060px}
+      .fanta-table-full th,.fanta-table-full td{font-size:12px;padding:9px 8px}
+      .fanta-table-full th{font-size:10.5px}
+      .fanta-table-full th[data-col-role=person],.fanta-table-full td[data-col-role=person]{min-width:180px}
+      .fanta-table-full th[data-col-role=metric],.fanta-table-full td[data-col-role=metric]{min-width:62px}
+      .fanta-table-full th[data-col-role=round],.fanta-table-full td[data-col-role=round]{min-width:76px}
+      .fanta-squad-modal{border-radius:20px;padding:15px;max-height:92vh}
+      .fanta-squad-modal h3{font-size:21px}
+    }
+
 </style>
 </head>
 <body>
@@ -6140,46 +6181,46 @@ function fantaFindPlayer(players,teamCode,playerName){
   });
   return loose.length===1 ? loose[0] : null;
 }
-function fantaPlayerFromListoneRow(row, rawId){
-  const team=smartSpace(firstPresent(row,[['squadra','team','club']])||'');
-  const ruolo=fantaRole(firstPresent(row,[['ruolo','role','posizione','position']]));
-  const nome=smartSpace(firstPresent(row,[['nome','first name','firstname']])||'');
-  const cognome=smartSpace(firstPresent(row,[['cognome','surname','last name','lastname']])||'');
-  const playerText=smartSpace(firstPresent(row,[['giocatore','player','nome giocatore','calciatore','nome completo','cognome e nome']]) || uniqueNameParts([cognome,nome]) || uniqueNameParts([nome,cognome]));
-  let surname=cognome, name=nome;
-  if(!surname && !name && playerText){
-    const parts=playerText.split(/\s+/);
-    if(ruolo==='PT' && parts.length>1 && fantaRole(parts[parts.length-1])==='PT'){
-      surname=parts.slice(0,-1).join(' ');
-      name=parts[parts.length-1];
-    }else{
+function fantaBuildPlayerContext(){
+  const players=fantaAllPlayersSorted();
+  const goalsAll=fantaGoalsByPlayerDayAll(players);
+  const byId=new Map();
+  const credits=new Map();
+  const registerPlayer=(player, ids=[])=>{
+    if(!player) return null;
+    player.numericId=String(player.numericId||ids.find(Boolean)||'').trim() || player.numericId || '';
+    player.stableKey=player.stableKey || fantaStableKey(player);
+    const uniqueKey=fantaNormalizeKey((player.teamCode||'')+'_'+(player.surname||'')+'_'+(player.name||''));
+    if(uniqueKey && !players.some(p=>fantaNormalizeKey((p.teamCode||'')+'_'+(p.surname||'')+'_'+(p.name||''))===uniqueKey)) players.push(player);
+    ids.forEach(id=>fantaIdVariants(id).forEach(v=>byId.set(v,player)));
+    if(player.numericId) fantaIdVariants(player.numericId).forEach(v=>byId.set(v,player));
+    if(player.stableKey) byId.set(player.stableKey,player);
+    byId.set(fantaNormalizeKey(player.teamCode+'_'+fantaPlayerDisplay(player)),player);
+    byId.set(fantaNormalizeKey(player.teamCode+'_'+fantaPlayerFull(player)),player);
+    return player;
+  };
+  const playerFromListoneRow=(r, rawId)=>{
+    const team=teamDisplayNameForChart(firstPresent(r,[['squadra','team','club']])||'');
+    const role=fantaRole(firstPresent(r,[['ruolo','role','posizione','position']]));
+    const nome=smartSpace(firstPresent(r,[['nome','first name','firstname']])||'');
+    const cognome=smartSpace(firstPresent(r,[['cognome','surname','last name','lastname']])||'');
+    const playerText=smartSpace(firstPresent(r,[['giocatore','player','nome giocatore','calciatore','nome completo','cognome e nome']]) || uniqueNameParts([cognome,nome]) || uniqueNameParts([nome,cognome]));
+    let surname=cognome, name=nome;
+    if(!surname && !name && playerText){
+      const parts=playerText.split(/\s+/).filter(Boolean);
       surname=parts.shift()||playerText;
       name=parts.join(' ');
     }
-  }
-  if(!team || (!surname && !name)) return null;
-  const player={
-    teamCode:team, surname, name, role:ruolo,
-    displayName:uniqueNameParts([surname,name]),
-    fullName:uniqueNameParts([name,surname])
+    if(!team || (!surname && !name)) return null;
+    const p={teamCode:team,surname,name,role,displayName:uniqueNameParts([surname,name]),fullName:uniqueNameParts([name,surname]),numericId:String(rawId||'').trim()};
+    p.stableKey=fantaStableKey(p);
+    return p;
   };
-  player.numericId=String(rawId||'').trim() || fantaNormalizeKey(team+'_'+player.displayName);
-  player.stableKey=fantaStableKey(player);
-  return player;
-}
-function fantaBuildPlayerContext(){
-  const players=fantaAllPlayersSorted();
-  const byId=new Map();
-  const credits=new Map();
-  const addPlayerAliases=(player, rawId)=>{
-    if(!player) return;
-    const ids=[rawId, player.numericId, player.stableKey, fantaNormalizeKey(player.teamCode+'_'+fantaPlayerDisplay(player)), fantaNormalizeKey(player.teamCode+'_'+fantaPlayerFull(player))];
-    ids.forEach(id=>fantaIdVariants(id).forEach(v=>byId.set(v,player)));
-  };
-  players.forEach((p,i)=>{
-    if(!p.numericId) p.numericId=String(i+1).padStart(3,'0');
-    if(!p.stableKey) p.stableKey=fantaStableKey(p);
-    addPlayerAliases(p,p.numericId);
+  players.forEach(p=>{
+    registerPlayer(p,[p.numericId,p.stableKey]);
+    const suggested=fantaSuggestedCredits(p,goalsAll);
+    fantaIdVariants(p.numericId).forEach(id=>credits.set(id,suggested));
+    credits.set(p.stableKey,suggested);
   });
   fantaListoneFiles().forEach(file=>{
     rowsToObjects(state.rows[file]||[]).forEach(r=>{
@@ -6191,14 +6232,11 @@ function fantaBuildPlayerContext(){
       let player=rawId ? byId.get(rawId) : null;
       if(!player && rawId) player=byId.get(fantaNormalizeKey(rawId));
       if(!player) player=fantaFindPlayer(players,team,playerText);
-      if(!player){
-        player=fantaPlayerFromListoneRow(r,rawId);
-        if(player) players.push(player);
-      }
+      if(!player) player=playerFromListoneRow(r,rawId);
       let key=fantaNormalizeKey(firstPresent(r,[['chiaveGiocatore','chiave','key','chiave giocatore']]));
       if(!key) key=fantaNormalizeKey(team+'_'+playerText);
       if(player){
-        addPlayerAliases(player,rawId);
+        registerPlayer(player,[rawId,key,player.numericId,player.stableKey]);
         if(key) byId.set(key,player);
       }
       const credit=num(firstPresent(r,[['crediti','creditiSuggeriti','crediti suggeriti','creditiSuggeritiBase250','quota','valore','costo']]));
@@ -6209,13 +6247,6 @@ function fantaBuildPlayerContext(){
       }
     });
   });
-  const goalsAll=fantaGoalsByPlayerDayAll(players);
-  players.forEach(p=>{
-    const suggested=fantaSuggestedCredits(p,goalsAll);
-    fantaIdVariants(p.numericId).forEach(id=>{ if(!credits.has(id)) credits.set(id,suggested); });
-    if(!credits.has(p.stableKey)) credits.set(p.stableKey,suggested);
-  });
-  players.sort(fantaComparePlayers);
   return {players,byId,credits};
 }
 function fantaResolvePlayerByName(players,row,file){
@@ -6281,11 +6312,12 @@ function fantaMvpsByPlayerDayAll(players){
   });
   return map;
 }
+function fantaTeamScoreKey(day,team){ return day+'|'+(teamMatchKey(team)||norm(team)||fantaNormText(team)); }
 function fantaGoalsConcededByTeamDay(){
   const map=new Map();
   collectPlayedMatchesForTrend().forEach(m=>{
-    const homeKey=m.round+'|'+fantaNormText(m.home);
-    const awayKey=m.round+'|'+fantaNormText(m.away);
+    const homeKey=fantaTeamScoreKey(m.round,m.home);
+    const awayKey=fantaTeamScoreKey(m.round,m.away);
     map.set(homeKey,(map.get(homeKey)||0)+m.ga);
     map.set(awayKey,(map.get(awayKey)||0)+m.gh);
   });
@@ -6327,7 +6359,11 @@ function fantaSameIdSet(a,b){ return JSON.stringify([...new Set(a)].sort())===JS
 function fantaAddResult(target,src){
   const empty=!target.playerIds.length;
   if(!empty && src.playerIds.length && !fantaSameIdSet(target.playerIds,src.playerIds)) target.notes.push('⚠ Squadra diversa tra le giornate');
-  target.points+=src.points; target.credits+=src.credits; target.pres+=src.pres; target.goals+=src.goals; target.mvps+=src.mvps;
+  target.points+=src.points;
+  // Allineato al programma desktop: nel totale torneo i crediti sono quelli della rosa,
+  // non la somma dei crediti giornata per giornata.
+  if(empty) target.credits=src.credits;
+  target.pres+=src.pres; target.goals+=src.goals; target.mvps+=src.mvps;
   target.gsPt+=src.gsPt; target.porteInviolate+=src.porteInviolate; target.rigPar+=src.rigPar; target.rigSbag+=src.rigSbag; target.autogoal+=src.autogoal;
   if(target.presPoints!==null || src.presPoints!==null) target.presPoints=(target.presPoints||0)+(src.presPoints!==null?src.presPoints:(src.pres||0)*6);
   target.players.push(...(src.players||[])); target.playerIds.push(...(src.playerIds||[])); target.notes.push(...(src.notes||[]));
@@ -6416,7 +6452,7 @@ function fantaCalculateFromRosters(){
         result.points += extra.rigPar*3 - extra.rigSbag*3 - extra.autogoal*2;
       }
       if(player.role==='PT'){
-        const k=day+'|'+fantaNormText(player.teamCode);
+        const k=fantaTeamScoreKey(day,player.teamCode);
         const has=conceded.has(k);
         const gs=conceded.get(k)||0;
         result.gsPt+=gs; result.points-=gs;
@@ -6500,15 +6536,20 @@ function fantaAggregateTotals(results){
   return out;
 }
 function fantaAvailableDayOptions(results){
-  const riepilogoOptions=fantaRiepilogoDayOptions();
-  if(riepilogoOptions.length) return [['totale','Tutte le giornate'],...riepilogoOptions];
   const calendar=fantaCalendarDays();
   const max=fantaCalendarMaxDay();
-  const days=[...new Set(results.map(r=>r.day).filter(d=>{
-    const n=parseInt(d,10);
-    return n>0 && (!calendar.size || calendar.has(n)) && (!max || n<=max);
-  }))].sort((a,b)=>a-b);
-  return [['totale','Tutte le giornate'],...days.map(d=>[String(d),'Giornata '+d])];
+  const map=new Map();
+  const addDay=(n)=>{
+    n=parseInt(n,10);
+    if(!Number.isFinite(n) || n<=0) return;
+    if(calendar.size && !calendar.has(n)) return;
+    if(max && n>max) return;
+    if(!map.has(String(n))) map.set(String(n),'Giornata '+n);
+  };
+  fantaRiepilogoDayOptions().forEach(([key,label])=>addDay(giornataNumberFromText(key)||giornataNumberFromText(label)||key));
+  (results||[]).forEach(r=>addDay(r.day));
+  const days=[...map.entries()].sort((a,b)=>parseInt(a[0],10)-parseInt(b[0],10));
+  return [['totale','Tutte le giornate'],...days];
 }
 function fantaRowsForSelected(data){
   const selected=state.selectedFantaGiornata||'totale';
@@ -6523,20 +6564,123 @@ function fantaDisplayPres(result){
   if(result.presPoints!==null && result.presPoints!==undefined) return result.presPoints;
   return (result.pres||0)*6;
 }
-function fantaBuildTable(rows){
-  const header=['POS.','Giornata','Partecipante','Punti','Crediti','Pres.','Goal','MVP','GS PT','PI','Rig. par.','Rig. sbagl.','AG','Squadra','Note'];
-  const body=rows.map((r,i)=>[
-    String(i+1), r.day ? String(r.day) : 'Totale', r.name, String(r.points), String(r.credits||''), String(fantaDisplayPres(r)||0),
-    String(r.goals||0), String(r.mvps||0), String(r.gsPt||0), String(r.porteInviolate||0), String(r.rigPar||0), String(r.rigSbag||0), String(r.autogoal||0),
-    r.squadOverride || fantaSquadText(r), fantaNoteText(r) || 'Rosa valida'
-  ]);
-  const wrap=document.createElement('div');
-  wrap.className='fanta-results-wrap';
-  const table=buildTable([header,...body],'fantacalcio_'+(state.selectedFantaGiornata||'totale'),null,['POS.','Giornata','Partecipante','Punti'],['Punti']);
-  table.classList.add('fanta-table-desktop','fanta-table-full');
-  wrap.appendChild(table);
-  return wrap;
+function fantaRankMedal(index){ return index===0?'🥇':(index===1?'🥈':(index===2?'🥉':'')); }
+function fantaResultSortValue(row,col,index){
+  switch(col){
+    case 0: return index+1;
+    case 1: return row.day||0;
+    case 2: return row.name||'';
+    case 3: return row.points||0;
+    case 4: return row.credits||0;
+    case 5: return fantaDisplayPres(row)||0;
+    case 6: return row.goals||0;
+    case 7: return row.mvps||0;
+    case 8: return row.gsPt||0;
+    case 9: return row.porteInviolate||0;
+    case 10: return row.rigPar||0;
+    case 11: return row.rigSbag||0;
+    case 12: return row.autogoal||0;
+    case 13: return fantaSquadText(row)||'';
+    default: return '';
+  }
 }
+function fantaCompareValues(a,b){
+  const an=Number(a), bn=Number(b);
+  const aNum=Number.isFinite(an) && String(a).trim()!=='';
+  const bNum=Number.isFinite(bn) && String(b).trim()!=='';
+  if(aNum || bNum) return (an||0)-(bn||0);
+  return String(a||'').localeCompare(String(b||''),'it',{numeric:true,sensitivity:'base'});
+}
+function fantaBuildTable(rows){
+  const headers=['POS.','Giornata','Partecipante','Punti','Crediti','Pres.','Gol','MVP','GS PT','PI','Rig. par.','Rig. sbagl.','AG','Squadra'];
+  const roles=['rank','round','person','metric','metric','metric','metric','metric','metric','metric','metric','metric','metric','action'];
+  const tableId='fantacalcio_'+(state.selectedFantaGiornata||'totale');
+  const sort=state.sortState[tableId]||{col:-1,dir:'asc'};
+  const sorted=[...rows];
+  if(sort.col>=0){
+    sorted.sort((ra,rb)=>{
+      const ia=rows.indexOf(ra), ib=rows.indexOf(rb);
+      let c=fantaCompareValues(fantaResultSortValue(ra,sort.col,ia),fantaResultSortValue(rb,sort.col,ib));
+      if(sort.dir==='desc') c=-c;
+      return c || fantaCompareResults(ra,rb);
+    });
+  }
+  const outer=document.createElement('div'); outer.className='fanta-results-wrap fanta-table-full';
+  const wrap=document.createElement('div'); wrap.className='tableWrap';
+  const table=document.createElement('table'); table.className='tbl-aligned';
+  const thead=document.createElement('thead'); const trh=document.createElement('tr');
+  headers.forEach((h,i)=>{
+    const th=document.createElement('th'); th.dataset.colRole=roles[i];
+    if(i===3) th.classList.add('col-highlight');
+    if(sort.col===i) th.classList.add(sort.dir==='asc'?'sort-asc':'sort-desc');
+    const span=document.createElement('span'); span.textContent=h;
+    const arrow=document.createElement('i'); arrow.className='sort-arrow';
+    th.appendChild(span); th.appendChild(arrow);
+    th.onclick=()=>{
+      if(sort.col===i) state.sortState[tableId]={col:i,dir:sort.dir==='asc'?'desc':'asc'};
+      else state.sortState[tableId]={col:i,dir:i===2?'asc':'desc'};
+      renderFantacalcio();
+    };
+    trh.appendChild(th);
+  });
+  thead.appendChild(trh); table.appendChild(thead);
+  const tbody=document.createElement('tbody');
+  sorted.forEach((r,i)=>{
+    const tr=document.createElement('tr');
+    const values=[String(i+1), r.day?String(r.day):'Totale', r.name, r.points||0, r.credits||0, fantaDisplayPres(r)||0, r.goals||0, r.mvps||0, r.gsPt||0, r.porteInviolate||0, r.rigPar||0, r.rigSbag||0, r.autogoal||0, ''];
+    values.forEach((value,colIdx)=>{
+      const td=document.createElement('td'); td.dataset.colRole=roles[colIdx];
+      if(colIdx===3) td.classList.add('col-highlight');
+      if(colIdx===2){
+        const name=document.createElement('span'); name.className='fanta-name-medal';
+        const medal=fantaRankMedal(i);
+        if(medal){ const m=document.createElement('span'); m.className='fanta-medal'; m.textContent=medal; name.appendChild(m); }
+        const t=document.createElement('span'); t.textContent=r.name||'-'; name.appendChild(t); td.appendChild(name);
+      }else if(colIdx===13){
+        const btn=document.createElement('button'); btn.type='button'; btn.className='fanta-squad-btn'; btn.textContent='Vedi squadra';
+        btn.onclick=(ev)=>{ ev.stopPropagation(); fantaOpenSquadModal(r,i+1); };
+        td.appendChild(btn);
+      }else{
+        td.textContent=String(value);
+      }
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody); wrap.appendChild(table); outer.appendChild(wrap);
+  const hint=document.createElement('div'); hint.className='scroll-hint'; hint.textContent='⟷ Scorri per leggere altri dati'; outer.appendChild(hint);
+  requestAnimationFrame(()=>refreshTableScrollState(wrap));
+  return outer;
+}
+function fantaOpenSquadModal(result,rank){
+  document.querySelectorAll('.fanta-squad-backdrop').forEach(x=>x.remove());
+  const backdrop=document.createElement('div'); backdrop.className='fanta-squad-backdrop';
+  const modal=document.createElement('div'); modal.className='fanta-squad-modal';
+  const close=document.createElement('button'); close.type='button'; close.className='fanta-squad-close'; close.textContent='×';
+  const closeModal=()=>{ backdrop.classList.remove('is-open'); document.body.classList.remove('player-modal-open'); setTimeout(()=>backdrop.remove(),160); };
+  close.onclick=closeModal; backdrop.addEventListener('click',ev=>{ if(ev.target===backdrop) closeModal(); });
+  const title=document.createElement('h3'); title.textContent=(fantaRankMedal((rank||1)-1)?fantaRankMedal((rank||1)-1)+' ':'')+(result.name||'Squadra');
+  const sub=document.createElement('div'); sub.className='sub'; sub.textContent=(result.day?('Giornata '+result.day):'Tutte le giornate')+' · '+(result.points||0)+' punti · '+(result.credits||0)+' crediti';
+  const list=document.createElement('div'); list.className='fanta-squad-list';
+  const players=fantaUniqueSortedPlayers(result);
+  if(!players.length){
+    const empty=document.createElement('div'); empty.className='empty'; empty.textContent='Squadra non disponibile.'; list.appendChild(empty);
+  }else{
+    players.forEach(p=>{
+      const item=document.createElement('div'); item.className='fanta-squad-player';
+      item.appendChild(imgOrInitialEl('player',[fantaPlayerFull(p),fantaPlayerDisplay(p)],'tbl-avatar'));
+      const info=document.createElement('div'); info.className='fanta-squad-info';
+      const name=document.createElement('div'); name.className='fanta-squad-name'; name.textContent=fantaPlayerDisplay(p)||fantaPlayerFull(p)||'-';
+      const meta=document.createElement('div'); meta.className='fanta-squad-meta'; meta.textContent=p.teamCode||'';
+      info.appendChild(name); info.appendChild(meta);
+      const role=document.createElement('span'); role.className='fanta-role-pill'; role.textContent=fantaRole(p.role)==='PT'?'PT':'G';
+      item.appendChild(info); item.appendChild(role); list.appendChild(item);
+    });
+  }
+  modal.appendChild(close); modal.appendChild(title); modal.appendChild(sub); modal.appendChild(list); backdrop.appendChild(modal); document.body.appendChild(backdrop); document.body.classList.add('player-modal-open');
+  requestAnimationFrame(()=>backdrop.classList.add('is-open'));
+}
+
 function fantaBuildMobileCards(rows){
   const list=document.createElement('div');
   list.className='fanta-mobile-list';
@@ -6649,11 +6793,10 @@ function fantaBuildRulesLegend(){
 }
 function fantaSummaryCards(parent,rows,data){
   const wrap=document.createElement('div'); wrap.className='fanta-summary';
-  const warnings=rows.filter(r=>fantaNoteText(r)).length + (data.issues||[]).length;
   const leader=rows[0] ? rows[0].name : '-';
   const avg=rows.length ? (rows.reduce((s,r)=>s+r.points,0)/rows.length).toFixed(2).replace('.',',') : '0';
   const cards=[
-    [rows.length,'Partecipanti'],[leader,'Leader'],[avg,'Media punti'],[rows[0]?rows[0].points:0,'Miglior punteggio'],[warnings,'Warning']
+    [rows.length,'Partecipanti'],[leader,'Leader'],[avg,'Media punti'],[rows[0]?rows[0].points:0,'Miglior punteggio']
   ];
   cards.forEach(([n,l])=>{
     const c=document.createElement('div'); c.className='fanta-mini-card';
