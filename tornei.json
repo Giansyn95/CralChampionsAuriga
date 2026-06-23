@@ -1,18 +1,42 @@
 {
   "titolo": "CRAL Champions Auriga",
   "sottotitolo": "Dove ogni partita pesa, ogni gol lascia il segno.",
-  "logo": "tornei/2026/immagini/logo_cral.png",
+  "logo": "immagini/logo_cral.png",
   "tornei": [
     {
-      "id": "2026",
+      "id": "2026-estate",
       "anno": "2026",
-      "edizione": "",
-      "titolo": "CRAL Champions - Auriga 2026",
-      "descrizione": "Classifiche, calendario, risultati, squadre e statistiche giocatori.",
-      "url": "tornei/2026/",
-      "stato": "Edizione attuale",
+      "stagione": "Estate",
+      "titolo": "CRAL Champions - Auriga 2026 Estate",
+      "descrizione": "Classifiche, calendario, risultati, squadre e statistiche giocatori dell'edizione estiva.",
+      "url": "tornei/2026-estate/",
+      "stato": "in-corso",
       "corrente": true,
-      "ordine": 2026,
+      "ordine": 20262,
+      "attivo": true
+    },
+    {
+      "id": "2026-inverno",
+      "anno": "2026",
+      "stagione": "Inverno",
+      "titolo": "CRAL Champions - Auriga 2026 Inverno",
+      "descrizione": "L'edizione invernale 2026: classifiche finali, marcatori e tabellino completo.",
+      "url": "tornei/2026-inverno/",
+      "stato": "concluso",
+      "corrente": false,
+      "ordine": 20261,
+      "attivo": true
+    },
+    {
+      "id": "2025",
+      "anno": "2025",
+      "stagione": "",
+      "titolo": "CRAL Champions - Auriga 2025",
+      "descrizione": "La prima edizione del torneo aziendale CRAL Champions.",
+      "url": "tornei/2025/",
+      "stato": "concluso",
+      "corrente": false,
+      "ordine": 20250,
       "attivo": true
     }
   ]
