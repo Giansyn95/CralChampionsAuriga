@@ -6200,19 +6200,58 @@ function fantaBuildPlayerContext(){
   const goalsAll=fantaGoalsByPlayerDayAll(players);
   const byId=new Map();
   const credits=new Map();
-  const registerPlayer=(player, ids=[])=>{
-    if(!player) return null;
-    player.numericId=String(player.numericId||ids.find(Boolean)||'').trim() || player.numericId || '';
-    player.stableKey=player.stableKey || fantaStableKey(player);
-    const uniqueKey=fantaNormalizeKey((player.teamCode||'')+'_'+(player.surname||'')+'_'+(player.name||''));
-    if(uniqueKey && !players.some(p=>fantaNormalizeKey((p.teamCode||'')+'_'+(p.surname||'')+'_'+(p.name||''))===uniqueKey)) players.push(player);
-    ids.forEach(id=>fantaIdVariants(id).forEach(v=>byId.set(v,player)));
-    if(player.numericId) fantaIdVariants(player.numericId).forEach(v=>byId.set(v,player));
-    if(player.stableKey) byId.set(player.stableKey,player);
-    byId.set(fantaNormalizeKey(player.teamCode+'_'+fantaPlayerDisplay(player)),player);
-    byId.set(fantaNormalizeKey(player.teamCode+'_'+fantaPlayerFull(player)),player);
-    return player;
+
+  const officialIdFields=[
+    ['idGiocatore','id giocatore','id_giocatore','player_id','player id','codiceGiocatore','codice giocatore','codice','id']
+  ];
+  const officialIdFromRow=(r)=>String(firstPresent(r,officialIdFields)||'').trim();
+  const officialIdAliases=(id)=>fantaIdVariants(id).map(fantaNormalizeKey).filter(Boolean);
+
+  const findExistingPlayer=(team,playerText,nome,cognome)=>{
+    const names=[
+      uniqueNameParts([cognome,nome]),
+      uniqueNameParts([nome,cognome]),
+      playerText
+    ].filter(Boolean);
+    for(const candidate of names){
+      const found=fantaFindPlayer(players,team,candidate) || fantaFindPlayer(players,'',candidate);
+      if(found) return found;
+    }
+    return null;
   };
+
+  const registerOfficialId=(player,id)=>{
+    if(!player || !id) return;
+    const raw=String(id).trim();
+    player.officialId=raw;
+    player.numericId=raw; // per compatibilita visuale: ora e' l'ID ufficiale del listone, non un progressivo interno
+    fantaIdVariants(raw).forEach(v=>byId.set(v,player));
+    officialIdAliases(raw).forEach(v=>byId.set(v,player));
+  };
+
+  const registerCredit=(player,id,credit)=>{
+    if(!credit || credit<=0) return;
+    if(id){
+      fantaIdVariants(id).forEach(v=>credits.set(v,credit));
+      officialIdAliases(id).forEach(v=>credits.set(v,credit));
+    }
+    if(player){
+      if(player.officialId) fantaIdVariants(player.officialId).forEach(v=>credits.set(v,credit));
+      if(player.stableKey) credits.set(player.stableKey,credit);
+    }
+  };
+
+  // I giocatori letti dai CSV squadra servono come anagrafica/nomi/squadra, ma NON
+  // vengono piu' registrati in byId con ID progressivi generati. La mappa byId deve
+  // contenere solo ID ufficiali presi dal listone_fantacalcio.csv, altrimenti un ID
+  // reale della rosa puo' agganciare per errore il giocatore numero N della lista squadre.
+  players.forEach((p,i)=>{
+    p.generatedId=String(i+1).padStart(3,'0');
+    p.stableKey=p.stableKey || fantaStableKey(p);
+    const suggested=fantaSuggestedCredits(p,goalsAll);
+    if(p.stableKey) credits.set(p.stableKey,suggested);
+  });
+
   const playerFromListoneRow=(r, rawId)=>{
     const team=teamDisplayNameForChart(firstPresent(r,[['squadra','team','club']])||'');
     const role=fantaRole(firstPresent(r,[['ruolo','role','posizione','position']]));
@@ -6226,41 +6265,40 @@ function fantaBuildPlayerContext(){
       name=parts.join(' ');
     }
     if(!team || (!surname && !name)) return null;
-    const p={teamCode:team,surname,name,role,displayName:uniqueNameParts([surname,name]),fullName:uniqueNameParts([name,surname]),numericId:String(rawId||'').trim()};
+    const p={teamCode:team,surname,name,role,displayName:uniqueNameParts([surname,name]),fullName:uniqueNameParts([name,surname]),numericId:String(rawId||'').trim(),officialId:String(rawId||'').trim()};
     p.stableKey=fantaStableKey(p);
     return p;
   };
-  players.forEach(p=>{
-    registerPlayer(p,[p.numericId,p.stableKey]);
-    const suggested=fantaSuggestedCredits(p,goalsAll);
-    fantaIdVariants(p.numericId).forEach(id=>credits.set(id,suggested));
-    credits.set(p.stableKey,suggested);
-  });
+
   fantaListoneFiles().forEach(file=>{
     rowsToObjects(state.rows[file]||[]).forEach(r=>{
-      const rawId=String(firstPresent(r,[['id','idGiocatore','id giocatore']])||'').trim();
+      const rawId=officialIdFromRow(r);
+      if(!rawId) return;
+
       const team=firstPresent(r,[['squadra','team','club']]);
       const nome=firstPresent(r,[['nome','first name','firstname']]);
       const cognome=firstPresent(r,[['cognome','surname','last name','lastname']]);
       const playerText=firstPresent(r,[['giocatore','player','nome giocatore','calciatore','nome completo','cognome e nome']]) || uniqueNameParts([cognome,nome]) || uniqueNameParts([nome,cognome]);
-      let player=rawId ? byId.get(rawId) : null;
-      if(!player && rawId) player=byId.get(fantaNormalizeKey(rawId));
-      if(!player) player=fantaFindPlayer(players,team,playerText);
+
+      // L'ID del listone e' autorevole: non si prova mai byId.get(rawId) prima
+      // di leggere la riga, per evitare collisioni con vecchi ID progressivi.
+      let player=findExistingPlayer(team,playerText,nome,cognome);
       if(!player) player=playerFromListoneRow(r,rawId);
-      let key=fantaNormalizeKey(firstPresent(r,[['chiaveGiocatore','chiave','key','chiave giocatore']]));
-      if(!key) key=fantaNormalizeKey(team+'_'+playerText);
-      if(player){
-        registerPlayer(player,[rawId,key,player.numericId,player.stableKey]);
-        if(key) byId.set(key,player);
-      }
+      if(!player) return;
+
+      const uniqueKey=fantaNormalizeKey((player.teamCode||'')+'_'+(player.surname||'')+'_'+(player.name||''));
+      if(uniqueKey && !players.some(p=>fantaNormalizeKey((p.teamCode||'')+'_'+(p.surname||'')+'_'+(p.name||''))===uniqueKey)) players.push(player);
+
+      registerOfficialId(player,rawId);
+
+      const key=fantaNormalizeKey(firstPresent(r,[['chiaveGiocatore','chiave','key','chiave giocatore']]));
+      if(key) byId.set(key,player);
+
       const credit=num(firstPresent(r,[['crediti','creditiSuggeriti','crediti suggeriti','creditiSuggeritiBase250','quota','valore','costo']]));
-      if(credit>0){
-        fantaIdVariants(rawId).forEach(id=>credits.set(id,credit));
-        if(key) credits.set(key,credit);
-        if(player){ fantaIdVariants(player.numericId).forEach(id=>credits.set(id,credit)); credits.set(player.stableKey,credit); }
-      }
+      if(credit>0) registerCredit(player,rawId,credit);
     });
   });
+
   return {players,byId,credits};
 }
 function fantaResolvePlayerByName(players,row,file){
@@ -6467,15 +6505,21 @@ function fantaValidateRoster(result,budget){
 function fantaResolveRosterPlayer(ctx, row, rawId){
   let usedId=String(rawId||'').trim();
   let player=null;
+
+  // Mapping rigoroso: se il listone e' presente, la rosa viene risolta solo tramite
+  // l'ID ufficiale del listone. Nessun fallback per nome, per evitare omonimie o
+  // collisioni tra ID reali e ID progressivi interni.
   for(const candidateId of fantaIdVariants(rawId)){
-    player=ctx.byId.get(candidateId);
-    if(player){ usedId=candidateId; break; }
+    player=ctx.byId.get(candidateId) || ctx.byId.get(fantaNormalizeKey(candidateId));
+    if(player){ usedId=player.officialId || candidateId; break; }
   }
-  if(!player){
+
+  if(!player && !fantaListoneFiles().length){
     const teamHint=firstPresent(row,[['squadra','team','club']]);
     player=fantaFindPlayer(ctx.players,teamHint,rawId) || fantaFindPlayer(ctx.players,'',rawId);
-    if(player) usedId=player.numericId || player.stableKey || usedId;
+    if(player) usedId=player.stableKey || player.generatedId || usedId;
   }
+
   return {player,usedId};
 }
 function fantaFirstRosterDay(rosters, playedDays){
