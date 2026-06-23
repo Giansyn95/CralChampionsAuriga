@@ -209,10 +209,11 @@
     .captain-armband::before{content:'C'}
     .small{font-size:12px;color:var(--muted)}
 
-    .player-link{border:0;background:transparent;color:inherit;font:inherit;font-weight:inherit;padding:0;margin:0;cursor:pointer;text-align:left;max-width:100%}
-    .player-link:hover,.player-link:focus{color:var(--blue);text-decoration:underline;text-underline-offset:3px;outline:none}
+    .player-link{border:0;background:transparent;color:inherit;font:inherit;font-weight:inherit;padding:0;margin:0;cursor:pointer;text-align:left;max-width:100%;text-decoration:none;transition:color .12s ease;-webkit-tap-highlight-color:transparent}
+    .player-link:hover,.player-link:focus{color:var(--blue);text-decoration:none;outline:none}
     .player-link:focus-visible{box-shadow:0 0 0 3px rgba(245,185,66,.36);border-radius:8px}
     .player-link-inline{display:inline-flex;align-items:center;gap:7px;min-width:0}
+    @media(hover:hover) and (pointer:fine){.player-link:hover{text-decoration:none}.player{contain:paint}.teamCard{contain:layout paint}}
     .player-profile-backdrop{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:22px;background:rgba(7,16,35,.72);backdrop-filter:blur(12px);opacity:0;transition:opacity .18s ease}
     .player-profile-backdrop.is-open{opacity:1}
     .player-profile-card{position:relative;width:min(980px,100%);max-height:92vh;overflow:auto;border-radius:30px;border:1px solid rgba(255,255,255,.22);background:linear-gradient(145deg,var(--panel),rgba(15,90,168,.12));box-shadow:0 28px 90px rgba(0,0,0,.42);color:var(--ink)}
@@ -232,18 +233,22 @@
     .player-profile-stat{position:relative;overflow:hidden;border-radius:20px;border:1px solid var(--line);background:linear-gradient(145deg,var(--panel),rgba(15,90,168,.08));padding:14px;min-height:96px;box-shadow:0 8px 20px var(--shadow)}
 
     /* ── Player of the Match: card stile "carta" con animazione di ingresso ── */
-    .motm-wrap{margin:18px 0}
+    .motm-wrap{margin:18px 0;perspective:900px}
     .motm-card{position:relative;overflow:hidden;border-radius:26px;padding:22px 20px;display:flex;align-items:center;gap:18px;
       background:linear-gradient(150deg,var(--dark) 0%,#0f5aa8 55%,var(--dark) 100%);
       border:1px solid rgba(245,185,66,.45);box-shadow:0 18px 46px rgba(0,0,0,.38);color:#fff;
       animation:motmEnter .65s cubic-bezier(.2,.9,.25,1.1) both;
-      will-change:transform;transform-style:preserve-3d}
+      will-change:transform;transform-style:preserve-3d;backface-visibility:hidden;isolation:isolate;contain:paint}
     .motm-card.is-tilting{transition:none}
-    .motm-card.is-resetting{transition:transform .45s cubic-bezier(.2,.85,.3,1)}
-    .motm-card-glare{position:absolute;inset:0;pointer-events:none;border-radius:inherit;
-      background:radial-gradient(circle at 50% 50%,rgba(255,255,255,.22),transparent 60%);
+    .motm-card.is-resetting{transition:transform .45s cubic-bezier(.2,.85,.3,1),box-shadow .25s ease}
+    .motm-card-glare{position:absolute;inset:0;pointer-events:none;border-radius:inherit;z-index:4;
+      background:radial-gradient(circle at var(--mx,50%) var(--my,50%),rgba(255,255,255,.34),transparent 56%);
       opacity:0;transition:opacity .25s}
-    .motm-card::after{content:'';position:absolute;top:0;left:-60%;width:45%;height:100%;
+    .motm-card::before{content:'';position:absolute;inset:-55%;z-index:0;pointer-events:none;
+      background:radial-gradient(circle at 18% 20%,rgba(245,185,66,.28),transparent 28%),radial-gradient(circle at 82% 76%,rgba(255,255,255,.16),transparent 34%),repeating-linear-gradient(135deg,rgba(255,255,255,.055) 0 1px,transparent 1px 16px)}
+    .motm-card > *{position:relative;z-index:1}
+    .motm-card .motm-card-glare{position:absolute;inset:0;z-index:4}
+    .motm-card::after{content:'';position:absolute;top:0;left:-60%;width:45%;height:100%;z-index:3;
       background:linear-gradient(75deg,transparent,rgba(255,255,255,.35),transparent);
       transform:skewX(-18deg);animation:motmShine 2.6s ease-in-out .5s 1;pointer-events:none}
     .motm-card:hover::after{animation:motmShine .9s ease-in-out 0s 1}
@@ -261,6 +266,17 @@
     @keyframes motmEnter{0%{opacity:0;transform:scale(.85) rotateY(12deg) translateY(14px)}100%{opacity:1;transform:scale(1) rotateY(0) translateY(0)}}
     @keyframes motmShine{0%{left:-60%}100%{left:130%}}
     @media(prefers-reduced-motion:reduce){.motm-card{animation:none}.motm-card::after{animation:none;display:none}.motm-card-glare{display:none}}
+    @media(min-width:721px){
+      .motm-wrap{display:flex;justify-content:center}
+      .motm-card{width:min(860px,100%);min-height:154px;padding:30px 34px;gap:26px}
+      .motm-card:hover{box-shadow:0 24px 64px rgba(0,0,0,.44),0 0 0 1px rgba(245,185,66,.22)}
+      .motm-photo{width:118px;height:118px;border-radius:28px;font-size:38px;transform:translateZ(38px);transition:transform .22s ease,box-shadow .22s ease}
+      .motm-card:hover .motm-photo{transform:translateZ(52px) scale(1.035);box-shadow:0 16px 34px rgba(0,0,0,.42),0 0 30px rgba(245,185,66,.28)}
+      .motm-info{padding-top:12px;transform:translateZ(28px)}
+      .motm-name{font-size:clamp(30px,3.1vw,42px)}
+      .motm-stat .n{font-size:24px}
+      .motm-eyebrow{top:18px;left:34px}
+    }
     @media(max-width:560px){
       .motm-card{flex-direction:column;text-align:center;padding:28px 18px 20px;gap:10px;border-radius:22px}
       .motm-eyebrow{position:static;margin-bottom:6px;justify-content:center}
@@ -277,12 +293,12 @@
       border:1px solid var(--line);background:var(--soft);color:var(--blue);font-weight:800;font-size:14px;
       cursor:pointer;transition:background .15s,transform .15s}
     .compare-trigger-btn:hover{background:var(--line);transform:translateY(-1px)}
-    .compare-backdrop{position:fixed;inset:0;background:rgba(7,16,30,.62);backdrop-filter:blur(3px);
+    .compare-backdrop{position:fixed;inset:0;background:rgba(7,16,30,.74);
       display:flex;align-items:flex-start;justify-content:center;padding:18px;overflow-y:auto;z-index:10000;
-      opacity:0;transition:opacity .18s}
+      opacity:0;transition:opacity .14s;will-change:opacity}
     .compare-backdrop.is-open{opacity:1}
     .compare-card{position:relative;width:min(720px,100%);border-radius:26px;border:1px solid var(--line);
-      background:var(--panel);box-shadow:0 26px 80px rgba(0,0,0,.4);padding:20px;color:var(--ink);margin-top:24px}
+      background:var(--panel);box-shadow:0 20px 56px rgba(0,0,0,.34);padding:20px;color:var(--ink);margin-top:24px;contain:layout paint;transform:translateZ(0)}
     .compare-close{position:absolute;top:14px;right:14px;width:36px;height:36px;border-radius:12px;border:1px solid var(--line);
       background:var(--soft);color:var(--ink);font-size:20px;line-height:1;cursor:pointer}
     .compare-title{font-family:'Oswald',Arial,sans-serif;font-size:20px;font-weight:800;margin:0 0 4px;padding-right:40px}
@@ -3694,40 +3710,47 @@ function renderMotmCard(){
 function attachCardTilt(card,glare){
   if(card._tiltAttached) return; card._tiltAttached=true;
   if(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-  const MAX_DEG=15; // più alto = effetto più visibile, spec. su card larga e bassa
-  let rafId=null;
+  const MAX_DEG=17; // desktop più leggibile senza aumentare il lavoro di repaint
+  let rafId=null, rect=null;
 
+  function refreshRect(){ rect=card.getBoundingClientRect(); }
+  function beginTilt(){
+    refreshRect();
+    card.classList.remove('is-resetting');
+    card.classList.add('is-tilting');
+  }
   function applyTilt(clientX,clientY){
-    const rect=card.getBoundingClientRect();
-    const px=(clientX-rect.left)/rect.width;
-    const py=(clientY-rect.top)/rect.height;
+    if(!rect) refreshRect();
+    const px=Math.max(0,Math.min(1,(clientX-rect.left)/rect.width));
+    const py=Math.max(0,Math.min(1,(clientY-rect.top)/rect.height));
     const rotY=(px-0.5)*2*MAX_DEG;
     const rotX=(0.5-py)*2*MAX_DEG;
     if(rafId) cancelAnimationFrame(rafId);
     rafId=requestAnimationFrame(()=>{
-      card.style.transform=`perspective(600px) scale3d(1.02,1.02,1.02) rotateX(${rotX.toFixed(2)}deg) rotateY(${rotY.toFixed(2)}deg)`;
+      card.style.transform=`perspective(720px) scale3d(1.025,1.025,1.025) rotateX(${rotX.toFixed(2)}deg) rotateY(${rotY.toFixed(2)}deg)`;
+      card.style.setProperty('--mx',(px*100).toFixed(0)+'%');
+      card.style.setProperty('--my',(py*100).toFixed(0)+'%');
       glare.style.opacity='1';
-      glare.style.background=`radial-gradient(circle at ${(px*100).toFixed(0)}% ${(py*100).toFixed(0)}%, rgba(255,255,255,.3), transparent 55%)`;
     });
   }
   function resetTilt(){
+    rect=null;
     if(rafId) cancelAnimationFrame(rafId);
     card.classList.remove('is-tilting'); card.classList.add('is-resetting');
     card.style.transform='';
     glare.style.opacity='0';
   }
 
-  // Desktop: segue il mouse mentre è sopra la card.
-  card.addEventListener('mousemove',ev=>{
-    card.classList.remove('is-resetting'); card.classList.add('is-tilting');
-    applyTilt(ev.clientX,ev.clientY);
-  });
+  // Desktop: cache del bounding-box su enter, così durante lo scroll/hover non
+  // chiediamo layout a ogni mousemove.
+  card.addEventListener('mouseenter',beginTilt);
+  card.addEventListener('mousemove',ev=>applyTilt(ev.clientX,ev.clientY));
   card.addEventListener('mouseleave',resetTilt);
 
   // Mobile: segue il dito solo mentre tocca la card; torna piatta al rilascio.
+  card.addEventListener('touchstart',ev=>{ if(ev.touches&&ev.touches.length) beginTilt(); },{passive:true});
   card.addEventListener('touchmove',ev=>{
     if(!ev.touches||!ev.touches.length) return;
-    card.classList.remove('is-resetting'); card.classList.add('is-tilting');
     applyTilt(ev.touches[0].clientX,ev.touches[0].clientY);
   },{passive:true});
   card.addEventListener('touchend',resetTilt);
@@ -4008,7 +4031,8 @@ function openPlayerProfile(name,contextRow){
   const compareRow=document.createElement('div'); compareRow.className='compare-trigger-row';
   const compareBtn=document.createElement('button'); compareBtn.type='button'; compareBtn.className='compare-trigger-btn';
   compareBtn.innerHTML='📊 Confronta con...';
-  compareBtn.onclick=()=>openCompareModal(data);
+  compareBtn.addEventListener('pointerenter',()=>{ loadChartJs().catch(()=>{}); },{once:true});
+  compareBtn.onclick=()=>{ loadChartJs().catch(()=>{}); openCompareModal(data); };
   compareRow.appendChild(compareBtn);
   body.appendChild(compareRow);
 
@@ -4176,7 +4200,7 @@ function openCompareModal(playerAData){
         data:{ labels:dsA.labels, datasets },
         options:{
           responsive:true, maintainAspectRatio:false,
-          animation:{duration:550,easing:'easeOutQuart'},
+          animation:false,
           scales:{
             x:{ ticks:{color:c.text,font:{weight:'700'}}, grid:{display:false} },
             y:{ beginAtZero:true, ticks:{color:c.text}, grid:{color:c.grid} }
@@ -4191,7 +4215,7 @@ function openCompareModal(playerAData){
         data:{ labels:dsA.labels, datasets },
         options:{
           responsive:true, maintainAspectRatio:false,
-          animation:{duration:550,easing:'easeOutQuart'},
+          animation:false,
           scales:{ r:{
             beginAtZero:true,
             grid:{color:c.grid}, angleLines:{color:c.grid},
