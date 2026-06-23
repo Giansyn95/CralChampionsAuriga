@@ -1,13 +1,13 @@
 {
   "titolo": "CRAL Champions Auriga",
-  "sottotitolo": "Benvenuto nella storia. Rivivi un torneo precedente o assisti alla competizione in corso.",
+  "sottotitolo": "Tutte le edizioni del torneo aziendale, in un unico archivio.",
   "logo": "tornei/2026/immagini/logo_cral.png",
   "tornei": [
     {
       "id": "2026-estate",
       "anno": "2026",
       "stagione": "Estate",
-      "titolo": "CRAL Champions - Auriga Spring 2026",
+      "titolo": "CRAL Champions - Auriga 2026",
       "descrizione": "Classifiche, calendario, risultati, squadre e statistiche giocatori dell'edizione estiva.",
       "url": "tornei/2026/",
       "stato": "in-corso",
