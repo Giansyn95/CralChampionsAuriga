@@ -100,11 +100,14 @@
 
     @media(max-width:760px){
       .wrap{padding:12px}
-      .hero{padding:18px;border-radius:20px}
-      .brand{gap:12px;align-items:flex-start}
-      .hero-logo{width:54px;height:54px;border-radius:15px}
-      .hero-sub{font-size:14px;margin-top:5px}
-      .theme-btn{width:42px;height:42px;border-radius:14px}
+      .hero{padding:16px;border-radius:20px}
+      .hero-inner{display:grid;grid-template-columns:minmax(0,1fr) 42px;align-items:start;gap:12px;flex-wrap:nowrap}
+      .brand{min-width:0;gap:10px;align-items:flex-start}
+      .brand > div:last-child{min-width:0}
+      .hero-logo{width:50px;height:50px;border-radius:14px}
+      .hero h1{font-size:clamp(25px,7.2vw,34px);line-height:1.02;max-width:100%;letter-spacing:.015em}
+      .hero-sub{font-size:13.5px;margin-top:6px;line-height:1.4;max-width:100%}
+      .theme-btn{width:42px;height:42px;border-radius:14px;align-self:start;justify-self:end}
       .current-card{grid-template-columns:1fr;padding:18px;border-radius:20px}
       .current-edition-mark{align-items:flex-start;text-align:left;flex-direction:row;gap:10px;order:-1}
       .current-year{font-size:48px}
@@ -114,6 +117,16 @@
       .section-head{align-items:flex-start}
       .archive-actions{justify-content:stretch}
       .secondary-btn{width:100%}
+    }
+    @media(max-width:380px){
+      .wrap{padding:10px}
+      .hero{padding:14px}
+      .hero-inner{grid-template-columns:minmax(0,1fr) 40px;gap:10px}
+      .brand{gap:9px}
+      .hero-logo{width:46px;height:46px;border-radius:13px;padding:5px}
+      .hero h1{font-size:clamp(23px,7vw,27px);letter-spacing:.01em}
+      .hero-sub{font-size:13px;line-height:1.35}
+      .theme-btn{width:40px;height:40px;border-radius:13px;font-size:19px}
     }
     @media(prefers-reduced-motion:reduce){
       *{transition:none!important;scroll-behavior:auto!important}
