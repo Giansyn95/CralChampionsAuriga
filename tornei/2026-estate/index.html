@@ -682,7 +682,7 @@
       .tabs{flex-wrap:nowrap;overflow-x:auto;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;padding:2px 0 7px;margin:11px -12px 12px;padding-left:12px;scrollbar-width:none}
       .tabs::-webkit-scrollbar{display:none}
       .tab{flex:0 0 auto;padding:9px 12px;font-size:13px;white-space:nowrap}
-      .tab[data-tab="fantacalcio"] .gold-crown{width:1.18em;height:1.18em;font-size:1.18em;line-height:1;margin-right:3px}
+      .tab[data-tab="fantacalcio"] .gold-crown{width:1.1em;height:1.1em;font-size:1.1em;line-height:1;margin-right:2px;vertical-align:-.1em}
       .search{padding:12px 13px;font-size:16px}
       .card{border-radius:18px;padding:14px}
       h2{font-size:23px;line-height:1.1}
@@ -713,7 +713,7 @@
 
     /* Fantacalcio: sorgente automatica da data/fantacalcio e tabella leggibile anche su mobile */
     .gold-crown{color:#f5b942!important;font-weight:900;text-shadow:0 0 12px rgba(245,185,66,.48)}
-    .tab[data-tab="fantacalcio"] .gold-crown{display:inline-flex;align-items:center;justify-content:center;width:1.18em;height:1.18em;margin-right:3px;font-size:1.18em;line-height:1;vertical-align:-.08em;font-family:'Inter',Arial,Helvetica,sans-serif}
+    .tab[data-tab="fantacalcio"] .gold-crown{display:inline-flex;align-items:center;justify-content:center;width:1.1em;height:1.1em;margin-right:2px;font-size:1.1em;line-height:1;vertical-align:-.10em;font-family:'Inter',Arial,Helvetica,sans-serif}
     .fanta-card-shell h2{display:flex;align-items:center;gap:8px}
     .fanta-claim{margin:0 0 12px;max-width:980px}
     .fanta-file-btn,.fanta-upload-list{display:none!important}
@@ -801,6 +801,12 @@
     [data-theme="dark"] .fanta-role-pill{color:var(--gold)}
 
     .fanta-mini-card .l .mini-emoji{font-size:12px;margin-right:4px;vertical-align:-1px}
+    .fanta-squad-points{display:flex;flex-direction:column;align-items:flex-end;gap:1px;min-width:42px;text-align:right;flex-shrink:0}
+    .fanta-squad-points .pts{font-size:18px;font-weight:900;color:var(--blue);font-variant-numeric:tabular-nums;line-height:1}
+    .fanta-squad-points .pts-label{font-size:9.5px;font-weight:900;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+    .fanta-squad-points .pts-detail{font-size:10px;color:var(--muted);font-weight:700;line-height:1.2;max-width:90px;text-align:right}
+    .fanta-squad-player{justify-content:space-between}
+    @media(max-width:420px){.fanta-squad-points .pts{font-size:16px}.fanta-squad-points .pts-detail{display:none}}
     .fanta-loading{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:14px;padding:14px 0}
     .fanta-loading::before{content:'⏳';font-size:18px}
 
@@ -6468,7 +6474,7 @@ function fantaReadExtras(){
   return map;
 }
 function fantaResult(day,name){
-  return {day,name,points:0,credits:0,pres:0,presPoints:null,goals:0,mvps:0,gsPt:0,porteInviolate:0,rigPar:0,rigSbag:0,autogoal:0,players:[],playerIds:[],notes:[]};
+  return {day,name,points:0,credits:0,pres:0,presPoints:null,goals:0,mvps:0,gsPt:0,porteInviolate:0,rigPar:0,rigSbag:0,autogoal:0,players:[],playerIds:[],playerPoints:new Map(),playerExtras:new Map(),notes:[]};
 }
 function fantaSameIdSet(a,b){ return JSON.stringify([...new Set(a)].sort())===JSON.stringify([...new Set(b)].sort()); }
 function fantaAddResult(target,src){
@@ -6482,6 +6488,19 @@ function fantaAddResult(target,src){
   target.gsPt+=src.gsPt; target.porteInviolate+=src.porteInviolate; target.rigPar+=src.rigPar; target.rigSbag+=src.rigSbag; target.autogoal+=src.autogoal;
   if(target.presPoints!==null || src.presPoints!==null) target.presPoints=(target.presPoints||0)+(src.presPoints!==null?src.presPoints:(src.pres||0)*6);
   target.players.push(...(src.players||[])); target.playerIds.push(...(src.playerIds||[])); target.notes.push(...(src.notes||[]));
+  if(src.playerPoints){
+    src.playerPoints.forEach((pts,key)=>{
+      target.playerPoints.set(key,(target.playerPoints.get(key)||0)+pts);
+    });
+  }
+  if(src.playerExtras){
+    src.playerExtras.forEach((ext,key)=>{
+      const t=target.playerExtras.get(key)||{goals:0,mvps:0,gsPt:0,pi:0,rigPar:0,rigSbag:0,autogoal:0};
+      t.goals+=ext.goals||0; t.mvps+=ext.mvps||0; t.gsPt+=ext.gsPt||0; t.pi+=ext.pi||0;
+      t.rigPar+=ext.rigPar||0; t.rigSbag+=ext.rigSbag||0; t.autogoal+=ext.autogoal||0;
+      target.playerExtras.set(key,t);
+    });
+  }
 }
 function fantaUniqueSortedPlayers(result){
   const map=new Map();
@@ -6622,25 +6641,36 @@ function fantaCalculateFromRosters(){
       const rowCredits=num(firstPresent(r,[['crediti','creditiUsati','crediti usati','costo','valore','quota']]));
       result.credits += rowCredits>0 ? rowCredits : (ctx.credits.get(usedId) || ctx.credits.get(rawId) || ctx.credits.get(player.numericId) || ctx.credits.get(player.stableKey) || 0);
       result.pres += 1; result.points += 6;
+      // Punti per singolo giocatore (presenza base)
+      const pPlayerKey=fantaNormText(player.teamCode)+'|'+fantaNormText(player.surname)+'|'+fantaNormText(player.name);
+      let pPlayerPts=6;
+      const pExt={goals:0,mvps:0,gsPt:0,pi:0,rigPar:0,rigSbag:0,autogoal:0};
       const playerKey=fantaPlayerKey(day,player);
-      const g=goals.get(playerKey)||0; result.goals+=g; result.points+=g*3;
-      const m=mvps.get(playerKey)||0; result.mvps+=m; result.points+=m*5;
+      const g=goals.get(playerKey)||0; result.goals+=g; result.points+=g*3; pPlayerPts+=g*3; pExt.goals+=g;
+      const m=mvps.get(playerKey)||0; result.mvps+=m; result.points+=m*5; pPlayerPts+=m*5; pExt.mvps+=m;
       let extra=null;
       for(const candidateId of [...fantaIdVariants(usedId),...fantaIdVariants(rawId),...fantaIdVariants(player.numericId),player.stableKey]){
         if(candidateId && extras.has(day+'|'+candidateId)){ extra=extras.get(day+'|'+candidateId); break; }
       }
       if(extra){
-        result.gsPt+=extra.gsPt; result.points-=extra.gsPt;
+        result.gsPt+=extra.gsPt; result.points-=extra.gsPt; pPlayerPts-=extra.gsPt; pExt.gsPt+=extra.gsPt;
         result.rigPar+=extra.rigPar; result.rigSbag+=extra.rigSbag; result.autogoal+=extra.autogoal;
-        result.points += extra.rigPar*3 - extra.rigSbag*3 - extra.autogoal*2;
+        pExt.rigPar+=extra.rigPar; pExt.rigSbag+=extra.rigSbag; pExt.autogoal+=extra.autogoal;
+        const extraPts=extra.rigPar*3 - extra.rigSbag*3 - extra.autogoal*2;
+        result.points += extraPts; pPlayerPts += extraPts;
       }
       if(player.role==='PT'){
         const k=fantaTeamScoreKey(day,player.teamCode);
         const has=conceded.has(k);
         const gs=conceded.get(k)||0;
-        result.gsPt+=gs; result.points-=gs;
-        if(has && gs===0){ result.porteInviolate+=1; result.points+=1; }
+        result.gsPt+=gs; result.points-=gs; pPlayerPts-=gs; pExt.gsPt+=gs;
+        if(has && gs===0){ result.porteInviolate+=1; result.points+=1; pPlayerPts+=1; pExt.pi+=1; }
       }
+      result.playerPoints.set(pPlayerKey,(result.playerPoints.get(pPlayerKey)||0)+pPlayerPts);
+      const prevExt=result.playerExtras.get(pPlayerKey)||{goals:0,mvps:0,gsPt:0,pi:0,rigPar:0,rigSbag:0,autogoal:0};
+      prevExt.goals+=pExt.goals; prevExt.mvps+=pExt.mvps; prevExt.gsPt+=pExt.gsPt; prevExt.pi+=pExt.pi;
+      prevExt.rigPar+=pExt.rigPar; prevExt.rigSbag+=pExt.rigSbag; prevExt.autogoal+=pExt.autogoal;
+      result.playerExtras.set(pPlayerKey,prevExt);
     });
   });
   const results=[...resultsByKey.values()];
@@ -6835,6 +6865,37 @@ function fantaBuildTable(rows){
   requestAnimationFrame(()=>refreshTableScrollState(wrap));
   return outer;
 }
+function fantaPlayerPointsFromResult(result, player){
+  if(!result.playerPoints || !result.playerPoints.size) return null;
+  const key=fantaNormText(player.teamCode)+'|'+fantaNormText(player.surname)+'|'+fantaNormText(player.name);
+  if(result.playerPoints.has(key)) return result.playerPoints.get(key);
+  return null;
+}
+function fantaPlayerPointsDetail(result, player){
+  const pts=fantaPlayerPointsFromResult(result,player);
+  if(pts===null) return null;
+  // Dettaglio breakdown: calcoliamo dal playerPoints map esteso (bonus/malus per giocatore)
+  const extKey=fantaNormText(player.teamCode)+'|'+fantaNormText(player.surname)+'|'+fantaNormText(player.name);
+  const ext=(result.playerExtras && result.playerExtras.get(extKey)) || null;
+  const parts=[];
+  if(ext){
+    parts.push('+6 pres.');
+    if(ext.goals>0) parts.push('+'+ext.goals*3+' gol('+ext.goals+')');
+    if(ext.mvps>0) parts.push('+'+ext.mvps*5+' MVP');
+    if(ext.rigPar>0) parts.push('+'+ext.rigPar*3+' rig.par.');
+    if(ext.rigSbag>0) parts.push('-'+ext.rigSbag*3+' rig.sb.');
+    if(ext.autogoal>0) parts.push('-'+ext.autogoal*2+' AG');
+    if(ext.gsPt>0) parts.push('-'+ext.gsPt+' GS');
+    if(ext.pi>0) parts.push('+'+ext.pi+' PI');
+  } else {
+    // Fallback semplice
+    const diff=pts-6;
+    parts.push('+6 pres.');
+    if(diff>0) parts.push('+'+diff+' bonus');
+    else if(diff<0) parts.push(diff+' malus');
+  }
+  return {pts, detail: parts.join(' · ')};
+}
 function fantaOpenSquadModal(result,rank){
   document.querySelectorAll('.fanta-squad-backdrop').forEach(x=>x.remove());
   const backdrop=document.createElement('div'); backdrop.className='fanta-squad-backdrop';
@@ -6843,9 +6904,12 @@ function fantaOpenSquadModal(result,rank){
   const closeModal=()=>{ backdrop.classList.remove('is-open'); document.body.classList.remove('player-modal-open'); setTimeout(()=>backdrop.remove(),160); };
   close.onclick=closeModal; backdrop.addEventListener('click',ev=>{ if(ev.target===backdrop) closeModal(); });
   const title=document.createElement('h3'); title.textContent=(fantaRankMedal((rank||1)-1)?fantaRankMedal((rank||1)-1)+' ':'')+(result.name||'Squadra');
-  const sub=document.createElement('div'); sub.className='sub'; sub.textContent=(result.day?('Giornata '+result.day):'Tutte le giornate')+' · '+(result.points||0)+' punti · '+(result.credits||0)+' crediti';
+  const selectedDay=state.selectedFantaGiornata||'totale';
+  const dayLabel=selectedDay==='totale'?'Tutte le giornate':('Giornata '+selectedDay);
+  const sub=document.createElement('div'); sub.className='sub'; sub.textContent=dayLabel+' · '+(result.points||0)+' punti · '+(result.credits||0)+' crediti';
   const list=document.createElement('div'); list.className='fanta-squad-list';
   const players=fantaUniqueSortedPlayers(result);
+  const hasPlayerPoints=result.playerPoints && result.playerPoints.size>0;
   if(!players.length){
     const empty=document.createElement('div'); empty.className='empty'; empty.textContent='Squadra non disponibile.'; list.appendChild(empty);
   }else{
@@ -6857,7 +6921,20 @@ function fantaOpenSquadModal(result,rank){
       const meta=document.createElement('div'); meta.className='fanta-squad-meta'; meta.textContent=p.teamCode||'';
       info.appendChild(name); info.appendChild(meta);
       const role=document.createElement('span'); role.className='fanta-role-pill'; role.textContent=fantaRole(p.role);
-      item.appendChild(info); item.appendChild(role); list.appendChild(item);
+      item.appendChild(info); item.appendChild(role);
+      // Punti del giocatore
+      if(hasPlayerPoints){
+        const ptsData=fantaPlayerPointsDetail(result,p);
+        if(ptsData!==null){
+          const ptsBox=document.createElement('div'); ptsBox.className='fanta-squad-points';
+          const ptsNum=document.createElement('div'); ptsNum.className='pts'; ptsNum.textContent=String(ptsData.pts);
+          const ptsLbl=document.createElement('div'); ptsLbl.className='pts-label'; ptsLbl.textContent='pt';
+          const ptsDtl=document.createElement('div'); ptsDtl.className='pts-detail'; ptsDtl.textContent=ptsData.detail;
+          ptsBox.appendChild(ptsNum); ptsBox.appendChild(ptsLbl); ptsBox.appendChild(ptsDtl);
+          item.appendChild(ptsBox);
+        }
+      }
+      list.appendChild(item);
     });
   }
   modal.appendChild(close); modal.appendChild(title); modal.appendChild(sub); modal.appendChild(list); backdrop.appendChild(modal); document.body.appendChild(backdrop); document.body.classList.add('player-modal-open');
