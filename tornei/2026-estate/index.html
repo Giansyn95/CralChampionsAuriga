@@ -682,7 +682,13 @@
       .tabs{flex-wrap:nowrap;overflow-x:auto;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;padding:2px 0 7px;margin:11px -12px 12px;padding-left:12px;scrollbar-width:none}
       .tabs::-webkit-scrollbar{display:none}
       .tab{flex:0 0 auto;padding:9px 12px;font-size:13px;white-space:nowrap}
-      .tab[data-tab="fantacalcio"] .gold-crown{width:1.1em;height:1.1em;font-size:1.1em;line-height:1;margin-right:2px;vertical-align:-.1em}
+      .tab[data-tab="fantacalcio"] .gold-crown{
+  width:16px;
+  height:16px;
+  font-size:16px;
+  margin-right:3px;
+  top:-1px;
+}
       .search{padding:12px 13px;font-size:16px}
       .card{border-radius:18px;padding:14px}
       h2{font-size:23px;line-height:1.1}
@@ -713,7 +719,20 @@
 
     /* Fantacalcio: sorgente automatica da data/fantacalcio e tabella leggibile anche su mobile */
     .gold-crown{color:#f5b942!important;font-weight:900;text-shadow:0 0 12px rgba(245,185,66,.48)}
-    .tab[data-tab="fantacalcio"] .gold-crown{display:inline-flex;align-items:center;justify-content:center;width:1.1em;height:1.1em;margin-right:2px;font-size:1.1em;line-height:1;vertical-align:-.10em;font-family:'Inter',Arial,Helvetica,sans-serif}
+    .tab[data-tab="fantacalcio"] .gold-crown{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:18px;
+  height:18px;
+  margin-right:4px;
+  line-height:1;
+  font-size:18px;
+  font-family:'Oswald',Arial,Helvetica,sans-serif;
+  position:relative;
+  top:-1px;
+  flex:0 0 18px;
+}
     .fanta-card-shell h2{display:flex;align-items:center;gap:8px}
     .fanta-claim{margin:0 0 12px;max-width:980px}
     .fanta-file-btn,.fanta-upload-list{display:none!important}
