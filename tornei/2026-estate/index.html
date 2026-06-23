@@ -637,6 +637,77 @@
       .wrapped-slide .ws-detail{margin-top:6px;line-height:1.55}
       .wrapped-slide .ws-stats-row{margin-top:22px}
     }
+
+    /* ── Fantacalcio ── */
+    .fanta-actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:12px 0 14px}
+    .fanta-actions .search{width:auto;min-width:220px;margin:0;padding:11px 13px}
+    .fanta-file-btn{position:relative;overflow:hidden;border-radius:14px;padding:11px 15px;background:var(--blue);color:#fff;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+    .fanta-file-btn input{position:absolute;inset:0;opacity:0;cursor:pointer;display:block}
+    .fanta-note{font-size:12.5px;color:var(--muted);line-height:1.45;margin:8px 0 0}
+    .fanta-note code{background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:1px 5px;color:var(--ink)}
+    .fanta-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin:12px 0 14px}
+    .fanta-mini-card{border:1px solid var(--line);border-radius:16px;background:var(--soft);padding:11px 12px}
+    .fanta-mini-card .n{font-size:22px;font-weight:900;color:var(--blue);line-height:1.05;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .fanta-mini-card .l{display:block;margin-top:5px;font-size:10.5px;font-weight:900;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+    .fanta-upload-list{margin-top:8px;color:var(--muted);font-size:12px}
+    .fanta-results-wrap{margin-top:12px}
+    .fanta-table-desktop{display:block}
+    .fanta-mobile-list{display:none}
+    .fanta-standing-card{border:1px solid var(--line);border-radius:18px;background:linear-gradient(145deg,var(--panel),rgba(15,90,168,.055));box-shadow:0 8px 20px var(--shadow);padding:13px;margin-bottom:10px}
+    .fanta-standing-top{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center}
+    .fanta-rank{width:34px;height:34px;border-radius:12px;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:900;font-variant-numeric:tabular-nums}
+    .fanta-player-main{min-width:0}
+    .fanta-player-name{font-size:16px;font-weight:900;color:var(--ink);line-height:1.15;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .fanta-day-badge{display:inline-flex;margin-top:5px;border-radius:999px;padding:3px 8px;background:var(--soft);border:1px solid var(--line);color:var(--muted);font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.04em}
+    .fanta-score{text-align:right;color:var(--blue);font-weight:900;font-size:25px;line-height:1;font-variant-numeric:tabular-nums}
+    .fanta-score span{display:block;margin-top:3px;color:var(--muted);font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.06em}
+    .fanta-card-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;margin-top:12px}
+    .fanta-card-stat{border:1px solid var(--line);background:var(--soft);border-radius:13px;padding:8px 6px;text-align:center;min-width:0}
+    .fanta-card-stat b{display:block;color:var(--blue);font-size:15px;font-weight:900;line-height:1.05;font-variant-numeric:tabular-nums;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .fanta-card-stat span{display:block;margin-top:4px;color:var(--muted);font-size:9.5px;font-weight:900;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .fanta-card-team,.fanta-card-note{margin-top:9px;color:var(--muted);font-size:12px;line-height:1.35;overflow-wrap:anywhere}
+    .fanta-card-note{border-top:1px solid var(--line);padding-top:8px}
+    .fanta-card-note.is-ok{color:var(--green);font-weight:800}
+    @media(max-width:720px){
+      .wrap{padding:12px}
+      .hero{border-radius:20px;padding:18px;margin-bottom:12px}
+      .hero-top{gap:12px;align-items:flex-start}
+      .hero-logo{width:54px;height:54px;border-radius:14px}
+      .hero h1{font-size:clamp(24px,8vw,34px);line-height:1}
+      .hero p{font-size:13px;line-height:1.35;margin-top:6px}
+      .toolbar{gap:8px;margin-top:15px}
+      .toolbar .btn.secondary{flex:1 1 100%;justify-content:center}
+      .toolbar .icon-btn{flex:1 1 48%;justify-content:center}
+      .status{font-size:12px;line-height:1.35}
+      .tabs{flex-wrap:nowrap;overflow-x:auto;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;padding:2px 0 7px;margin:11px -12px 12px;padding-left:12px;scrollbar-width:none}
+      .tabs::-webkit-scrollbar{display:none}
+      .tab{flex:0 0 auto;padding:9px 12px;font-size:13px;white-space:nowrap}
+      .search{padding:12px 13px;font-size:16px}
+      .card{border-radius:18px;padding:14px}
+      h2{font-size:23px;line-height:1.1}
+      .hint{font-size:13px}
+      .fanta-actions{display:grid;grid-template-columns:1fr;gap:9px;margin:11px 0 12px}
+      .fanta-actions .search{width:100%;min-width:0;margin:0;font-size:16px}
+      .fanta-file-btn{width:100%;justify-content:center;min-height:46px;text-align:center}
+      .fanta-note,.fanta-upload-list{font-size:11.8px;line-height:1.45}
+      .fanta-summary{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:11px 0 13px}
+      .fanta-mini-card{border-radius:14px;padding:10px}
+      .fanta-mini-card .n{font-size:19px}
+      .fanta-mini-card .l{font-size:9.5px}
+      .fanta-table-desktop{display:none}
+      .fanta-mobile-list{display:block}
+    }
+    @media(max-width:420px){
+      .fanta-card-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+      .fanta-standing-card{padding:11px;border-radius:16px}
+      .fanta-rank{width:30px;height:30px;border-radius:10px;font-size:13px}
+      .fanta-player-name{font-size:15px}
+      .fanta-score{font-size:23px}
+      .fanta-card-stat{padding:7px 4px;border-radius:11px}
+      .fanta-card-stat b{font-size:14px}
+      .fanta-card-stat span{font-size:8.8px}
+    }
+
 </style>
 </head>
 <body>
@@ -680,6 +751,7 @@
   <section id="calendario"  class="section"        role="tabpanel"></section>
   <section id="risultati"   class="section"        role="tabpanel"></section>
   <section id="riepilogo"   class="section"        role="tabpanel"></section>
+  <section id="fantacalcio" class="section"        role="tabpanel"></section>
 </div>
 
 <script>
@@ -704,12 +776,14 @@ const DEFAULT_FILES    = [
   'classifica_mvp.csv','classifica_portieri.csv',
   'risultati_partite.csv','risultati.csv','partite.csv',
   'calendario_andata_ritorno.csv','calendario.csv',
-  'riepilogo_giornate.csv'
+  'riepilogo_giornate.csv',
+  'listone_fantacalcio.csv','eventi_fantacalcio.csv',
+  'classifica_fantacalcio.csv','classifica_totale_fantacalcio.csv','fantacalcio_risultati.csv'
 ];
 const TABS = [
   ['home','🏠 Home'],['classifiche','🏆 Classifiche'],['statistiche','📊 Statistiche'],
   ['squadre','👕 Squadre'],['calendario','📅 Calendario'],['risultati','⚽ Risultati'],
-  ['riepilogo','📝 Riepilogo giornate']
+  ['riepilogo','📝 Riepilogo giornate'],['fantacalcio','♕ Fantacalcio']
 ];
 
 /* ── Stato globale ── */
@@ -720,6 +794,8 @@ let state = {
   search: '', activeTab: 'home',
   selectedRiepilogoGiornata: '',
   riepilogoFilterInitialized: false,
+  selectedFantaGiornata: 'totale',
+  fantaResultFileKeys: [],
   sortState: {}   // { tableId: { col, dir } }
 };
 let loadErrors = [];
@@ -927,7 +1003,11 @@ function num(x){ const n=parseFloat(String(x||'0').replace(',','.').replace(/[^0
 /* ══════════════════════════════════
    CLASSIFICAZIONE FILE
    ══════════════════════════════════ */
-function fileKind(f){ const n=norm(f);
+function fileKind(f){ const n=norm(f); const raw=String(f||'').split('/').pop().toLowerCase().replace(/^__fanta_upload_\d+_\d+_/,'');
+  if(raw.startsWith('rosa_')||raw.startsWith('roster_')) return 'fanta_roster';
+  if(norm(raw)==='listonefantacalciocsv') return 'fanta_listone';
+  if(norm(raw)==='eventifantacalciocsv') return 'fanta_eventi';
+  if(raw.includes('fantacalcio') && (raw.includes('classifica')||raw.includes('risultati'))) return 'fanta_output';
   if(n.includes('classificasquadre')) return 'classifica_squadre';
   if(n.includes('marcatori')) return 'marcatori';
   if(n.includes('mvp')) return 'mvp';
@@ -937,7 +1017,7 @@ function fileKind(f){ const n=norm(f);
   if(n.includes('riepilogogiornata')||n.includes('riepilogogiornate')||n.includes('refertogiornata')||/^giornata\d*csv$/.test(n)||/^giornata\d+/.test(n)) return 'riepilogo';
   if(n.includes('risultati')||n==='partitecsv'||n.includes('partite')) return 'risultati';
   if(n.includes('calendario')) return 'calendario';
-  if(/^squadra/i.test(f)) return 'squadra';
+  if(/^squadra/i.test(raw)) return 'squadra';
   return 'altro';
 }
 function sectionFiles(kind){ return Object.keys(state.rows).filter(f=>fileKind(f)===kind); }
@@ -5833,6 +5913,564 @@ function renderMatchSection(sectionId, kind){
   card.appendChild(inner); el.appendChild(card);
 }
 
+
+/* ══════════════════════════════════
+   FANTACALCIO STATICO
+   Regole allineate al progetto Java allegato:
+   - CSV rose: rosa_*.csv o roster_*.csv con giornata;partecipante;idGiocatore
+   - CSV listone: listone_fantacalcio.csv opzionale per crediti/alias
+   - CSV eventi: eventi_fantacalcio.csv opzionale con GS_PT, RIGORE_PARATO,
+     RIGORE_SBAGLIATO, AUTOGOAL/AUTOGOL
+   ══════════════════════════════════ */
+function fantaNormText(value){ return String(value||'').trim().toUpperCase().replace(/\s+/g,' '); }
+function fantaNormalizeKey(value){
+  return String(value||'')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .trim().toUpperCase()
+    .replace(/[\s\-]+/g,'_')
+    .replace(/[^A-Z0-9_]/g,'')
+    .replace(/_+/g,'_')
+    .replace(/^_+|_+$/g,'');
+}
+function fantaRole(raw){
+  const v=fantaNormText(raw);
+  return (v==='PT'||v==='P'||v==='POR'||v==='PORTIERE'||v==='GK'||v.startsWith('PORT')) ? 'PT' : 'G';
+}
+function fantaComparePlayers(a,b){
+  if(a.role!==b.role) return a.role==='PT' ? -1 : 1;
+  const c=String(a.surname||'').localeCompare(String(b.surname||''),'it',{sensitivity:'base'});
+  if(c) return c;
+  return String(a.name||'').localeCompare(String(b.name||''),'it',{sensitivity:'base'});
+}
+function fantaPlayerDisplay(player){ return uniqueNameParts([player.surname,player.name]); }
+function fantaPlayerFull(player){ return uniqueNameParts([player.name,player.surname]); }
+function fantaStableKey(player){ return fantaNormalizeKey(player.teamCode+'_'+player.surname+' '+player.name); }
+function fantaPlayerKey(day,player){ return day+'|'+fantaNormText(player.teamCode)+'|'+fantaNormText(player.surname)+'|'+fantaNormText(player.name); }
+function fantaRosterFiles(){ return sectionFiles('fanta_roster'); }
+function fantaListoneFiles(){ return sectionFiles('fanta_listone'); }
+function fantaEventFiles(){ return sectionFiles('fanta_eventi'); }
+function fantaOutputFiles(){
+  const files=[...sectionFiles('fanta_output'),...(state.fantaResultFileKeys||[])];
+  return files.filter((f,i,a)=>a.indexOf(f)===i && state.rows[f]);
+}
+function fantaAllPlayersSorted(){
+  const players=[];
+  sectionFiles('squadra').forEach(f=>{
+    rowsToObjects(state.rows[f]||[]).forEach(r=>{
+      const team=teamDisplayNameForChart(fieldLoose(r,['squadra','team','club']) || teamNameFromFile(f));
+      const surname=smartSpace(fieldExact(r,['cognome','surname','last name','lastname']) || '');
+      const name=smartSpace(fieldExact(r,['nome','name','first name','firstname']) || '');
+      const direct=playerDisplayName(r);
+      const role=fantaRole(fieldLoose(r,['ruolo','role','posizione','position']));
+      let finalSurname=surname, finalName=name;
+      if(!finalSurname && !finalName && direct){
+        const parts=smartSpace(direct).split(/\s+/);
+        finalSurname=parts.shift()||direct;
+        finalName=parts.join(' ');
+      }
+      if(!team || (!finalSurname && !finalName)) return;
+      players.push({teamCode:team,surname:finalSurname,name:finalName,role,displayName:uniqueNameParts([finalSurname,finalName]),fullName:uniqueNameParts([finalName,finalSurname])});
+    });
+  });
+  players.sort(fantaComparePlayers);
+  players.forEach((p,i)=>{ p.numericId=String(i+1).padStart(3,'0'); p.stableKey=fantaStableKey(p); });
+  return players;
+}
+function fantaSuggestedCredits(player,goalsAll){ return (player.role==='PT'?8:10) + (goalsAll.get(fantaPlayerKey(-1,player))||0)*2; }
+function fantaFindPlayer(players,teamCode,playerName){
+  const teamKey=fantaNormText(teamCode);
+  const nameKey=fantaNormText(playerName);
+  if(!nameKey) return null;
+  const candidates=players.filter(p=>!teamKey || fantaNormText(p.teamCode)===teamKey || teamMatchKey(p.teamCode)===teamMatchKey(teamCode));
+  for(const p of candidates){
+    if(fantaNormText(fantaPlayerDisplay(p))===nameKey || fantaNormText(fantaPlayerFull(p))===nameKey) return p;
+  }
+  const loose=candidates.filter(p=>{
+    const a=norm(fantaPlayerDisplay(p)), b=norm(fantaPlayerFull(p)), q=norm(playerName);
+    return q && (a===q || b===q || a.includes(q) || b.includes(q) || q.includes(a) || q.includes(b));
+  });
+  return loose.length===1 ? loose[0] : null;
+}
+function fantaBuildPlayerContext(){
+  const players=fantaAllPlayersSorted();
+  const goalsAll=fantaGoalsByPlayerDayAll(players);
+  const byId=new Map();
+  const credits=new Map();
+  players.forEach(p=>{
+    byId.set(p.numericId,p);
+    byId.set(p.stableKey,p);
+    byId.set(fantaNormalizeKey(p.teamCode+'_'+fantaPlayerDisplay(p)),p);
+    byId.set(fantaNormalizeKey(p.teamCode+'_'+fantaPlayerFull(p)),p);
+    const suggested=fantaSuggestedCredits(p,goalsAll);
+    credits.set(p.numericId,suggested);
+    credits.set(p.stableKey,suggested);
+  });
+  fantaListoneFiles().forEach(file=>{
+    rowsToObjects(state.rows[file]||[]).forEach(r=>{
+      const rawId=String(firstPresent(r,[['id','idGiocatore','id giocatore']])||'').trim();
+      const team=firstPresent(r,[['squadra','team','club']]);
+      const playerText=firstPresent(r,[['giocatore','player','nome giocatore','calciatore']]);
+      let player=rawId ? byId.get(rawId) : null;
+      if(!player && rawId) player=byId.get(fantaNormalizeKey(rawId));
+      if(!player) player=fantaFindPlayer(players,team,playerText);
+      let key=fantaNormalizeKey(firstPresent(r,[['chiaveGiocatore','chiave','key','chiave giocatore']]));
+      if(!key) key=fantaNormalizeKey(team+'_'+playerText);
+      if(player && key) byId.set(key,player);
+      const credit=num(firstPresent(r,[['crediti','creditiSuggeriti','crediti suggeriti','creditiSuggeritiBase250']]));
+      if(credit>0){
+        if(rawId) credits.set(rawId,credit);
+        if(rawId) credits.set(fantaNormalizeKey(rawId),credit);
+        if(key) credits.set(key,credit);
+        if(player){ credits.set(player.numericId,credit); credits.set(player.stableKey,credit); }
+      }
+    });
+  });
+  return {players,byId,credits};
+}
+function fantaResolvePlayerByName(players,row,file){
+  const name=playerNameFromRow(row);
+  const team=teamHintFromRow(row) || firstPresent(row,[['squadra','team','club']]);
+  return fantaFindPlayer(players,team,name) || fantaFindPlayer(players,'',name);
+}
+function fantaGoalsByPlayerDayAll(players){
+  const map=new Map();
+  const add=(day,player,goals)=>{
+    if(!player || !Number.isFinite(day) || day===0) return;
+    const qty=goals>0 ? goals : 1;
+    const key=fantaPlayerKey(day,player);
+    const allKey=fantaPlayerKey(-1,player);
+    map.set(key,(map.get(key)||0)+qty);
+    map.set(allKey,(map.get(allKey)||0)+qty);
+  };
+  sectionFiles('riepilogo').forEach(file=>{
+    const parsed=parseRiepilogoFile(file);
+    const rows=(parsed.marcatori&&parsed.marcatori.length) ? parsed.marcatori : (parsed.totaliMarcatori||[]);
+    rows.forEach(r=>{
+      const day=parseInt(rowGiornataKey(r,file),10);
+      const player=fantaResolvePlayerByName(players,r,file);
+      const g=num(firstPresent(r,[['gol','goal','reti','totale','quantita','qta','valore']]));
+      add(day,player,g||1);
+    });
+  });
+  sectionFiles('marcatori').forEach(file=>{
+    rowsToObjects(state.rows[file]||[]).forEach(r=>{
+      const day=parseInt(firstPresent(r,[['giornata','day','turno','round']]),10);
+      if(!Number.isFinite(day) || day<=0) return;
+      const player=fantaResolvePlayerByName(players,r,file);
+      const g=num(firstPresent(r,[['gol','goal','reti','totale','quantita','qta','valore']]));
+      add(day,player,g||1);
+    });
+  });
+  return map;
+}
+function fantaMvpsByPlayerDayAll(players){
+  const map=new Map();
+  const add=(day,player,qty)=>{
+    if(!player || !Number.isFinite(day) || day<=0) return;
+    const key=fantaPlayerKey(day,player);
+    map.set(key,(map.get(key)||0)+(qty||1));
+  };
+  sectionFiles('riepilogo').forEach(file=>{
+    const parsed=parseRiepilogoFile(file);
+    (parsed.mvp||[]).forEach(r=>{
+      const day=parseInt(rowGiornataKey(r,file),10);
+      const player=fantaResolvePlayerByName(players,r,file);
+      const vote=num(firstPresent(r,[['voto','punti','valore']]));
+      if(vote<0) return;
+      add(day,player,1);
+    });
+  });
+  sectionFiles('mvp').forEach(file=>{
+    rowsToObjects(state.rows[file]||[]).forEach(r=>{
+      const day=parseInt(firstPresent(r,[['giornata','day','turno','round']]),10);
+      if(!Number.isFinite(day) || day<=0) return;
+      const player=fantaResolvePlayerByName(players,r,file);
+      add(day,player,1);
+    });
+  });
+  return map;
+}
+function fantaGoalsConcededByTeamDay(){
+  const map=new Map();
+  collectPlayedMatchesForTrend().forEach(m=>{
+    const homeKey=m.round+'|'+fantaNormText(m.home);
+    const awayKey=m.round+'|'+fantaNormText(m.away);
+    map.set(homeKey,(map.get(homeKey)||0)+m.ga);
+    map.set(awayKey,(map.get(awayKey)||0)+m.gh);
+  });
+  return map;
+}
+function fantaParseEventType(raw){
+  const v=fantaNormalizeKey(raw);
+  if(v==='GS'||v==='PT'||v==='GS_PT'||v==='GOL_SUBITO_PT'||v==='GOAL_SUBITO_PT') return 'gsPt';
+  if(v==='RIGORE_PARATO') return 'rigPar';
+  if(v==='RIGORE_SBAGLIATO'||v==='RIGORE_SBAGL'||v==='SBAGL') return 'rigSbag';
+  if(v==='AUTOGOAL'||v==='AUTOGOL') return 'autogoal';
+  return '';
+}
+function fantaReadExtras(){
+  const map=new Map();
+  const ensure=(key)=>{
+    let o=map.get(key);
+    if(!o){ o={gsPt:0,rigPar:0,rigSbag:0,autogoal:0}; map.set(key,o); }
+    return o;
+  };
+  fantaEventFiles().forEach(file=>{
+    rowsToObjects(state.rows[file]||[]).forEach(r=>{
+      const day=parseInt(firstPresent(r,[['giornata','day','turno','round']]),10);
+      const id=String(firstPresent(r,[['idGiocatore','id','id giocatore','giocatore']])||'').trim();
+      const type=fantaParseEventType(firstPresent(r,[['tipoEvento','evento','tipo','tipo evento']]));
+      let qty=num(firstPresent(r,[['quantita','qta','valore','qty']]));
+      if(!qty) qty=1;
+      if(!Number.isFinite(day) || day<=0 || !id || !type) return;
+      [id,fantaNormalizeKey(id)].filter(Boolean).forEach(k=>{ ensure(day+'|'+k)[type]+=qty; });
+    });
+  });
+  return map;
+}
+function fantaResult(day,name){
+  return {day,name,points:0,credits:0,pres:0,presPoints:null,goals:0,mvps:0,gsPt:0,porteInviolate:0,rigPar:0,rigSbag:0,autogoal:0,players:[],playerIds:[],notes:[]};
+}
+function fantaSameIdSet(a,b){ return JSON.stringify([...new Set(a)].sort())===JSON.stringify([...new Set(b)].sort()); }
+function fantaAddResult(target,src){
+  const empty=!target.playerIds.length;
+  if(!empty && src.playerIds.length && !fantaSameIdSet(target.playerIds,src.playerIds)) target.notes.push('⚠ Squadra diversa tra le giornate');
+  target.points+=src.points; target.credits+=src.credits; target.pres+=src.pres; target.goals+=src.goals; target.mvps+=src.mvps;
+  target.gsPt+=src.gsPt; target.porteInviolate+=src.porteInviolate; target.rigPar+=src.rigPar; target.rigSbag+=src.rigSbag; target.autogoal+=src.autogoal;
+  if(target.presPoints!==null || src.presPoints!==null) target.presPoints=(target.presPoints||0)+(src.presPoints!==null?src.presPoints:(src.pres||0)*6);
+  target.players.push(...(src.players||[])); target.playerIds.push(...(src.playerIds||[])); target.notes.push(...(src.notes||[]));
+}
+function fantaUniqueSortedPlayers(result){
+  const map=new Map();
+  (result.players||[]).forEach(p=>map.set(fantaNormText(p.teamCode)+'|'+fantaNormText(p.surname)+'|'+fantaNormText(p.name),p));
+  return [...map.values()].sort(fantaComparePlayers);
+}
+function fantaSquadText(result){ return fantaUniqueSortedPlayers(result).map(fantaPlayerDisplay).join(', '); }
+function fantaNoteText(result){ return [...new Set((result.notes||[]).filter(Boolean))].join(' | '); }
+function fantaCompareResults(a,b){
+  let c=b.points-a.points; if(c) return c;
+  c=b.goals-a.goals; if(c) return c;
+  c=b.mvps-a.mvps; if(c) return c;
+  c=a.autogoal-b.autogoal; if(c) return c;
+  c=a.rigSbag-b.rigSbag; if(c) return c;
+  c=a.credits-b.credits; if(c) return c;
+  c=String(a.name||'').localeCompare(String(b.name||''),'it',{sensitivity:'base'}); if(c) return c;
+  return (a.day||0)-(b.day||0);
+}
+function fantaValidateRoster(result,budget){
+  let pt=0,g=0;
+  (result.players||[]).forEach(p=>{ if(p.role==='PT') pt++; else g++; });
+  if(pt!==1 || g!==4) result.notes.push('PT='+pt+' (richiesto 1) | G='+g+' (richiesti 4)');
+  if(result.credits>budget) result.notes.push('Budget superato: '+result.credits+'/'+budget);
+}
+function fantaCalculateFromRosters(){
+  const ctx=fantaBuildPlayerContext();
+  const rosters=fantaRosterFiles();
+  const resultsByKey=new Map();
+  const firstSource=new Map();
+  const goals=fantaGoalsByPlayerDayAll(ctx.players);
+  const mvps=fantaMvpsByPlayerDayAll(ctx.players);
+  const conceded=fantaGoalsConcededByTeamDay();
+  const extras=fantaReadExtras();
+  const playedDays=new Set(collectPlayedMatchesForTrend().map(m=>m.round));
+  const issues=[];
+  const budget=250;
+  rosters.forEach(file=>{
+    const duplicateInFile=new Set();
+    rowsToObjects(state.rows[file]||[]).forEach((r,rowIndex)=>{
+      const day=parseInt(firstPresent(r,[['giornata','day','turno','round']]),10);
+      const name=String(firstPresent(r,[['partecipante','nome','participant','fantallenatore']])||'').trim();
+      const rawId=String(firstPresent(r,[['idGiocatore','id','giocatore','id giocatore']])||'').trim();
+      if(!Number.isFinite(day) || day<=0){ issues.push(file+' riga '+(rowIndex+2)+': giornata non valida'); return; }
+      if(playedDays.size && !playedDays.has(day)) return;
+      if(!name){ issues.push(file+' riga '+(rowIndex+2)+': partecipante mancante'); return; }
+      if(!rawId){ issues.push(file+' riga '+(rowIndex+2)+': idGiocatore mancante'); return; }
+      const rosterKey=day+'|'+fantaNormText(name);
+      const source=firstSource.get(rosterKey);
+      if(!source) firstSource.set(rosterKey,file);
+      else if(source!==file){
+        if(!duplicateInFile.has(rosterKey)) issues.push(file+' riga '+(rowIndex+2)+': duplicato per '+name+' giornata '+day+' già presente in '+source);
+        duplicateInFile.add(rosterKey); return;
+      }
+      let usedId=rawId;
+      let player=ctx.byId.get(usedId);
+      if(!player){ usedId=fantaNormalizeKey(rawId); player=ctx.byId.get(usedId); }
+      if(!player){ issues.push(file+' riga '+(rowIndex+2)+': giocatore '+rawId+' non presente nel listone/squadre'); return; }
+      let result=resultsByKey.get(rosterKey);
+      if(!result){ result=fantaResult(day,name); resultsByKey.set(rosterKey,result); }
+      result.players.push(player); result.playerIds.push(usedId);
+      result.credits += ctx.credits.get(usedId) || ctx.credits.get(rawId) || ctx.credits.get(player.numericId) || ctx.credits.get(player.stableKey) || 0;
+      result.pres += 1; result.points += 6;
+      const playerKey=fantaPlayerKey(day,player);
+      const g=goals.get(playerKey)||0; result.goals+=g; result.points+=g*3;
+      const m=mvps.get(playerKey)||0; result.mvps+=m; result.points+=m*5;
+      const extra=extras.get(day+'|'+usedId) || extras.get(day+'|'+rawId) || extras.get(day+'|'+player.numericId) || extras.get(day+'|'+player.stableKey);
+      if(extra){
+        result.gsPt+=extra.gsPt; result.points-=extra.gsPt;
+        result.rigPar+=extra.rigPar; result.rigSbag+=extra.rigSbag; result.autogoal+=extra.autogoal;
+        result.points += extra.rigPar*3 - extra.rigSbag*3 - extra.autogoal*2;
+      }
+      if(player.role==='PT'){
+        const k=day+'|'+fantaNormText(player.teamCode);
+        const has=conceded.has(k);
+        const gs=conceded.get(k)||0;
+        result.gsPt+=gs; result.points-=gs;
+        if(has && gs===0){ result.porteInviolate+=1; result.points+=1; }
+      }
+    });
+  });
+  const results=[...resultsByKey.values()];
+  results.forEach(r=>fantaValidateRoster(r,budget));
+  results.sort(fantaCompareResults);
+  return {source:'calcolata',results,issues,rosterCount:rosters.length,playerCount:ctx.players.length};
+}
+function fantaResultFromImportedRow(r,file){
+  const name=String(firstPresent(r,[['partecipante','nome','participant','fantallenatore']])||'').trim();
+  const dayRaw=firstPresent(r,[['giornata','day','turno','round']]);
+  const day=giornataNumberFromText(dayRaw) ? parseInt(giornataNumberFromText(dayRaw),10) : 0;
+  const points=num(firstPresent(r,[['punti','puntiTotali','punti totali','points','pts']]));
+  if(!name || (!points && String(firstPresent(r,[['punti','puntiTotali','punti totali','points','pts']])||'').trim()==='')) return null;
+  const res=fantaResult(day,name);
+  res.points=points;
+  res.credits=num(firstPresent(r,[['creditiUsati','crediti usati','crediti','creditiMedi','crediti medi']]));
+  res.pres=num(firstPresent(r,[['presenze','pres']])) || 0;
+  const explicitPresPoints=num(firstPresent(r,[['puntiPresenza','punti presenza','pres.','presenza punti']]));
+  if(explicitPresPoints) res.presPoints=explicitPresPoints;
+  res.goals=num(firstPresent(r,[['goal','gol','reti']]));
+  res.mvps=num(firstPresent(r,[['mvp','puntiMvp','punti mvp']]));
+  res.gsPt=num(firstPresent(r,[['gsPt','gs pt','goalSubitiPt','gol subiti pt']]));
+  res.porteInviolate=num(firstPresent(r,[['porteInviolate','porte inviolate','pi','clean sheet']]));
+  res.rigPar=num(firstPresent(r,[['rigoriParati','rigori parati','rig. par.','rig par']]));
+  res.rigSbag=num(firstPresent(r,[['rigoriSbagliati','rigori sbagliati','rig. sbagl.','rig sbagl']]));
+  res.autogoal=num(firstPresent(r,[['autogoal','autogol','ag']]));
+  const squad=firstPresent(r,[['squadra','rosa','formazione']]);
+  if(squad) res.squadOverride=smartSpace(squad);
+  const note=firstPresent(r,[['note','nota','esito']]);
+  if(note && norm(note)!==norm('Rosa valida')) res.notes.push(note);
+  if(!day && norm(file).includes('classificatotalefantacalcio')) res.importedTotal=true;
+  return res;
+}
+function fantaReadImportedResults(){
+  const rows=[];
+  fantaOutputFiles().forEach(file=>{
+    rowsToObjects(state.rows[file]||[]).forEach(r=>{
+      const res=fantaResultFromImportedRow(r,file);
+      if(res) rows.push(res);
+    });
+  });
+  rows.sort(fantaCompareResults);
+  return rows;
+}
+function fantaCurrentData(){
+  const imported=fantaReadImportedResults();
+  if(imported.length) return {source:'importata',results:imported,issues:[],rosterCount:fantaRosterFiles().length,playerCount:fantaAllPlayersSorted().length};
+  return fantaCalculateFromRosters();
+}
+function fantaAggregateTotals(results){
+  const totals=new Map();
+  results.forEach(r=>{
+    const key=fantaNormText(r.name);
+    let t=totals.get(key);
+    if(!t){ t=fantaResult(0,r.name); totals.set(key,t); t.days=new Set(); }
+    fantaAddResult(t,r);
+    if(r.day) t.days.add(r.day);
+  });
+  const out=[...totals.values()];
+  out.forEach(t=>{ t.day=0; t.giornateGiocate=t.days?t.days.size:0; });
+  out.sort(fantaCompareResults);
+  return out;
+}
+function fantaAvailableDayOptions(results){
+  const days=[...new Set(results.map(r=>r.day).filter(d=>d>0))].sort((a,b)=>a-b);
+  return [['totale','Totale torneo'],...days.map(d=>[String(d),'Giornata '+d])];
+}
+function fantaRowsForSelected(data){
+  const selected=state.selectedFantaGiornata||'totale';
+  if(selected==='totale'){
+    const directTotals=data.results.filter(r=>!r.day && r.importedTotal);
+    return directTotals.length ? directTotals.sort(fantaCompareResults) : fantaAggregateTotals(data.results.filter(r=>r.day>0));
+  }
+  const day=parseInt(selected,10);
+  return data.results.filter(r=>r.day===day).sort(fantaCompareResults);
+}
+function fantaDisplayPres(result){
+  if(result.presPoints!==null && result.presPoints!==undefined) return result.presPoints;
+  return (result.pres||0)*6;
+}
+function fantaBuildTable(rows){
+  const header=['POS.','Giornata','Partecipante','Punti','Crediti','Pres.','Goal','MVP','GS PT','PI','Rig. par.','Rig. sbagl.','AG','Squadra','Note'];
+  const body=rows.map((r,i)=>[
+    String(i+1), r.day ? String(r.day) : 'Totale', r.name, String(r.points), String(r.credits||''), String(fantaDisplayPres(r)||0),
+    String(r.goals||0), String(r.mvps||0), String(r.gsPt||0), String(r.porteInviolate||0), String(r.rigPar||0), String(r.rigSbag||0), String(r.autogoal||0),
+    r.squadOverride || fantaSquadText(r), fantaNoteText(r) || 'Rosa valida'
+  ]);
+  const wrap=document.createElement('div');
+  wrap.className='fanta-results-wrap';
+  const table=buildTable([header,...body],'fantacalcio_'+(state.selectedFantaGiornata||'totale'),null,['POS.','Giornata','Partecipante','Punti'],['Punti']);
+  table.classList.add('fanta-table-desktop');
+  wrap.appendChild(table);
+  wrap.appendChild(fantaBuildMobileCards(rows));
+  return wrap;
+}
+function fantaBuildMobileCards(rows){
+  const list=document.createElement('div');
+  list.className='fanta-mobile-list';
+  rows.forEach((r,i)=>{
+    const card=document.createElement('article');
+    card.className='fanta-standing-card';
+
+    const top=document.createElement('div');
+    top.className='fanta-standing-top';
+
+    const rank=document.createElement('div');
+    rank.className='fanta-rank';
+    rank.textContent=String(i+1);
+    top.appendChild(rank);
+
+    const main=document.createElement('div');
+    main.className='fanta-player-main';
+    const name=document.createElement('div');
+    name.className='fanta-player-name';
+    name.textContent=r.name||'-';
+    const day=document.createElement('span');
+    day.className='fanta-day-badge';
+    day.textContent=r.day ? ('Giornata '+r.day) : 'Totale torneo';
+    main.appendChild(name);
+    main.appendChild(day);
+    top.appendChild(main);
+
+    const score=document.createElement('div');
+    score.className='fanta-score';
+    score.textContent=String(r.points||0);
+    const scoreLabel=document.createElement('span');
+    scoreLabel.textContent='Punti';
+    score.appendChild(scoreLabel);
+    top.appendChild(score);
+    card.appendChild(top);
+
+    const stats=[
+      ['Crediti',r.credits||''],['Pres.',fantaDisplayPres(r)||0],['Gol',r.goals||0],['MVP',r.mvps||0],
+      ['GS PT',r.gsPt||0],['PI',r.porteInviolate||0],['Rig. par.',r.rigPar||0],['Rig. sbagl.',r.rigSbag||0],['AG',r.autogoal||0]
+    ];
+    const grid=document.createElement('div');
+    grid.className='fanta-card-grid';
+    stats.forEach(([label,value])=>{
+      const stat=document.createElement('div');
+      stat.className='fanta-card-stat';
+      const b=document.createElement('b');
+      b.textContent=String(value===''?'-':value);
+      const s=document.createElement('span');
+      s.textContent=label;
+      stat.appendChild(b);
+      stat.appendChild(s);
+      grid.appendChild(stat);
+    });
+    card.appendChild(grid);
+
+    const team=fantaSquadText(r);
+    if(team || r.squadOverride){
+      const teamEl=document.createElement('div');
+      teamEl.className='fanta-card-team';
+      teamEl.textContent='Squadra: '+(r.squadOverride||team);
+      card.appendChild(teamEl);
+    }
+    const note=fantaNoteText(r);
+    const noteEl=document.createElement('div');
+    noteEl.className='fanta-card-note'+(note?'':' is-ok');
+    noteEl.textContent=note ? ('Note: '+note) : 'Rosa valida';
+    card.appendChild(noteEl);
+
+    list.appendChild(card);
+  });
+  return list;
+}
+function fantaSummaryCards(parent,rows,data){
+  const wrap=document.createElement('div'); wrap.className='fanta-summary';
+  const warnings=rows.filter(r=>fantaNoteText(r)).length + (data.issues||[]).length;
+  const leader=rows[0] ? rows[0].name : '-';
+  const avg=rows.length ? (rows.reduce((s,r)=>s+r.points,0)/rows.length).toFixed(2).replace('.',',') : '0';
+  const cards=[
+    [rows.length,'Partecipanti'],[leader,'Leader'],[avg,'Media punti'],[rows[0]?rows[0].points:0,'Miglior punteggio'],[warnings,'Warning']
+  ];
+  cards.forEach(([n,l])=>{
+    const c=document.createElement('div'); c.className='fanta-mini-card';
+    const numEl=document.createElement('div'); numEl.className='n'; numEl.textContent=n;
+    const lab=document.createElement('span'); lab.className='l'; lab.textContent=l;
+    c.appendChild(numEl); c.appendChild(lab); wrap.appendChild(c);
+  });
+  parent.appendChild(wrap);
+}
+function renderFantacalcio(){
+  const el=document.getElementById('fantacalcio'); el.innerHTML='';
+  const card=document.createElement('div'); card.className='card';
+  const title=document.createElement('h2'); title.textContent='♕ Fantacalcio'; card.appendChild(title);
+  const intro=document.createElement('p'); intro.className='hint';
+  intro.textContent='Legge automaticamente le rose rosa_*.csv/roster_*.csv, il listone_fantacalcio.csv e gli eventi extra se presenti. Puoi anche caricare uno o più CSV di classifica giornaliera Fantacalcio.';
+  card.appendChild(intro);
+
+  const actions=document.createElement('div'); actions.className='fanta-actions';
+  const label=document.createElement('label'); label.className='fanta-file-btn'; label.textContent='📥 Carica CSV risultati giornata';
+  const input=document.createElement('input'); input.type='file'; input.accept='.csv,text/csv'; input.multiple=true;
+  input.onchange=e=>handleFantaResultsFiles(e.target.files);
+  label.appendChild(input); actions.appendChild(label);
+
+  const data=fantaCurrentData();
+  let options=fantaAvailableDayOptions(data.results);
+  if(!options.some(o=>o[0]===state.selectedFantaGiornata)) state.selectedFantaGiornata='totale';
+  const select=document.createElement('select'); select.className='search'; select.setAttribute('aria-label','Filtro giornata fantacalcio');
+  options.forEach(([value,text])=>{ const o=document.createElement('option'); o.value=value; o.textContent=text; if(value===state.selectedFantaGiornata) o.selected=true; select.appendChild(o); });
+  select.onchange=()=>{ state.selectedFantaGiornata=select.value; renderFantacalcio(); };
+  actions.appendChild(select);
+  card.appendChild(actions);
+
+  const source=document.createElement('div'); source.className='fanta-note';
+  source.innerHTML='Fonte dati: <b>'+esc(data.source==='importata'?'CSV risultati Fantacalcio caricati/precaricati':'calcolo da rose e CSV torneo')+'</b> · Rose trovate: '+esc(data.rosterCount||0)+' · Giocatori listone/squadre: '+esc(data.playerCount||0);
+  card.appendChild(source);
+  if((state.fantaResultFileKeys||[]).length){
+    const uploaded=document.createElement('div'); uploaded.className='fanta-upload-list';
+    uploaded.textContent='CSV risultati caricati in questa sessione: '+state.fantaResultFileKeys.map(x=>String(x).replace(/^__fanta_upload_\d+_\d+_/,'')).join(', ');
+    card.appendChild(uploaded);
+  }
+
+  const rows=fantaRowsForSelected(data);
+  fantaSummaryCards(card,rows,data);
+  if(!data.results.length){
+    const empty=document.createElement('div'); empty.className='empty';
+    empty.innerHTML='Nessun dato Fantacalcio disponibile. Inserisci nella cartella/manifest i file <code>rosa_*.csv</code> o <code>roster_*.csv</code> e, se vuoi visualizzare risultati già calcolati, carica un CSV con colonne come <code>giornata;partecipante;punti</code> oppure <code>classifica_fantacalcio.csv</code>.';
+    card.appendChild(empty);
+  }else if(!rows.length){
+    card.appendChild(buildEl('div','empty','Nessun risultato per il filtro selezionato.'));
+  }else{
+    card.appendChild(fantaBuildTable(rows));
+  }
+  if(data.issues && data.issues.length){
+    const details=document.createElement('details'); details.className='err-section';
+    const summary=document.createElement('summary'); summary.textContent='Avvisi import Fantacalcio ('+data.issues.length+')';
+    details.appendChild(summary);
+    data.issues.slice(0,80).forEach(msg=>{ const div=document.createElement('div'); div.className='err-item'; div.textContent=msg; details.appendChild(div); });
+    card.appendChild(details);
+  }
+  el.appendChild(card);
+}
+async function handleFantaResultsFiles(fileList){
+  const files=[...fileList].filter(f=>/\.csv$/i.test(f.name));
+  if(!files.length){ setStatus('Nessun CSV Fantacalcio selezionato.'); return; }
+  state.fantaResultFileKeys=state.fantaResultFileKeys||[];
+  for(let i=0;i<files.length;i++){
+    const file=files[i];
+    try{
+      const txt=await safeFileText(file,file.name);
+      const key='__fanta_upload_'+Date.now()+'_'+i+'_'+file.name;
+      state.files[key]=txt;
+      state.rows[key]=parseCsv(txt);
+      state.fantaResultFileKeys.push(key);
+    }catch(e){ loadErrors.push(file.name+' — CSV Fantacalcio saltato: '+String((e&&e.message)||e||'errore di lettura')); }
+  }
+  clearDerivedDataCaches(); showErrors(); state.selectedFantaGiornata='totale';
+  setStatus('CSV Fantacalcio caricati: '+files.length,true);
+  renderFantacalcio();
+}
+
 /* Renderizza SOLO la sezione attiva per efficienza */
 function renderActiveSection(){
   switch(state.activeTab){
@@ -5843,6 +6481,7 @@ function renderActiveSection(){
     case 'calendario':  renderMatchSection('calendario','calendario'); break;
     case 'risultati':   renderMatchSection('risultati','risultati'); break;
     case 'riepilogo':   renderRiepilogoGiornate(); break;
+    case 'fantacalcio': renderFantacalcio(); break;
   }
 }
 function renderAll(){ updateTitle(); renderTabs(); renderActiveSection(); }
@@ -5865,7 +6504,7 @@ async function fetchText(path,fresh){
 async function loadAuto(fresh){
   setStatus('Caricamento in corso…');
   state.files={}; state.rows={}; loadErrors=[]; state.imagesReady=true;
-  state.selectedRiepilogoGiornata=''; state.riepilogoFilterInitialized=false;
+  state.selectedRiepilogoGiornata=''; state.riepilogoFilterInitialized=false; state.selectedFantaGiornata='totale'; state.fantaResultFileKeys=[];
   clearImageProbeCache();
   clearDerivedDataCaches();
   invalidateHeroLogo();
@@ -6031,7 +6670,7 @@ function refreshAfterManualLoad(csv,img){
 async function loadFromDirectoryHandle(dir){
   manualLoadActive = true;
   state.files={}; state.rows={}; state.imageURLs={}; state.imageAliases={}; loadErrors=[]; state.imagesReady=false;
-  state.selectedRiepilogoGiornata=''; state.riepilogoFilterInitialized=false;
+  state.selectedRiepilogoGiornata=''; state.riepilogoFilterInitialized=false; state.selectedFantaGiornata='totale'; state.fantaResultFileKeys=[];
   clearImageProbeCache();
   clearDerivedDataCaches();
   invalidateHeroLogo();
@@ -6100,7 +6739,7 @@ async function loadFolder(fileList){
   manualLoadActive = true;
   const files=[...fileList]; // snapshot: l'input viene svuotato subito dopo la selezione
   state.files={}; state.rows={}; state.imageURLs={}; state.imageAliases={}; loadErrors=[]; state.imagesReady=false;
-  state.selectedRiepilogoGiornata=''; state.riepilogoFilterInitialized=false;
+  state.selectedRiepilogoGiornata=''; state.riepilogoFilterInitialized=false; state.selectedFantaGiornata='totale'; state.fantaResultFileKeys=[];
   clearImageProbeCache();
   clearDerivedDataCaches();
   invalidateHeroLogo();
