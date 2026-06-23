@@ -6038,11 +6038,41 @@ function fantaCalendarDays(){
   _fantaCalendarDaysCache=days;
   return days;
 }
-function fantaPlayedDays(){
-  const played=new Set(collectPlayedMatchesForTrend().map(m=>m.round).filter(d=>d>0));
+function fantaCalendarMaxDay(){
   const calendar=fantaCalendarDays();
-  if(!calendar.size) return played;
-  return new Set([...played].filter(d=>calendar.has(d)));
+  return calendar.size ? Math.max(...calendar) : 0;
+}
+function fantaRiepilogoDayOptions(){
+  // Il filtro Fantacalcio deve seguire le stesse giornate filtrabili del tab
+  // Riepilogo giornate, ma non deve mai superare il calendario ufficiale.
+  const options=riepilogoGiornateOptions(sectionFiles('riepilogo'),{fast:true});
+  const calendar=fantaCalendarDays();
+  const max=fantaCalendarMaxDay();
+  const out=[];
+  const seen=new Set();
+  options.forEach(([key,label])=>{
+    const n=parseInt(giornataNumberFromText(key)||giornataNumberFromText(label)||'',10);
+    if(!Number.isFinite(n) || n<=0) return;
+    if(calendar.size && !calendar.has(n)) return;
+    if(max && n>max) return;
+    const k=String(n);
+    if(!seen.has(k)){ seen.add(k); out.push([k,'Giornata '+n]); }
+  });
+  // Fallback: se non ci sono riepiloghi ma ci sono risultati già disputati, usa quelli.
+  if(!out.length){
+    collectPlayedMatchesForTrend().forEach(m=>{
+      const n=parseInt(m.round,10);
+      if(!Number.isFinite(n) || n<=0) return;
+      if(calendar.size && !calendar.has(n)) return;
+      if(max && n>max) return;
+      const k=String(n);
+      if(!seen.has(k)){ seen.add(k); out.push([k,'Giornata '+n]); }
+    });
+  }
+  return out.sort((a,b)=>parseInt(a[0],10)-parseInt(b[0],10));
+}
+function fantaPlayedDays(){
+  return new Set(fantaRiepilogoDayOptions().map(([key])=>parseInt(key,10)).filter(n=>Number.isFinite(n)&&n>0));
 }
 function fantaRole(raw){
   const v=fantaNormText(raw);
@@ -6110,19 +6140,46 @@ function fantaFindPlayer(players,teamCode,playerName){
   });
   return loose.length===1 ? loose[0] : null;
 }
+function fantaPlayerFromListoneRow(row, rawId){
+  const team=smartSpace(firstPresent(row,[['squadra','team','club']])||'');
+  const ruolo=fantaRole(firstPresent(row,[['ruolo','role','posizione','position']]));
+  const nome=smartSpace(firstPresent(row,[['nome','first name','firstname']])||'');
+  const cognome=smartSpace(firstPresent(row,[['cognome','surname','last name','lastname']])||'');
+  const playerText=smartSpace(firstPresent(row,[['giocatore','player','nome giocatore','calciatore','nome completo','cognome e nome']]) || uniqueNameParts([cognome,nome]) || uniqueNameParts([nome,cognome]));
+  let surname=cognome, name=nome;
+  if(!surname && !name && playerText){
+    const parts=playerText.split(/\s+/);
+    if(ruolo==='PT' && parts.length>1 && fantaRole(parts[parts.length-1])==='PT'){
+      surname=parts.slice(0,-1).join(' ');
+      name=parts[parts.length-1];
+    }else{
+      surname=parts.shift()||playerText;
+      name=parts.join(' ');
+    }
+  }
+  if(!team || (!surname && !name)) return null;
+  const player={
+    teamCode:team, surname, name, role:ruolo,
+    displayName:uniqueNameParts([surname,name]),
+    fullName:uniqueNameParts([name,surname])
+  };
+  player.numericId=String(rawId||'').trim() || fantaNormalizeKey(team+'_'+player.displayName);
+  player.stableKey=fantaStableKey(player);
+  return player;
+}
 function fantaBuildPlayerContext(){
   const players=fantaAllPlayersSorted();
-  const goalsAll=fantaGoalsByPlayerDayAll(players);
   const byId=new Map();
   const credits=new Map();
-  players.forEach(p=>{
-    fantaIdVariants(p.numericId).forEach(id=>byId.set(id,p));
-    byId.set(p.stableKey,p);
-    byId.set(fantaNormalizeKey(p.teamCode+'_'+fantaPlayerDisplay(p)),p);
-    byId.set(fantaNormalizeKey(p.teamCode+'_'+fantaPlayerFull(p)),p);
-    const suggested=fantaSuggestedCredits(p,goalsAll);
-    fantaIdVariants(p.numericId).forEach(id=>credits.set(id,suggested));
-    credits.set(p.stableKey,suggested);
+  const addPlayerAliases=(player, rawId)=>{
+    if(!player) return;
+    const ids=[rawId, player.numericId, player.stableKey, fantaNormalizeKey(player.teamCode+'_'+fantaPlayerDisplay(player)), fantaNormalizeKey(player.teamCode+'_'+fantaPlayerFull(player))];
+    ids.forEach(id=>fantaIdVariants(id).forEach(v=>byId.set(v,player)));
+  };
+  players.forEach((p,i)=>{
+    if(!p.numericId) p.numericId=String(i+1).padStart(3,'0');
+    if(!p.stableKey) p.stableKey=fantaStableKey(p);
+    addPlayerAliases(p,p.numericId);
   });
   fantaListoneFiles().forEach(file=>{
     rowsToObjects(state.rows[file]||[]).forEach(r=>{
@@ -6134,10 +6191,14 @@ function fantaBuildPlayerContext(){
       let player=rawId ? byId.get(rawId) : null;
       if(!player && rawId) player=byId.get(fantaNormalizeKey(rawId));
       if(!player) player=fantaFindPlayer(players,team,playerText);
+      if(!player){
+        player=fantaPlayerFromListoneRow(r,rawId);
+        if(player) players.push(player);
+      }
       let key=fantaNormalizeKey(firstPresent(r,[['chiaveGiocatore','chiave','key','chiave giocatore']]));
       if(!key) key=fantaNormalizeKey(team+'_'+playerText);
       if(player){
-        fantaIdVariants(rawId).forEach(id=>byId.set(id,player));
+        addPlayerAliases(player,rawId);
         if(key) byId.set(key,player);
       }
       const credit=num(firstPresent(r,[['crediti','creditiSuggeriti','crediti suggeriti','creditiSuggeritiBase250','quota','valore','costo']]));
@@ -6148,6 +6209,13 @@ function fantaBuildPlayerContext(){
       }
     });
   });
+  const goalsAll=fantaGoalsByPlayerDayAll(players);
+  players.forEach(p=>{
+    const suggested=fantaSuggestedCredits(p,goalsAll);
+    fantaIdVariants(p.numericId).forEach(id=>{ if(!credits.has(id)) credits.set(id,suggested); });
+    if(!credits.has(p.stableKey)) credits.set(p.stableKey,suggested);
+  });
+  players.sort(fantaComparePlayers);
   return {players,byId,credits};
 }
 function fantaResolvePlayerByName(players,row,file){
@@ -6296,7 +6364,9 @@ function fantaCalculateFromRosters(){
   const playedDays=fantaPlayedDays();
   const issues=[];
   const budget=250;
-  if(!playedDays.size) issues.push('Nessuna giornata valida trovata: vengono conteggiate solo le giornate previste dal calendario e già disputate.');
+  if(!fantaListoneFiles().length) issues.push('Listone Fantacalcio non caricato: atteso data/fantacalcio/listone_fantacalcio.csv.');
+  if(!rosters.length) issues.push('Nessuna rosa Fantacalcio caricata dalle cartelle data/giornataX/.');
+  if(!playedDays.size) issues.push('Nessuna giornata valida trovata: il Fantacalcio usa solo le giornate presenti nel Riepilogo giornate e previste dal calendario.');
   rosters.forEach(file=>{
     const duplicateInFile=new Set();
     rowsToObjects(state.rows[file]||[]).forEach((r,rowIndex)=>{
@@ -6430,7 +6500,14 @@ function fantaAggregateTotals(results){
   return out;
 }
 function fantaAvailableDayOptions(results){
-  const days=[...new Set(results.map(r=>r.day).filter(d=>d>0))].sort((a,b)=>a-b);
+  const riepilogoOptions=fantaRiepilogoDayOptions();
+  if(riepilogoOptions.length) return [['totale','Tutte le giornate'],...riepilogoOptions];
+  const calendar=fantaCalendarDays();
+  const max=fantaCalendarMaxDay();
+  const days=[...new Set(results.map(r=>r.day).filter(d=>{
+    const n=parseInt(d,10);
+    return n>0 && (!calendar.size || calendar.has(n)) && (!max || n<=max);
+  }))].sort((a,b)=>a-b);
   return [['totale','Tutte le giornate'],...days.map(d=>[String(d),'Giornata '+d])];
 }
 function fantaRowsForSelected(data){
@@ -6685,6 +6762,7 @@ function isFantaDayDirPath(path){
   return /(^|\/)giornata[\s_-]*\d+$/i.test(String(path||'').replace(/\\/g,'/').replace(/\/+$/,''));
 }
 function githubRepoInfoFromLocation(){
+  const candidates=[location.href, document.querySelector('meta[property="og:url"]')?.content||''];
   const fromUrl=(url)=>{
     try{
       const u=new URL(url, location.href);
@@ -6694,7 +6772,35 @@ function githubRepoInfoFromLocation(){
       return owner && repo ? {owner,repo} : null;
     }catch(e){ return null; }
   };
-  return fromUrl(location.href) || fromUrl(document.querySelector('meta[property="og:url"]')?.content||'');
+  for(const url of candidates){
+    const info=fromUrl(url);
+    if(info) return info;
+  }
+  return null;
+}
+let _githubFantaTreeCache=null;
+async function githubListFantaCsvFilesFromTree(fresh=false){
+  const info=githubRepoInfoFromLocation();
+  if(!info) return [];
+  const cacheKey=info.owner+'/'+info.repo;
+  if(!fresh && _githubFantaTreeCache && _githubFantaTreeCache.key===cacheKey) return _githubFantaTreeCache.files;
+  try{
+    const bust=fresh?('?t='+Date.now()):'';
+    const repoRes=await fetch('https://api.github.com/repos/'+encodeURIComponent(info.owner)+'/'+encodeURIComponent(info.repo)+bust);
+    if(!repoRes.ok) return [];
+    const repo=await repoRes.json();
+    const branch=repo.default_branch || 'main';
+    const treeRes=await fetch('https://api.github.com/repos/'+encodeURIComponent(info.owner)+'/'+encodeURIComponent(info.repo)+'/git/trees/'+encodeURIComponent(branch)+'?recursive=1'+(fresh?'&t='+Date.now():''));
+    if(!treeRes.ok) return [];
+    const data=await treeRes.json();
+    const files=(data.tree||[])
+      .filter(item=>item && item.type==='blob' && /\.csv$/i.test(item.path||''))
+      .map(item=>normalizeFantaCsvPath(item.path))
+      .filter(Boolean);
+    const unique=[...new Set(files)];
+    _githubFantaTreeCache={key:cacheKey,files:unique};
+    return unique;
+  }catch(e){ return []; }
 }
 async function githubListFantaCsvFiles(path='data', depth=0, fresh=false, insideDay=false, insideFanta=false){
   const info=githubRepoInfoFromLocation();
@@ -6755,9 +6861,11 @@ async function directoryIndexFantaCsvFiles(fresh){
 }
 async function discoverFantaFiles(fresh){
   const found=new Set();
-  // Nessun manifest Fantacalcio: rose da data/giornataX/ e listone/eventi globali da data/fantacalcio/.
-  (await githubListFantaCsvFiles('data',0,fresh,false)).forEach(p=>found.add(p));
-  (await directoryIndexFantaCsvFiles(fresh)).forEach(p=>found.add(p));
+  // Nessun manifest Fantacalcio: usa l'albero GitHub del repository pubblico
+  // per elencare velocemente rose in data/giornataX/ e listone/eventi in data/fantacalcio/.
+  (await githubListFantaCsvFilesFromTree(fresh)).forEach(p=>found.add(p));
+  if(!found.size) (await githubListFantaCsvFiles('data',0,fresh,false)).forEach(p=>found.add(p));
+  if(!found.size) (await directoryIndexFantaCsvFiles(fresh)).forEach(p=>found.add(p));
   return [...found];
 }
 async function loadAuto(fresh){
