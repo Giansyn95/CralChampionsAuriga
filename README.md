@@ -1,157 +1,288 @@
-# CRAL Champions Auriga - Landing archivio tornei
+# CRAL Champions
 
-Questo pacchetto contiene i file aggiornati per gestire la landing principale del torneo CRAL Champions Auriga e l'archivio delle diverse edizioni.
+Sito statico per la gestione e la pubblicazione del torneo aziendale **CRAL Champions**.
 
-## File inclusi
+Il progetto è composto da una singola pagina HTML che legge dati da file CSV, mostra classifiche, calendario, risultati, statistiche giocatori, riepiloghi di giornata e sezione Fantacalcio. È pensato per essere pubblicato facilmente su **GitHub Pages**, senza backend e senza processo di build.
 
-- `index.html`  
-  Landing page principale. Legge `tornei.json`, mostra l'edizione corrente, mette in evidenza le ultime edizioni e permette di aprire l'archivio completo.
+## Funzionalità
 
-- `tornei.json`  
-  Configurazione delle edizioni del torneo. Ogni edizione è descritta con anno, stagione, cartella, URL, stato e ordinamento.
+- Home con KPI del torneo, grafici e stato di avanzamento.
+- Classifiche squadre, marcatori, MVP e portieri.
+- Statistiche giocatori, inclusa media gol per partita.
+- Schede squadre con giocatori, ruoli, capitano e avatar.
+- Calendario con stato giornate: disputate, prossime e da giocare.
+- Risultati e riepiloghi di giornata.
+- Sezione Fantacalcio con calcolo punteggi da rose, eventi e risultati.
+- Ricerca globale per squadre, giocatori e partite.
+- Tabelle ordinabili.
+- Tema chiaro/scuro con preferenza salvata nel browser.
+- Stampa o esportazione in PDF tramite browser.
+- Banner diagnostico per CSV mancanti o con problemi di formato.
+- Supporto a immagini di squadre, giocatori e logo CRAL.
+- Anteprima link tramite metadati Open Graph.
 
-- `migrazione-landing-tornei.yml`  
-  Workflow GitHub Actions per creare o aggiornare la struttura delle edizioni, spostare i file del torneo dentro la cartella corretta e rigenerare la landing.
+## Stack tecnico
 
-- `README.md`  
-  Questo file di spiegazione.
+- **HTML5**
+- **CSS3**
+- **JavaScript vanilla**
+- **CSV** come sorgente dati
+- **Chart.js** caricato da CDN per i grafici
+- **Google Fonts** per la UI
+- **GitHub Pages** per il deploy statico
 
-## Obiettivo della struttura
+Non sono necessari Node.js, npm, database o server applicativi.
 
-La struttura permette di distinguere più tornei nello stesso anno, ad esempio:
-
-```text
-tornei/2026-estate/
-tornei/2026-inverno/
-tornei/2025/
-```
-
-L'edizione estiva 2026 non usa più la cartella generica `tornei/2026/`, ma la cartella specifica:
-
-```text
-tornei/2026-estate/
-```
-
-Questo evita conflitti quando nello stesso anno esistono sia un torneo estivo sia un torneo invernale.
-
-## Configurazione in `tornei.json`
-
-Ogni elemento dentro `tornei` rappresenta una edizione. Esempio:
-
-```json
-{
-  "id": "2026-estate",
-  "anno": "2026",
-  "stagione": "Estate",
-  "slug": "estate",
-  "nome": "Estate",
-  "cartella": "tornei/2026-estate",
-  "titolo": "CRAL Champions - Auriga",
-  "descrizione": "Classifiche, calendario, risultati, squadre e statistiche giocatori dell'edizione estiva.",
-  "url": "tornei/2026-estate/",
-  "stato": "in-corso",
-  "corrente": true,
-  "ordine": 20262,
-  "attivo": true
-}
-```
-
-### Campi principali
-
-- `id`: identificativo univoco dell'edizione, per esempio `2026-estate` o `2026-inverno`.
-- `anno`: anno mostrato graficamente nella landing.
-- `stagione`: nome leggibile della stagione, per esempio `Estate` o `Inverno`.
-- `slug`: versione tecnica della stagione, in minuscolo.
-- `cartella`: percorso della cartella dell'edizione.
-- `titolo`: titolo del torneo mostrato nella scheda principale.
-- `descrizione`: testo descrittivo dell'edizione.
-- `url`: link alla pagina dell'edizione.
-- `stato`: può essere `in-corso`, `concluso` o `prossimo`.
-- `corrente`: se `true`, l'edizione viene mostrata come torneo corrente.
-- `ordine`: valore numerico usato per ordinare le edizioni dalla più recente alla più vecchia.
-- `attivo`: se `false`, l'edizione non viene mostrata nella landing.
-
-## Logica della landing `index.html`
-
-La landing:
-
-1. carica il file `tornei.json`;
-2. individua l'edizione corrente usando `corrente: true`;
-3. mostra nella scheda principale:
-   - badge `Edizione in corso`;
-   - stagione solo in piccolo accanto al badge, per esempio `Estate`;
-   - titolo del torneo sotto il badge;
-   - descrizione;
-   - anno grande sulla destra;
-   - pulsante di accesso all'edizione;
-4. mostra nell'archivio solo le ultime edizioni in primo piano;
-5. mostra un pulsante per aprire la lista completa delle edizioni più vecchie.
-
-La quantità di edizioni in primo piano è configurabile in `tornei.json`:
-
-```json
-"archivio": {
-  "primoPiano": 2
-}
-```
-
-Con questa configurazione, la landing mostra gli ultimi 2 tornei in evidenza; gli altri restano nascosti finché l'utente non apre l'archivio completo.
-
-## Workflow GitHub Actions
-
-Il file `.github/workflows/migrazione-landing-tornei.yml` serve per creare o aggiornare una edizione.
-
-Input disponibili quando si avvia manualmente il workflow:
-
-- `anno`: anno del torneo, per esempio `2026`.
-- `stagione`: `estate` oppure `inverno`.
-- `stato`: `in-corso`, `concluso` oppure `prossimo`.
-- `corrente`: `true` oppure `false`.
-
-Esempio per il torneo estivo 2026:
+## Struttura consigliata del repository
 
 ```text
-anno: 2026
-stagione: estate
-stato: in-corso
-corrente: true
+.
+├── index.html
+├── README.md
+├── data/
+│   ├── manifest.csv
+│   ├── config.csv
+│   ├── classifica_squadre.csv
+│   ├── classifica_marcatori.csv
+│   ├── classifica_mvp.csv
+│   ├── classifica_portieri.csv
+│   ├── risultati_partite.csv
+│   ├── calendario_andata_ritorno.csv
+│   ├── riepilogo_giornate.csv
+│   ├── squadra_NomeSquadra.csv
+│   ├── giornata1/
+│   │   └── rosa_partecipante.csv
+│   └── fantacalcio/
+│       ├── listone_fantacalcio.csv
+│       └── eventi_fantacalcio.csv
+└── immagini/
+    ├── logo_cral.png
+    ├── squadre/
+    │   └── nome-squadra.png
+    └── giocatori/
+        └── nome-giocatore.png
 ```
 
-Il workflow crea o aggiorna:
+> I nomi effettivi dei CSV possono essere gestiti tramite `data/manifest.csv`. I file base più importanti sono caricati automaticamente anche se non dichiarati nel manifest.
+
+## File dati principali
+
+### `data/manifest.csv`
+
+Elenco dei CSV da caricare.
+
+Esempio:
+
+```csv
+file
+classifica_squadre.csv
+classifica_marcatori.csv
+classifica_mvp.csv
+classifica_portieri.csv
+risultati_partite.csv
+calendario_andata_ritorno.csv
+riepilogo_giornate.csv
+squadra_Rossi.csv
+squadra_Blu.csv
+```
+
+### `data/config.csv`
+
+Permette di personalizzare titolo e sottotitolo del sito.
+
+Esempio:
+
+```csv
+chiave;valore
+titolo;CRAL Champions - Auriga 2026
+sottotitolo;Classifiche, calendario, risultati e statistiche giocatori
+```
+
+### `data/classifica_squadre.csv`
+
+Classifica generale delle squadre.
+
+Colonne consigliate:
+
+```csv
+Posizione;Squadra;PG;V;N;P;GF;GS;DR;Punti finali;Penalità;Nota penalità
+```
+
+### `data/classifica_marcatori.csv`
+
+Classifica marcatori.
+
+Colonne consigliate:
+
+```csv
+Posizione;Giocatore;Squadra;Gol;Partite;Note
+```
+
+### `data/classifica_mvp.csv`
+
+Classifica MVP.
+
+Colonne consigliate:
+
+```csv
+Posizione;Giocatore;Squadra;Punti MVP;Note
+```
+
+### `data/classifica_portieri.csv`
+
+Classifica portieri.
+
+Colonne consigliate:
+
+```csv
+Posizione;Portiere;Squadra;Punti;Note
+```
+
+### `data/risultati_partite.csv`
+
+Risultati delle partite.
+
+Colonne consigliate:
+
+```csv
+Giornata;Data;Squadra casa;Gol casa;Squadra trasferta;Gol trasferta;Note
+```
+
+### `data/calendario_andata_ritorno.csv`
+
+Calendario del torneo.
+
+Può essere gestito sia come tabella CSV classica sia come calendario a blocchi per giornata, in base al formato utilizzato dal file sorgente.
+
+### `data/riepilogo_giornate.csv`
+
+Riepiloghi per giornata con marcatori, MVP, portieri, autogol e statistiche aggregate.
+
+### `data/squadra_NomeSquadra.csv`
+
+Rosa di una singola squadra.
+
+Colonne consigliate:
+
+```csv
+Nome;Cognome;Ruolo;Numero;Capitano
+```
+
+Il nome della squadra viene ricavato dal nome file, ad esempio:
 
 ```text
-tornei/2026-estate/
+squadra_FC_Rossi.csv
 ```
 
-Poi aggiorna `tornei.json` con una voce coerente con la struttura creata.
+## Immagini
 
-## Come installare i file nel repository
+Le immagini vengono cercate automaticamente nelle cartelle:
 
-1. Copiare `index.html` nella root del repository.
-2. Copiare `tornei.json` nella root del repository.
-3. Copiare `migrazione-landing-tornei.yml` in:
+```text
+immagini/logo_cral.png
+immagini/squadre/
+immagini/giocatori/
+```
 
-   ```text
-   .github/workflows/migrazione-landing-tornei.yml
-   ```
+Sono supportati i formati:
 
-4. Fare commit e push su GitHub.
-5. Eseguire il workflow manualmente da GitHub Actions quando serve creare o aggiornare una nuova edizione.
+- `.png`
+- `.jpg`
+- `.jpeg`
 
-## Note sulla visualizzazione
+Per aumentare le probabilità di riconoscimento automatico, usa nomi file normalizzati e coerenti con squadre e giocatori.
 
-La landing è pensata per desktop e mobile:
+Esempi:
 
-- layout responsive;
-- tema chiaro/scuro;
-- focus visibile da tastiera;
-- skip link per accessibilità;
-- archivio compatto con pulsante per mostrare le edizioni più vecchie.
+```text
+immagini/squadre/fcrossi.png
+immagini/giocatori/mariorossi.png
+```
 
-## Modifiche rispetto alla versione precedente
+Se un'immagine non viene trovata, il sito mostra un fallback con iniziali o placeholder.
 
-- La cartella `2026` è stata sostituita da `2026-estate`.
-- `tornei.json` ora supporta più edizioni nello stesso anno.
-- La scheda principale non ripete più la stagione più volte: la stagione compare solo nel badge piccolo accanto a `Edizione in corso`.
-- Sotto al badge viene mostrato il titolo del torneo.
-- L'archivio mostra gli ultimi 2 tornei in primo piano e mette i precedenti dietro un pulsante.
+## Fantacalcio
+
+La sezione Fantacalcio carica dati da:
+
+```text
+data/giornataX/rosa_*.csv
+data/giornataX/roster_*.csv
+data/fantacalcio/listone_fantacalcio.csv
+data/fantacalcio/eventi_fantacalcio.csv
+```
+
+Regole punteggio visualizzate dalla web app:
+
+| Evento | Punti |
+|---|---:|
+| Presenza | +6 |
+| Gol | +3 |
+| MVP | +5 |
+| Porta inviolata portiere | +1 |
+| Rigore parato | +3 |
+| Gol subito portiere | -1 |
+| Rigore sbagliato | -3 |
+| Autogol | -2 |
+
+## Avvio in locale
+
+Per evitare problemi di caricamento dei CSV via browser, è consigliato usare un piccolo server locale.
+
+Da terminale, nella cartella del progetto:
+
+```bash
+python -m http.server 8000
+```
+
+Poi apri:
+
+```text
+http://localhost:8000
+```
+
+In alternativa, la pagina include anche funzioni di caricamento manuale dei file/cartelle tramite browser compatibili con la File System Access API.
+
+## Deploy su GitHub Pages
+
+1. Carica il repository su GitHub.
+2. Verifica che `index.html` sia nella root del repository.
+3. Vai su **Settings → Pages**.
+4. Seleziona il branch principale, ad esempio `main`.
+5. Seleziona la cartella `/root`.
+6. Salva e attendi la pubblicazione.
+
+L'URL finale sarà simile a:
+
+```text
+https://<utente-o-organizzazione>.github.io/<nome-repository>/
+```
+
+## Aggiornamento dati
+
+Per aggiornare il torneo:
+
+1. Modifica o sostituisci i CSV nella cartella `data/`.
+2. Aggiorna `manifest.csv` se aggiungi nuovi file.
+3. Aggiungi o aggiorna immagini in `immagini/`.
+4. Esegui commit e push sul repository.
+5. Apri il sito e usa il pulsante di ricarica dati se necessario.
+
+## Note operative
+
+- Il sito è completamente statico: ogni aggiornamento passa dai file CSV.
+- I CSV possono usare `;` oppure `,` come separatore.
+- Il sito include controlli per segnalare file mancanti, colonne incoerenti, intestazioni vuote e valori numerici non validi.
+- Le tabelle sono scrollabili su mobile.
+- La UI è responsive e ottimizzata per consultazione da desktop e smartphone.
+- Chart.js viene caricato solo quando servono i grafici, riducendo il caricamento iniziale.
+
+## Licenza
+
+Aggiungi qui la licenza del progetto, se prevista.
+
+Esempio:
+
+```text
+MIT
+```
