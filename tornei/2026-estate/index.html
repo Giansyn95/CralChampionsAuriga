@@ -6514,8 +6514,8 @@ function fantaAddResult(target,src){
   }
   if(src.playerExtras){
     src.playerExtras.forEach((ext,key)=>{
-      const t=target.playerExtras.get(key)||{goals:0,mvps:0,gsPt:0,pi:0,rigPar:0,rigSbag:0,autogoal:0};
-      t.goals+=ext.goals||0; t.mvps+=ext.mvps||0; t.gsPt+=ext.gsPt||0; t.pi+=ext.pi||0;
+      const t=target.playerExtras.get(key)||{pres:0,goals:0,mvps:0,gsPt:0,pi:0,rigPar:0,rigSbag:0,autogoal:0};
+      t.pres+=ext.pres||0; t.goals+=ext.goals||0; t.mvps+=ext.mvps||0; t.gsPt+=ext.gsPt||0; t.pi+=ext.pi||0;
       t.rigPar+=ext.rigPar||0; t.rigSbag+=ext.rigSbag||0; t.autogoal+=ext.autogoal||0;
       target.playerExtras.set(key,t);
     });
@@ -6663,7 +6663,7 @@ function fantaCalculateFromRosters(){
       // Punti per singolo giocatore (presenza base)
       const pPlayerKey=fantaNormText(player.teamCode)+'|'+fantaNormText(player.surname)+'|'+fantaNormText(player.name);
       let pPlayerPts=6;
-      const pExt={goals:0,mvps:0,gsPt:0,pi:0,rigPar:0,rigSbag:0,autogoal:0};
+      const pExt={pres:1,goals:0,mvps:0,gsPt:0,pi:0,rigPar:0,rigSbag:0,autogoal:0};
       const playerKey=fantaPlayerKey(day,player);
       const g=goals.get(playerKey)||0; result.goals+=g; result.points+=g*3; pPlayerPts+=g*3; pExt.goals+=g;
       const m=mvps.get(playerKey)||0; result.mvps+=m; result.points+=m*5; pPlayerPts+=m*5; pExt.mvps+=m;
@@ -6686,8 +6686,8 @@ function fantaCalculateFromRosters(){
         if(has && gs===0){ result.porteInviolate+=1; result.points+=1; pPlayerPts+=1; pExt.pi+=1; }
       }
       result.playerPoints.set(pPlayerKey,(result.playerPoints.get(pPlayerKey)||0)+pPlayerPts);
-      const prevExt=result.playerExtras.get(pPlayerKey)||{goals:0,mvps:0,gsPt:0,pi:0,rigPar:0,rigSbag:0,autogoal:0};
-      prevExt.goals+=pExt.goals; prevExt.mvps+=pExt.mvps; prevExt.gsPt+=pExt.gsPt; prevExt.pi+=pExt.pi;
+      const prevExt=result.playerExtras.get(pPlayerKey)||{pres:0,goals:0,mvps:0,gsPt:0,pi:0,rigPar:0,rigSbag:0,autogoal:0};
+      prevExt.pres+=pExt.pres||0; prevExt.goals+=pExt.goals; prevExt.mvps+=pExt.mvps; prevExt.gsPt+=pExt.gsPt; prevExt.pi+=pExt.pi;
       prevExt.rigPar+=pExt.rigPar; prevExt.rigSbag+=pExt.rigSbag; prevExt.autogoal+=pExt.autogoal;
       result.playerExtras.set(pPlayerKey,prevExt);
     });
@@ -6898,7 +6898,15 @@ function fantaPlayerPointsDetail(result, player){
   const ext=(result.playerExtras && result.playerExtras.get(extKey)) || null;
   const parts=[];
   if(ext){
-    parts.push('+6 pres.');
+    // I punti presenza devono riflettere il filtro giornata corrente:
+    // singola giornata = +6, totale su N giornate = +(6*N).
+    const bonusMalusPts=(ext.goals||0)*3+(ext.mvps||0)*5+(ext.rigPar||0)*3-(ext.rigSbag||0)*3-(ext.autogoal||0)*2-(ext.gsPt||0)+(ext.pi||0);
+    let presCount=num(ext.pres);
+    if(!presCount){
+      const inferred=(pts-bonusMalusPts)/6;
+      presCount=Number.isFinite(inferred)&&inferred>0?Math.round(inferred):1;
+    }
+    parts.push('+'+(presCount*6)+' pres.');
     if(ext.goals>0) parts.push('+'+ext.goals*3+' gol('+ext.goals+')');
     if(ext.mvps>0) parts.push('+'+ext.mvps*5+' MVP');
     if(ext.rigPar>0) parts.push('+'+ext.rigPar*3+' rig.par.');
@@ -6908,8 +6916,10 @@ function fantaPlayerPointsDetail(result, player){
     if(ext.pi>0) parts.push('+'+ext.pi+' PI');
   } else {
     // Fallback semplice
-    const diff=pts-6;
-    parts.push('+6 pres.');
+    const presCount=result.day?1:Math.max(1,result.giornateGiocate||1);
+    const presPts=presCount*6;
+    const diff=pts-presPts;
+    parts.push('+'+presPts+' pres.');
     if(diff>0) parts.push('+'+diff+' bonus');
     else if(diff<0) parts.push(diff+' malus');
   }
