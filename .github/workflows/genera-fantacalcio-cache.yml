@@ -6,11 +6,16 @@ on:
       - main
       - master
     paths:
-      - 'index.html'
-      - 'data/**/*.csv'
+      - 'tornei/**/index.html'
+      - 'tornei/**/data/**/*.csv'
       - 'tools/genera_fantacalcio_cache.js'
       - '.github/workflows/genera-fantacalcio-cache.yml'
   workflow_dispatch:
+    inputs:
+      torneo_dir:
+        description: 'Cartella torneo da elaborare, es. tornei/2026-estate. Scrivi all per elaborare tutti i tornei trovati.'
+        required: false
+        default: 'tornei/2026-estate'
 
 permissions:
   contents: write
@@ -21,6 +26,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -32,17 +39,59 @@ jobs:
           npm install --no-save playwright-chromium
           npx playwright install --with-deps chromium
 
-      - name: Genera data/fantacalcio_cache.json
-        run: node tools/genera_fantacalcio_cache.js
-
-      - name: Commit cache aggiornata
+      - name: Determina tornei da aggiornare
+        id: tornei
+        shell: bash
         run: |
-          if git diff --quiet -- data/fantacalcio_cache.json; then
-            echo "Cache Fantacalcio già aggiornata."
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            input="${{ inputs.torneo_dir }}"
+            if [ -z "$input" ]; then
+              input="tornei/2026-estate"
+            fi
+            echo "dirs=$input" >> "$GITHUB_OUTPUT"
+            echo "Tornei richiesti: $input"
             exit 0
           fi
+
+          before="${{ github.event.before }}"
+          after="${{ github.sha }}"
+          git diff --name-only "$before" "$after" > changed_files.txt 2>/dev/null || git diff --name-only HEAD~1 HEAD > changed_files.txt
+
+          dirs=$(awk -F/ '/^tornei\/[^/]+\// {print $1"/"$2}' changed_files.txt | sort -u | tr '\n' ' ' | sed 's/[[:space:]]*$//')
+          if [ -z "$dirs" ]; then
+            dirs="tornei/2026-estate"
+          fi
+
+          echo "dirs=$dirs" >> "$GITHUB_OUTPUT"
+          echo "Tornei rilevati: $dirs"
+
+      - name: Genera data/fantacalcio_cache.json
+        shell: bash
+        run: |
+          dirs="${{ steps.tornei.outputs.dirs }}"
+          if [ "$dirs" = "all" ]; then
+            node tools/genera_fantacalcio_cache.js --all
+          else
+            node tools/genera_fantacalcio_cache.js $dirs
+          fi
+
+      - name: Commit cache aggiornata
+        shell: bash
+        run: |
+          cache_files=$(find tornei -path '*/data/fantacalcio_cache.json' -type f -print)
+          if [ -z "$cache_files" ]; then
+            echo "Nessuna cache generata."
+            exit 0
+          fi
+
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/fantacalcio_cache.json
+          git add $cache_files
+
+          if git diff --cached --quiet; then
+            echo "Cache Fantacalcio gia aggiornata."
+            exit 0
+          fi
+
           git commit -m "Aggiorna cache Fantacalcio"
           git push
