@@ -65,7 +65,7 @@ jobs:
           echo "dirs=$dirs" >> "$GITHUB_OUTPUT"
           echo "Tornei rilevati: $dirs"
 
-      - name: Genera data/fantacalcio_cache.json
+      - name: Genera data/fantacalcio/fantacalcio_cache.json
         shell: bash
         run: |
           dirs="${{ steps.tornei.outputs.dirs }}"
@@ -78,7 +78,7 @@ jobs:
       - name: Commit cache aggiornata
         shell: bash
         run: |
-          cache_files=$(find tornei -path '*/data/fantacalcio_cache.json' -type f -print)
+          cache_files=$(find tornei -path '*/data/fantacalcio/fantacalcio_cache.json' -type f -print)
           if [ -z "$cache_files" ]; then
             echo "Nessuna cache generata."
             exit 0
