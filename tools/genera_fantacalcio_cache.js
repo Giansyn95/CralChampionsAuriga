@@ -75,7 +75,7 @@ Struttura attesa per ogni torneo:
   <torneo>/data/fantacalcio/*.csv
 
 Output:
-  <torneo>/data/fantacalcio_cache.json
+  <torneo>/data/fantacalcio/fantacalcio_cache.json
 
 Variabili opzionali, utili solo per casi particolari:
   SITE_DIR, DATA_DIR, FANTA_DIR, INDEX_FILE, CACHE_FILE
@@ -121,7 +121,7 @@ function configForSiteDir(siteDirInput, useEnvOverrides) {
   const dataDir = resolveFromRoot(useEnvOverrides ? process.env.DATA_DIR : '', path.join(toRepoRelative(siteDir), 'data'));
   const fantaDir = resolveFromRoot(useEnvOverrides ? process.env.FANTA_DIR : '', path.join(toRepoRelative(dataDir), 'fantacalcio'));
   const indexPath = resolveFromRoot(useEnvOverrides ? process.env.INDEX_FILE : '', path.join(toRepoRelative(siteDir), 'index.html'));
-  const outPath = resolveFromRoot(useEnvOverrides ? process.env.CACHE_FILE : '', path.join(toRepoRelative(dataDir), 'fantacalcio_cache.json'));
+  const outPath = resolveFromRoot(useEnvOverrides ? process.env.CACHE_FILE : '', path.join(toRepoRelative(fantaDir), 'fantacalcio_cache.json'));
   return { siteDir, dataDir, fantaDir, indexPath, outPath };
 }
 
