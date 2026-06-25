@@ -762,6 +762,14 @@
     .fanta-h2h-player-name{font-weight:900;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .fanta-h2h-player-pts{font-family:'Oswald',Arial,sans-serif;font-size:34px;font-weight:700;color:var(--blue);line-height:1}
     .fanta-h2h-player-label{font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;margin-top:3px}
+    /* H2H: punteggi a semaforo, leggibili in tema chiaro e scuro */
+    :root{--h2h-win-bg:#12805c;--h2h-win-fg:#fff;--h2h-draw-bg:#f5b942;--h2h-draw-fg:#071d3a;--h2h-loss-bg:#b42318;--h2h-loss-fg:#fff}
+    [data-theme="dark"]{--h2h-win-bg:#34d399;--h2h-win-fg:#052e22;--h2h-draw-bg:#f5b942;--h2h-draw-fg:#071d3a;--h2h-loss-bg:#f87171;--h2h-loss-fg:#450a0a}
+    .fanta-h2h-player-pts{display:inline-flex;align-items:center;justify-content:center;min-width:76px;margin-top:6px;padding:4px 14px;border-radius:999px;border:2px solid transparent;box-shadow:0 7px 18px var(--shadow);font-variant-numeric:tabular-nums;text-shadow:none}
+    .fanta-h2h-score-value{display:inline-flex;align-items:center;justify-content:center;min-width:52px;padding:3px 9px;border-radius:999px;border:2px solid transparent;font-weight:900;font-variant-numeric:tabular-nums;line-height:1.15;box-shadow:0 5px 14px var(--shadow);text-shadow:none}
+    .fanta-h2h-player-pts.is-win,.fanta-h2h-score-value.is-win{background:var(--h2h-win-bg);color:var(--h2h-win-fg);border-color:rgba(255,255,255,.45)}
+    .fanta-h2h-player-pts.is-draw,.fanta-h2h-score-value.is-draw{background:var(--h2h-draw-bg);color:var(--h2h-draw-fg);border-color:rgba(7,29,58,.18)}
+    .fanta-h2h-player-pts.is-loss,.fanta-h2h-score-value.is-loss{background:var(--h2h-loss-bg);color:var(--h2h-loss-fg);border-color:rgba(255,255,255,.42)}
     .fanta-h2h-center{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 8px;background:var(--panel);border-left:1px solid var(--line);border-right:1px solid var(--line)}
     .fanta-h2h-record{font-family:'Oswald',Arial,sans-serif;font-size:22px;font-weight:700;color:var(--ink);white-space:nowrap}
     .fanta-h2h-record-label{font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;margin-top:2px}
@@ -1688,11 +1696,20 @@ function renderTabs(){
     b.onclick=()=>showTab(id);
     el.appendChild(b);
   });
+  syncGlobalSearchVisibility();
+}
+function syncGlobalSearchVisibility(){
+  const searchEl=document.getElementById('search');
+  if(!searchEl) return;
+  const hide=state.activeTab==='fantacalcio';
+  searchEl.hidden=hide;
+  searchEl.setAttribute('aria-hidden',hide?'true':'false');
 }
 function showTab(id){
   state.activeTab=id;
   document.querySelectorAll('.section').forEach(s=>s.classList.toggle('active',s.id===id));
   document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===id));
+  syncGlobalSearchVisibility();
   renderActiveSection();
 }
 
@@ -7771,10 +7788,12 @@ function fantaBuildH2H(data, allParticipants){
     });
 
     // Scoreboard
+    const h2hOutcomeClass=(a,b)=>!played.length?'':(a>b?'is-win':(a===b?'is-draw':'is-loss'));
+
     const sb=document.createElement('div'); sb.className='fanta-h2h-scoreboard';
-    const lPanel=document.createElement('div'); lPanel.className='fanta-h2h-player'+(lWins>=rWins?' is-winner':'');
+    const lPanel=document.createElement('div'); lPanel.className='fanta-h2h-player'+(lWins>rWins?' is-winner':'');
     const lNameEl=document.createElement('div'); lNameEl.className='fanta-h2h-player-name'; lNameEl.textContent=lName; lNameEl.title=lName;
-    const lPts=document.createElement('div'); lPts.className='fanta-h2h-player-pts'; lPts.textContent=String(lTotal);
+    const lPts=document.createElement('div'); lPts.className='fanta-h2h-player-pts '+h2hOutcomeClass(lWins,rWins); lPts.textContent=String(lTotal);
     const lLbl=document.createElement('div'); lLbl.className='fanta-h2h-player-label'; lLbl.textContent='punti totali';
     lPanel.appendChild(lNameEl); lPanel.appendChild(lPts); lPanel.appendChild(lLbl);
 
@@ -7786,7 +7805,7 @@ function fantaBuildH2H(data, allParticipants){
 
     const rPanel=document.createElement('div'); rPanel.className='fanta-h2h-player'+(rWins>lWins?' is-winner':'');
     const rNameEl=document.createElement('div'); rNameEl.className='fanta-h2h-player-name'; rNameEl.textContent=rName; rNameEl.title=rName;
-    const rPts=document.createElement('div'); rPts.className='fanta-h2h-player-pts'; rPts.textContent=String(rTotal);
+    const rPts=document.createElement('div'); rPts.className='fanta-h2h-player-pts '+h2hOutcomeClass(rWins,lWins); rPts.textContent=String(rTotal);
     const rLbl=document.createElement('div'); rLbl.className='fanta-h2h-player-label'; rLbl.textContent='punti totali';
     rPanel.appendChild(rNameEl); rPanel.appendChild(rPts); rPanel.appendChild(rLbl);
 
@@ -7805,9 +7824,12 @@ function fantaBuildH2H(data, allParticipants){
       const cls=d.left>d.right?'is-left-win':(d.right>d.left?'is-right-win':'is-draw');
       row.className='fanta-h2h-round '+cls;
 
+      const leftScoreClass=d.left>d.right?'is-win':(d.left===d.right?'is-draw':'is-loss');
+      const rightScoreClass=d.right>d.left?'is-win':(d.left===d.right?'is-draw':'is-loss');
+
       const lv=document.createElement('div'); lv.className='fanta-h2h-round-left';
       const lCell=document.createElement('div'); lCell.className='fanta-h2h-score-cell';
-      const lScore=document.createElement('span'); lScore.textContent=String(d.left)+' pt';
+      const lScore=document.createElement('span'); lScore.className='fanta-h2h-score-value '+leftScoreClass; lScore.textContent=String(d.left)+' pt';
       lCell.appendChild(lScore);
       if(d.leftResult) lCell.appendChild(h2hSquadButton(d.leftResult));
       lv.appendChild(lCell);
@@ -7817,7 +7839,7 @@ function fantaBuildH2H(data, allParticipants){
       const rv=document.createElement('div'); rv.className='fanta-h2h-round-right';
       const rCell=document.createElement('div'); rCell.className='fanta-h2h-score-cell';
       if(d.rightResult) rCell.appendChild(h2hSquadButton(d.rightResult));
-      const rScore=document.createElement('span'); rScore.textContent=String(d.right)+' pt';
+      const rScore=document.createElement('span'); rScore.className='fanta-h2h-score-value '+rightScoreClass; rScore.textContent=String(d.right)+' pt';
       rCell.appendChild(rScore);
       rv.appendChild(rCell);
 
@@ -7939,7 +7961,7 @@ function renderActiveSection(){
     case 'fantacalcio': renderFantacalcio(); break;
   }
 }
-function renderAll(){ updateTitle(); renderTabs(); renderActiveSection(); }
+function renderAll(){ updateTitle(); renderTabs(); syncGlobalSearchVisibility(); renderActiveSection(); }
 
 /* ══════════════════════════════════
    CARICAMENTO FILE
