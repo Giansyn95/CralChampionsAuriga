@@ -920,6 +920,36 @@
       .fanta-squad-modal h3{font-size:21px}
     }
 
+
+    /* ── Fix Fantacalcio mobile: trend e H2H ──
+       1) Il nome partecipante viene troncato dentro la sua colonna: i badge trend
+          restano agganciati al nome e non invadono/si schiacciano sulla colonna Punti.
+       2) Nel testa-a-testa mobile punti e bottone squadra restano sempre sulla stessa riga. */
+    .fanta-table-full th[data-col-role=person],
+    .fanta-table-full td[data-col-role=person]{overflow:hidden!important}
+    .fanta-name-medal{max-width:100%;min-width:0;display:inline-flex;align-items:center;gap:7px;vertical-align:middle}
+    .fanta-participant-text{display:inline-block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .fanta-name-medal .fanta-participant-text{max-width:100%}
+    .fanta-trend-up,.fanta-trend-down,.fanta-trend-flat{margin-left:2px;flex:0 0 22px}
+    @media(max-width:720px){
+      .fanta-table-full th[data-col-role=person],.fanta-table-full td[data-col-role=person]{min-width:205px;max-width:205px}
+      .fanta-name-medal .fanta-participant-text{max-width:126px}
+    }
+    @media(max-width:600px){
+      .fanta-h2h-round{grid-template-columns:minmax(0,1fr) 34px minmax(0,1fr);gap:4px;padding:8px 6px}
+      .fanta-h2h-score-cell{flex-direction:row;flex-wrap:nowrap;align-items:center;gap:4px;white-space:nowrap}
+      .fanta-h2h-round-left .fanta-h2h-score-cell{justify-content:flex-end}
+      .fanta-h2h-round-right .fanta-h2h-score-cell{justify-content:flex-start;align-items:center}
+      .fanta-h2h-mini-squad-btn{font-size:8.8px;padding:4px 5px;max-width:68px;line-height:1;overflow:hidden;text-overflow:ellipsis}
+      .fanta-h2h-round-label{font-size:10px}
+    }
+    @media(max-width:390px){
+      .fanta-table-full th[data-col-role=person],.fanta-table-full td[data-col-role=person]{min-width:190px;max-width:190px}
+      .fanta-name-medal .fanta-participant-text{max-width:112px}
+      .fanta-h2h-round{grid-template-columns:minmax(0,1fr) 30px minmax(0,1fr);font-size:11px;padding:7px 5px}
+      .fanta-h2h-mini-squad-btn{font-size:8px;max-width:60px;padding:4px 4px}
+    }
+
 </style>
 </head>
 <body>
@@ -7094,7 +7124,7 @@ function fantaBuildTable(rows, allResults){
         const nameWrap=document.createElement('span'); nameWrap.className='fanta-name-medal';
         const medal=fantaRankMedal(i);
         if(medal){ const m=document.createElement('span'); m.className='fanta-medal'; m.textContent=medal; nameWrap.appendChild(m); }
-        const t=document.createElement('span'); t.textContent=r.name||'-'; nameWrap.appendChild(t);
+        const t=document.createElement('span'); t.className='fanta-participant-text'; t.textContent=r.name||'-'; nameWrap.appendChild(t);
         // Badge trend solo sul totale e se abbiamo storico
         if((state.selectedFantaGiornata||'totale')==='totale' && allResultsForTrend.length){
           const trend=fantaTrendBadge(r.name,allResultsForTrend);
@@ -7846,7 +7876,7 @@ function renderFantacalcio(){
 
   // Input "Il mio nome" per highlight e trend
   const myNameWrap=document.createElement('div'); myNameWrap.className='fanta-myname-wrap';
-  const myNameLabel=document.createElement('span'); myNameLabel.className='fanta-myname-label'; myNameLabel.textContent='Il tuo nome:';
+  const myNameLabel=document.createElement('span'); myNameLabel.className='fanta-myname-label'; myNameLabel.textContent='Partecipante:';
   const myNameInput=document.createElement('input'); myNameInput.type='text'; myNameInput.className='fanta-myname-input';
   myNameInput.placeholder='es. Rossi Mario'; myNameInput.value=fantaGetMyName();
   myNameInput.setAttribute('aria-label','Il tuo nome nel Fantacalcio');
