@@ -1506,15 +1506,24 @@ function initialIconEl(cls,name){
   if(!d.textContent) d.classList.add('is-empty-fallback');
   return d;
 }
-function readyImageEl(cls,name,src,onError){
+function readyImageEl(cls,name,src,onError,opts={}){
   const img=document.createElement('img');
   img.className=cls;
   img.alt=name||'';
   img.decoding='async';
-  img.loading='lazy';
+  img.loading=opts.loading||'lazy';
+  if(opts.fetchPriority) img.fetchPriority=opts.fetchPriority;
   if(typeof onError==='function') img.onerror=()=>onError(img);
   img.src=src;
   return img;
+}
+function imageLoadHints(type,cls){
+  if(type==='player' && String(cls||'').includes('motm-photo')){
+    return {loading:'eager',fetchPriority:'high'};
+  }
+  return type==='player'
+    ? {loading:'lazy',fetchPriority:'low'}
+    : {loading:'eager',fetchPriority:'high'};
 }
 
 /* Crea elemento img o div iniziali — NESSUN innerHTML con dati utente.
@@ -1555,7 +1564,7 @@ function imgOrInitialEl(type,name,cls){
       // Cache persistente obsoleta o file rinominato: rimuovi la mappa e torna alle iniziali.
       forgetResolvedImage(type,names,cached);
       if(img.isConnected) img.replaceWith(initialIconEl(cls,mainName));
-    });
+    },imageLoadHints(type,cls));
   }
   if(cached===null){
     return initialIconEl(cls,mainName);
@@ -1570,18 +1579,29 @@ function imgOrInitialEl(type,name,cls){
      La prima URL valida viene salvata in _resolvedImageURLCache e, per i giocatori,
      anche in localStorage come mappa leggera nome -> URL. */
   fallback._onAvatarVisible=()=>{
-    probeFirstWorkingImage(candidates).then(src=>{
-      rememberResolvedImage(type,names,src);
-      if(!fallback.isConnected) return; // la sezione è cambiata nel frattempo
-      if(src){
-        const img=readyImageEl(cls,mainName,src,failedImg=>{
-          forgetResolvedImage(type,names,src);
-          if(failedImg.isConnected) failedImg.replaceWith(initialIconEl(cls,mainName));
-        });
-        fallback.replaceWith(img);
-      }
-      // Se src è null restano le iniziali già visibili.
-    });
+    const runProbe=()=>{
+      probeFirstWorkingImage(candidates).then(src=>{
+        rememberResolvedImage(type,names,src);
+        if(!fallback.isConnected) return; // la sezione è cambiata nel frattempo
+        if(src){
+          const img=readyImageEl(cls,mainName,src,failedImg=>{
+            forgetResolvedImage(type,names,src);
+            if(failedImg.isConnected) failedImg.replaceWith(initialIconEl(cls,mainName));
+          },imageLoadHints(type,cls));
+          fallback.replaceWith(img);
+        }
+        // Se src è null restano le iniziali già visibili.
+      });
+    };
+
+    // I loghi squadra e la foto MVP/MotM in Home devono restare prioritari;
+    // le altre foto giocatori partono solo quando il browser ha tempo.
+    if(type==='player' && !String(cls||'').includes('motm-photo')){
+      if('requestIdleCallback' in window) requestIdleCallback(runProbe,{timeout:1200});
+      else setTimeout(runProbe,120);
+    }else{
+      runProbe();
+    }
   };
   avatarObserver().observe(fallback);
   return fallback;
@@ -8419,34 +8439,94 @@ async function loadFromDirectoryHandle(dir){
   refreshAfterManualLoad(state._csvCount,state._imgCount);
 }
 
+
+function possibleMvpImageKeys(){
+  const motm=currentMvpOfTournament();
+  if(!motm) return [];
+  const names=[motm.name,...(motm.imageNames||[]),canonicalPlayerInitialName(motm.imageNames||[])].filter(Boolean);
+  const keys=[];
+  names.forEach(name=>{
+    const clean=smartSpace(cleanPersonTokenForTeamLookup(name));
+    [name,clean].filter(Boolean).forEach(value=>{
+      const key=norm(value);
+      if(key) keys.push(key);
+      const parts=String(value).trim().split(/\s+/).filter(Boolean);
+      if(parts.length>1){
+        const reversed=norm([...parts].reverse().join(' '));
+        if(reversed) keys.push(reversed);
+      }
+    });
+  });
+  return [...new Set(keys)];
+}
+
+function isHomeMvpImageFile(file){
+  const base=norm(baseNoExt(file.webkitRelativePath||file.name||''));
+  if(!base) return false;
+  return possibleMvpImageKeys().some(key=>
+    key && (base===key || (key.length>=4 && base.includes(key)) || (base.length>=4 && key.includes(base)))
+  );
+}
+
+function imageLoadPriority(file){
+  const rel=String(file.webkitRelativePath||file.name||'').toLowerCase().replace(/\\/g,'/');
+  if(rel.includes('logo')||rel.includes('cral')) return 0;
+  if(rel.includes('/squadre/')||rel.includes('immagini/squadre/')) return 1;
+  if(isHomeMvpImageFile(file)) return 2;
+  if(rel.includes('/giocatori/')||rel.includes('immagini/giocatori/')) return 3;
+  return 4;
+}
+
+function rememberImageFile(file){
+  const rel=file.webkitRelativePath||file.name;
+  try{
+    rememberImage(rel,file);
+    state._imgCount=(state._imgCount||0)+1;
+  }catch(e){
+    loadErrors.push(rel+' — immagine saltata: '+String((e&&e.message)||e||'errore'));
+  }
+}
+
 function processImageFilesLater(imageFiles){
   if(!imageFiles.length){
     state.imagesReady=true;
     forceHomeRefreshPasses();
     return;
   }
-  // Le immagini non devono mai bloccare l'aggiornamento dei CSV/Home.
-  // Su Chrome con file:// e cartelle su unità Z: alcune PNG possono congelare il picker
-  // se elaborate dentro lo stesso flusso dei CSV. Le carichiamo dopo, a piccoli lotti.
+
+  const ordered=[...imageFiles].sort((a,b)=>{
+    const pa=imageLoadPriority(a), pb=imageLoadPriority(b);
+    if(pa!==pb) return pa-pb;
+    return String(a.webkitRelativePath||a.name).localeCompare(String(b.webkitRelativePath||b.name),'it');
+  });
+  const criticalImages=ordered.filter(f=>imageLoadPriority(f)<=2); // logo + squadre + MVP Home
+  const deferredImages=ordered.filter(f=>imageLoadPriority(f)>2);  // altri giocatori + altro
+
+  // Prima rendi disponibili logo CRAL, loghi squadra e foto MVP in Home: non devono competere
+  // con il caricamento delle altre foto giocatori/inziali.
+  criticalImages.forEach(rememberImageFile);
+  tryLoadLogo();
+  renderActiveSection();
+
+  if(!deferredImages.length){
+    state.imagesReady=true;
+    showErrors();
+    setStatus(dataLoadStatus(state._csvCount||0),true);
+    forceHomeRefreshPasses();
+    return;
+  }
+
   let i=0;
   function step(){
     const start=i;
-    while(i<imageFiles.length && i<start+5){
-      const file=imageFiles[i++];
-      const rel=file.webkitRelativePath||file.name;
-      try{
-        rememberImage(rel,file);
-        state._imgCount=(state._imgCount||0)+1;
-      }catch(e){
-        loadErrors.push(rel+' — immagine saltata: '+String((e&&e.message)||e||'errore'));
-      }
+    while(i<deferredImages.length && i<start+8){
+      rememberImageFile(deferredImages[i++]);
     }
-    tryLoadLogo();
-    // Aggiorna la sezione attiva così loghi/avatar compaiono senza cambiare tab.
-    renderActiveSection();
-    if(i<imageFiles.length){
-      setStatus(`Caricati ${state._csvCount||0} CSV. Immagini ${i}/${imageFiles.length}…`,true);
-      setTimeout(step,0);
+
+    if(i<deferredImages.length){
+      setStatus(`Caricati ${state._csvCount||0} CSV. Immagini giocatori ${i}/${deferredImages.length}…`,true);
+      if('requestIdleCallback' in window) requestIdleCallback(step,{timeout:500});
+      else setTimeout(step,40);
     }else{
       state.imagesReady=true;
       showErrors();
@@ -8454,7 +8534,9 @@ function processImageFilesLater(imageFiles){
       forceHomeRefreshPasses();
     }
   }
-  if(imageFiles.length) setTimeout(step,0);
+
+  if('requestIdleCallback' in window) requestIdleCallback(step,{timeout:500});
+  else setTimeout(step,40);
 }
 
 function forceHomeRefreshPasses(){
