@@ -3533,6 +3533,14 @@ function personTokenIsSafeExact(value, teamHint){
   if(!matches.length) return true; // nome esterno/non presente in rosa: compatibilità CSV semplici
   return matches.length===1;
 }
+// Restituisce true se il token nome NON corrisponde a nessun giocatore in rosa
+// E ci sono file squadra caricati (altrimenti non possiamo saperlo).
+function isPersonExternal(name){
+  if(!rosterIdentityRecords().length) return false;
+  const clean=cleanPersonTokenForTeamLookup(name);
+  const matches=uniqueRosterRecords(rosterMatchesForPersonToken(clean,''));
+  return matches.length===0;
+}
 function personTokensReferToSamePlayer(a,b,teamA,teamB){
   const ak=personMatchKey(a), bk=personMatchKey(b);
   if(!ak || !bk) return false;
@@ -6235,6 +6243,51 @@ function renderMiniSection(parent,title,rows,imgType,emptyText,tableId,priorityN
   else if(emptyText){ card.appendChild(buildEl('div','empty',emptyText)); }
   parent.appendChild(card);
 }
+// Conta i gol espliciti di una lista di token marcatori (es. "Rossi x2", "Bianchi").
+function countGoalsInTokenList(people){
+  return people.reduce((sum,name)=>{
+    const n=riepilogoGoalNumberFromText(name);
+    return sum + (n!==null && n>0 ? n : 1);
+  },0);
+}
+// Aggiunge una pill "Marcature esterne xN" con logo squadra (se fornito).
+function addExternalScorerPill(parent,label,count,teamName){
+  if(count<=0) return;
+  const row=document.createElement('div');
+  row.style.cssText='display:flex;gap:8px;align-items:flex-start;margin-top:8px;flex-wrap:wrap';
+  const icon=document.createElement('b');
+  icon.className='small'; icon.style.minWidth='28px'; icon.style.fontSize='16px';
+  icon.textContent='\u26bd'; icon.title=label; icon.setAttribute('aria-label',label);
+  row.appendChild(icon);
+  const list=document.createElement('div'); list.style.cssText='display:flex;gap:6px;flex-wrap:wrap;align-items:center';
+  const pill=document.createElement('span');
+  pill.style.cssText='display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--soft);border-radius:999px;padding:4px 8px;font-size:12px;font-weight:700;opacity:.8';
+  if(teamName){
+    const logo=imgOrInitialEl('team',teamName,'mini-logo');
+    logo.title=teamName; logo.alt=teamName;
+    pill.appendChild(logo);
+  }
+  const t=document.createElement('span');
+  t.textContent='Marcature esterne'+(count>1?' \xd7'+count:'');
+  pill.appendChild(t);
+  list.appendChild(pill); row.appendChild(list); parent.appendChild(row);
+}
+// Aggiunge una pill "Premiato giocatore esterno" per MVP o miglior portiere.
+function addExternalAwardPill(parent,label){
+  const row=document.createElement('div');
+  row.style.cssText='display:flex;gap:8px;align-items:flex-start;margin-top:8px;flex-wrap:wrap';
+  const icon=document.createElement('b');
+  icon.className='small'; icon.style.minWidth='28px'; icon.style.fontSize='16px';
+  const isKeeper=norm(label).includes('portiere')||norm(label).includes('keeper');
+  icon.textContent=isKeeper ? '\ud83e\uddค' : '\u2b50';
+  icon.title=label; icon.setAttribute('aria-label',label);
+  row.appendChild(icon);
+  const list=document.createElement('div'); list.style.cssText='display:flex;gap:6px;flex-wrap:wrap;align-items:center';
+  const pill=document.createElement('span');
+  pill.style.cssText='display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--soft);border-radius:999px;padding:4px 8px;font-size:12px;font-weight:700;opacity:.8';
+  const t=document.createElement('span'); t.textContent='Premiato giocatore esterno';
+  pill.appendChild(t); list.appendChild(pill); row.appendChild(list); parent.appendChild(row);
+}
 function renderPartiteRiepilogo(parent,rows,file,contextRows){
   if(!rows.length) return;
   const wrap=document.createElement('div'); wrap.className='tableWrap riepilogo-matches'; wrap.style.marginTop='10px';
@@ -6250,8 +6303,56 @@ function renderPartiteRiepilogo(parent,rows,file,contextRows){
     const marcatoriTrasferta=splitPeopleList(firstPresent(r,[['marcatori trasferta','marcatori ospite','marcatori squadra trasferta','gol trasferta marcatori','scorer trasferta']]) || firstPresent(r,[['marcatori away']]));
     const marcatoriGenerici=splitInlinePeople(firstPresent(r,[['marcatori','scorers','reti']]) || inlineMarcatori);
     const mvp=splitInlinePeople(firstPresent(r,[['mvp','migliore in campo','man of the match','motm']]) || inlineMvp);
+    const inlinePortiere=extractInlineField(note,'Portiere');
+    const portiere=splitInlinePeople(firstPresent(r,[['portiere','miglior portiere','best keeper','goalkeeper']]) || inlinePortiere);
     const esito=esitoText(r);
     const res=resultText(r);
+    const scorePair=parseScorePair(res);
+
+    // ── Gol residui per squadra (marcature esterne) ──────────────────────────
+    const autogoalRaw=firstPresent(r,[['autogol','autogoal','ag']]);
+    const autogoalCount=num(autogoalRaw)||(splitPeopleList(autogoalRaw).filter(Boolean).length)||0;
+    let externalCasa=0, externalTrasferta=0, externalGeneric=0;
+    if(scorePair){
+      const [ghTot,gaTot]=scorePair;
+      if(marcatoriCasa.length || marcatoriTrasferta.length){
+        externalCasa=Math.max(0, ghTot - countGoalsInTokenList(marcatoriCasa));
+        externalTrasferta=Math.max(0, gaTot - countGoalsInTokenList(marcatoriTrasferta));
+        // Scala gli autogol dal residuo della squadra con residuo maggiore.
+        let ag=autogoalCount;
+        while(ag>0){
+          if(externalCasa>=externalTrasferta && externalCasa>0) externalCasa--;
+          else if(externalTrasferta>0) externalTrasferta--;
+          else break;
+          ag--;
+        }
+      } else if(marcatoriGenerici.length){
+        externalGeneric=Math.max(0, ghTot+gaTot - countGoalsInTokenList(marcatoriGenerici) - autogoalCount);
+      }
+    }
+
+    // ── Se ci sono file squadra, filtra via i nomi esterni dalla lista nominale ─
+    const hasRoster=rosterIdentityRecords().length>0;
+    const filterKnown=(list)=>hasRoster ? list.filter(n=>!isPersonExternal(cleanRiepilogoScorerName(n))) : list;
+    const marcatoriCasaKnown=filterKnown(marcatoriCasa);
+    const marcatoriTrasfertaKnown=filterKnown(marcatoriTrasferta);
+    const marcatoriGenericiKnown=filterKnown(marcatoriGenerici);
+    // Ricalcola il residuo aggiungendo i gol degli esterni rimossi dalle liste nominate.
+    if(hasRoster && scorePair){
+      if(marcatoriCasa.length || marcatoriTrasferta.length){
+        const removedCasa=marcatoriCasa.filter(n=>isPersonExternal(cleanRiepilogoScorerName(n)));
+        const removedTrasf=marcatoriTrasferta.filter(n=>isPersonExternal(cleanRiepilogoScorerName(n)));
+        externalCasa=Math.max(0, externalCasa + countGoalsInTokenList(removedCasa));
+        externalTrasferta=Math.max(0, externalTrasferta + countGoalsInTokenList(removedTrasf));
+      } else if(marcatoriGenerici.length){
+        const removedGen=marcatoriGenerici.filter(n=>isPersonExternal(cleanRiepilogoScorerName(n)));
+        externalGeneric=Math.max(0, externalGeneric + countGoalsInTokenList(removedGen));
+      }
+    }
+
+    // ── Premi individuali: verifica se tutti i nominati sono esterni ──────────
+    const mvpExternal=hasRoster && mvp.length>0 && mvp.every(n=>isPersonExternal(n));
+    const portiereExternal=hasRoster && portiere.length>0 && portiere.every(n=>isPersonExternal(n));
 
     const m=document.createElement('div'); m.className='match riepilogo-match';
     const left=document.createElement('div'); left.style.cssText='min-width:0;flex:1';
@@ -6270,10 +6371,20 @@ function renderPartiteRiepilogo(parent,rows,file,contextRows){
 
     const metaParts=[giornata,data,esito?('Esito: '+esito):''].filter(Boolean);
     if(metaParts.length){ const meta=document.createElement('div'); meta.className='small'; meta.textContent=metaParts.join(' · '); left.appendChild(meta); }
-    addPeopleLineSmart(left,'Marcatori casa',marcatoriCasa,true,casa,contextRows);
-    addPeopleLineSmart(left,'Marcatori trasf.',marcatoriTrasferta,true,trasferta,contextRows);
-    if(!marcatoriCasa.length && !marcatoriTrasferta.length) addPeopleLineSmart(left,'Marcatori',marcatoriGenerici,true,'',contextRows,[casa,trasferta]);
-    addPeopleLineSmart(left,'MVP',mvp,true,'',contextRows);
+    addPeopleLineSmart(left,'Marcatori casa',marcatoriCasaKnown,true,casa,contextRows);
+    addExternalScorerPill(left,'Marcatori casa',externalCasa,casa);
+    addPeopleLineSmart(left,'Marcatori trasf.',marcatoriTrasfertaKnown,true,trasferta,contextRows);
+    addExternalScorerPill(left,'Marcatori trasf.',externalTrasferta,trasferta);
+    if(!marcatoriCasa.length && !marcatoriTrasferta.length){
+      addPeopleLineSmart(left,'Marcatori',marcatoriGenericiKnown,true,'',contextRows,[casa,trasferta]);
+      addExternalScorerPill(left,'Marcatori',externalGeneric,'');
+    }
+    if(!mvpExternal) addPeopleLineSmart(left,'MVP',mvp,true,'',contextRows);
+    else addExternalAwardPill(left,'MVP');
+    if(portiere.length){
+      if(!portiereExternal) addPeopleLineSmart(left,'Miglior portiere',portiere,true,'',contextRows);
+      else addExternalAwardPill(left,'Miglior portiere');
+    }
     const notePulita=cleanRiepilogoNote(note);
     if(notePulita){ const n=document.createElement('div'); n.className='small'; n.style.marginTop='8px'; n.textContent=notePulita; left.appendChild(n); }
 
@@ -6283,6 +6394,7 @@ function renderPartiteRiepilogo(parent,rows,file,contextRows){
   parent.appendChild(wrap);
 }
 function renderRiepilogoGiornate(){
+
   const el=document.getElementById('riepilogo'); el.innerHTML='';
   const files=sectionFiles('riepilogo');
   if(!files.length){
