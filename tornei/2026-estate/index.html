@@ -6457,14 +6457,56 @@ function renderRiepilogoGiornate(){
       content.appendChild(card);
     }
     const tablePrefix='riepilogo_'+norm(f)+'_'+rowGiornataKey(allRows[0]||{},f);
-    // Determina se ci sono partite già giocate nella giornata (risultato leggibile).
     const hasPlayedMatches=partite.some(r=>!!parseScorePair(resultText(r)));
     const hasRosterForExt=rosterIdentityRecords().length>0;
-    // MVP: se assente ma ci sono partite giocate e roster → "Premiato giocatore esterno"
-    const mvpEmptyText=(!playerSearch && hasPlayedMatches && hasRosterForExt) ? 'Premiato giocatore esterno' : (playerSearch?'':'Nessun MVP indicato.');
-    // Portiere: stessa logica
-    const portiereEmptyText=(!playerSearch && !norm(state.search) && hasPlayedMatches && hasRosterForExt) ? 'Premiato giocatore esterno' : ((playerSearch||norm(state.search))?'':'Nessun miglior portiere indicato.');
+
+    // ── Calcola residui marcatori esterni aggregati su tutte le partite ────────
+    // Struttura: [{team, count}] con team='' se lista generica
+    const externalScorerResiduals=[];
+    if(hasPlayedMatches && hasRosterForExt){
+      partite.forEach(r=>{
+        const res=resultText(r);
+        const scorePair=parseScorePair(res);
+        if(!scorePair) return;
+        const [ghTot,gaTot]=scorePair;
+        const casa=firstPresent(r,[['squadra casa','casa','home','squadra 1','team casa']])||Object.values(r)[0]||'';
+        const trasferta=firstPresent(r,[['squadra trasferta','trasferta','ospite','away','squadra 2','team trasferta']])||Object.values(r)[1]||'';
+        const mCasa=splitPeopleList(firstPresent(r,[['marcatori casa','marcatori squadra casa','gol casa marcatori','scorer casa']])||firstPresent(r,[['marcatori home']]));
+        const mTrasf=splitPeopleList(firstPresent(r,[['marcatori trasferta','marcatori ospite','marcatori squadra trasferta','gol trasferta marcatori','scorer trasferta']])||firstPresent(r,[['marcatori away']]));
+        const mGen=splitInlinePeople(firstPresent(r,[['marcatori','scorers','reti']])||extractInlineField(firstPresent(r,[['note','commento','descrizione']]),'Marcatori'));
+        const autogoalRaw=firstPresent(r,[['autogol','autogoal','ag']]);
+        const autogoalCount=num(autogoalRaw)||(splitPeopleList(autogoalRaw).filter(Boolean).length)||0;
+        if(mCasa.length||mTrasf.length){
+          let extC=Math.max(0,ghTot-countGoalsInTokenList(mCasa));
+          let extT=Math.max(0,gaTot-countGoalsInTokenList(mTrasf));
+          // aggiungi i gol degli esterni nominati rimossi dal filtro
+          const remC=mCasa.filter(n=>isPersonExternal(cleanRiepilogoScorerName(n)));
+          const remT=mTrasf.filter(n=>isPersonExternal(cleanRiepilogoScorerName(n)));
+          extC=Math.max(0,extC+countGoalsInTokenList(remC));
+          extT=Math.max(0,extT+countGoalsInTokenList(remT));
+          let ag=autogoalCount;
+          while(ag>0){ if(extC>=extT&&extC>0) extC--; else if(extT>0) extT--; else break; ag--; }
+          if(extC>0) externalScorerResiduals.push({team:casa,count:extC});
+          if(extT>0) externalScorerResiduals.push({team:trasferta,count:extT});
+        } else if(mGen.length){
+          const remG=mGen.filter(n=>isPersonExternal(cleanRiepilogoScorerName(n)));
+          const extG=Math.max(0,ghTot+gaTot-countGoalsInTokenList(mGen)-autogoalCount+countGoalsInTokenList(remG));
+          if(extG>0) externalScorerResiduals.push({team:'',count:extG});
+        }
+      });
+    }
+
+    // ── Testo vuoto per MVP e portiere ────────────────────────────────────────
+    const mvpEmptyText=(!playerSearch && hasPlayedMatches && hasRosterForExt) ? 'Premio assegnato a giocatore esterno' : (playerSearch?'':'Nessun MVP indicato.');
+    const portiereEmptyText=(!playerSearch && !norm(state.search) && hasPlayedMatches && hasRosterForExt) ? 'Premio assegnato a giocatore esterno' : ((playerSearch||norm(state.search))?'':'Nessun miglior portiere indicato.');
+
+    // ── Render sezioni ────────────────────────────────────────────────────────
     renderMiniSection(content,'Marcatori della giornata',marcatori,'player',playerSearch?'':'Nessun marcatore indicato.',tablePrefix+'_marcatori',['sezione','giocatore','marcatore','gol','goal','reti'],['gol','goal','reti']);
+    // Appende pill "Marcature esterne" alla card marcatori appena creata
+    if(externalScorerResiduals.length){
+      const marcatoriCard=content.lastElementChild;
+      if(marcatoriCard) externalScorerResiduals.forEach(({team,count})=>addExternalScorerPill(marcatoriCard,'Marcature esterne',count,team));
+    }
     renderMiniSection(content,'MVP della giornata',mvp,'player',mvpEmptyText,tablePrefix+'_mvp',['sezione','giocatore','mvp','punti'],['punti']);
     renderMiniSection(content,'Miglior portiere',portiere,'player',portiereEmptyText,tablePrefix+'_portiere',['sezione','giocatore','portiere','punti'],['punti']);
     renderMiniSection(content,'Autogol',autogoal,'player','',tablePrefix+'_autogol',['giocatore']);
