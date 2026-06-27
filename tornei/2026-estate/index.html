@@ -1039,6 +1039,7 @@ const DEFAULT_FILES    = [
   'riepilogo_giornate.csv'
 ];
 const FANTA_CACHE_FILE   = 'fantacalcio/fantacalcio_cache.json';
+const PORTIERI_SNAPSHOT_FILE = 'portieri_snapshot.json';
 const FANTA_CACHE_SCHEMA = 1;
 const TABS = [
   ['home','🏠 Home'],['classifiche','🏆 Classifiche'],['statistiche','📊 Statistiche'],
@@ -6496,10 +6497,9 @@ function renderRiepilogoGiornate(){
       });
     }
 
-    // ── Calcola partite giocate con premio esterno per MVP e portiere ──────────
-    // Per ogni partita giocata, verifica se l'MVP/portiere assegnato è esterno.
-    // Struttura: [{matchLabel}] dove matchLabel = "Casa vs Trasferta"
-    function buildExternalAwardMatches(fieldNames){
+    // ── Calcola partite con premio esterno per MVP ───────────────────────────────
+    // Per MVP: cerca il campo inline nella riga partita, verifica se è esterno.
+    function buildExternalMvpMatches(){
       const result=[];
       if(!hasPlayedMatches||!hasRosterForExt) return result;
       const playedPartite=partite.filter(r=>!!parseScorePair(resultText(r)));
@@ -6507,17 +6507,49 @@ function renderRiepilogoGiornate(){
         const casa=firstPresent(r,[['squadra casa','casa','home','squadra 1','team casa']])||Object.values(r)[0]||'';
         const trasferta=firstPresent(r,[['squadra trasferta','trasferta','ospite','away','squadra 2','team trasferta']])||Object.values(r)[1]||'';
         const note=firstPresent(r,[['note','commento','descrizione']]);
-        const inlineVal=fieldNames.map(fn=>extractInlineField(note,fn)).find(Boolean)||'';
-        const nominees=splitInlinePeople(firstPresent(r,[fieldNames])||inlineVal);
-        // Esterno = ha nominati E tutti sono esterni
+        const inlineVal=extractInlineField(note,'MVP')||'';
+        const nominees=splitInlinePeople(firstPresent(r,[['mvp','migliore in campo','man of the match','motm']])||inlineVal);
         if(nominees.length>0 && nominees.every(n=>isPersonExternal(n))){
           result.push({matchLabel:casa&&trasferta?casa+' vs '+trasferta:''});
         }
       });
       return result;
     }
-    const externalMvpMatches=buildExternalAwardMatches(['mvp','migliore in campo','man of the match','motm']);
-    const externalPortiereMatches=buildExternalAwardMatches(['portiere','miglior portiere','best keeper','goalkeeper']);
+    // ── Calcola partite con portiere esterno dallo snapshot ───────────────────
+    // Usa portieri_snapshot.json generato da genera_portieri_snapshot.js.
+    // Fallback: se lo snapshot non è disponibile, usa la logica inline come per MVP.
+    function buildExternalPortiereMatches(){
+      if(!hasPlayedMatches) return [];
+      const giornataKey=rowGiornataKey(allRows[0]||{},f);
+      // Prova prima lo snapshot
+      if(state.portieriSnapshot && state.portieriSnapshot.portieriEsterni){
+        const esterniGiornata=state.portieriSnapshot.portieriEsterni[String(giornataKey)];
+        if(Array.isArray(esterniGiornata)){
+          return esterniGiornata.map(({casa,trasferta})=>({
+            matchLabel:casa&&trasferta?casa+' vs '+trasferta:''
+          }));
+        }
+        // Se lo snapshot esiste ma non ha dati per questa giornata → nessun esterno
+        return [];
+      }
+      // Fallback: logica inline (solo se colonna portiere è compilata nel CSV)
+      if(!hasRosterForExt) return [];
+      const result=[];
+      const playedPartite=partite.filter(r=>!!parseScorePair(resultText(r)));
+      playedPartite.forEach(r=>{
+        const casa=firstPresent(r,[['squadra casa','casa','home','squadra 1','team casa']])||Object.values(r)[0]||'';
+        const trasferta=firstPresent(r,[['squadra trasferta','trasferta','ospite','away','squadra 2','team trasferta']])||Object.values(r)[1]||'';
+        const note=firstPresent(r,[['note','commento','descrizione']]);
+        const inlineVal=extractInlineField(note,'Portiere')||'';
+        const nominees=splitInlinePeople(firstPresent(r,[['portiere','miglior portiere','best keeper','goalkeeper']])||inlineVal);
+        if(nominees.length>0 && nominees.every(n=>isPersonExternal(n))){
+          result.push({matchLabel:casa&&trasferta?casa+' vs '+trasferta:''});
+        }
+      });
+      return result;
+    }
+    const externalMvpMatches=buildExternalMvpMatches();
+    const externalPortiereMatches=buildExternalPortiereMatches();
 
     // Aggiunge pill/label testuale dopo una card per i premi esterni per partita
     function appendExternalAwardPills(card, externalMatches, labelSingolare, labelPlurale){
@@ -7532,6 +7564,16 @@ async function loadFantaPrecomputedCache(fresh){
   }
 }
 let _fantaEnsureDataPromise=null;
+// Carica portieri_snapshot.json in state.portieriSnapshot (silenzioso se assente)
+async function loadPortieriSnapshot(fresh){
+  if(state.portieriSnapshot && !fresh) return;
+  try{
+    const txt=await fetchText(PORTIERI_SNAPSHOT_FILE,!!fresh);
+    state.portieriSnapshot=JSON.parse(txt);
+  }catch(e){
+    state.portieriSnapshot=null;
+  }
+}
 function ensureFantaDataInBackground(fresh){
   if(manualLoadActive) return Promise.resolve(false);
   if(state.fantaPrecomputedData && !fresh){ state.fantaLoading=false; return Promise.resolve(true); }
@@ -8741,6 +8783,7 @@ async function loadAuto(fresh){
   if(manualLoadActive) return;
   applyConfig(); showErrors(); renderAll(); tryLoadLogo(); warmPlayerProfileCaches();
   ensureFantaDataInBackground(fresh);
+  loadPortieriSnapshot(fresh);
   if(ok || state.rows['manifest.csv']) setStatus(dataLoadStatus(ok+(state.rows['manifest.csv']?1:0)),true);
   else setStatus('Autocaricamento bloccato — usa Seleziona cartella');
 }
