@@ -1,0 +1,91 @@
+name: Genera snapshot portieri
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    paths:
+      - 'tornei/**/data/**/*.csv'
+      - 'tools/genera_portieri_snapshot.js'
+      - '.github/workflows/genera-portieri-snapshot.yml'
+  workflow_dispatch:
+    inputs:
+      torneo_dir:
+        description: 'Cartella torneo da elaborare, es. tornei/2026-estate. Scrivi all per elaborare tutti i tornei trovati.'
+        required: false
+        default: 'tornei/2026-estate'
+
+permissions:
+  contents: write
+
+jobs:
+  build-snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Determina tornei da aggiornare
+        id: tornei
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            input="${{ inputs.torneo_dir }}"
+            if [ -z "$input" ]; then
+              input="tornei/2026-estate"
+            fi
+            echo "dirs=$input" >> "$GITHUB_OUTPUT"
+            echo "Tornei richiesti: $input"
+            exit 0
+          fi
+
+          before="${{ github.event.before }}"
+          after="${{ github.sha }}"
+          git diff --name-only "$before" "$after" > changed_files.txt 2>/dev/null || git diff --name-only HEAD~1 HEAD > changed_files.txt
+
+          dirs=$(awk -F/ '/^tornei\/[^/]+\// {print $1"/"$2}' changed_files.txt | sort -u | tr '\n' ' ' | sed 's/[[:space:]]*$//')
+          if [ -z "$dirs" ]; then
+            dirs="tornei/2026-estate"
+          fi
+
+          echo "dirs=$dirs" >> "$GITHUB_OUTPUT"
+          echo "Tornei rilevati: $dirs"
+
+      - name: Genera data/portieri_snapshot.json
+        shell: bash
+        run: |
+          dirs="${{ steps.tornei.outputs.dirs }}"
+          if [ "$dirs" = "all" ]; then
+            node tools/genera_portieri_snapshot.js --all
+          else
+            node tools/genera_portieri_snapshot.js $dirs
+          fi
+
+      - name: Commit snapshot aggiornato
+        shell: bash
+        run: |
+          snapshot_files=$(find tornei -path '*/data/portieri_snapshot.json' -type f -print)
+          if [ -z "$snapshot_files" ]; then
+            echo "Nessuno snapshot generato."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add $snapshot_files
+
+          if git diff --cached --quiet; then
+            echo "Snapshot portieri gia aggiornato."
+            exit 0
+          fi
+
+          git commit -m "Aggiorna snapshot portieri"
+          git push
