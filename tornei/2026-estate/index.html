@@ -6269,7 +6269,7 @@ function addExternalScorerPill(parent,label,count,teamName){
   row.appendChild(icon);
   const list=document.createElement('div'); list.style.cssText='display:flex;gap:6px;flex-wrap:wrap;align-items:center';
   const pill=document.createElement('span');
-  pill.style.cssText='display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--soft);border-radius:999px;padding:4px 8px;font-size:12px;font-weight:700;opacity:.8';
+  pill.style.cssText='display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--soft);border-radius:999px;padding:4px 8px;font-size:12px;font-weight:700';
   if(teamName){
     const logo=imgOrInitialEl('team',teamName,'mini-logo');
     logo.title=teamName; logo.alt=teamName;
@@ -6609,7 +6609,7 @@ function renderRiepilogoGiornate(){
     const mvpExternalRows=externalMvpMatches.map(({matchLabel})=>({
       'Sezione': 'MVP',
       'Giocatore': 'Esterno',
-      'Punti': 'N/A',
+      'Punti MVP': 'N/A',
       'Giornata': rowGiornataKey(allRows[0]||{},f)||'',
       'Squadra': '/',
       _noLink: true
@@ -6621,7 +6621,7 @@ function renderRiepilogoGiornate(){
     const portiereExternalRows=externalPortiereMatches.map(({matchLabel})=>({
       'Sezione': 'Portiere',
       'Giocatore': 'Esterno',
-      'Punti': 'N/A',
+      'Punti PT': 'N/A',
       'Giornata': rowGiornataKey(allRows[0]||{},f)||'',
       'Squadra': '/',
       'Partita': matchLabel||'',
