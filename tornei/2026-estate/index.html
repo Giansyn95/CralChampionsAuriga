@@ -6594,10 +6594,10 @@ function renderRiepilogoGiornate(){
     // ── Costruisce righe sintetiche "Marcature esterne" per la tabella marcatori ─
     const externalScorerRows=externalScorerResiduals.map(({team,count})=>({
       'Sezione': 'Marcatore',
+      'Giornata': rowGiornataKey(allRows[0]||{},f)||'',
+      'Squadra': team,
       'Giocatore': 'Marcature di esterni',
       'Gol': count,
-      'Squadra': team,
-      'Giornata': rowGiornataKey(allRows[0]||{},f)||'',
       _noLink: true
     }));
     // ── Render sezioni ────────────────────────────────────────────────────────
@@ -6606,30 +6606,30 @@ function renderRiepilogoGiornate(){
     // Costruisce righe sintetiche per premi assegnati a giocatori esterni,
     // da iniettare direttamente nella tabella come righe normali.
     // MVP esterni: "Giocatore esterno", squadra "/", no link
-    const mvpExternalRows=externalMvpMatches.map(({matchLabel})=>({
+    const mvpExternalRows=externalMvpMatches.map(()=>({
       'Sezione': 'MVP',
-      'Giocatore': 'Esterno',
-      'Punti MVP': 'N/A',
       'Giornata': rowGiornataKey(allRows[0]||{},f)||'',
       'Squadra': '/',
+      'Giocatore': 'Esterno',
+      'PuntiMVP': 'N/A',
       _noLink: true
     }));
     const mvpRows=[...mvp,...mvpExternalRows];
     const mvpNoInternalText=(!playerSearch&&!mvpRows.length)?'Nessun MVP indicato.':'';
-    renderMiniSection(content,'MVP della giornata',mvpRows,'player',mvpNoInternalText,tablePrefix+'_mvp',['sezione','giocatore','mvp','punti'],['punti']);
+    renderMiniSection(content,'MVP della giornata',mvpRows,'player',mvpNoInternalText,tablePrefix+'_mvp',['sezione','giocatore','puntimvp','punti mvp','mvp','giornata','squadra'],['puntimvp','punti mvp','punti']);
     // Portiere esterni: "Giocatore esterno", squadra "/", partita nella colonna Partita, no link
     const portiereExternalRows=externalPortiereMatches.map(({matchLabel})=>({
-      'Sezione': 'Portiere',
-      'Giocatore': 'Esterno',
-      'Punti PT': 'N/A',
+      'Sezione': 'Miglior portiere',
       'Giornata': rowGiornataKey(allRows[0]||{},f)||'',
       'Squadra': '/',
+      'Portiere': 'Esterno',
+      'PuntiPortiere': 'N/A',
       'Partita': matchLabel||'',
       _noLink: true
     }));
     const portiereRows=[...portiere,...portiereExternalRows];
     const portiereNoInternalText=(!playerSearch&&!norm(state.search)&&!portiereRows.length)?'Nessun miglior portiere indicato.':'';
-    renderMiniSection(content,'Miglior portiere',portiereRows,'player',portiereNoInternalText,tablePrefix+'_portiere',['sezione','giocatore','portiere','punti'],['punti']);
+    renderMiniSection(content,'Miglior portiere',portiereRows,'player',portiereNoInternalText,tablePrefix+'_portiere',['sezione','giocatore','portiere','puntiportiere','punti pt','giornata','squadra','partita'],['puntiportiere','punti pt','punti']);
     renderMiniSection(content,'Autogol',autogoal,'player','',tablePrefix+'_autogol',['giocatore']);
     rendered++;
   }
