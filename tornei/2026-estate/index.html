@@ -6318,8 +6318,24 @@ function renderPartiteRiepilogo(parent,rows,file,contextRows){
     const scorePair=parseScorePair(res);
 
     // ── Gol esterni = Gol totali − Gol torneo − Autogol ─────────────────────────
-    const autogoalRaw=firstPresent(r,[['autogol','autogoal','ag']]);
-    const autogoalCount=num(autogoalRaw)||(splitPeopleList(autogoalRaw).filter(Boolean).length)||0;
+    // Gli autogoal possono essere in colonna inline OPPURE su righe separate (Sezione=Autogoal).
+    // Leggo prima la colonna inline, poi sommando le righe Autogoal in contextRows per questa partita.
+    const autogoalInline=num(firstPresent(r,[['autogol','autogoal','ag']]))||0;
+    const normTeam=s=>String(s||'').toLowerCase().trim();
+    const agContextRows=(contextRows||[]).filter(cr=>{
+      const sez=normTeam(firstPresent(cr,[['sezione','section']]));
+      return sez==='autogoal'||sez==='autogol'||sez==='autogoale';
+    });
+    // Somma i gol degli autogoal relativi a questa partita (stessa squadra casa o trasferta)
+    const agFromRows=agContextRows.reduce((sum,cr)=>{
+      const sq=normTeam(firstPresent(cr,[['squadra','team','squadra casa','casa']]));
+      if(sq===normTeam(casa)||sq===normTeam(trasferta)){
+        const g=num(firstPresent(cr,[['gol','goal','reti','valore']]))||1;
+        return sum+g;
+      }
+      return sum;
+    },0);
+    const autogoalCount=autogoalInline+agFromRows;
     const hasRoster=rosterIdentityRecords().length>0;
     const filterKnown=(list)=>hasRoster ? list.filter(n=>!isPersonExternal(cleanRiepilogoScorerName(n))) : list;
     const marcatoriCasaKnown=filterKnown(marcatoriCasa);
@@ -6491,8 +6507,19 @@ function renderRiepilogoGiornate(){
         const mCasa=splitPeopleList(firstPresent(r,[['marcatori casa','marcatori squadra casa','gol casa marcatori','scorer casa']])||firstPresent(r,[['marcatori home']]));
         const mTrasf=splitPeopleList(firstPresent(r,[['marcatori trasferta','marcatori ospite','marcatori squadra trasferta','gol trasferta marcatori','scorer trasferta']])||firstPresent(r,[['marcatori away']]));
         const mGen=splitInlinePeople(firstPresent(r,[['marcatori','scorers','reti']])||extractInlineField(firstPresent(r,[['note','commento','descrizione']]),'Marcatori'));
-        const autogoalRaw=firstPresent(r,[['autogol','autogoal','ag']]);
-        const autogoalCount=num(autogoalRaw)||(splitPeopleList(autogoalRaw).filter(Boolean).length)||0;
+        // Autogoal: legge da colonna inline + righe parsed.autogoal per questa partita
+        const autogoalInline2=num(firstPresent(r,[['autogol','autogoal','ag']]))||0;
+        const normT2=s=>String(s||'').toLowerCase().trim();
+        const c2=normT2(casa); const t2=normT2(trasferta);
+        const agFromRows2=(autogoal||[]).reduce((sum,cr)=>{
+          const sq=normT2(firstPresent(cr,[['squadra','team','squadra casa','casa']]));
+          if(sq===c2||sq===t2){
+            const g=num(firstPresent(cr,[['gol','goal','reti','valore']]))||1;
+            return sum+g;
+          }
+          return sum;
+        },0);
+        const autogoalCount=autogoalInline2+agFromRows2;
         // Gol esterni = totale - gol torneo - autogol
         const mCasaKnown=mCasa.filter(n=>!isPersonExternal(cleanRiepilogoScorerName(n)));
         const mTrasfKnown=mTrasf.filter(n=>!isPersonExternal(cleanRiepilogoScorerName(n)));
