@@ -6595,7 +6595,7 @@ function renderRiepilogoGiornate(){
     const externalScorerRows=externalScorerResiduals.map(({team,count})=>({
       'Sezione': 'Marcatore',
       'Giornata': rowGiornataKey(allRows[0]||{},f)||'',
-      'Squadra': team,
+      'Squadra': '—',
       'Giocatore': 'Marcature di esterni',
       'Gol': count,
       _noLink: true
@@ -6609,7 +6609,7 @@ function renderRiepilogoGiornate(){
     const mvpExternalRows=externalMvpMatches.map(()=>({
       'Sezione': 'MVP',
       'Giornata': rowGiornataKey(allRows[0]||{},f)||'',
-      'Squadra': '/',
+      'Squadra': '—',
       'Giocatore': 'Esterno',
       'PuntiMVP': 'N/A',
       _noLink: true
@@ -6621,7 +6621,7 @@ function renderRiepilogoGiornate(){
     const portiereExternalRows=externalPortiereMatches.map(({matchLabel})=>({
       'Sezione': 'Miglior portiere',
       'Giornata': rowGiornataKey(allRows[0]||{},f)||'',
-      'Squadra': '/',
+      'Squadra': '—',
       'Portiere': 'Esterno',
       'PuntiPortiere': 'N/A',
       'Partita': matchLabel||'',
