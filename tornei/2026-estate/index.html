@@ -6317,10 +6317,7 @@ function renderPartiteRiepilogo(parent,rows,file,contextRows){
     const res=resultText(r);
     const scorePair=parseScorePair(res);
 
-    // ── Gol residui per squadra (marcature esterne) ──────────────────────────
-    // Logica: Gol esterni = Gol totali − Gol interni nominati − Autogol
-    // Gli autogol sono gol validi a tutti gli effetti e vengono sottratti prima
-    // del calcolo del residuo, indipendentemente da chi li ha causati.
+    // ── Gol esterni = Gol totali − Gol torneo − Autogol ─────────────────────────
     const autogoalRaw=firstPresent(r,[['autogol','autogoal','ag']]);
     const autogoalCount=num(autogoalRaw)||(splitPeopleList(autogoalRaw).filter(Boolean).length)||0;
     const hasRoster=rosterIdentityRecords().length>0;
@@ -6331,20 +6328,25 @@ function renderPartiteRiepilogo(parent,rows,file,contextRows){
     let externalCasa=0, externalTrasferta=0, externalGeneric=0;
     if(scorePair){
       const [ghTot,gaTot]=scorePair;
+      const golTotali=ghTot+gaTot;
       if(marcatoriCasa.length || marcatoriTrasferta.length){
-        const internalCasa=countGoalsInTokenList(marcatoriCasaKnown);
-        const internalTrasf=countGoalsInTokenList(marcatoriTrasfertaKnown);
-        const availC=Math.max(0, ghTot - internalCasa);
-        const availT=Math.max(0, gaTot - internalTrasf);
-        const totalResiduo=Math.max(0, availC+availT - autogoalCount);
-        if(totalResiduo>0){
-          const ratio=availC+availT>0 ? availC/(availC+availT) : 0.5;
-          externalCasa=Math.round(totalResiduo*ratio);
-          externalTrasferta=totalResiduo-externalCasa;
+        // Gol torneo = marcatori in rosa (casa + trasferta)
+        const golTorneoCasa=countGoalsInTokenList(marcatoriCasaKnown);
+        const golTorneoTrasf=countGoalsInTokenList(marcatoriTrasfertaKnown);
+        const golTorneo=golTorneoCasa+golTorneoTrasf;
+        // Esterni = totale - torneo - autogol
+        const esterni=Math.max(0, golTotali - golTorneo - autogoalCount);
+        if(esterni>0){
+          // Attribuisce i gol esterni alla squadra col maggior residuo
+          const residuoCasa=Math.max(0, ghTot - golTorneoCasa);
+          const residuoTrasf=Math.max(0, gaTot - golTorneoTrasf);
+          if(residuoCasa>=residuoTrasf) externalCasa=esterni;
+          else externalTrasferta=esterni;
         }
-      } else if(marcatoriGenerici.length){
-        const internalGen=countGoalsInTokenList(marcatoriGenericiKnown);
-        externalGeneric=Math.max(0, ghTot+gaTot - internalGen - autogoalCount);
+      } else {
+        // Lista generica: totale - torneo - autogol
+        const golTorneo=countGoalsInTokenList(marcatoriGenericiKnown);
+        externalGeneric=Math.max(0, golTotali - golTorneo - autogoalCount);
       }
     }
 
@@ -6491,25 +6493,25 @@ function renderRiepilogoGiornate(){
         const mGen=splitInlinePeople(firstPresent(r,[['marcatori','scorers','reti']])||extractInlineField(firstPresent(r,[['note','commento','descrizione']]),'Marcatori'));
         const autogoalRaw=firstPresent(r,[['autogol','autogoal','ag']]);
         const autogoalCount=num(autogoalRaw)||(splitPeopleList(autogoalRaw).filter(Boolean).length)||0;
-        // Gol interni = marcatori nominati che sono in rosa
+        // Gol esterni = totale - gol torneo - autogol
         const mCasaKnown=mCasa.filter(n=>!isPersonExternal(cleanRiepilogoScorerName(n)));
         const mTrasfKnown=mTrasf.filter(n=>!isPersonExternal(cleanRiepilogoScorerName(n)));
         const mGenKnown=mGen.filter(n=>!isPersonExternal(cleanRiepilogoScorerName(n)));
+        const golTotali=ghTot+gaTot;
         if(mCasa.length||mTrasf.length){
-          const internalC=countGoalsInTokenList(mCasaKnown);
-          const internalT=countGoalsInTokenList(mTrasfKnown);
-          const rawC=Math.max(0,ghTot-internalC);
-          const rawT=Math.max(0,gaTot-internalT);
-          if(rawC+rawT>0){
-            const agC=Math.round(autogoalCount*(rawC/(rawC+rawT)));
-            const agT=autogoalCount-agC;
-            const extC=Math.max(0,rawC-agC);
-            const extT=Math.max(0,rawT-agT);
-            if(extC>0) externalScorerResiduals.push({team:casa,count:extC});
-            if(extT>0) externalScorerResiduals.push({team:trasferta,count:extT});
+          const golTorneoCasa=countGoalsInTokenList(mCasaKnown);
+          const golTorneoTrasf=countGoalsInTokenList(mTrasfKnown);
+          const golTorneo=golTorneoCasa+golTorneoTrasf;
+          const esterni=Math.max(0, golTotali - golTorneo - autogoalCount);
+          if(esterni>0){
+            const residuoCasa=Math.max(0, ghTot-golTorneoCasa);
+            const residuoTrasf=Math.max(0, gaTot-golTorneoTrasf);
+            if(residuoCasa>=residuoTrasf) externalScorerResiduals.push({team:casa,count:esterni});
+            else externalScorerResiduals.push({team:trasferta,count:esterni});
           }
         } else if(mGen.length){
-          const extG=Math.max(0,ghTot+gaTot-countGoalsInTokenList(mGenKnown)-autogoalCount);
+          const golTorneo=countGoalsInTokenList(mGenKnown);
+          const extG=Math.max(0, golTotali - golTorneo - autogoalCount);
           if(extG>0) externalScorerResiduals.push({team:'',count:extG});
         }
       });
