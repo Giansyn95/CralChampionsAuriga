@@ -117,6 +117,7 @@
     table.tbl-aligned th,table.tbl-aligned td{overflow:hidden;text-overflow:ellipsis}
     table.tbl-aligned th[data-col-role=rank],table.tbl-aligned td[data-col-role=rank]{min-width:46px;max-width:60px;text-align:center}
     table.tbl-aligned th[data-col-role=metric],table.tbl-aligned td[data-col-role=metric]{min-width:54px;max-width:80px;text-align:center;font-variant-numeric:tabular-nums}
+    table.tbl-aligned th[data-col-role=quantity],table.tbl-aligned td[data-col-role=quantity]{min-width:92px;max-width:120px;text-align:center;font-variant-numeric:tabular-nums;white-space:nowrap}
     table.tbl-aligned th[data-col-role=round],table.tbl-aligned td[data-col-role=round]{min-width:64px;max-width:100px;text-align:center}
     table.tbl-aligned th[data-col-role=team],table.tbl-aligned td[data-col-role=team],
     table.tbl-aligned th[data-col-role=person],table.tbl-aligned td[data-col-role=person]{min-width:130px;max-width:220px}
@@ -632,7 +633,7 @@
     .player-profile-role-badge{display:inline-flex;align-items:center;justify-content:flex-start;min-width:0;max-width:100%;text-align:left}
     .player-profile-role-badge span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     @media(max-width:720px){.player-profile-backdrop{padding:7px;align-items:center}.player-profile-card{width:calc(100vw - 14px);max-width:calc(100vw - 14px);max-height:calc(100svh - 14px);border-radius:22px}.player-profile-hero{grid-template-columns:74px minmax(0,1fr);gap:11px;padding:16px 14px 14px;border-radius:22px 22px 0 0}.player-profile-photo{width:72px;height:72px;border-radius:18px;font-size:23px}.player-profile-title{padding-right:38px;gap:8px}.player-profile-title h2{font-size:clamp(22px,7vw,30px);line-height:1.02}.player-profile-sub{gap:6px;font-size:12px;align-items:flex-start}.player-profile-team-badge{padding:4px 7px}.player-profile-team-name{max-width:min(42vw,260px)}.player-profile-role-badge{max-width:min(42vw,260px)}.player-profile-badge{font-size:11px;padding:5px 8px}.player-profile-body{padding:13px 12px 16px}.player-profile-stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.player-profile-stat{min-height:78px;padding:10px;border-radius:16px}.player-profile-stat .n{font-size:23px}.player-profile-stat .l{font-size:10px}.player-profile-panels{grid-template-columns:1fr;gap:10px}.player-profile-section{border-radius:18px;padding:12px}.player-profile-entry{align-items:flex-start;padding:9px 10px}.player-profile-close{top:9px;right:9px;width:36px;height:36px;border-radius:12px}.chart-container.is-tall{height:340px}}
-    @media(max-width:560px){.wrap{padding:14px}.grid{grid-template-columns:1fr}.hero{padding:22px}.riepilogo-match{display:block}.score{margin:6px 0}.riepilogo-match .match-team{max-width:none}.riepilogo-match .match-name{font-size:16px}.riepilogo-match .score{text-align:left;font-size:26px;min-width:0}.riepilogo-kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.riepilogo-kpi.is-wide,.riepilogo-kpi.is-match-max,.riepilogo-kpi.is-scorer{grid-column:1/-1}.tableWrap{font-size:13px}th,td{padding:9px 9px}table.tbl-aligned th[data-col-role=rank],table.tbl-aligned td[data-col-role=rank]{min-width:40px;max-width:54px}table.tbl-aligned th[data-col-role=section],table.tbl-aligned td[data-col-role=section]{min-width:70px;max-width:110px}table.tbl-aligned th[data-col-role=team],table.tbl-aligned td[data-col-role=team],table.tbl-aligned th[data-col-role=person],table.tbl-aligned td[data-col-role=person]{min-width:118px;max-width:150px}table.tbl-aligned th[data-col-role=metric],table.tbl-aligned td[data-col-role=metric]{min-width:48px;max-width:68px}.tbl-logo,.tbl-avatar{width:24px;height:24px}.mini-logo{width:22px;height:22px}.name-cell{gap:7px}.player{gap:9px}.player-link-inline{display:inline-block;line-height:1.18}.chart-container.is-tall{height:380px}}
+    @media(max-width:560px){.wrap{padding:14px}.grid{grid-template-columns:1fr}.hero{padding:22px}.riepilogo-match{display:block}.score{margin:6px 0}.riepilogo-match .match-team{max-width:none}.riepilogo-match .match-name{font-size:16px}.riepilogo-match .score{text-align:left;font-size:26px;min-width:0}.riepilogo-kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.riepilogo-kpi.is-wide,.riepilogo-kpi.is-match-max,.riepilogo-kpi.is-scorer{grid-column:1/-1}.tableWrap{font-size:13px}th,td{padding:9px 9px}table.tbl-aligned th[data-col-role=rank],table.tbl-aligned td[data-col-role=rank]{min-width:40px;max-width:54px}table.tbl-aligned th[data-col-role=section],table.tbl-aligned td[data-col-role=section]{min-width:70px;max-width:110px}table.tbl-aligned th[data-col-role=team],table.tbl-aligned td[data-col-role=team],table.tbl-aligned th[data-col-role=person],table.tbl-aligned td[data-col-role=person]{min-width:118px;max-width:150px}table.tbl-aligned th[data-col-role=metric],table.tbl-aligned td[data-col-role=metric]{min-width:48px;max-width:68px}table.tbl-aligned th[data-col-role=quantity],table.tbl-aligned td[data-col-role=quantity]{min-width:88px;max-width:112px}.tbl-logo,.tbl-avatar{width:24px;height:24px}.mini-logo{width:22px;height:22px}.name-cell{gap:7px}.player{gap:9px}.player-link-inline{display:inline-block;line-height:1.18}.chart-container.is-tall{height:380px}}
     @media print{.toolbar,.tabs,.search,#errorBanner{display:none}.section{display:block}.wrap{max-width:none}.card,.hero{box-shadow:none}}
     @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
   
@@ -1148,7 +1149,7 @@ function prettyColumnName(header){
     presenze:'Presenze', partite:'Partite', mediagoal:'Media goal', ['media'+'g'+'ol']:'Media goal', mediagoalpartita:'Media goal/partita', ['media'+'g'+'olpartita']:'Media goal/partita',
 
     // Riepiloghi
-    sezione:'Sezione', statistica:'Statistica', valore:'Valore', totale:'Totale', categoria:'Categoria', descrizione:'Descrizione',
+    sezione:'Sezione', statistica:'Statistica', valore:'Valore', quantita:'Quantità', qta:'Quantità', quantity:'Quantità', totale:'Totale', categoria:'Categoria', descrizione:'Descrizione',
     marcatoricasa:'Marcatori casa', marcatoritrasferta:'Marcatori trasferta', marcatore:'Marcatore', marcatori:'Marcatori',
     totalemarcatoregiornata:'Totale marcatore giornata', voce:'Voce', voci:'Voci', dato:'Dato', etichetta:'Etichetta'
   };
@@ -1156,7 +1157,7 @@ function prettyColumnName(header){
 
   // Split controllato per intestazioni tutte attaccate ma non presenti nella mappa.
   // Lavora sui termini più comuni dei CSV del torneo senza rovinare sigle tipo MVP o PG.
-  const tokens=['player','team','code','squadra','trasferta','ospite','giornata','originali','penalita','penalità','finali','totali','punti','portiere','giocatore','marcatori','marcatore','miglior','differenza','partite','partita','presenze','statistica','valore','cognome','numero','subiti','fatti','clean','sheet','assist','autogoal','ruolo','media','goal','casa','note','nota','nome','reti','goal','mvp','pg','gf','gs','dr','pt','v','n','p'];
+  const tokens=['player','team','code','squadra','trasferta','ospite','giornata','originali','penalita','penalità','finali','totali','punti','portiere','giocatore','marcatori','marcatore','miglior','differenza','partite','partita','presenze','statistica','valore','quantita','qta','quantity','cognome','numero','subiti','fatti','clean','sheet','assist','autogoal','ruolo','media','goal','casa','note','nota','nome','reti','goal','mvp','pg','gf','gs','dr','pt','v','n','p'];
   let compact=n;
   const parts=[];
   while(compact){
@@ -2072,7 +2073,9 @@ function findNameColIndex(headers, imgType){
     const idx = normed.findIndex(h=>h===nc||h.includes(nc));
     if(idx>=0) return idx;
   }
-  return 0; // fallback: prima colonna
+  // Nessun fallback sulla prima colonna: evita avatar/icone su colonne descrittive
+  // come "Sezione" nella tabella Autogoal quando non esiste una vera colonna giocatore.
+  return -1;
 }
 
 /* Porta in prima posizione le colonne indicate (es. Giocatore+Goal), lasciando le altre
@@ -2103,7 +2106,8 @@ function tableColumnRole(header,index,imgType,nameColIdx){
   if(['giornata','turno','round'].includes(n)) return 'round';
   if(['data','giorno','date'].includes(n)) return 'date';
   if(['partita','match','gara','incontro'].includes(n)) return 'match';
-  if(n.includes('punti') || n.includes('goal') || n.includes('goal') || n.includes('reti') || ['pts','pg','gf','gs','dr','pt','mvp'].includes(n)) return 'metric';
+  if(n.includes('quantita') || ['qta','qty','quantity'].includes(n)) return 'quantity';
+  if(n.includes('punti') || n.includes('goal') || n.includes('reti') || ['pts','pg','gf','gs','dr','pt','mvp'].includes(n)) return 'metric';
   if(n.includes('note') || n.includes('descrizione') || n.includes('commento')) return 'note';
   return 'text';
 }
@@ -2166,8 +2170,55 @@ function removeColumnsByNorm(tableRows, blockedNames){
   if(keep.length===headers.length) return tableRows;
   return tableRows.map(row=>keep.map(i=>row[i]??''));
 }
+
+function duplicateDisplayColumnKey(header){
+  const raw=String(header||'').trim();
+  const n=norm(raw);
+  if(!n) return '';
+  // Le vecchie intestazioni CSV e le nuove etichette UI possono convivere
+  // nella stessa tabella (es. Gol + Goal): in UI devono diventare una sola colonna.
+  if(['gol','goal','reti','g'].includes(n)) return 'goal';
+  if(['quantita','qta','quantity'].includes(n)) return 'quantita';
+  if(['autogol','autogoal','autoreti'].includes(n)) return 'autogoal';
+  return norm(prettyColumnName(raw));
+}
+function mergeDuplicateDisplayColumns(rows){
+  if(!rows || !rows.length) return rows;
+  const headers=rows[0]||[];
+  const groups=[];
+  const seen=new Map();
+  headers.forEach((h,i)=>{
+    const key=duplicateDisplayColumnKey(h) || ('__col_'+i);
+    if(seen.has(key)) groups[seen.get(key)].idxs.push(i);
+    else{
+      seen.set(key,groups.length);
+      groups.push({key,header:h,idxs:[i]});
+    }
+  });
+  if(!groups.some(g=>g.idxs.length>1)) return rows;
+  return rows.map((row,rowIndex)=>{
+    const merged=groups.map(g=>{
+      if(rowIndex===0){
+        if(g.key==='goal') return 'Goal';
+        if(g.key==='quantita') return 'Quantità';
+        if(g.key==='autogoal') return 'Autogoal';
+        return g.header;
+      }
+      const values=[];
+      g.idxs.forEach(i=>{
+        const v=row[i];
+        if(String(v??'').trim()==='') return;
+        if(!values.some(existing=>norm(existing)===norm(v))) values.push(v);
+      });
+      return values.join(' / ');
+    });
+    if(row && row._noLink) merged._noLink=true;
+    return merged;
+  });
+}
 function buildTable(rows, tableId, imgType, priorityNames, highlightName){
   if(!rows||!rows.length) return buildEl('div','empty','Nessun dato disponibile.');
+  rows=mergeDuplicateDisplayColumns(rows);
   let headers=rows[0];
   let body=rows.slice(1);
   const hasSearch=!!norm(state.search);
@@ -3187,7 +3238,7 @@ function renderClassifiche(){
   const goalkeeperSearch=isGoalkeeperSearchActive();
   const sections=[
     ['classifica_squadre','CLASSIFICA SQUADRE','team',['posizione','squadra','puntifinali'],['puntifinali']],
-    ['marcatori','CLASSIFICA MARCATORI','player',['posizione','pos','rank','giocatore','goal','goal','reti'],['goal','goal','reti']],
+    ['marcatori','CLASSIFICA MARCATORI','player',['posizione','pos','rank','giocatore','goal','goal','reti'],['goal','reti']],
     ['mvp','CLASSIFICA MVP','player',['posizione','pos','rank','giocatore','puntimvp','punti'],['puntimvp','punti']],
     ['portieri','CLASSIFICA PORTIERI','player',['posizione','pos','rank','giocatore','portiere','player','punti'],['punti']]
   ];
@@ -6174,8 +6225,42 @@ function renderKpiGrid(parent, items){
   });
   parent.appendChild(grid);
 }
+function mergeDuplicateObjectKeysForRows(objs){
+  if(!objs || !objs.length) return objs;
+  const displayHeaders=new Map();
+  (objs||[]).forEach(o=>{
+    Object.keys(o||{}).forEach(k=>{
+      if(/^_/.test(k)) return;
+      const dk=duplicateDisplayColumnKey(k) || norm(k) || k;
+      if(!displayHeaders.has(dk)){
+        if(dk==='goal') displayHeaders.set(dk,'Goal');
+        else if(dk==='quantita') displayHeaders.set(dk,'Quantità');
+        else if(dk==='autogoal') displayHeaders.set(dk,'Autogoal');
+        else displayHeaders.set(dk,k);
+      }
+    });
+  });
+  return (objs||[]).map(o=>{
+    const out={};
+    Object.entries(o||{}).forEach(([k,v])=>{
+      if(/^_/.test(k)){ out[k]=v; return; }
+      const dk=duplicateDisplayColumnKey(k) || norm(k) || k;
+      const target=displayHeaders.get(dk) || k;
+      const value=String(v??'').trim();
+      if(!value){
+        if(!(target in out)) out[target]='';
+        return;
+      }
+      const current=String(out[target]??'').trim();
+      if(!current) out[target]=v;
+      else if(norm(current)!==norm(value)) out[target]=current+' / '+value;
+    });
+    return out;
+  });
+}
 function objectsToRows(objs){
   if(!objs.length) return [];
+  objs=mergeDuplicateObjectKeysForRows(objs);
   const allHeaders=[...new Set(objs.flatMap(o=>Object.keys(o).filter(k=>!/^_/.test(k))))];
   // Mostra solo colonne realmente valorizzate almeno in una riga.
   // Nei CSV riepilogo molte colonne sono presenti nell'header globale ma vuote
@@ -6246,8 +6331,8 @@ function autogoalTableValuesSame(goalValue, valueValue){
 }
 function normalizeAutogoalTableRows(rows){
   if(!rows || !rows.length) return rows;
-  const goalCandidates=['goal','reti','g'];
-  const valueCandidates=['valore','value','totale','numero'];
+  const goalCandidates=['goal','gol','reti','g'];
+  const valueCandidates=['valore','value','totale','numero','quantita','quantità','qta','quantity'];
   const normalizedValueCandidates=valueCandidates.map(norm);
   const hasGoal=rows.some(r=>!!autogoalTableColumnKey(r,goalCandidates));
   const hasValue=rows.some(r=>!!autogoalTableColumnKey(r,valueCandidates));
@@ -6266,6 +6351,7 @@ function normalizeAutogoalTableRows(rows){
     Object.entries(r).forEach(([k,v])=>{
       const nk=norm(k);
       if(nk==='voce'||nk==='voci') return;
+      if((nk==='giocatore'||nk==='marcatore'||nk==='player'||nk==='calciatore') && !String(v??'').trim()) return;
       if(goalAndValueSame && (nk==='goal'||nk==='reti'||nk==='g')) return;
       if(goalAndValueSame && normalizedValueCandidates.includes(nk)){
         if(!quantityWritten){ out['Quantità']=quantityValue; quantityWritten=true; }
@@ -6279,7 +6365,11 @@ function normalizeAutogoalTableRows(rows){
 }
 function rowsHavePlayerColumn(rows){
   const candidates=NAME_COL_CANDIDATES_PLAYER.map(norm);
-  return (rows||[]).some(r=>Object.keys(r||{}).some(k=>candidates.some(c=>norm(k)===c||norm(k).includes(c))));
+  return (rows||[]).some(r=>Object.keys(r||{}).some(k=>{
+    const nk=norm(k);
+    const isPlayerCol=candidates.some(c=>nk===c||nk.includes(c));
+    return isPlayerCol && String(r[k]??'').trim()!=='';
+  }));
 }
 
 function autogoalRowsForDisplay(rows, partite){
@@ -6700,7 +6790,7 @@ function renderRiepilogoGiornate(){
     }));
     // ── Render sezioni ────────────────────────────────────────────────────────
     const marcatoriRows=[...marcatori,...externalScorerRows];
-    renderMiniSection(content,'Marcatori della giornata',marcatoriRows,'player',playerSearch?'':'Nessun marcatore indicato.',tablePrefix+'_marcatori',['sezione','giocatore','marcatore','goal','goal','reti'],['goal','goal','reti']);
+    renderMiniSection(content,'Marcatori della giornata',marcatoriRows,'player',playerSearch?'':'Nessun marcatore indicato.',tablePrefix+'_marcatori',['sezione','giocatore','marcatore','goal','reti'],['goal','reti']);
     // Costruisce righe sintetiche per premi assegnati a giocatori esterni,
     // da iniettare direttamente nella tabella come righe normali.
     // MVP esterni: "Giocatore esterno", squadra "/", no link
@@ -6728,7 +6818,8 @@ function renderRiepilogoGiornate(){
     const portiereRows=[...portiere,...portiereExternalRows];
     const portiereNoInternalText=(!playerSearch&&!norm(state.search)&&!portiereRows.length)?'Nessun miglior portiere indicato.':'';
     renderMiniSection(content,'Miglior portiere',portiereRows,'player',portiereNoInternalText,tablePrefix+'_portiere',['sezione','giocatore','portiere','puntiportiere','punti pt','giornata','squadra','partita'],['puntiportiere','punti pt','punti']);
-    renderMiniSection(content,'Autogoal',autogoal,rowsHavePlayerColumn(autogoal)?'player':null,'',tablePrefix+'_autogoal',['sezione','giocatore','marcatore','quantita','goal','valore'],['quantita','goal','valore']);
+    const autogoalImgType=rowsHavePlayerColumn(autogoal)?'player':null;
+    renderMiniSection(content,'Autogoal',autogoal,autogoalImgType,'',tablePrefix+'_autogoal',['sezione','giocatore','marcatore','quantita','goal','valore'],['quantita','goal','valore']);
     rendered++;
   }
 
@@ -7563,7 +7654,7 @@ function fantaResultFromImportedRow(r,file){
   res.pres=num(firstPresent(r,[['presenze','pres']])) || 0;
   const explicitPresPoints=num(firstPresent(r,[['puntiPresenza','punti presenza','pres.','presenza punti']]));
   if(explicitPresPoints) res.presPoints=explicitPresPoints;
-  res.goals=num(firstPresent(r,[['goal','goal','reti']]));
+  res.goals=num(firstPresent(r,[['goal','reti']]));
   res.mvps=num(firstPresent(r,[['mvp','puntiMvp','punti mvp']]));
   res.gsPt=num(firstPresent(r,[['gsPt','gs pt','goalSubitiPt','goal subiti pt']]));
   res.porteInviolate=num(firstPresent(r,[['porteInviolate','porte inviolate','pi','clean sheet']]));
