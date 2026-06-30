@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "generatedAt": "2026-06-29T18:48:45.515Z",
+  "generatedAt": "2026-06-30T08:07:52.437Z",
   "source": "calcolata",
   "rosterCount": 80,
   "playerCount": 35,
@@ -3162,6 +3162,172 @@
     },
     {
       "day": 6,
+      "name": "Michele Cirilli",
+      "points": 38,
+      "credits": 48,
+      "pres": 5,
+      "presPoints": null,
+      "goals": 3,
+      "mvps": 1,
+      "gsPt": 6,
+      "porteInviolate": 0,
+      "rigPar": 0,
+      "rigSbag": 0,
+      "autogoal": 0,
+      "players": [
+        {
+          "teamCode": "FC Stealthy Dribblers",
+          "surname": "Bruno",
+          "name": "PT",
+          "role": "PT",
+          "displayName": "Bruno PT",
+          "fullName": "PT Bruno",
+          "numericId": "001",
+          "stableKey": "FC_STEALTHY_DRIBBLERS_BRUNO_PT"
+        },
+        {
+          "teamCode": "Auriga Juniors",
+          "surname": "De Toma",
+          "name": "Nicola",
+          "role": "C",
+          "displayName": "De Toma Nicola",
+          "fullName": "Nicola De Toma",
+          "numericId": "015",
+          "stableKey": "AURIGA_JUNIORS_DE_TOMA_NICOLA"
+        },
+        {
+          "teamCode": "Auriga Juniors",
+          "surname": "Albrizio",
+          "name": "Gianfranco",
+          "role": "D",
+          "displayName": "Albrizio Gianfranco",
+          "fullName": "Gianfranco Albrizio",
+          "numericId": "006",
+          "stableKey": "AURIGA_JUNIORS_ALBRIZIO_GIANFRANCO"
+        },
+        {
+          "teamCode": "BOT & BALL",
+          "surname": "Anselmi",
+          "name": "Biagio",
+          "role": "D",
+          "displayName": "Anselmi Biagio",
+          "fullName": "Biagio Anselmi",
+          "numericId": "007",
+          "stableKey": "BOT_BALL_ANSELMI_BIAGIO"
+        },
+        {
+          "teamCode": "BlackJack",
+          "surname": "Todisco",
+          "name": "Giovanni",
+          "role": "D",
+          "displayName": "Todisco Giovanni",
+          "fullName": "Giovanni Todisco",
+          "numericId": "033",
+          "stableKey": "BLACKJACK_TODISCO_GIOVANNI"
+        }
+      ],
+      "playerIds": [
+        "001",
+        "015",
+        "006",
+        "007",
+        "033"
+      ],
+      "playerPoints": [
+        [
+          "FC STEALTHY DRIBBLERS|BRUNO|PT",
+          0
+        ],
+        [
+          "AURIGA JUNIORS|DE TOMA|NICOLA",
+          17
+        ],
+        [
+          "AURIGA JUNIORS|ALBRIZIO|GIANFRANCO",
+          9
+        ],
+        [
+          "BOT & BALL|ANSELMI|BIAGIO",
+          6
+        ],
+        [
+          "BLACKJACK|TODISCO|GIOVANNI",
+          6
+        ]
+      ],
+      "playerExtras": [
+        [
+          "FC STEALTHY DRIBBLERS|BRUNO|PT",
+          {
+            "pres": 1,
+            "goals": 0,
+            "mvps": 0,
+            "gsPt": 6,
+            "pi": 0,
+            "rigPar": 0,
+            "rigSbag": 0,
+            "autogoal": 0
+          }
+        ],
+        [
+          "AURIGA JUNIORS|DE TOMA|NICOLA",
+          {
+            "pres": 1,
+            "goals": 2,
+            "mvps": 1,
+            "gsPt": 0,
+            "pi": 0,
+            "rigPar": 0,
+            "rigSbag": 0,
+            "autogoal": 0
+          }
+        ],
+        [
+          "AURIGA JUNIORS|ALBRIZIO|GIANFRANCO",
+          {
+            "pres": 1,
+            "goals": 1,
+            "mvps": 0,
+            "gsPt": 0,
+            "pi": 0,
+            "rigPar": 0,
+            "rigSbag": 0,
+            "autogoal": 0
+          }
+        ],
+        [
+          "BOT & BALL|ANSELMI|BIAGIO",
+          {
+            "pres": 1,
+            "goals": 0,
+            "mvps": 0,
+            "gsPt": 0,
+            "pi": 0,
+            "rigPar": 0,
+            "rigSbag": 0,
+            "autogoal": 0
+          }
+        ],
+        [
+          "BLACKJACK|TODISCO|GIOVANNI",
+          {
+            "pres": 1,
+            "goals": 0,
+            "mvps": 0,
+            "gsPt": 0,
+            "pi": 0,
+            "rigPar": 0,
+            "rigSbag": 0,
+            "autogoal": 0
+          }
+        ]
+      ],
+      "notes": [],
+      "importedTotal": false,
+      "squadOverride": ""
+    },
+    {
+      "day": 6,
       "name": "Paolo Turi",
       "points": 38,
       "credits": 48,
@@ -3978,172 +4144,6 @@
             "pres": 1,
             "goals": 0,
             "mvps": 1,
-            "gsPt": 0,
-            "pi": 0,
-            "rigPar": 0,
-            "rigSbag": 0,
-            "autogoal": 0
-          }
-        ]
-      ],
-      "notes": [],
-      "importedTotal": false,
-      "squadOverride": ""
-    },
-    {
-      "day": 6,
-      "name": "Michele Cirilli",
-      "points": 36,
-      "credits": 48,
-      "pres": 5,
-      "presPoints": null,
-      "goals": 3,
-      "mvps": 1,
-      "gsPt": 6,
-      "porteInviolate": 0,
-      "rigPar": 0,
-      "rigSbag": 0,
-      "autogoal": 1,
-      "players": [
-        {
-          "teamCode": "FC Stealthy Dribblers",
-          "surname": "Bruno",
-          "name": "PT",
-          "role": "PT",
-          "displayName": "Bruno PT",
-          "fullName": "PT Bruno",
-          "numericId": "001",
-          "stableKey": "FC_STEALTHY_DRIBBLERS_BRUNO_PT"
-        },
-        {
-          "teamCode": "Auriga Juniors",
-          "surname": "De Toma",
-          "name": "Nicola",
-          "role": "C",
-          "displayName": "De Toma Nicola",
-          "fullName": "Nicola De Toma",
-          "numericId": "015",
-          "stableKey": "AURIGA_JUNIORS_DE_TOMA_NICOLA"
-        },
-        {
-          "teamCode": "Auriga Juniors",
-          "surname": "Albrizio",
-          "name": "Gianfranco",
-          "role": "D",
-          "displayName": "Albrizio Gianfranco",
-          "fullName": "Gianfranco Albrizio",
-          "numericId": "006",
-          "stableKey": "AURIGA_JUNIORS_ALBRIZIO_GIANFRANCO"
-        },
-        {
-          "teamCode": "BOT & BALL",
-          "surname": "Anselmi",
-          "name": "Biagio",
-          "role": "D",
-          "displayName": "Anselmi Biagio",
-          "fullName": "Biagio Anselmi",
-          "numericId": "007",
-          "stableKey": "BOT_BALL_ANSELMI_BIAGIO"
-        },
-        {
-          "teamCode": "BlackJack",
-          "surname": "Todisco",
-          "name": "Giovanni",
-          "role": "D",
-          "displayName": "Todisco Giovanni",
-          "fullName": "Giovanni Todisco",
-          "numericId": "033",
-          "stableKey": "BLACKJACK_TODISCO_GIOVANNI"
-        }
-      ],
-      "playerIds": [
-        "001",
-        "015",
-        "006",
-        "007",
-        "033"
-      ],
-      "playerPoints": [
-        [
-          "FC STEALTHY DRIBBLERS|BRUNO|PT",
-          0
-        ],
-        [
-          "AURIGA JUNIORS|DE TOMA|NICOLA",
-          17
-        ],
-        [
-          "AURIGA JUNIORS|ALBRIZIO|GIANFRANCO",
-          9
-        ],
-        [
-          "BOT & BALL|ANSELMI|BIAGIO",
-          4
-        ],
-        [
-          "BLACKJACK|TODISCO|GIOVANNI",
-          6
-        ]
-      ],
-      "playerExtras": [
-        [
-          "FC STEALTHY DRIBBLERS|BRUNO|PT",
-          {
-            "pres": 1,
-            "goals": 0,
-            "mvps": 0,
-            "gsPt": 6,
-            "pi": 0,
-            "rigPar": 0,
-            "rigSbag": 0,
-            "autogoal": 0
-          }
-        ],
-        [
-          "AURIGA JUNIORS|DE TOMA|NICOLA",
-          {
-            "pres": 1,
-            "goals": 2,
-            "mvps": 1,
-            "gsPt": 0,
-            "pi": 0,
-            "rigPar": 0,
-            "rigSbag": 0,
-            "autogoal": 0
-          }
-        ],
-        [
-          "AURIGA JUNIORS|ALBRIZIO|GIANFRANCO",
-          {
-            "pres": 1,
-            "goals": 1,
-            "mvps": 0,
-            "gsPt": 0,
-            "pi": 0,
-            "rigPar": 0,
-            "rigSbag": 0,
-            "autogoal": 0
-          }
-        ],
-        [
-          "BOT & BALL|ANSELMI|BIAGIO",
-          {
-            "pres": 1,
-            "goals": 0,
-            "mvps": 0,
-            "gsPt": 0,
-            "pi": 0,
-            "rigPar": 0,
-            "rigSbag": 0,
-            "autogoal": 1
-          }
-        ],
-        [
-          "BLACKJACK|TODISCO|GIOVANNI",
-          {
-            "pres": 1,
-            "goals": 0,
-            "mvps": 0,
             "gsPt": 0,
             "pi": 0,
             "rigPar": 0,
