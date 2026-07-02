@@ -1005,6 +1005,70 @@
       .fanta-h2h-mini-squad-btn{font-size:8px;max-width:60px;padding:4px 4px}
     }
 
+    /* ══════════════════════════════════
+       PAGELLONE IGNORANTE
+       Firma visiva: il "cartellino" da arbitro — richiama il 🟥 della rubrica,
+       leggermente ruotato come se fosse stato sventolato sul tavolo, con la foto
+       che sborda dal bordo superiore e il voto timbrato come uno stamp da arbitro.
+       ══════════════════════════════════ */
+    .pg-banner{position:relative;overflow:hidden;border-radius:22px;padding:22px 24px;margin-bottom:16px;
+      background:linear-gradient(135deg,var(--dark),var(--red) 145%);box-shadow:0 14px 34px var(--shadow)}
+    .pg-banner::before{content:'';position:absolute;inset:0;opacity:.10;pointer-events:none;
+      background:repeating-linear-gradient(-45deg,#fff 0 10px,transparent 10px 22px)}
+    .pg-banner-content{position:relative;display:flex;align-items:center;justify-content:center;gap:14px;text-align:center;flex-wrap:wrap}
+    .pg-banner-flag{font-size:22px;flex:0 0 auto;filter:drop-shadow(0 3px 6px rgba(0,0,0,.35))}
+    .pg-banner-text{font-family:'Oswald',Arial,Helvetica,sans-serif;color:#fff;font-size:14px;font-weight:700;
+      letter-spacing:.08em;text-transform:uppercase;line-height:1.5}
+    .pg-banner-text b{display:block;font-size:clamp(20px,4vw,30px);letter-spacing:.03em;color:var(--gold)}
+    .pg-selector{display:flex;justify-content:flex-end;margin-bottom:16px}
+    .pg-selector select{padding:10px 14px;border-radius:999px;border:1px solid var(--line);background:var(--panel);
+      color:var(--ink);font-weight:800;font-family:'Oswald',Arial,sans-serif;letter-spacing:.02em;cursor:pointer}
+    .pg-empty{text-align:center;padding:40px 20px;color:var(--muted)}
+    .pg-empty-icon{font-size:38px;margin-bottom:8px}
+    .pg-team{margin-bottom:28px}
+    .pg-team-head{display:flex;align-items:center;gap:12px;margin-bottom:14px;padding-bottom:8px;border-bottom:2px solid var(--line)}
+    .pg-team-logo{width:38px;height:38px;flex:0 0 auto;border-radius:10px;overflow:hidden;background:var(--soft);
+      display:flex;align-items:center;justify-content:center}
+    .pg-team-logo-img,.pg-team-logo>*{width:100%;height:100%;object-fit:contain}
+    .pg-team-name{margin:0;font-family:'Oswald',Arial,Helvetica,sans-serif;font-size:18px;letter-spacing:.03em;
+      color:var(--ink);text-transform:uppercase}
+    .pg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:22px 18px}
+
+    /* Il cartellino */
+    .pg-card{position:relative;background:var(--panel);border-radius:16px;padding:20px 16px 16px;
+      border:1px solid var(--line);box-shadow:0 10px 26px var(--shadow);
+      transform:rotate(var(--pg-rot,0deg));transition:transform .18s ease}
+    .pg-card:hover{transform:rotate(0deg) translateY(-2px)}
+    .pg-card::before{content:'';position:absolute;top:0;left:0;right:0;height:8px;border-radius:16px 16px 0 0;
+      background:linear-gradient(90deg,var(--red),#e2453a)}
+    .pg-card-top{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+    .pg-card-photo{width:46px;height:46px;flex:0 0 auto;border-radius:50%;overflow:hidden;border:2px solid var(--panel);
+      box-shadow:0 0 0 2px var(--red);margin-top:-4px}
+    .pg-card-photo img,.pg-card-photo>*{width:100%;height:100%;object-fit:cover}
+    .pg-card-name{font-family:'Oswald',Arial,Helvetica,sans-serif;font-weight:700;font-size:15px;color:var(--ink);
+      letter-spacing:.01em;line-height:1.2}
+    .pg-role-icon{margin-right:5px}
+    .pg-card-text{margin:0 0 14px;font-size:13.5px;line-height:1.5;color:var(--ink);font-style:italic}
+    .pg-card-bottom{display:flex;align-items:flex-end;justify-content:space-between;gap:10px}
+    .pg-paragone{flex:1;min-width:0;display:flex;align-items:flex-start;gap:6px;font-size:12px;font-weight:800;
+      color:var(--muted);text-transform:uppercase;letter-spacing:.02em;line-height:1.35}
+    .pg-paragone-icon{flex:0 0 auto}
+    .pg-muted{opacity:.5;font-style:normal}
+    /* Timbro del voto: doppio anello come uno stamp da arbitro */
+    .pg-voto{flex:0 0 auto;width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+      font-family:'Oswald',Arial,Helvetica,sans-serif;font-weight:700;font-size:16px;transform:rotate(-8deg);
+      border:2px solid currentColor;box-shadow:inset 0 0 0 3px var(--panel),inset 0 0 0 4px currentColor}
+    .pg-vt-low{color:var(--red)}
+    .pg-vt-mid{color:var(--muted)}
+    .pg-vt-high{color:var(--blue)}
+    .pg-vt-top{color:var(--gold)}
+    .pg-vt-na{color:var(--muted);opacity:.6}
+    @media(max-width:560px){
+      .pg-banner{padding:18px 16px}
+      .pg-grid{grid-template-columns:1fr}
+      .pg-card{transform:none}
+      .pg-card:hover{transform:translateY(-2px)}
+    }
 </style>
 </head>
 <body>
@@ -1048,6 +1112,7 @@
   <section id="calendario"  class="section"        role="tabpanel"></section>
   <section id="risultati"   class="section"        role="tabpanel"></section>
   <section id="riepilogo"   class="section"        role="tabpanel"></section>
+  <section id="pagellone"   class="section"        role="tabpanel"></section>
   <section id="fantacalcio" class="section"        role="tabpanel"></section>
 </div>
 
@@ -1081,7 +1146,7 @@ const FANTA_CACHE_SCHEMA = 1;
 const TABS = [
   ['home','🏠 Home'],['classifiche','🏆 Classifiche'],['statistiche','📊 Statistiche'],
   ['squadre','👕 Squadre'],['calendario','📅 Calendario'],['risultati','⚽ Risultati'],
-  ['riepilogo','📝 Riepilogo giornate'],['fantacalcio','Fantacalcio']
+  ['riepilogo','📝 Riepilogo giornate'],['pagellone','📣 Pagellone ignorante'],['fantacalcio','Fantacalcio']
 ];
 
 /* ── Stato globale ── */
@@ -1092,6 +1157,7 @@ let state = {
   search: '', activeTab: 'home',
   selectedRiepilogoGiornata: '',
   riepilogoFilterInitialized: false,
+  selectedPagelloneGiornata: '',
   selectedFantaGiornata: 'totale',
   fantaResultFileKeys: [],
   fantaPrecomputedData: null,
@@ -1323,6 +1389,7 @@ function fileKind(f){ const n=norm(f); const raw=String(f||'').split('/').pop().
   if(n.includes('marcatori')) return 'marcatori';
   if(n.includes('mvp')) return 'mvp';
   if(n.includes('portieri')) return 'portieri';
+  if(n.includes('pagellone')) return 'pagellone';
   // File riepilogo: uno per giornata o un riepilogo unico.
   // Esempi riconosciuti: giornata_1.csv, riepilogo_giornata_1.csv, referto_giornata_1.csv, riepilogo_giornate.csv.
   if(n.includes('riepilogogiornata')||n.includes('riepilogogiornate')||n.includes('refertogiornata')||/^giornata\d*csv$/.test(n)||/^giornata\d+/.test(n)) return 'riepilogo';
@@ -1332,6 +1399,9 @@ function fileKind(f){ const n=norm(f); const raw=String(f||'').split('/').pop().
   return 'altro';
 }
 function sectionFiles(kind){ return Object.keys(state.rows).filter(f=>fileKind(f)===kind); }
+/* Come sectionFiles, ma per file di testo semplice non-CSV (es. i pagelloni),
+   che vengono tenuti solo in state.files e mai passati a parseCsv. */
+function sectionTextFiles(kind){ return Object.keys(state.files).filter(f=>!state.rows[f] && fileKind(f)===kind); }
 
 /* ══════════════════════════════════
    IMMAGINI
@@ -1888,7 +1958,7 @@ function renderTabs(){
 function syncGlobalSearchVisibility(){
   const searchEl=document.getElementById('search');
   if(!searchEl) return;
-  const hide=state.activeTab==='fantacalcio';
+  const hide=state.activeTab==='fantacalcio'||state.activeTab==='pagellone';
   searchEl.hidden=hide;
   searchEl.setAttribute('aria-hidden',hide?'true':'false');
 }
@@ -6943,6 +7013,153 @@ function renderPartiteRiepilogo(parent,rows,file,contextRows){
   });
   parent.appendChild(wrap);
 }
+/* ══════════════════════════════════
+   PAGELLONE IGNORANTE
+   Un file di testo semplice per giornata (es. pagellone_giornata_3.txt),
+   elencato in manifest.csv come i CSV. Formato a blocchi:
+     SQUADRA: Nome Squadra
+     GIOCATORE: Nome Cognome
+     TESTO: sintesi
+     PARAGONE: paragone scherzoso
+     VOTO: 7
+   ══════════════════════════════════ */
+function pagelloneGiornataNumber(f){
+  const m=String(f||'').match(/giornata[_\s-]*([0-9]+)/i);
+  return m?parseInt(m[1],10):null;
+}
+function parsePagellone(text){
+  const t=String(text||'').replace(/\r\n?/g,'\n');
+  const squadre=[];
+  // Ogni blocco squadra inizia con una riga "SQUADRA:".
+  const teamBlocks=t.split(/\n(?=\s*SQUADRA\s*:)/i).map(b=>b.trim()).filter(Boolean);
+  for(const block of teamBlocks){
+    const teamMatch=block.match(/^\s*SQUADRA\s*:\s*(.+)$/im);
+    if(!teamMatch) continue;
+    const squadra=smartSpace(teamMatch[1].trim());
+    const giocatori=[];
+    // Dentro al blocco squadra, ogni giocatore inizia con "GIOCATORE:".
+    const playerChunks=block.split(/\n(?=\s*GIOCATORE\s*:)/i).slice(1);
+    for(const chunk of playerChunks){
+      const nomeM=chunk.match(/^\s*GIOCATORE\s*:\s*(.+)$/im);
+      if(!nomeM) continue;
+      const testoM=chunk.match(/TESTO\s*:\s*([\s\S]*?)(?=\n\s*[A-ZÀ-Ù]+\s*:|$)/i);
+      const paragoneM=chunk.match(/PARAGONE\s*:\s*([\s\S]*?)(?=\n\s*[A-ZÀ-Ù]+\s*:|$)/i);
+      const votoM=chunk.match(/VOTO\s*:\s*([0-9]+(?:[.,][0-9]+)?)/i);
+      giocatori.push({
+        nome: smartSpace(nomeM[1].trim()),
+        testo: smartSpace((testoM?testoM[1]:'').trim()),
+        paragone: smartSpace((paragoneM?paragoneM[1]:'').trim()),
+        voto: votoM?parseFloat(votoM[1].replace(',','.')):null
+      });
+    }
+    if(giocatori.length) squadre.push({squadra,giocatori});
+  }
+  return squadre;
+}
+function votoGradeClass(v){
+  if(v==null||isNaN(v)) return 'pg-vt-na';
+  if(v<5) return 'pg-vt-low';
+  if(v<6.5) return 'pg-vt-mid';
+  if(v<7.5) return 'pg-vt-high';
+  return 'pg-vt-top';
+}
+function votoDisplay(v){
+  if(v==null||isNaN(v)) return '—';
+  return Number.isInteger(v)?String(v):v.toFixed(1).replace('.',',');
+}
+/* Prova ad abbinare il nome del pagellone alla rosa ufficiale per capire se è un portiere
+   (icona guanto) o un giocatore di movimento (icona pallone); se non trova corrispondenza
+   usa comunque il pallone, senza bloccare il rendering. */
+function pagelloneRoleIcon(nome){
+  const target=norm(nome);
+  if(!target) return '⚽';
+  const found=allPlayersFromTeams().find(p=>{
+    const pn=norm(p.nome);
+    return pn===target || pn.includes(target) || target.includes(pn);
+  });
+  const ruolo=norm(found&&found.ruolo||'');
+  return (ruolo.includes('portiere')||ruolo==='p'||ruolo==='gk') ? '🧤' : '⚽';
+}
+/* Giornata di riferimento da usare quando non ci sono (ancora) pagelle da mostrare:
+   si appoggia agli stessi dati di calendario/riepilogo usati altrove nell'app
+   (es. "Dati aggiornati a giornata X" in home), non al nome del file del pagellone
+   (che in questo caso non esiste). */
+function referenceGiornataForPagellone(){
+  return latestRiepilogoGiornata() || totalCalendarioGiornate() || null;
+}
+function pagelloneEmptyMessage(giornata){
+  return giornata ? `Nessuna valutazione caricata per la giornata ${giornata}.` : 'Nessuna valutazione caricata.';
+}
+function renderPagellone(){
+  const el=document.getElementById('pagellone');
+  if(!el) return;
+  const files=sectionTextFiles('pagellone');
+  if(!files.length){
+    const msg=pagelloneEmptyMessage(referenceGiornataForPagellone());
+    el.innerHTML=`<div class="card pg-empty"><div class="pg-empty-icon">📣</div><h3>${esc(msg)}</h3><p>Appena viene caricato il file di testo della giornata, la rubrica comparirà qui.</p></div>`;
+    return;
+  }
+  const sorted=files.slice().sort((a,b)=>(pagelloneGiornataNumber(b)||0)-(pagelloneGiornataNumber(a)||0));
+  if(!state.selectedPagelloneGiornata || !sorted.includes(state.selectedPagelloneGiornata)){
+    state.selectedPagelloneGiornata=sorted[0];
+  }
+  const currentFile=state.selectedPagelloneGiornata;
+  const num=pagelloneGiornataNumber(currentFile);
+  const squadre=parsePagellone(state.files[currentFile]||'');
+
+  const selectorHtml = sorted.length>1 ? `<div class="pg-selector"><select id="pgGiornataSelect" aria-label="Seleziona giornata">${
+    sorted.map(f=>{ const n=pagelloneGiornataNumber(f); return `<option value="${esc(f)}" ${f===currentFile?'selected':''}>${n?n+'ª giornata':esc(prettyFileName(f))}</option>`; }).join('')
+  }</select></div>` : '';
+
+  let html = `
+    <div class="pg-banner">
+      <div class="pg-banner-content">
+        <span class="pg-banner-flag">📣🟥</span>
+        <span class="pg-banner-text">Rubrica pagellone ignorante<b>${num?num+'ª GG':esc(prettyFileName(currentFile))}</b></span>
+        <span class="pg-banner-flag">🟥📣</span>
+      </div>
+    </div>
+    ${selectorHtml}`;
+
+  if(!squadre.length){
+    const msg=pagelloneEmptyMessage(num||referenceGiornataForPagellone());
+    html += `<div class="card pg-empty"><h3>${esc(msg)}</h3><p>Il file di questa giornata non è nel formato atteso (SQUADRA / GIOCATORE / TESTO / PARAGONE / VOTO).</p></div>`;
+  }else{
+    squadre.forEach(sq=>{
+      html += `<div class="pg-team">
+        <div class="pg-team-head"><div class="pg-team-logo"></div><h3 class="pg-team-name">${esc(sq.squadra)}</h3></div>
+        <div class="pg-grid">`;
+      sq.giocatori.forEach((g,i)=>{
+        const rot=(i%2===0?-1.3:1.1);
+        html += `<div class="pg-card" style="--pg-rot:${rot}deg">
+          <div class="pg-card-top">
+            <div class="pg-card-photo"></div>
+            <div class="pg-card-name"><span class="pg-role-icon">${pagelloneRoleIcon(g.nome)}</span>${esc(g.nome)}</div>
+          </div>
+          <p class="pg-card-text">${g.testo?esc(g.testo):'<span class="pg-muted">Nessun commento.</span>'}</p>
+          <div class="pg-card-bottom">
+            <div class="pg-paragone"><span class="pg-paragone-icon">🎭</span>${g.paragone?esc(g.paragone):'<span class="pg-muted">—</span>'}</div>
+            <div class="pg-voto ${votoGradeClass(g.voto)}">${votoDisplay(g.voto)}</div>
+          </div>
+        </div>`;
+      });
+      html += `</div></div>`;
+    });
+  }
+
+  el.innerHTML=html;
+
+  // Aggancia le foto reali sui placeholder, nello stesso ordine in cui sono stati generati.
+  const teamLogoSlots=el.querySelectorAll('.pg-team-logo');
+  squadre.forEach((sq,i)=>{ if(teamLogoSlots[i]) teamLogoSlots[i].appendChild(imgOrInitialEl('team',sq.squadra,'pg-team-logo-img')); });
+  const photoSlots=el.querySelectorAll('.pg-card-photo');
+  let k=0;
+  squadre.forEach(sq=>sq.giocatori.forEach(g=>{ if(photoSlots[k]) photoSlots[k].appendChild(imgOrInitialEl('player',g.nome,'pg-avatar')); k++; }));
+
+  const sel=document.getElementById('pgGiornataSelect');
+  if(sel) sel.onchange=()=>{ state.selectedPagelloneGiornata=sel.value; renderPagellone(); };
+}
+
 function renderRiepilogoGiornate(){
 
   const el=document.getElementById('riepilogo'); el.innerHTML='';
@@ -9134,6 +9351,7 @@ function renderActiveSection(){
     case 'calendario':  renderMatchSection('calendario','calendario'); break;
     case 'risultati':   renderMatchSection('risultati','risultati'); break;
     case 'riepilogo':   renderRiepilogoGiornate(); break;
+    case 'pagellone':   renderPagellone(); break;
     case 'fantacalcio': renderFantacalcio(); break;
   }
 }
@@ -9314,7 +9532,7 @@ async function loadFantaFilesInBackground(fresh){
 async function loadAuto(fresh){
   setStatus('Caricamento in corso…');
   state.files={}; state.rows={}; loadErrors=[]; state.imagesReady=true;
-  state.selectedRiepilogoGiornata=''; state.riepilogoFilterInitialized=false; state.selectedFantaGiornata='totale'; state.fantaResultFileKeys=[]; state.fantaLoading=true;
+  state.selectedRiepilogoGiornata=''; state.riepilogoFilterInitialized=false; state.selectedFantaGiornata='totale'; state.fantaResultFileKeys=[]; state.fantaLoading=true; state.selectedPagelloneGiornata='';
   state.fantaPrecomputedData=null; state.fantaPrecomputedAttempted=false; state.fantaPrecomputedLoading=false;
   clearImageProbeCache();
   clearDerivedDataCaches();
@@ -9363,6 +9581,17 @@ async function loadAuto(fresh){
       if(!DEFAULT_FILES.includes(f) && fileKind(f)!=='riepilogo') loadErrors.push(f+' — non trovato');
     }
   });
+  /* Pagelloni: file di testo semplice (uno per giornata), elencati in manifest.csv
+     come i CSV ma non parsati da parseCsv — restano testo puro in state.files.
+     Nessun errore mostrato se mancano: la giornata può non avere ancora il pagellone. */
+  const txtList=[...new Set(list.filter(x=>/\.txt$/i.test(x) && fileKind(x)==='pagellone' && !state.files[x]))];
+  if(txtList.length){
+    const txtResults=await Promise.all(txtList.map(f=>fetchText(f,fresh)
+      .then(txt=>({status:'fulfilled',f,txt}))
+      .catch(reason=>({status:'rejected',f,reason}))));
+    txtResults.forEach(res=>{ if(res.status==='fulfilled') state.files[res.f]=res.txt; });
+  }
+
   /* Se nel frattempo l'utente ha già caricato manualmente una cartella (es. ha cliccato
      "Seleziona cartella" prima che l'autoload finisse), questo risultato è superato:
      non sovrascrivere i dati più recenti già mostrati. */
@@ -9435,6 +9664,13 @@ async function ingestPickedFile(file, relPath, basename){
     state._imgCount=(state._imgCount||0)+1;
     return true;
   }
+  if(/\.txt$/i.test(name) && fileKind(relPath||name)==='pagellone'){
+    const txt=await safeFileText(file, relPath||name);
+    state.files[name]=txt;
+    clearDerivedDataCaches();
+    state._csvCount=(state._csvCount||0)+1;
+    return true;
+  }
   if(!/\.csv$/i.test(name)) return false;
   const txt=await safeFileText(file, relPath||name);
   // La chiave resta il nome file puro (senza percorso) per compatibilità con fileKind/sectionFiles.
@@ -9483,7 +9719,7 @@ function refreshAfterManualLoad(csv,img){
 async function loadFromDirectoryHandle(dir){
   manualLoadActive = true;
   state.files={}; state.rows={}; state.imageURLs={}; state.imageAliases={}; loadErrors=[]; state.imagesReady=false;
-  state.selectedRiepilogoGiornata=''; state.riepilogoFilterInitialized=false; state.selectedFantaGiornata='totale'; state.fantaResultFileKeys=[];
+  state.selectedRiepilogoGiornata=''; state.riepilogoFilterInitialized=false; state.selectedFantaGiornata='totale'; state.fantaResultFileKeys=[]; state.selectedPagelloneGiornata='';
   state.fantaPrecomputedData=null; state.fantaPrecomputedAttempted=true; state.fantaPrecomputedLoading=false;
   clearImageProbeCache();
   clearDerivedDataCaches();
@@ -9615,7 +9851,7 @@ async function loadFolder(fileList){
   manualLoadActive = true;
   const files=[...fileList]; // snapshot: l'input viene svuotato subito dopo la selezione
   state.files={}; state.rows={}; state.imageURLs={}; state.imageAliases={}; loadErrors=[]; state.imagesReady=false;
-  state.selectedRiepilogoGiornata=''; state.riepilogoFilterInitialized=false; state.selectedFantaGiornata='totale'; state.fantaResultFileKeys=[];
+  state.selectedRiepilogoGiornata=''; state.riepilogoFilterInitialized=false; state.selectedFantaGiornata='totale'; state.fantaResultFileKeys=[]; state.selectedPagelloneGiornata='';
   state.fantaPrecomputedData=null; state.fantaPrecomputedAttempted=true; state.fantaPrecomputedLoading=false;
   clearImageProbeCache();
   clearDerivedDataCaches();
