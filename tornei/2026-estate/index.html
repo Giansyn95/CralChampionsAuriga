@@ -7095,21 +7095,25 @@ function renderPagellone(){
   if(!el) return;
   const files=sectionTextFiles('pagellone');
   if(!files.length){
-    const msg=pagelloneEmptyMessage(referenceGiornataForPagellone());
-    el.innerHTML=`<div class="card pg-empty"><div class="pg-empty-icon">📣</div><h3>${esc(msg)}</h3><p>Appena viene caricato il file di testo della giornata, la rubrica comparirà qui.</p></div>`;
+    // Non è ancora stato caricato nessun pagellone per nessuna giornata: messaggio generico,
+    // senza numero (non avrebbe senso puntare a "una" giornata quando mancano tutte).
+    el.innerHTML=`<div class="card pg-empty"><div class="pg-empty-icon">📣</div><h3>${esc(pagelloneEmptyMessage())}</h3><p>Appena viene caricato il file di testo della giornata, la rubrica comparirà qui.</p></div>`;
     return;
   }
   const sorted=files.slice().sort((a,b)=>(pagelloneGiornataNumber(b)||0)-(pagelloneGiornataNumber(a)||0));
   if(!state.selectedPagelloneGiornata || !sorted.includes(state.selectedPagelloneGiornata)){
+    // Come negli altri filtri per giornata dell'app: si posiziona di default sull'ultima inserita.
     state.selectedPagelloneGiornata=sorted[0];
   }
   const currentFile=state.selectedPagelloneGiornata;
   const num=pagelloneGiornataNumber(currentFile);
   const squadre=parsePagellone(state.files[currentFile]||'');
 
-  const selectorHtml = sorted.length>1 ? `<div class="pg-selector"><select id="pgGiornataSelect" aria-label="Seleziona giornata">${
+  // Il filtro va sempre mostrato quando esiste almeno un pagellone caricato (anche uno solo),
+  // così l'utente vede su quale giornata si trova e può cambiarla — come per gli altri filtri.
+  const selectorHtml = `<div class="pg-selector"><select id="pgGiornataSelect" aria-label="Seleziona giornata">${
     sorted.map(f=>{ const n=pagelloneGiornataNumber(f); return `<option value="${esc(f)}" ${f===currentFile?'selected':''}>${n?n+'ª giornata':esc(prettyFileName(f))}</option>`; }).join('')
-  }</select></div>` : '';
+  }</select></div>`;
 
   let html = `
     <div class="pg-banner">
@@ -7122,6 +7126,8 @@ function renderPagellone(){
     ${selectorHtml}`;
 
   if(!squadre.length){
+    // Qui invece esiste almeno un altro pagellone caricato altrove: manca (o è malformato)
+    // solo quello di questa giornata specifica, quindi il messaggio cita il suo numero.
     const msg=pagelloneEmptyMessage(num||referenceGiornataForPagellone());
     html += `<div class="card pg-empty"><h3>${esc(msg)}</h3><p>Il file di questa giornata non è nel formato atteso (SQUADRA / GIOCATORE / TESTO / PARAGONE / VOTO).</p></div>`;
   }else{
