@@ -490,8 +490,14 @@
     .player-pagella-row:hover,.player-pagella-row.is-active{background:rgba(15,90,168,.10);border-color:rgba(15,90,168,.28);transform:translateY(-1px)}
     .player-pagella-day{display:inline-flex;align-items:center;justify-content:center;border-radius:999px;background:var(--blue);color:#fff;font-size:12px;font-weight:900;padding:5px 8px;font-variant-numeric:tabular-nums;white-space:nowrap}
     .player-pagella-main{min-width:0}
-    .player-pagella-match{font-size:13px;font-weight:900;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    .player-pagella-meta{margin-top:3px;color:var(--muted);font-size:11px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .player-pagella-match{display:block;font-size:13px;font-weight:900;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .player-pagella-meta{display:flex;align-items:center;gap:6px;margin-top:4px;color:var(--muted);font-size:11px;font-weight:800;overflow:hidden;white-space:nowrap;min-width:0}
+    .player-pagella-meta-label{display:inline-block;min-width:0;overflow:hidden;text-overflow:ellipsis;vertical-align:middle}
+    .player-pagella-score-badge{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;min-width:46px;padding:2px 7px;border-radius:999px;border:1px solid var(--line);background:rgba(102,112,133,.12);color:var(--muted);font-size:10.5px;font-weight:900;font-variant-numeric:tabular-nums;line-height:1.25;box-shadow:0 4px 10px var(--shadow)}
+    .player-pagella-score-badge.is-win{background:rgba(18,128,92,.16);border-color:rgba(18,128,92,.28);color:var(--green)}
+    .player-pagella-score-badge.is-draw{background:rgba(245,185,66,.24);border-color:rgba(245,185,66,.48);color:#9a6500}
+    .player-pagella-score-badge.is-loss{background:rgba(180,35,24,.14);border-color:rgba(180,35,24,.28);color:var(--red)}
+    [data-theme="dark"] .player-pagella-score-badge.is-draw{color:var(--gold)}
     .player-pagella-vote{width:42px;height:42px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-family:'Oswald',Arial,sans-serif;font-size:15px;font-weight:900;border:2px solid currentColor;box-shadow:inset 0 0 0 3px var(--soft),0 6px 14px var(--shadow);font-variant-numeric:tabular-nums;background:var(--panel)}
     .player-pagella-preview{margin-top:12px;border-radius:20px;border:1px solid rgba(121,91,61,.22);background:linear-gradient(rgba(255,255,255,.58) 0 1px,transparent 1px 30px),linear-gradient(120deg,#fff8e8,#fff1d8);color:#172033;padding:15px 15px 14px;box-shadow:0 14px 30px rgba(7,29,58,.16);position:relative;overflow:hidden}
     .player-pagella-preview[hidden]{display:none}
@@ -499,12 +505,20 @@
     .player-pagella-preview-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px;position:relative;z-index:1}
     .player-pagella-preview-title{min-width:0}
     .player-pagella-preview-title b{display:block;font-family:'Oswald',Arial,sans-serif;font-size:18px;color:#172033;line-height:1.12;text-transform:uppercase;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    .player-pagella-preview-title span{display:block;margin-top:4px;color:#5f6b7a;font-size:12px;font-weight:800;line-height:1.3}
+    .player-pagella-preview-meta{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:5px;color:#5f6b7a;font-size:12px;font-weight:800;line-height:1.3}
+    .player-pagella-preview-meta-text{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+    .player-pagella-preview .player-pagella-score-badge{background:#fff8e8;box-shadow:none}
+    .player-pagella-preview .player-pagella-score-badge.is-win{background:rgba(18,128,92,.16);border-color:rgba(18,128,92,.32);color:#12805c}
+    .player-pagella-preview .player-pagella-score-badge.is-draw{background:rgba(245,185,66,.30);border-color:rgba(245,185,66,.56);color:#9a6500}
+    .player-pagella-preview .player-pagella-score-badge.is-loss{background:rgba(180,35,24,.14);border-color:rgba(180,35,24,.34);color:#b42318}
+    [data-theme="dark"] .player-pagella-preview .player-pagella-score-badge.is-win{color:var(--green)}
+    [data-theme="dark"] .player-pagella-preview .player-pagella-score-badge.is-draw{color:var(--gold)}
+    [data-theme="dark"] .player-pagella-preview .player-pagella-score-badge.is-loss{color:var(--red)}
     .player-pagella-preview .pg-voto{width:48px;height:48px;background:#fff8e8;box-shadow:inset 0 0 0 3px #fff8e8,inset 0 0 0 4px currentColor,0 5px 12px rgba(7,29,58,.16)}
     .player-pagella-preview-text{font-size:13.5px;line-height:1.5;font-style:italic;margin:0 0 10px;color:#172033;position:relative;z-index:1}
     .player-pagella-preview-paragone{display:flex;gap:7px;color:#5f6b7a;font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.02em;line-height:1.35;position:relative;z-index:1}
     .player-pagelle-note{margin-top:9px;color:var(--muted);font-size:11.5px;line-height:1.35}
-    @media(max-width:720px){.player-pagelle-summary{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.player-pagelle-list{max-height:none;overflow:visible;padding-right:0}.player-pagella-row{grid-template-columns:46px minmax(0,1fr) 40px;gap:8px;padding:9px}.player-pagella-day{font-size:11px;padding:5px 7px}.player-pagella-match{font-size:12.5px}.player-pagella-meta{font-size:10.5px}.player-pagella-vote{width:38px;height:38px;font-size:14px}.player-pagella-preview{border-radius:17px;padding:14px 13px}.player-pagella-preview-title b{font-size:16px;white-space:normal}.player-pagella-preview-text{font-size:13px}}
+    @media(max-width:720px){.player-pagelle-summary{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.player-pagelle-list{max-height:none;overflow:visible;padding-right:0}.player-pagella-row{grid-template-columns:minmax(0,1fr) 40px;gap:8px;padding:10px 9px}.player-pagella-row .player-pagella-day,.player-pagella-row .player-pagella-meta{display:none}.player-pagella-match{font-size:12.8px;line-height:1.25}.player-pagella-vote{width:38px;height:38px;font-size:14px}.player-pagella-preview{border-radius:17px;padding:14px 13px}.player-pagella-preview-title b{font-size:16px;white-space:normal}.player-pagella-preview-meta{gap:6px}.player-pagella-preview-meta-text{white-space:normal}.player-pagella-preview .player-pagella-score-badge{min-width:44px;padding:3px 8px;font-size:10.5px}.player-pagella-preview-text{font-size:13px}}
     body.player-modal-open{overflow:hidden}
 
     /* ── Partite ── */
@@ -5085,6 +5099,8 @@ function pagellonePlayerIndex(){
             imageNames,
             identityKey,
             matchLabel,
+            home,
+            away,
             score:info.score||'',
             data:info.data||'',
             voto:g.voto,
@@ -5131,15 +5147,64 @@ function playerPagelleForProfile(data){
   }
   return [...out.values()].sort((a,b)=>(b.giornataNum-a.giornataNum)||String(b.giornataLabel).localeCompare(String(a.giornataLabel),'it',{numeric:true}));
 }
+function playerPagellaOutcome(item){
+  if(!item || !item.score) return '';
+  const scorePair=parseScorePair(item.score);
+  if(!scorePair) return '';
+  let home=item.home||'', away=item.away||'';
+  if((!home || !away) && item.matchLabel){
+    const parts=String(item.matchLabel).split(/\s+vs\s+/i);
+    if(parts.length>=2){ home=home||parts[0].trim(); away=away||parts.slice(1).join(' vs ').trim(); }
+  }
+  const team=item.team||item.squadraPagellone||'';
+  if(!home || !away || !team) return '';
+  const isHome=pagelloneTeamsSame(team,home);
+  const isAway=pagelloneTeamsSame(team,away);
+  if(!isHome && !isAway) return '';
+  const [gh,ga]=scorePair;
+  const mine=isHome?gh:ga;
+  const other=isHome?ga:gh;
+  if(mine>other) return 'win';
+  if(mine<other) return 'loss';
+  return 'draw';
+}
+function playerPagellaOutcomeText(outcome){
+  if(outcome==='win') return 'Vittoria';
+  if(outcome==='draw') return 'Pareggio';
+  if(outcome==='loss') return 'Sconfitta';
+  return 'Risultato';
+}
+function playerPagellaScoreBadge(item){
+  if(!item || !item.score) return null;
+  const outcome=playerPagellaOutcome(item);
+  const badge=document.createElement('span');
+  badge.className='player-pagella-score-badge'+(outcome?' is-'+outcome:'');
+  badge.textContent=pagelloneCleanScoreText ? pagelloneCleanScoreText(item.score) : String(item.score||'');
+  badge.title=playerPagellaOutcomeText(outcome);
+  return badge;
+}
+function appendPlayerPagellaInlineMeta(container,item,options){
+  const opts=options||{};
+  const badge=playerPagellaScoreBadge(item);
+  if(badge) container.appendChild(badge);
+  const label=document.createElement('span');
+  label.className=opts.textClass||'player-pagella-meta-label';
+  const parts=[];
+  if(opts.giornata) parts.push(opts.giornata);
+  if(opts.matchLabel) parts.push(opts.matchLabel);
+  if(opts.team && item.team) parts.push(item.team);
+  label.textContent=fixItalianAccents(parts.join(' · ') || opts.fallback || 'Clicca per leggere');
+  container.appendChild(label);
+}
 function profilePagellaPreview(preview,item){
   preview.innerHTML='';
   preview.hidden=false;
   const head=document.createElement('div'); head.className='player-pagella-preview-head';
   const title=document.createElement('div'); title.className='player-pagella-preview-title';
   const b=document.createElement('b'); const rk=roleKind(item.role); b.textContent=(rk?roleEmojiForKind(rk)+' ':'')+(item.playerName||item.nomeOriginale||'Giocatore');
-  const meta=document.createElement('span');
+  const meta=document.createElement('div'); meta.className='player-pagella-preview-meta';
   const g=item.giornataNum ? ('Giornata '+item.giornataNum) : fixItalianAccents(item.giornataLabel||'Giornata');
-  meta.textContent=[g,item.matchLabel,item.score].filter(Boolean).join(' · ');
+  appendPlayerPagellaInlineMeta(meta,item,{giornata:g,matchLabel:item.matchLabel,textClass:'player-pagella-preview-meta-text'});
   title.appendChild(b); title.appendChild(meta);
   const vote=document.createElement('div'); vote.className='pg-voto '+votoGradeClass(item.voto); vote.textContent=votoDisplay(item.voto,item.votoLabel);
   head.appendChild(title); head.appendChild(vote); preview.appendChild(head);
@@ -5169,11 +5234,12 @@ function profilePagelleSection(items){
   const list=document.createElement('div'); list.className='player-pagelle-list';
   const preview=document.createElement('div'); preview.className='player-pagella-preview'; preview.hidden=true;
   items.forEach((item,idx)=>{
-    const btn=document.createElement('button'); btn.type='button'; btn.className='player-pagella-row'; btn.dataset.index=String(idx);
+    const btn=document.createElement('button'); btn.type='button'; btn.className='player-pagella-row'; btn.dataset.index=String(idx); btn.setAttribute('aria-expanded','false');
     const day=document.createElement('span'); day.className='player-pagella-day'; day.textContent=item.giornataNum?('G'+item.giornataNum):profileShortGiornataLabel(item.giornataLabel);
     const main=document.createElement('span'); main.className='player-pagella-main';
     const match=document.createElement('span'); match.className='player-pagella-match'; match.textContent=fixItalianAccents(item.matchLabel||item.team||'Pagella');
-    const meta=document.createElement('span'); meta.className='player-pagella-meta'; meta.textContent=[item.score,item.team].filter(Boolean).join(' · ') || 'Clicca per leggere';
+    const meta=document.createElement('span'); meta.className='player-pagella-meta';
+    appendPlayerPagellaInlineMeta(meta,item,{team:true});
     main.appendChild(match); main.appendChild(meta);
     const vote=document.createElement('span'); vote.className='player-pagella-vote '+votoGradeClass(item.voto); vote.textContent=votoDisplay(item.voto,item.votoLabel);
     btn.appendChild(day); btn.appendChild(main); btn.appendChild(vote); list.appendChild(btn);
@@ -5184,8 +5250,15 @@ function profilePagelleSection(items){
     const idx=parseInt(btn.dataset.index||'-1',10);
     const item=items[idx];
     if(!item) return;
-    list.querySelectorAll('.player-pagella-row.is-active').forEach(x=>x.classList.remove('is-active'));
+    const wasOpen=btn.classList.contains('is-active') && !preview.hidden;
+    list.querySelectorAll('.player-pagella-row.is-active').forEach(x=>{ x.classList.remove('is-active'); x.setAttribute('aria-expanded','false'); });
+    if(wasOpen){
+      preview.hidden=true;
+      preview.innerHTML='';
+      return;
+    }
     btn.classList.add('is-active');
+    btn.setAttribute('aria-expanded','true');
     profilePagellaPreview(preview,item);
   });
   section.appendChild(list); section.appendChild(preview);
@@ -7983,7 +8056,7 @@ function renderPagellone(){
 
     if(!currentFile){
       const msg=files.length ? pagelloneEmptyMessage(num||currentLabel) : pagelloneEmptyMessage();
-      html += `<div class="card pg-empty"><div class="pg-empty-icon">📣</div><h3>${esc(msg)}</h3><p>Stay tuned!</p></div>`;
+      html += `<div class="card pg-empty"><div class="pg-empty-icon">📣</div><h3>${esc(msg)}</h3><p>Il filtro resta disponibile per tutte le giornate e per le partite della giornata, anche quando il file del pagellone non è ancora presente.</p></div>`;
     }else if(!entry || !entry.squadre.length){
       const msg=pagelloneEmptyMessage(num||currentLabel);
       html += `<div class="card pg-empty"><h3>${esc(msg)}</h3><p>Il file di questa giornata non è nel formato atteso (SQUADRA / GIOCATORE / TESTO / PARAGONE / VOTO).</p></div>`;
