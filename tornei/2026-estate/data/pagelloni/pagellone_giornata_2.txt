@@ -1,1 +1,142 @@
-Test
+SQUADRA: Out Of Office FC
+
+GIOCATORE: Colangiuli
+TESTO: Causa due rigori che Turi trasforma senza pietà, ma para quanto basta per evitare la sconfitta ai suoi. Miglior portiere di giornata solo perché l'altro non si presenta.
+PARAGONE: Loris Karius
+VOTO: 5
+
+GIOCATORE: Mondelli
+TESTO: Partita nella norma per il veterano di casa: sempre pulito in costruzione, cerca il passaggio più semplice. Ottimo in contenimento ma non sgaloppa mai.
+PARAGONE: Elseid Hysaj
+VOTO: 6.25
+
+GIOCATORE: Di Giovine
+TESTO: Prestazione incolore per il talentino gravinese: tanta qualità ma manca la freddezza sotto porta, con troppi tiri sbagliati.
+PARAGONE: Eljero Elia
+VOTO: 6.25
+
+GIOCATORE: Lorusso
+TESTO: La solita rocciosità e cazzimma da minervinese: non molla l'avversario nemmeno a pagarlo, a volte fuori posizione ma sempre pronto a recuperare.
+PARAGONE: Jimmy Grimble
+VOTO: 6.5
+
+GIOCATORE: Capurso
+TESTO: Zio Fil parte carico già dagli spogliatoi. In campo non c'è trippa per gatti: o la gamba o la palla, mai entrambe.
+PARAGONE: Jaap Stam
+VOTO: 6.5
+
+GIOCATORE: Arena
+TESTO: Parte bene e inizia subito a calciare verso la porta. Segna ancora e sale a quota 4 gol nel torneo.
+PARAGONE: Eder
+VOTO: 6.5
+
+GIOCATORE: Saracino
+TESTO: Giornata di grazia con imbucate che spesso i compagni faticano a decifrare. Tripletta a referto, con un gol di pregevole fattura che piega le mani del portiere subentrato negli ultimi 20 minuti.
+PARAGONE: Javier Chevanton
+VOTO: 7.5
+
+SQUADRA: FC Stealthy Dribblers
+
+GIOCATORE: Bruno
+TESTO: sv (in campo solo 20 minuti causa Ferrovie dello Stato).
+PARAGONE: —
+VOTO: sv
+
+GIOCATORE: Colavito
+TESTO: sv (in campo solo 20 minuti causa Ferrovie dello Stato, come Bruno).
+PARAGONE: —
+VOTO: sv
+
+GIOCATORE: Grippa
+TESTO: Dopo la sconfitta contro il collega di reparto ci mette tutta la grinta possibile. Dribbling che mandano al bar chiunque, memorabile quello in mezzo a tre avversari.
+PARAGONE: Lorenzo Cataldi
+VOTO: 6.5
+
+GIOCATORE: De Leo
+TESTO: Entra in campo carico per questioni personali, ma la squadra ringrazia: ringhia su ogni pallone e resta sempre sul pezzo, parando di tutto.
+PARAGONE: Olivier Giroud
+VOTO: 6.5
+
+GIOCATORE: Masellis
+TESTO: Arriva il gol che sblocca lui e la squadra, esultanza plateale. Buone giocate con qualche sbavatura dietro, ma recuperi importanti e incornata da applausi.
+PARAGONE: German Denis
+VOTO: 6.5
+
+GIOCATORE: Menolascina
+TESTO: Iniziano a vedersi sprazzi di talento vero: dribbling ubriacanti, giocate concrete e un gol a coronare un'azione corale. Può dare ancora di più.
+PARAGONE: Simone Padoin
+VOTO: 7
+
+GIOCATORE: Turi
+TESTO: Il capitano, la garra, la determinazione: corre e trascina la squadra per tutta la partita. Segna due rigori netti e ne reclama un terzo.
+PARAGONE: Stevan Jovetic
+VOTO: 7.5
+
+SQUADRA: Bot&Ball
+
+GIOCATORE: Mincuzzi
+TESTO: Solita gestione tranquilla nel primo tempo, quasi annoiato. Nel secondo i suoi si sciolgono e lui prende tiri da ogni parte, ma resta comunque il migliore tra i portieri.
+PARAGONE: Diego Lopez
+VOTO: 7
+
+GIOCATORE: Gilè
+TESTO: Arriva carico ma è limitato da una ferita al dente che lo tiene fuori quasi tutta la gara. Entra solo negli ultimi 20 minuti, in cui la squadra subisce 3 gol. Sfortunato ma generoso.
+PARAGONE: Cristian Zapata
+VOTO: 6
+
+GIOCATORE: Guri
+TESTO: Più motivato del solito, parte un po' pesante ma garantisce corsa, velocità e costanza. A inizio secondo tempo uno stiramento lo costringe ad alzare bandiera bianca.
+PARAGONE: Ledian Memushaj
+VOTO: 6.25
+
+GIOCATORE: Ziri
+TESTO: Indemoniato: controlli, stop e giocate di qualità, usa ogni mezzo possibile per inventare calcio. Epico il duello in alta quota con Palmitessa.
+PARAGONE: Edin Dzeko
+VOTO: 6.5
+
+GIOCATORE: Camposeo
+TESTO: Elegante nei disimpegni, rapido nelle ripartenze e sempre lucido. Segna anche un gol ma resta impassibile.
+PARAGONE: Denzel Dumfries
+VOTO: 7
+
+GIOCATORE: Anselmi
+TESTO: Trascina la squadra alla vittoria con 3 gol di pregevole fattura dopo le critiche dell'ultima giornata, poi accusa un blackout fisico totale nel finale. MVP di giornata.
+PARAGONE: Totò Di Natale
+VOTO: 7.5
+
+SQUADRA: BlackJack
+
+GIOCATORE: Schiavone
+TESTO: Il cugino di Menolascina respira già aria Auriga e si vede: esperienza, professionalità e diligenza fin dal primo minuto.
+PARAGONE: Federico Marchetti
+VOTO: 6.25
+
+GIOCATORE: Todisco
+TESTO: Esordio atteso da tempo: entra con timore nelle giocate, affidabile ma poco incisivo offensivamente. Come tutta la squadra, primo tempo in blackout.
+PARAGONE: Vito Lavopa
+VOTO: 6.25
+
+GIOCATORE: Palmitessa
+TESTO: Trova un altro colosso davanti a sé e i duelli con Ziri fanno scintille. Non molla nulla sulle palle alte e nel secondo tempo diventa decisivo, dopo un primo tempo più fantasma.
+PARAGONE: Oguchi Onyewu
+VOTO: 6.5
+
+GIOCATORE: Cirilli
+TESTO: Nuovo innesto tra grandi aspettative: primo tempo bloccato, poi si scioglie e regala tocchi e combinazioni interessanti.
+PARAGONE: Ricky Alvarez
+VOTO: 6.5
+
+GIOCATORE: Menolascina
+TESTO: Grinta e urla continue per spronare i compagni. Tanti tiri neutralizzati dal portiere e un'occasione clamorosa divorata davanti alla porta.
+PARAGONE: Massimo Ambrosini
+VOTO: 6.5
+
+GIOCATORE: Lo Riso
+TESTO: Esordio nei tornei Auriga: sorprende per tocchi e iniziative personali mai egoiste, sempre utili a liberare i compagni. Potenziale interessante.
+PARAGONE: Emanuele Rao
+VOTO: 6.5
+
+GIOCATORE: Fiorella
+TESTO: Primo tempo dormiente, poi entra in ciabatte nel secondo e mette 3 gol, uno col mancino che lascia Camposeo ancora a chiedersi come sia entrata.
+PARAGONE: Keisuke Honda
+VOTO: 7.5
