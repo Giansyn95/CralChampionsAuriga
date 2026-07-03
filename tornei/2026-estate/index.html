@@ -7790,7 +7790,7 @@ function renderPagellone(){
 
     if(!currentFile){
       const msg=files.length ? pagelloneEmptyMessage(num||currentLabel) : pagelloneEmptyMessage();
-      html += `<div class="card pg-empty"><div class="pg-empty-icon">📣</div><h3>${esc(msg)}</h3><p>Il filtro resta disponibile per tutte le giornate e per le partite della giornata, anche quando il file del pagellone non è ancora presente.</p></div>`;
+      html += `<div class="card pg-empty"><div class="pg-empty-icon">📣</div><h3>${esc(msg)}</h3><p>Stay tuned!</p></div>`;
     }else if(!entry || !entry.squadre.length){
       const msg=pagelloneEmptyMessage(num||currentLabel);
       html += `<div class="card pg-empty"><h3>${esc(msg)}</h3><p>Il file di questa giornata non è nel formato atteso (SQUADRA / GIOCATORE / TESTO / PARAGONE / VOTO).</p></div>`;
