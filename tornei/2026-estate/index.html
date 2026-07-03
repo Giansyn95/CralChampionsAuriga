@@ -488,11 +488,19 @@
     .player-pagelle-list{display:flex;flex-direction:column;gap:8px;max-height:320px;overflow:auto;overscroll-behavior:contain;padding-right:3px;contain:content}
     .player-pagella-row{width:100%;display:grid;grid-template-columns:54px minmax(0,1fr) auto;gap:10px;align-items:center;border:1px solid var(--line);border-radius:16px;background:var(--soft);color:var(--ink);padding:10px 11px;text-align:left;cursor:pointer;font-family:inherit;transition:background .12s ease,transform .12s ease,border-color .12s ease}
     .player-pagella-row:hover,.player-pagella-row.is-active{background:rgba(15,90,168,.10);border-color:rgba(15,90,168,.28);transform:translateY(-1px)}
-    .player-pagella-day{display:inline-flex;align-items:center;justify-content:center;border-radius:999px;background:var(--blue);color:#fff;font-size:12px;font-weight:900;padding:5px 8px;font-variant-numeric:tabular-nums;white-space:nowrap}
+    .player-pagella-day{display:inline-flex;align-items:center;justify-content:center;border-radius:999px;background:var(--blue);color:#fff;font-size:12px;font-weight:900;padding:5px 8px;font-variant-numeric:tabular-nums;white-space:nowrap;border:1px solid transparent}
+    .player-pagella-day.is-win{background:rgba(18,128,92,.16);border-color:rgba(18,128,92,.34);color:var(--green)}
+    .player-pagella-day.is-draw{background:rgba(245,185,66,.24);border-color:rgba(245,185,66,.50);color:#9a6500}
+    .player-pagella-day.is-loss{background:rgba(180,35,24,.14);border-color:rgba(180,35,24,.32);color:var(--red)}
+    [data-theme="dark"] .player-pagella-day.is-draw{color:var(--gold)}
     .player-pagella-main{min-width:0}
     .player-pagella-match{display:block;font-size:13px;font-weight:900;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
-    .player-pagella-mobile-day{display:none;font-weight:900;color:var(--blue);margin-right:5px;white-space:nowrap}
+    .player-pagella-mobile-day{display:none;align-items:center;justify-content:center;border-radius:999px;background:var(--blue);border:1px solid transparent;color:#fff;font-size:11px;font-weight:900;line-height:1.2;padding:2px 7px;margin-right:6px;white-space:nowrap;font-variant-numeric:tabular-nums;vertical-align:1px;box-shadow:0 4px 10px var(--shadow)}
+    .player-pagella-mobile-day.is-win{background:rgba(18,128,92,.16);border-color:rgba(18,128,92,.34);color:var(--green)}
+    .player-pagella-mobile-day.is-draw{background:rgba(245,185,66,.24);border-color:rgba(245,185,66,.50);color:#9a6500}
+    .player-pagella-mobile-day.is-loss{background:rgba(180,35,24,.14);border-color:rgba(180,35,24,.32);color:var(--red)}
+    [data-theme="dark"] .player-pagella-mobile-day.is-draw{color:var(--gold)}
     .player-pagella-meta{display:flex;align-items:center;gap:6px;margin-top:4px;color:var(--muted);font-size:11px;font-weight:800;overflow:hidden;white-space:nowrap;min-width:0}
     .player-pagella-meta-label{display:inline-block;min-width:0;overflow:hidden;text-overflow:ellipsis;vertical-align:middle}
     .player-pagella-score-badge{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;min-width:46px;padding:2px 7px;border-radius:999px;border:1px solid var(--line);background:rgba(102,112,133,.12);color:var(--muted);font-size:10.5px;font-weight:900;font-variant-numeric:tabular-nums;line-height:1.25;box-shadow:0 4px 10px var(--shadow)}
@@ -520,7 +528,7 @@
     .player-pagella-preview-text{font-size:13.5px;line-height:1.5;font-style:italic;margin:0 0 10px;color:#172033;position:relative;z-index:1}
     .player-pagella-preview-paragone{display:flex;gap:7px;color:#5f6b7a;font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.02em;line-height:1.35;position:relative;z-index:1}
     .player-pagelle-note{margin-top:9px;color:var(--muted);font-size:11.5px;line-height:1.35}
-    @media(max-width:720px){.player-pagelle-summary{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.player-pagelle-list{max-height:none;overflow:visible;padding-right:0}.player-pagella-row{grid-template-columns:minmax(0,1fr) 40px;gap:8px;padding:10px 9px}.player-pagella-row .player-pagella-day,.player-pagella-row .player-pagella-meta{display:none}.player-pagella-main{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.player-pagella-mobile-day{display:inline}.player-pagella-match{display:inline;font-size:12.8px;line-height:1.25;white-space:inherit;overflow:visible;text-overflow:clip}.player-pagella-vote{width:38px;height:38px;font-size:14px}.player-pagella-preview{border-radius:17px;padding:14px 13px}.player-pagella-preview-title b{font-size:16px;white-space:normal}.player-pagella-preview-meta{gap:6px}.player-pagella-preview-meta-text{white-space:normal}.player-pagella-preview .player-pagella-score-badge{min-width:44px;padding:3px 8px;font-size:10.5px}.player-pagella-preview-text{font-size:13px}}
+    @media(max-width:720px){.player-pagelle-summary{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.player-pagelle-list{max-height:none;overflow:visible;padding-right:0}.player-pagella-row{grid-template-columns:minmax(0,1fr) 40px;gap:8px;padding:10px 9px}.player-pagella-row .player-pagella-day,.player-pagella-row .player-pagella-meta{display:none}.player-pagella-main{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.player-pagella-mobile-day{display:inline-flex}.player-pagella-match{display:inline;font-size:12.8px;line-height:1.25;white-space:inherit;overflow:visible;text-overflow:clip}.player-pagella-vote{width:38px;height:38px;font-size:14px}.player-pagella-preview{border-radius:17px;padding:14px 13px}.player-pagella-preview-title b{font-size:16px;white-space:normal}.player-pagella-preview-meta{gap:6px}.player-pagella-preview-meta-text{white-space:normal}.player-pagella-preview .player-pagella-score-badge{min-width:44px;padding:3px 8px;font-size:10.5px}.player-pagella-preview-text{font-size:13px}}
     body.player-modal-open{overflow:hidden}
 
     /* ── Partite ── */
@@ -5237,9 +5245,10 @@ function profilePagelleSection(items){
   const preview=document.createElement('div'); preview.className='player-pagella-preview'; preview.hidden=true;
   items.forEach((item,idx)=>{
     const btn=document.createElement('button'); btn.type='button'; btn.className='player-pagella-row'; btn.dataset.index=String(idx); btn.setAttribute('aria-expanded','false');
-    const day=document.createElement('span'); day.className='player-pagella-day'; day.textContent=item.giornataNum?('G'+item.giornataNum):profileShortGiornataLabel(item.giornataLabel);
+    const outcome=playerPagellaOutcome(item);
+    const day=document.createElement('span'); day.className='player-pagella-day'+(outcome?' is-'+outcome:''); day.textContent=item.giornataNum?('G'+item.giornataNum):profileShortGiornataLabel(item.giornataLabel);
     const main=document.createElement('span'); main.className='player-pagella-main';
-    const mobileDay=document.createElement('span'); mobileDay.className='player-pagella-mobile-day'; mobileDay.textContent=(item.giornataNum?('G'+item.giornataNum):profileShortGiornataLabel(item.giornataLabel))+' -';
+    const mobileDay=document.createElement('span'); mobileDay.className='player-pagella-mobile-day'+(outcome?' is-'+outcome:''); mobileDay.textContent=item.giornataNum?('G'+item.giornataNum):profileShortGiornataLabel(item.giornataLabel);
     const match=document.createElement('span'); match.className='player-pagella-match'; match.textContent=fixItalianAccents(item.matchLabel||item.team||'Pagella');
     const meta=document.createElement('span'); meta.className='player-pagella-meta';
     appendPlayerPagellaInlineMeta(meta,item,{team:true});
