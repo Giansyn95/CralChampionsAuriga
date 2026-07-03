@@ -1023,6 +1023,7 @@
     .pg-selector{display:flex;justify-content:flex-end;margin-bottom:16px}
     .pg-selector select{padding:10px 14px;border-radius:999px;border:1px solid var(--line);background:var(--panel);
       color:var(--ink);font-weight:800;font-family:'Oswald',Arial,sans-serif;letter-spacing:.02em;cursor:pointer}
+    .pg-match-wrap{margin:0 0 18px}
     .pg-empty{text-align:center;padding:40px 20px;color:var(--muted)}
     .pg-empty-icon{font-size:38px;margin-bottom:8px}
     .pg-team{margin-bottom:28px}
@@ -1141,6 +1142,12 @@ const DEFAULT_FILES    = [
   'riepilogo_giornate.csv'
 ];
 const FANTA_CACHE_FILE   = 'fantacalcio/fantacalcio_cache.json';
+/* Cartella dedicata ai pagelloni, dentro alla data/ di QUESTO torneo (relativa alla pagina,
+   non un percorso assoluto): tornei/NOME-TORNEO/data/pagelloni/pagellone_giornata_N.txt.
+   Essendo relativa, funziona automaticamente per qualsiasi torneo con questa stessa
+   struttura (tornei/<qualsiasi-nome>/index.html + .../data/pagelloni/...), senza dover
+   scrivere il nome del torneo da nessuna parte nel codice. */
+const PAGELLONE_SUBFOLDER = 'data/pagelloni/';
 const PORTIERI_SNAPSHOT_FILE = 'portieri_snapshot.json';
 const FANTA_CACHE_SCHEMA = 1;
 const TABS = [
@@ -7027,6 +7034,11 @@ function pagelloneGiornataNumber(f){
   const m=String(f||'').match(/giornata[_\s-]*([0-9]+)/i);
   return m?parseInt(m[1],10):null;
 }
+/* Collassa solo gli spazi/a-capo multipli, senza toccare "&" o il maiuscolo/minuscolo:
+   a differenza di smartSpace() (pensata per nomi di file/colonne), qui i nomi sono testo
+   libero scritto dall'utente e vanno lasciati esattamente come li ha scritti
+   (es. "BlackJack" o "Bot&Ball" non devono diventare "Black Jack" / "Bot & Ball"). */
+function collapseSpace(s){ return String(s||'').replace(/\s+/g,' ').trim(); }
 function parsePagellone(text){
   const t=String(text||'').replace(/\r\n?/g,'\n');
   const squadre=[];
@@ -7035,7 +7047,7 @@ function parsePagellone(text){
   for(const block of teamBlocks){
     const teamMatch=block.match(/^\s*SQUADRA\s*:\s*(.+)$/im);
     if(!teamMatch) continue;
-    const squadra=smartSpace(teamMatch[1].trim());
+    const squadra=collapseSpace(teamMatch[1].trim());
     const giocatori=[];
     // Dentro al blocco squadra, ogni giocatore inizia con "GIOCATORE:".
     const playerChunks=block.split(/\n(?=\s*GIOCATORE\s*:)/i).slice(1);
@@ -7046,9 +7058,9 @@ function parsePagellone(text){
       const paragoneM=chunk.match(/PARAGONE\s*:\s*([\s\S]*?)(?=\n\s*[A-ZÀ-Ù]+\s*:|$)/i);
       const votoM=chunk.match(/VOTO\s*:\s*([0-9]+(?:[.,][0-9]+)?)/i);
       giocatori.push({
-        nome: smartSpace(nomeM[1].trim()),
-        testo: smartSpace((testoM?testoM[1]:'').trim()),
-        paragone: smartSpace((paragoneM?paragoneM[1]:'').trim()),
+        nome: collapseSpace(nomeM[1].trim()),
+        testo: collapseSpace((testoM?testoM[1]:'').trim()),
+        paragone: collapseSpace((paragoneM?paragoneM[1]:'').trim()),
         voto: votoM?parseFloat(votoM[1].replace(',','.')):null
       });
     }
@@ -7089,6 +7101,59 @@ function referenceGiornataForPagellone(){
 }
 function pagelloneEmptyMessage(giornata){
   return giornata ? `Nessuna valutazione caricata per la giornata ${giornata}.` : 'Nessuna valutazione caricata.';
+}
+/* Recupera il risultato della partita tra due squadre di una giornata, cercando nei CSV
+   di risultati/calendario già caricati (stessa convenzione di colonne usata altrove
+   nell'app). Se non trova nulla (nomi diversi, file non caricati, partita non ancora
+   giocata) restituisce null e la card mostrerà comunque le due squadre con "-". */
+function matchInfoForPagelloneTeams(teamA,teamB,giornataNum){
+  const a=norm(teamA), b=norm(teamB);
+  if(!a||!b) return null;
+  for(const kind of ['risultati','calendario']){
+    for(const f of sectionFiles(kind)){
+      for(const r of rowsToObjects(state.rows[f])){
+        const gText=firstPresent(r,[['giornata','turno','round']]);
+        const gn=giornataNumberFromText(gText);
+        if(giornataNum && gn && parseInt(gn,10)!==giornataNum) continue;
+        const home=col(r,['squadra casa','casa','home','squadra 1'])||Object.values(r)[0]||'';
+        const away=col(r,['squadra trasferta','trasferta','ospite','away','squadra 2'])||Object.values(r)[1]||'';
+        const nh=norm(home), na=norm(away);
+        if(!((nh===a&&na===b)||(nh===b&&na===a))) continue;
+        const score=col(r,['risultato','score'])||[col(r,['goal casa','reti casa']),col(r,['goal trasferta','reti trasferta'])].filter(x=>x!==''&&x!=null).join(' - ');
+        const data=col(r,['data','giorno','date']);
+        return {home,away,score:score||'',data:data||''};
+      }
+    }
+  }
+  return null;
+}
+/* Card riassuntiva della partita (loghi + "vs" + risultato), da inserire prima dei due
+   pagelloni della coppia di squadre — stesso stile visivo già usato in Riepilogo giornate,
+   così non introduce un nuovo linguaggio grafico. */
+function buildPagelloneMatchCard(teamA,teamB,giornataNum){
+  const info=matchInfoForPagelloneTeams(teamA,teamB,giornataNum);
+  const home=(info&&info.home)||teamA, away=(info&&info.away)||teamB;
+  const m=document.createElement('div'); m.className='match riepilogo-match';
+  const left=document.createElement('div'); left.style.cssText='min-width:0;flex:1';
+  const teamsWrap=document.createElement('div'); teamsWrap.className='match-teams';
+  const homeTeam=document.createElement('div'); homeTeam.className='match-team';
+  homeTeam.appendChild(imgOrInitialEl('team',home,'mini-logo'));
+  const homeName=document.createElement('span'); homeName.className='match-name'; homeName.textContent=home;
+  homeTeam.appendChild(homeName);
+  const vs=document.createElement('span'); vs.className='match-vs'; vs.textContent='vs';
+  const awayTeam=document.createElement('div'); awayTeam.className='match-team';
+  awayTeam.appendChild(imgOrInitialEl('team',away,'mini-logo'));
+  const awayName=document.createElement('span'); awayName.className='match-name'; awayName.textContent=away;
+  awayTeam.appendChild(awayName);
+  teamsWrap.appendChild(homeTeam); teamsWrap.appendChild(vs); teamsWrap.appendChild(awayTeam);
+  left.appendChild(teamsWrap);
+  if(info&&info.data){ const meta=document.createElement('div'); meta.className='small'; meta.textContent=info.data; left.appendChild(meta); }
+  m.appendChild(left);
+  const sc=document.createElement('div'); sc.className='score'; sc.textContent=(info&&info.score)?info.score:'-';
+  m.appendChild(sc);
+  const wrap=document.createElement('div'); wrap.className='tableWrap riepilogo-matches pg-match-wrap';
+  wrap.appendChild(m);
+  return wrap;
 }
 function renderPagellone(){
   const el=document.getElementById('pagellone');
@@ -7131,7 +7196,9 @@ function renderPagellone(){
     const msg=pagelloneEmptyMessage(num||referenceGiornataForPagellone());
     html += `<div class="card pg-empty"><h3>${esc(msg)}</h3><p>Il file di questa giornata non è nel formato atteso (SQUADRA / GIOCATORE / TESTO / PARAGONE / VOTO).</p></div>`;
   }else{
-    squadre.forEach(sq=>{
+    squadre.forEach((sq,i)=>{
+      // Ogni 2 squadre = 1 partita: prima della coppia inserisco lo slot per il risultato.
+      if(i%2===0) html += `<div class="pg-match-slot" data-pair-index="${i}"></div>`;
       html += `<div class="pg-team">
         <div class="pg-team-head"><div class="pg-team-logo"></div><h3 class="pg-team-name">${esc(sq.squadra)}</h3></div>
         <div class="pg-grid">`;
@@ -7154,6 +7221,15 @@ function renderPagellone(){
   }
 
   el.innerHTML=html;
+
+  // Riempie gli slot delle partite con la card risultato (o li rimuove se la squadra
+  // è rimasta senza un'avversaria in questo file, es. pagellone caricato di una sola squadra).
+  el.querySelectorAll('.pg-match-slot').forEach(slot=>{
+    const i=parseInt(slot.dataset.pairIndex,10);
+    const teamA=squadre[i], teamB=squadre[i+1];
+    if(teamA && teamB) slot.replaceWith(buildPagelloneMatchCard(teamA.squadra,teamB.squadra,num));
+    else slot.remove();
+  });
 
   // Aggancia le foto reali sui placeholder, nello stesso ordine in cui sono stati generati.
   const teamLogoSlots=el.querySelectorAll('.pg-team-logo');
@@ -9377,6 +9453,16 @@ async function fetchText(path,fresh){
   if(!r2.ok) throw new Error(path);
   return await r2.text();
 }
+/* I pagelloni vivono in una sottocartella dedicata (vedi PAGELLONE_SUBFOLDER), relativa alla
+   pagina corrente: funziona identica per ogni torneo/edizione che replica questa struttura
+   (tornei/<nome-torneo>/index.html + .../data/pagelloni/...), senza bisogno di configurare
+   nulla per-torneo. Se non risponde, si ricade sul comportamento standard di fetchText
+   (utile se in un torneo i pagelloni sono rimasti dentro alla data/ senza sottocartella). */
+async function fetchPagelloneText(filename,fresh){
+  const bust=fresh?('?t='+Date.now()):'';
+  try{ const r=await fetch(PAGELLONE_SUBFOLDER+filename+bust); if(r.ok) return await r.text(); }catch(e){}
+  return fetchText(filename,fresh);
+}
 
 
 function normalizeFantaCsvPath(path){
@@ -9592,7 +9678,7 @@ async function loadAuto(fresh){
      Nessun errore mostrato se mancano: la giornata può non avere ancora il pagellone. */
   const txtList=[...new Set(list.filter(x=>/\.txt$/i.test(x) && fileKind(x)==='pagellone' && !state.files[x]))];
   if(txtList.length){
-    const txtResults=await Promise.all(txtList.map(f=>fetchText(f,fresh)
+    const txtResults=await Promise.all(txtList.map(f=>fetchPagelloneText(f,fresh)
       .then(txt=>({status:'fulfilled',f,txt}))
       .catch(reason=>({status:'rejected',f,reason}))));
     txtResults.forEach(res=>{ if(res.status==='fulfilled') state.files[res.f]=res.txt; });
