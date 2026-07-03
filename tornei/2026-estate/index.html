@@ -480,6 +480,31 @@
     .player-profile-entry .value{font-size:18px;color:var(--blue);font-weight:900;font-variant-numeric:tabular-nums;white-space:nowrap}
     .player-profile-empty{border:1px dashed var(--line);border-radius:15px;padding:12px;color:var(--muted);font-size:13px;background:var(--soft)}
     .player-profile-note{margin-top:10px;color:var(--muted);font-size:12px;line-height:1.45}
+    .player-profile-pagelle{grid-column:1/-1;overflow:hidden}
+    .player-pagelle-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:8px 0 12px}
+    .player-pagelle-kpi{border:1px solid var(--line);border-radius:15px;background:var(--soft);padding:9px 10px;min-width:0}
+    .player-pagelle-kpi b{display:block;color:var(--blue);font-size:20px;font-weight:900;line-height:1;font-variant-numeric:tabular-nums;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .player-pagelle-kpi span{display:block;margin-top:5px;color:var(--muted);font-size:9.5px;font-weight:900;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .player-pagelle-list{display:flex;flex-direction:column;gap:8px;max-height:320px;overflow:auto;overscroll-behavior:contain;padding-right:3px;contain:content}
+    .player-pagella-row{width:100%;display:grid;grid-template-columns:54px minmax(0,1fr) auto;gap:10px;align-items:center;border:1px solid var(--line);border-radius:16px;background:var(--soft);color:var(--ink);padding:10px 11px;text-align:left;cursor:pointer;font-family:inherit;transition:background .12s ease,transform .12s ease,border-color .12s ease}
+    .player-pagella-row:hover,.player-pagella-row.is-active{background:rgba(15,90,168,.10);border-color:rgba(15,90,168,.28);transform:translateY(-1px)}
+    .player-pagella-day{display:inline-flex;align-items:center;justify-content:center;border-radius:999px;background:var(--blue);color:#fff;font-size:12px;font-weight:900;padding:5px 8px;font-variant-numeric:tabular-nums;white-space:nowrap}
+    .player-pagella-main{min-width:0}
+    .player-pagella-match{font-size:13px;font-weight:900;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .player-pagella-meta{margin-top:3px;color:var(--muted);font-size:11px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .player-pagella-vote{width:42px;height:42px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-family:'Oswald',Arial,sans-serif;font-size:15px;font-weight:900;border:2px solid currentColor;box-shadow:inset 0 0 0 3px var(--soft),0 6px 14px var(--shadow);font-variant-numeric:tabular-nums;background:var(--panel)}
+    .player-pagella-preview{margin-top:12px;border-radius:20px;border:1px solid rgba(121,91,61,.22);background:linear-gradient(rgba(255,255,255,.58) 0 1px,transparent 1px 30px),linear-gradient(120deg,#fff8e8,#fff1d8);color:#172033;padding:15px 15px 14px;box-shadow:0 14px 30px rgba(7,29,58,.16);position:relative;overflow:hidden}
+    .player-pagella-preview[hidden]{display:none}
+    .player-pagella-preview::before{content:'';position:absolute;top:-9px;left:50%;width:96px;height:24px;transform:translateX(-50%) rotate(-2deg);border-radius:3px;background:rgba(255,226,133,.72);box-shadow:0 4px 10px rgba(0,0,0,.12)}
+    .player-pagella-preview-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px;position:relative;z-index:1}
+    .player-pagella-preview-title{min-width:0}
+    .player-pagella-preview-title b{display:block;font-family:'Oswald',Arial,sans-serif;font-size:18px;color:#172033;line-height:1.12;text-transform:uppercase;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .player-pagella-preview-title span{display:block;margin-top:4px;color:#5f6b7a;font-size:12px;font-weight:800;line-height:1.3}
+    .player-pagella-preview .pg-voto{width:48px;height:48px;background:#fff8e8;box-shadow:inset 0 0 0 3px #fff8e8,inset 0 0 0 4px currentColor,0 5px 12px rgba(7,29,58,.16)}
+    .player-pagella-preview-text{font-size:13.5px;line-height:1.5;font-style:italic;margin:0 0 10px;color:#172033;position:relative;z-index:1}
+    .player-pagella-preview-paragone{display:flex;gap:7px;color:#5f6b7a;font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.02em;line-height:1.35;position:relative;z-index:1}
+    .player-pagelle-note{margin-top:9px;color:var(--muted);font-size:11.5px;line-height:1.35}
+    @media(max-width:720px){.player-pagelle-summary{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.player-pagelle-list{max-height:none;overflow:visible;padding-right:0}.player-pagella-row{grid-template-columns:46px minmax(0,1fr) 40px;gap:8px;padding:9px}.player-pagella-day{font-size:11px;padding:5px 7px}.player-pagella-match{font-size:12.5px}.player-pagella-meta{font-size:10.5px}.player-pagella-vote{width:38px;height:38px;font-size:14px}.player-pagella-preview{border-radius:17px;padding:14px 13px}.player-pagella-preview-title b{font-size:16px;white-space:normal}.player-pagella-preview-text{font-size:13px}}
     body.player-modal-open{overflow:hidden}
 
     /* ── Partite ── */
@@ -3817,6 +3842,7 @@ const _playerTeamMapCache = { value:null };
 const _playerRoleMapCache = { value:null };
 const _parsedRiepilogoCache = new Map();
 const _pagelloneRosterPlayerCache = new Map();
+let _pagellonePlayerIndexCache = null;
 let _riepilogoPreloadToken = 0;
 const _profileDataCache = new Map();
 let _fantaCurrentDataCache = null;
@@ -3829,6 +3855,7 @@ function clearDerivedDataCaches(){
   _playerRoleMapCache.value = null;
   _parsedRiepilogoCache.clear();
   _pagelloneRosterPlayerCache.clear();
+  _pagellonePlayerIndexCache = null;
   _riepilogoPreloadToken++;
   _profileDataCache.clear();
   _teamRankMapCache = null;
@@ -3852,6 +3879,7 @@ function warmPlayerProfileCaches(){
       playerTeamMap();
       playerRoleMap();
       sectionFiles('riepilogo').forEach(f=>parseRiepilogoFile(f));
+      if(sectionTextFiles('pagellone').length) pagellonePlayerIndex();
     }catch(e){ /* cache warm-up non critica */ }
   };
   if('requestIdleCallback' in window) requestIdleCallback(run,{timeout:1400});
@@ -5002,6 +5030,169 @@ function profileTimelineSection(title,icon,entries,unit,emptyText){
   section.appendChild(list);
   return section;
 }
+
+function formatProfileVoteAverage(value){
+  const n=Number(value||0);
+  if(!Number.isFinite(n)) return '0';
+  const rounded=Math.round(n*100)/100;
+  const decimals=Number.isInteger(rounded) ? 0 : (Math.abs(rounded*10-Math.round(rounded*10))<0.001 ? 1 : 2);
+  return rounded.toFixed(decimals).replace('.',',');
+}
+function pagellonePlayerIndexAdd(map,key,item){
+  if(!key) return;
+  if(!map.has(key)) map.set(key,[]);
+  map.get(key).push(item);
+}
+function pagellonePlayerIdentityKey(found,nome,squadra){
+  const team=(found&&found.squadra)||squadra||'';
+  let rec=null;
+  if(found&&found.row) rec=uniqueRosterRecordForPersonToken(playerFullName(found.row)||found.nome||nome,team);
+  if(!rec && found&&found.nome) rec=uniqueRosterRecordForPersonToken(found.nome,team);
+  if(!rec) rec=uniqueRosterRecordForPersonToken(nome,team);
+  return rec ? rec.identityKey : '';
+}
+function pagellonePlayerIndex(){
+  if(_pagellonePlayerIndexCache) return _pagellonePlayerIndexCache;
+  const index={items:[],byIdentity:new Map(),byLoose:new Map()};
+  const seen=new Set();
+  const options=pagelloneGiornateOptions();
+  const entries=pagelloneBuildEntries(options);
+  entries.forEach(entry=>{
+    (entry.pairs||[]).forEach(pair=>{
+      pagelloneTeamsToRenderForPair(pair).forEach(sq=>{
+        (sq.giocatori||[]).forEach((g,playerIndex)=>{
+          const found=pagelloneMatchRosterPlayer(g.nome,sq.squadra);
+          const team=(found&&found.squadra)||sq.squadra||'';
+          const playerName=(found&&found.nome)||g.nome||'';
+          const imageNames=(found&&found.imageNames&&found.imageNames.length)?found.imageNames:[playerName,g.nome].filter(Boolean);
+          const identityKey=pagellonePlayerIdentityKey(found,g.nome,team);
+          const info=pair.matchInfo||{};
+          const home=info.home || pair.teamA?.squadra || '';
+          const away=info.away || pair.teamB?.squadra || '';
+          const matchLabel=(home&&away) ? (home+' vs '+away) : teamDisplayNameForChart(team||sq.squadra||'');
+          const uniqueKey=[entry.key,pair.key||'',pagelloneTeamKey(team||sq.squadra),identityKey||personMatchKey(playerName)||personMatchKey(g.nome),playerIndex].join('|');
+          if(seen.has(uniqueKey)) return;
+          seen.add(uniqueKey);
+          const item={
+            giornataKey:String(entry.key||''),
+            giornataLabel:entry.label||('Giornata '+(entry.num||'')),
+            giornataNum:parseInt(entry.num||giornataNumberFromText(entry.label)||0,10)||0,
+            team:team||sq.squadra||'',
+            squadraPagellone:sq.squadra||'',
+            playerName:playerName||g.nome||'',
+            nomeOriginale:g.nome||'',
+            role:(found&&found.ruolo)||'',
+            imageNames,
+            identityKey,
+            matchLabel,
+            score:info.score||'',
+            data:info.data||'',
+            voto:g.voto,
+            votoLabel:g.votoLabel,
+            testo:g.testo||'',
+            paragone:g.paragone||''
+          };
+          index.items.push(item);
+          if(identityKey) pagellonePlayerIndexAdd(index.byIdentity,identityKey,item);
+          const teamKey=pagelloneTeamKey(team||sq.squadra||'');
+          [item.playerName,item.nomeOriginale,...imageNames].filter(Boolean).forEach(alias=>{
+            const pk=personMatchKey(alias);
+            if(pk) pagellonePlayerIndexAdd(index.byLoose,teamKey+'|'+pk,item);
+          });
+        });
+      });
+    });
+  });
+  index.items.sort((a,b)=>(b.giornataNum-a.giornataNum)||String(b.giornataLabel).localeCompare(String(a.giornataLabel),'it',{numeric:true}));
+  _pagellonePlayerIndexCache=index;
+  return index;
+}
+function playerPagelleForProfile(data){
+  const index=pagellonePlayerIndex();
+  const out=new Map();
+  const add=item=>{ if(!item) return; const k=[item.giornataKey,item.team,item.playerName,item.matchLabel,item.votoLabel,item.testo].map(x=>String(x||'')).join('|'); if(!out.has(k)) out.set(k,item); };
+  const tokens=[data.fullName,data.name,...(data.candidates||[]),...(data.imageNames||[])].filter(Boolean);
+  const identityKeys=identityKeysForPlayerTokens(tokens,data.team);
+  if(data.record&&data.record.row){
+    const rec=uniqueRosterRecordForPersonToken(playerFullName(data.record.row)||data.fullName||data.name,data.team);
+    if(rec) identityKeys.add(rec.identityKey);
+  }
+  identityKeys.forEach(key=>(index.byIdentity.get(key)||[]).forEach(add));
+  const teamKey=pagelloneTeamKey(data.team||'');
+  tokens.forEach(token=>{
+    const pk=personMatchKey(token);
+    if(pk) (index.byLoose.get(teamKey+'|'+pk)||[]).forEach(add);
+  });
+  if(!out.size){
+    index.items.forEach(item=>{
+      if(data.team && item.team && !pagelloneTeamsSame(item.team,data.team)) return;
+      if(tokens.some(token=>personTokensReferToSamePlayer(item.playerName,token,item.team,data.team) || personTokensReferToSamePlayer(item.nomeOriginale,token,item.team,data.team))) add(item);
+    });
+  }
+  return [...out.values()].sort((a,b)=>(b.giornataNum-a.giornataNum)||String(b.giornataLabel).localeCompare(String(a.giornataLabel),'it',{numeric:true}));
+}
+function profilePagellaPreview(preview,item){
+  preview.innerHTML='';
+  preview.hidden=false;
+  const head=document.createElement('div'); head.className='player-pagella-preview-head';
+  const title=document.createElement('div'); title.className='player-pagella-preview-title';
+  const b=document.createElement('b'); const rk=roleKind(item.role); b.textContent=(rk?roleEmojiForKind(rk)+' ':'')+(item.playerName||item.nomeOriginale||'Giocatore');
+  const meta=document.createElement('span');
+  const g=item.giornataNum ? ('Giornata '+item.giornataNum) : fixItalianAccents(item.giornataLabel||'Giornata');
+  meta.textContent=[g,item.matchLabel,item.score].filter(Boolean).join(' · ');
+  title.appendChild(b); title.appendChild(meta);
+  const vote=document.createElement('div'); vote.className='pg-voto '+votoGradeClass(item.voto); vote.textContent=votoDisplay(item.voto,item.votoLabel);
+  head.appendChild(title); head.appendChild(vote); preview.appendChild(head);
+  const text=document.createElement('p'); text.className='player-pagella-preview-text'; text.textContent=item.testo||'Nessun commento.'; preview.appendChild(text);
+  const par=document.createElement('div'); par.className='player-pagella-preview-paragone';
+  const icon=document.createElement('span'); icon.textContent='\ud83c\udfad';
+  const content=document.createElement('span'); content.textContent=item.paragone||'Nessun paragone indicato.';
+  par.appendChild(icon); par.appendChild(content); preview.appendChild(par);
+}
+function profilePagelleSection(items){
+  const section=document.createElement('div'); section.className='player-profile-section player-profile-pagelle';
+  const h=document.createElement('h3'); h.textContent='\ud83d\udce3 Pagelle ricevute'; section.appendChild(h);
+  if(!items||!items.length){
+    const empty=document.createElement('div'); empty.className='player-profile-empty'; empty.textContent='Nessuna pagella caricata per questo giocatore.'; section.appendChild(empty); return section;
+  }
+  const numeric=items.map(i=>Number(i.voto)).filter(Number.isFinite);
+  const avg=numeric.length ? numeric.reduce((s,v)=>s+v,0)/numeric.length : 0;
+  const best=[...items].filter(i=>Number.isFinite(Number(i.voto))).sort((a,b)=>Number(b.voto)-Number(a.voto)||b.giornataNum-a.giornataNum)[0] || items[0];
+  const latest=items[0];
+  const summary=document.createElement('div'); summary.className='player-pagelle-summary';
+  const addKpi=(value,label)=>{ const box=document.createElement('div'); box.className='player-pagelle-kpi'; const b=document.createElement('b'); b.textContent=value; const s=document.createElement('span'); s.textContent=label; box.appendChild(b); box.appendChild(s); summary.appendChild(box); };
+  addKpi(String(items.length),'Pagelle');
+  addKpi(numeric.length?formatProfileVoteAverage(avg):'—','Media voto');
+  addKpi(best?votoDisplay(best.voto,best.votoLabel):'—','Miglior voto');
+  addKpi(latest?votoDisplay(latest.voto,latest.votoLabel):'—','Ultimo voto');
+  section.appendChild(summary);
+  const list=document.createElement('div'); list.className='player-pagelle-list';
+  const preview=document.createElement('div'); preview.className='player-pagella-preview'; preview.hidden=true;
+  items.forEach((item,idx)=>{
+    const btn=document.createElement('button'); btn.type='button'; btn.className='player-pagella-row'; btn.dataset.index=String(idx);
+    const day=document.createElement('span'); day.className='player-pagella-day'; day.textContent=item.giornataNum?('G'+item.giornataNum):profileShortGiornataLabel(item.giornataLabel);
+    const main=document.createElement('span'); main.className='player-pagella-main';
+    const match=document.createElement('span'); match.className='player-pagella-match'; match.textContent=fixItalianAccents(item.matchLabel||item.team||'Pagella');
+    const meta=document.createElement('span'); meta.className='player-pagella-meta'; meta.textContent=[item.score,item.team].filter(Boolean).join(' · ') || 'Clicca per leggere';
+    main.appendChild(match); main.appendChild(meta);
+    const vote=document.createElement('span'); vote.className='player-pagella-vote '+votoGradeClass(item.voto); vote.textContent=votoDisplay(item.voto,item.votoLabel);
+    btn.appendChild(day); btn.appendChild(main); btn.appendChild(vote); list.appendChild(btn);
+  });
+  list.addEventListener('click',ev=>{
+    const btn=ev.target.closest('.player-pagella-row');
+    if(!btn) return;
+    const idx=parseInt(btn.dataset.index||'-1',10);
+    const item=items[idx];
+    if(!item) return;
+    list.querySelectorAll('.player-pagella-row.is-active').forEach(x=>x.classList.remove('is-active'));
+    btn.classList.add('is-active');
+    profilePagellaPreview(preview,item);
+  });
+  section.appendChild(list); section.appendChild(preview);
+  const note=document.createElement('div'); note.className='player-pagelle-note'; note.textContent='Lista ordinata dalla pagella pi\u00f9 recente alla pi\u00f9 vecchia. Il voto mantiene + e - in visualizzazione, ma la media usa il valore numerico equivalente.';
+  section.appendChild(note);
+  return section;
+}
 function closePlayerProfile(){
   const old=document.getElementById('playerProfileBackdrop');
   if(old) old.remove();
@@ -5011,6 +5202,7 @@ function closePlayerProfile(){
 function playerProfileEscHandler(ev){ if(ev.key==='Escape' && !document.getElementById('compareBackdrop')) closePlayerProfile(); }
 function openPlayerProfile(name,contextRow){
   const data=buildPlayerProfileData(name,contextRow);
+  const pagelle=playerPagelleForProfile(data);
   closePlayerProfile();
   const backdrop=document.createElement('div');
   backdrop.id='playerProfileBackdrop';
@@ -5054,6 +5246,7 @@ function openPlayerProfile(name,contextRow){
   if(!data.isKeeper){
     panels.appendChild(profileTimelineSection('MVP DELLA GIORNATA','⭐',data.mvp.entries,{detail:'',valueSuffix:'pt'},'Nessun MVP registrato nelle giornate.'));
   }
+  if(pagelle.length) panels.appendChild(profilePagelleSection(pagelle));
   if(panels.children.length) body.appendChild(panels);
 
   const compareRow=document.createElement('div'); compareRow.className='compare-trigger-row';
