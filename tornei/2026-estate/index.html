@@ -1020,10 +1020,23 @@
     .pg-banner-text{font-family:'Oswald',Arial,Helvetica,sans-serif;color:#fff;font-size:14px;font-weight:700;
       letter-spacing:.08em;text-transform:uppercase;line-height:1.5}
     .pg-banner-text b{display:block;font-size:clamp(20px,4vw,30px);letter-spacing:.03em;color:var(--gold)}
-    .pg-selector{display:flex;justify-content:flex-end;margin-bottom:16px}
+    .pg-selector{display:flex;justify-content:flex-end;margin-bottom:0}
+    .pg-selectors{display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap;margin-bottom:16px}
     .pg-selector select{padding:10px 14px;border-radius:999px;border:1px solid var(--line);background:var(--panel);
-      color:var(--ink);font-weight:800;font-family:'Oswald',Arial,sans-serif;letter-spacing:.02em;cursor:pointer}
+      color:var(--ink);font-weight:800;font-family:'Oswald',Arial,sans-serif;letter-spacing:.02em;cursor:pointer;max-width:100%}
+    @media(max-width:560px){ .pg-selectors{justify-content:stretch} .pg-selector{flex:1 1 auto} .pg-selector select{width:100%} }
     .pg-match-wrap{margin:0 0 18px}
+    /* Nomi squadra spesso più lunghi del solito (es. "FC Stealthy Dribblers"): a differenza
+       del riepilogo-match originale, qui non ci si può affidare al solo "display:block" del
+       contenitore — anche .match-teams deve impilarsi, altrimenti i nomi lunghi vengono
+       comunque schiacciati su un'unica riga e troncati con l'ellissi. */
+    .pg-match-wrap .match-team{min-width:0}
+    .pg-match-wrap .match-name{white-space:normal;overflow:visible;text-overflow:clip}
+    @media(max-width:640px){
+      .pg-match-wrap .match-teams{flex-direction:column;align-items:flex-start;gap:8px}
+      .pg-match-wrap .match-vs{margin-left:44px}
+      .pg-match-wrap .match-name{font-size:15px}
+    }
     .pg-empty{text-align:center;padding:40px 20px;color:var(--muted)}
     .pg-empty-icon{font-size:38px;margin-bottom:8px}
     .pg-team{margin-bottom:28px}
@@ -1165,6 +1178,7 @@ let state = {
   selectedRiepilogoGiornata: '',
   riepilogoFilterInitialized: false,
   selectedPagelloneGiornata: '',
+  selectedPagellonePartita: '',
   selectedFantaGiornata: 'totale',
   fantaResultFileKeys: [],
   fantaPrecomputedData: null,
@@ -7056,12 +7070,16 @@ function parsePagellone(text){
       if(!nomeM) continue;
       const testoM=chunk.match(/TESTO\s*:\s*([\s\S]*?)(?=\n\s*[A-ZÀ-Ù]+\s*:|$)/i);
       const paragoneM=chunk.match(/PARAGONE\s*:\s*([\s\S]*?)(?=\n\s*[A-ZÀ-Ù]+\s*:|$)/i);
-      const votoM=chunk.match(/VOTO\s*:\s*([0-9]+(?:[.,][0-9]+)?)/i);
+      // Supporta anche "6+" / "6-" (mezzo voto in più/meno, come sulla Gazzetta): il segno,
+      // se presente, vale ±0.25 così non serve più convertirlo a mano prima di caricare il file.
+      const votoM=chunk.match(/VOTO\s*:\s*([0-9]+(?:[.,][0-9]+)?)\s*([+-])?/i);
+      let voto=votoM?parseFloat(votoM[1].replace(',','.')):null;
+      if(voto!=null && votoM[2]) voto += (votoM[2]==='+' ? 0.25 : -0.25);
       giocatori.push({
         nome: collapseSpace(nomeM[1].trim()),
         testo: collapseSpace((testoM?testoM[1]:'').trim()),
         paragone: collapseSpace((paragoneM?paragoneM[1]:'').trim()),
-        voto: votoM?parseFloat(votoM[1].replace(',','.')):null
+        voto
       });
     }
     if(giocatori.length) squadre.push({squadra,giocatori});
@@ -7079,16 +7097,21 @@ function votoDisplay(v){
   if(v==null||isNaN(v)) return '—';
   return Number.isInteger(v)?String(v):v.toFixed(1).replace('.',',');
 }
-/* Prova ad abbinare il nome del pagellone alla rosa ufficiale per capire se è un portiere
-   (icona guanto) o un giocatore di movimento (icona pallone); se non trova corrispondenza
-   usa comunque il pallone, senza bloccare il rendering. */
-function pagelloneRoleIcon(nome){
+/* Abbina il nome scritto nel pagellone (spesso solo il cognome) al giocatore corrispondente
+   nella rosa ufficiale (stesso elenco usato dal resto dell'app). Restituisce il record intero,
+   così chi lo usa ha sia il ruolo (icona 🧤/⚽) sia il nome canonico "Nome Cognome" da passare
+   a imgOrInitialEl — che è la stringa da cui viene generato il nome-file dell'immagine, quindi
+   passare solo il cognome del pagellone impedirebbe di trovare la foto già presente. */
+function pagelloneMatchRosterPlayer(nome){
   const target=norm(nome);
-  if(!target) return '⚽';
-  const found=allPlayersFromTeams().find(p=>{
+  if(!target) return null;
+  return allPlayersFromTeams().find(p=>{
     const pn=norm(p.nome);
     return pn===target || pn.includes(target) || target.includes(pn);
-  });
+  }) || null;
+}
+function pagelloneRoleIcon(nome){
+  const found=pagelloneMatchRosterPlayer(nome);
   const ruolo=norm(found&&found.ruolo||'');
   return (ruolo.includes('portiere')||ruolo==='p'||ruolo==='gk') ? '🧤' : '⚽';
 }
@@ -7174,11 +7197,32 @@ function renderPagellone(){
   const num=pagelloneGiornataNumber(currentFile);
   const squadre=parsePagellone(state.files[currentFile]||'');
 
+  // Ogni 2 squadre = 1 partita della giornata (stesso ordine in cui compaiono nel file).
+  // pairKey è l'indice della prima squadra della coppia, riusato anche per gli slot-risultato.
+  const pairs=[];
+  for(let i=0;i<squadre.length;i+=2) pairs.push({key:String(i),teamA:squadre[i],teamB:squadre[i+1]});
+  const validPairKeys=pairs.filter(p=>p.teamB).map(p=>p.key);
+  if(state.selectedPagellonePartita && !validPairKeys.includes(state.selectedPagellonePartita)){
+    state.selectedPagellonePartita='';
+  }
+
   // Il filtro va sempre mostrato quando esiste almeno un pagellone caricato (anche uno solo),
   // così l'utente vede su quale giornata si trova e può cambiarla — come per gli altri filtri.
   const selectorHtml = `<div class="pg-selector"><select id="pgGiornataSelect" aria-label="Seleziona giornata">${
     sorted.map(f=>{ const n=pagelloneGiornataNumber(f); return `<option value="${esc(f)}" ${f===currentFile?'selected':''}>${n?n+'ª giornata':esc(prettyFileName(f))}</option>`; }).join('')
   }</select></div>`;
+
+  // Il filtro per partita compare solo se in questa giornata ci sono almeno 2 partite:
+  // con una sola non avrebbe nulla da filtrare.
+  const partitaSelectorHtml = validPairKeys.length>1 ? `<div class="pg-selector"><select id="pgPartitaSelect" aria-label="Seleziona partita">
+    <option value="">Tutte le partite della giornata</option>
+    ${pairs.filter(p=>p.teamB).map(p=>`<option value="${esc(p.key)}" ${state.selectedPagellonePartita===p.key?'selected':''}>${esc(p.teamA.squadra)} vs ${esc(p.teamB.squadra)}</option>`).join('')}
+  </select></div>` : '';
+
+  // Squadre effettivamente da disegnare: tutte, oppure solo quelle della partita scelta.
+  const displaySquadre = state.selectedPagellonePartita
+    ? [pairs.find(p=>p.key===state.selectedPagellonePartita).teamA, pairs.find(p=>p.key===state.selectedPagellonePartita).teamB]
+    : squadre;
 
   let html = `
     <div class="pg-banner">
@@ -7188,7 +7232,7 @@ function renderPagellone(){
         <span class="pg-banner-flag">🟥📣</span>
       </div>
     </div>
-    ${selectorHtml}`;
+    <div class="pg-selectors">${selectorHtml}${partitaSelectorHtml}</div>`;
 
   if(!squadre.length){
     // Qui invece esiste almeno un altro pagellone caricato altrove: manca (o è malformato)
@@ -7196,7 +7240,7 @@ function renderPagellone(){
     const msg=pagelloneEmptyMessage(num||referenceGiornataForPagellone());
     html += `<div class="card pg-empty"><h3>${esc(msg)}</h3><p>Il file di questa giornata non è nel formato atteso (SQUADRA / GIOCATORE / TESTO / PARAGONE / VOTO).</p></div>`;
   }else{
-    squadre.forEach((sq,i)=>{
+    displaySquadre.forEach((sq,i)=>{
       // Ogni 2 squadre = 1 partita: prima della coppia inserisco lo slot per il risultato.
       if(i%2===0) html += `<div class="pg-match-slot" data-pair-index="${i}"></div>`;
       html += `<div class="pg-team">
@@ -7226,20 +7270,30 @@ function renderPagellone(){
   // è rimasta senza un'avversaria in questo file, es. pagellone caricato di una sola squadra).
   el.querySelectorAll('.pg-match-slot').forEach(slot=>{
     const i=parseInt(slot.dataset.pairIndex,10);
-    const teamA=squadre[i], teamB=squadre[i+1];
+    const teamA=displaySquadre[i], teamB=displaySquadre[i+1];
     if(teamA && teamB) slot.replaceWith(buildPagelloneMatchCard(teamA.squadra,teamB.squadra,num));
     else slot.remove();
   });
 
   // Aggancia le foto reali sui placeholder, nello stesso ordine in cui sono stati generati.
   const teamLogoSlots=el.querySelectorAll('.pg-team-logo');
-  squadre.forEach((sq,i)=>{ if(teamLogoSlots[i]) teamLogoSlots[i].appendChild(imgOrInitialEl('team',sq.squadra,'pg-team-logo-img')); });
+  displaySquadre.forEach((sq,i)=>{ if(teamLogoSlots[i]) teamLogoSlots[i].appendChild(imgOrInitialEl('team',sq.squadra,'pg-team-logo-img')); });
   const photoSlots=el.querySelectorAll('.pg-card-photo');
   let k=0;
-  squadre.forEach(sq=>sq.giocatori.forEach(g=>{ if(photoSlots[k]) photoSlots[k].appendChild(imgOrInitialEl('player',g.nome,'pg-avatar')); k++; }));
+  displaySquadre.forEach(sq=>sq.giocatori.forEach(g=>{
+    if(photoSlots[k]){
+      const found=pagelloneMatchRosterPlayer(g.nome);
+      // Passo entrambi i nomi (canonico + quello scritto nel pagellone): imgOrInitialEl
+      // prova tutti gli alias in ordine, così funziona anche se il match di rosa fallisce.
+      photoSlots[k].appendChild(imgOrInitialEl('player', found?[found.nome,g.nome]:g.nome, 'pg-avatar'));
+    }
+    k++;
+  }));
 
   const sel=document.getElementById('pgGiornataSelect');
-  if(sel) sel.onchange=()=>{ state.selectedPagelloneGiornata=sel.value; renderPagellone(); };
+  if(sel) sel.onchange=()=>{ state.selectedPagelloneGiornata=sel.value; state.selectedPagellonePartita=''; renderPagellone(); };
+  const partitaSel=document.getElementById('pgPartitaSelect');
+  if(partitaSel) partitaSel.onchange=()=>{ state.selectedPagellonePartita=partitaSel.value; renderPagellone(); };
 }
 
 function renderRiepilogoGiornate(){
@@ -9624,7 +9678,7 @@ async function loadFantaFilesInBackground(fresh){
 async function loadAuto(fresh){
   setStatus('Caricamento in corso…');
   state.files={}; state.rows={}; loadErrors=[]; state.imagesReady=true;
-  state.selectedRiepilogoGiornata=''; state.riepilogoFilterInitialized=false; state.selectedFantaGiornata='totale'; state.fantaResultFileKeys=[]; state.fantaLoading=true; state.selectedPagelloneGiornata='';
+  state.selectedRiepilogoGiornata=''; state.riepilogoFilterInitialized=false; state.selectedFantaGiornata='totale'; state.fantaResultFileKeys=[]; state.fantaLoading=true; state.selectedPagelloneGiornata=''; state.selectedPagellonePartita='';
   state.fantaPrecomputedData=null; state.fantaPrecomputedAttempted=false; state.fantaPrecomputedLoading=false;
   clearImageProbeCache();
   clearDerivedDataCaches();
@@ -9811,7 +9865,7 @@ function refreshAfterManualLoad(csv,img){
 async function loadFromDirectoryHandle(dir){
   manualLoadActive = true;
   state.files={}; state.rows={}; state.imageURLs={}; state.imageAliases={}; loadErrors=[]; state.imagesReady=false;
-  state.selectedRiepilogoGiornata=''; state.riepilogoFilterInitialized=false; state.selectedFantaGiornata='totale'; state.fantaResultFileKeys=[]; state.selectedPagelloneGiornata='';
+  state.selectedRiepilogoGiornata=''; state.riepilogoFilterInitialized=false; state.selectedFantaGiornata='totale'; state.fantaResultFileKeys=[]; state.selectedPagelloneGiornata=''; state.selectedPagellonePartita='';
   state.fantaPrecomputedData=null; state.fantaPrecomputedAttempted=true; state.fantaPrecomputedLoading=false;
   clearImageProbeCache();
   clearDerivedDataCaches();
@@ -9943,7 +9997,7 @@ async function loadFolder(fileList){
   manualLoadActive = true;
   const files=[...fileList]; // snapshot: l'input viene svuotato subito dopo la selezione
   state.files={}; state.rows={}; state.imageURLs={}; state.imageAliases={}; loadErrors=[]; state.imagesReady=false;
-  state.selectedRiepilogoGiornata=''; state.riepilogoFilterInitialized=false; state.selectedFantaGiornata='totale'; state.fantaResultFileKeys=[]; state.selectedPagelloneGiornata='';
+  state.selectedRiepilogoGiornata=''; state.riepilogoFilterInitialized=false; state.selectedFantaGiornata='totale'; state.fantaResultFileKeys=[]; state.selectedPagelloneGiornata=''; state.selectedPagellonePartita='';
   state.fantaPrecomputedData=null; state.fantaPrecomputedAttempted=true; state.fantaPrecomputedLoading=false;
   clearImageProbeCache();
   clearDerivedDataCaches();
