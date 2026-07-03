@@ -7663,22 +7663,20 @@ function pagellonePairsForTeam(entries,teamKey){
   const map=new Map();
   const addPair=(p)=>{
     if(!p || !pagellonePairBelongsToTeam(p,teamKey)) return;
+    // In modalita Per squadra il filtro Partita deve restare agganciato alle giornate
+    // con pagellone effettivamente caricato. Non aggiungiamo calendario/risultati futuri:
+    // quelli servono in modalita Per giornata, ma qui farebbero comparire partite non ancora valutabili.
     const info=p.matchInfo;
-    const id=info ? pagelloneMatchIdentity(info.giornataNum,info.home,info.away) : (p.key||pagelloneMatchOptionLabel(p,true));
+    const id=info ? pagelloneMatchIdentity(info.giornataNum,p.matchInfo.home,p.matchInfo.away) : (p.key||pagelloneMatchOptionLabel(p,true));
     if(id && !map.has(id)) map.set(id,p);
   };
   (entries||[]).forEach(e=>(e.pairs||[]).forEach(addPair));
-  pagelloneKnownMatches().forEach((m,i)=>addPair({
-    key:pagellonePairKeyForMatch(m.giornataNum,m,i),
-    localKey:String(i),
-    giornataKey:String(m.giornataNum),
-    giornataLabel:'Giornata '+m.giornataNum,
-    giornataNum:m.giornataNum,
-    teamA:pagellonePlaceholderTeam(m.home),
-    teamB:pagellonePlaceholderTeam(m.away),
-    matchInfo:m
-  }));
   return [...map.values()].sort((a,b)=>(parseInt(a.giornataNum||0,10)-parseInt(b.giornataNum||0,10))||pagelloneMatchOptionLabel(a,false).localeCompare(pagelloneMatchOptionLabel(b,false),'it',{numeric:true}));
+}
+function pagelloneEmptyMessageForTeam(teamLabel,pair){
+  const team=String(teamLabel||'Squadra').trim() || 'Squadra';
+  const n=pair ? (pair.giornataNum || giornataNumberFromText(pair.giornataLabel) || giornataNumberFromText(pair.giornataKey)) : '';
+  return n ? `Nessuna valutazione caricata per ${team} relativa alla giornata ${n}.` : `Nessuna valutazione caricata per ${team}.`;
 }
 function pagelloneMatchSlotHtml(pair){
   if(!pair) return '';
@@ -7792,7 +7790,7 @@ function renderPagellone(){
 
     if(!currentFile){
       const msg=files.length ? pagelloneEmptyMessage(num||currentLabel) : pagelloneEmptyMessage();
-      html += `<div class="card pg-empty"><div class="pg-empty-icon">📣</div><h3>${esc(msg)}</h3><p>Stay tuned!</p></div>`;
+      html += `<div class="card pg-empty"><div class="pg-empty-icon">📣</div><h3>${esc(msg)}</h3><p>Il filtro resta disponibile per tutte le giornate e per le partite della giornata, anche quando il file del pagellone non è ancora presente.</p></div>`;
     }else if(!entry || !entry.squadre.length){
       const msg=pagelloneEmptyMessage(num||currentLabel);
       html += `<div class="card pg-empty"><h3>${esc(msg)}</h3><p>Il file di questa giornata non è nel formato atteso (SQUADRA / GIOCATORE / TESTO / PARAGONE / VOTO).</p></div>`;
@@ -7825,7 +7823,8 @@ function renderPagellone(){
       </div>
       <div class="pg-selectors">${selectors}</div>`;
 
-    const selectedPairKeys=state.selectedPagellonePartita ? new Set([String(state.selectedPagellonePartita)]) : null;
+    const selectedPair=state.selectedPagellonePartita ? allPairs.find(p=>String(p.key)===String(state.selectedPagellonePartita)) : null;
+    const selectedPairKeys=selectedPair ? new Set([String(selectedPair.key)]) : null;
     entries.forEach(entry=>{
       (entry.pairs||[]).forEach(pair=>{
         if(selectedPairKeys && !selectedPairKeys.has(String(pair.key))) return;
@@ -7837,7 +7836,8 @@ function renderPagellone(){
       });
     });
     if(!displayTeams.length){
-      html += `<div class="card pg-empty"><div class="pg-empty-icon">📣</div><h3>${esc('Nessuna valutazione caricata per '+teamLabel+'.')}</h3><p>Puoi cambiare squadra o restringere il filtro a una partita specifica.</p></div>`;
+      const emptyMsg=pagelloneEmptyMessageForTeam(teamLabel,selectedPair);
+      html += `<div class="card pg-empty"><div class="pg-empty-icon">📣</div><h3>${esc(emptyMsg)}</h3><p>${selectedPair?'Puoi cambiare partita o squadra.':'Puoi cambiare squadra o restringere il filtro a una partita specifica.'}</p></div>`;
     }
   }
 
