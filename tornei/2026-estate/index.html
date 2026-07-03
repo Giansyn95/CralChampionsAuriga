@@ -1020,11 +1020,14 @@
     .pg-banner-text{font-family:'Oswald',Arial,Helvetica,sans-serif;color:#fff;font-size:14px;font-weight:700;
       letter-spacing:.08em;text-transform:uppercase;line-height:1.5}
     .pg-banner-text b{display:block;font-size:clamp(20px,4vw,30px);letter-spacing:.03em;color:var(--gold)}
-    .pg-selector{display:flex;justify-content:flex-end;margin-bottom:0}
-    .pg-selectors{display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap;margin-bottom:16px}
-    .pg-selector select{padding:10px 14px;border-radius:999px;border:1px solid var(--line);background:var(--panel);
-      color:var(--ink);font-weight:800;font-family:'Oswald',Arial,sans-serif;letter-spacing:.02em;cursor:pointer;max-width:100%}
-    @media(max-width:560px){ .pg-selectors{justify-content:stretch} .pg-selector{flex:1 1 auto} .pg-selector select{width:100%} }
+    .pg-selectors{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;align-items:end;margin-bottom:16px}
+    .pg-selector{display:flex;flex-direction:column;gap:5px;min-width:0}
+    .pg-selector-label{color:var(--muted);font-size:10.5px;font-weight:900;text-transform:uppercase;letter-spacing:.06em}
+    .pg-selector select{width:100%;min-height:42px;padding:10px 14px;border-radius:14px;border:1px solid var(--line);background:var(--panel);
+      color:var(--ink);font-weight:800;font-family:'Oswald',Arial,sans-serif;letter-spacing:.02em;cursor:pointer;max-width:100%;box-shadow:0 6px 16px var(--shadow)}
+    .pg-selector select:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(15,90,168,.14)}
+    @media(max-width:900px){.pg-selectors{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    @media(max-width:560px){ .pg-selectors{grid-template-columns:1fr;gap:8px;margin-bottom:12px}.pg-selector select{min-height:46px;font-size:16px} }
     .pg-match-wrap{margin:0 0 18px}
     /* Nomi squadra spesso più lunghi del solito (es. "FC Stealthy Dribblers"): a differenza
        del riepilogo-match originale, qui non ci si può affidare al solo "display:block" del
@@ -1069,6 +1072,7 @@
 
     /* Bacheca: ogni squadra diventa una porzione di muro su cui sono affisse le pagelle. */
     .pg-team{position:relative;margin-bottom:28px;padding:18px 16px 20px;border-radius:24px;overflow:hidden;
+      content-visibility:auto;contain-intrinsic-size:520px;contain:layout paint;
       border:1px solid rgba(121,91,61,.18);
       background:
         radial-gradient(circle at 15% 18%,var(--pg-wall-spot),transparent 24%),
@@ -1230,7 +1234,9 @@ let state = {
   search: '', activeTab: 'home',
   selectedRiepilogoGiornata: '',
   riepilogoFilterInitialized: false,
+  selectedPagelloneMode: 'giornata',
   selectedPagelloneGiornata: '',
+  selectedPagelloneSquadra: '',
   selectedPagellonePartita: '',
   selectedFantaGiornata: 'totale',
   fantaResultFileKeys: [],
@@ -3792,6 +3798,7 @@ const _identityKeysCache = new Map();
 const _playerTeamMapCache = { value:null };
 const _playerRoleMapCache = { value:null };
 const _parsedRiepilogoCache = new Map();
+const _pagelloneRosterPlayerCache = new Map();
 let _riepilogoPreloadToken = 0;
 const _profileDataCache = new Map();
 let _fantaCurrentDataCache = null;
@@ -3803,6 +3810,7 @@ function clearDerivedDataCaches(){
   _playerTeamMapCache.value = null;
   _playerRoleMapCache.value = null;
   _parsedRiepilogoCache.clear();
+  _pagelloneRosterPlayerCache.clear();
   _riepilogoPreloadToken++;
   _profileDataCache.clear();
   _teamRankMapCache = null;
@@ -7161,27 +7169,83 @@ function votoGradeClass(v){
   return 'pg-vt-top';
 }
 function votoDisplay(v,label){
-  if(label) return String(label);
+  if(label) return String(label).replace('.',',');
   if(v==null||isNaN(v)) return '—';
-  return Number.isInteger(v)?String(v):v.toFixed(1).replace('.',',');
+  const rounded=Math.round(Number(v)*100)/100;
+  const base=Math.floor(rounded);
+  const frac=Math.round((rounded-base)*100);
+  // Nei dati i voti con + / - valgono 0.25 in più o in meno nei calcoli,
+  // ma in UI restano in forma calcistica: 6+ invece di 6,25; 6- invece di 5,75.
+  if(frac===25) return String(base)+'+';
+  if(frac===75) return String(base+1)+'-';
+  if(Number.isInteger(rounded)) return String(rounded);
+  return String(rounded).replace('.',',');
 }
 /* Abbina il nome scritto nel pagellone (spesso solo il cognome) al giocatore corrispondente
    nella rosa ufficiale (stesso elenco usato dal resto dell'app). Restituisce il record intero,
    così chi lo usa ha sia il ruolo (icona 🧤/⚽) sia il nome canonico "Nome Cognome" da passare
    a imgOrInitialEl — che è la stringa da cui viene generato il nome-file dell'immagine, quindi
    passare solo il cognome del pagellone impedirebbe di trovare la foto già presente. */
-function pagelloneMatchRosterPlayer(nome){
-  const target=norm(nome);
+function pagelloneMatchRosterPlayer(nome,squadraHint){
+  const clean=cleanPersonTokenForTeamLookup(nome);
+  const target=personMatchKey(clean);
   if(!target) return null;
-  return allPlayersFromTeams().find(p=>{
-    const pn=norm(p.nome);
-    return pn===target || pn.includes(target) || target.includes(pn);
-  }) || null;
+  const teamLabel=teamDisplayNameForChart(squadraHint||'');
+  const cacheKey=target+'|'+pagelloneTeamKey(teamLabel);
+  if(_pagelloneRosterPlayerCache.has(cacheKey)) return _pagelloneRosterPlayerCache.get(cacheKey);
+
+  const toOut=rec=>{
+    if(!rec) return null;
+    const row=rec.row||{};
+    const fullName=playerFullName(row) || playerDisplayName(row) || clean || nome;
+    return {
+      nome:fullName,
+      squadra:rec.team || teamLabel,
+      ruolo:fieldLoose(row,['ruolo','role','posizione','position']),
+      row,
+      imageNames:playerImageNames(row).filter(Boolean)
+    };
+  };
+
+  // Stessa logica del Riepilogo: prima si restringe il match alla squadra di contesto.
+  // Così un cognome scritto da solo nel pagellone non può prendere foto/ruolo di un omonimo
+  // che gioca in un'altra squadra.
+  const allMatches=uniqueRosterRecords(rosterMatchesForPersonToken(nome,''));
+  const teamKey=pagelloneTeamKey(teamLabel);
+  if(teamKey){
+    const teamMatches=allMatches.filter(rec=>rec.teamKey===teamKey || pagelloneTeamsSame(rec.team,teamLabel));
+    const exactTeamMatches=teamMatches.filter(rec=>rec.aliasKeys && rec.aliasKeys.has(target));
+    const scoped=exactTeamMatches.length ? exactTeamMatches : teamMatches;
+    if(scoped.length===1){
+      const out=toOut(scoped[0]);
+      _pagelloneRosterPlayerCache.set(cacheKey,out);
+      return out;
+    }
+  }
+
+  const direct=uniqueRosterRecordForPersonToken(nome,teamLabel);
+  if(direct){
+    const out=toOut(direct);
+    _pagelloneRosterPlayerCache.set(cacheKey,out);
+    return out;
+  }
+
+  // Fallback compatibile con CSV semplici, ma sempre filtrato per squadra quando disponibile.
+  const fallbackMatches=allPlayersFromTeams().filter(p=>{
+    const pn=personMatchKey(p.nome);
+    if(!(pn===target || pn.includes(target) || target.includes(pn))) return false;
+    return !teamLabel || pagelloneTeamsSame(p.squadra,teamLabel);
+  });
+  const fallback=fallbackMatches.length===1 ? fallbackMatches[0] : null;
+  const out=fallback ? {nome:fallback.nome,squadra:fallback.squadra,ruolo:fallback.ruolo,row:null,imageNames:[fallback.nome]} : null;
+  _pagelloneRosterPlayerCache.set(cacheKey,out);
+  return out;
 }
-function pagelloneRoleIcon(nome){
-  const found=pagelloneMatchRosterPlayer(nome);
-  const ruolo=norm(found&&found.ruolo||'');
-  return (ruolo.includes('portiere')||ruolo==='p'||ruolo==='gk') ? '🧤' : '⚽';
+function pagelloneRoleIcon(nome,squadraHint){
+  const found=pagelloneMatchRosterPlayer(nome,squadraHint);
+  const ruolo=(found&&found.ruolo) || roleForPersonToken(nome,found&&found.row?[found.row]:[]) || '';
+  const kind=roleKind(ruolo);
+  return kind ? roleEmojiForKind(kind) : '👤';
 }
 /* Giornata di riferimento da usare quando non ci sono (ancora) pagelle da mostrare:
    si appoggia agli stessi dati di calendario/riepilogo usati altrove nell'app
@@ -7193,34 +7257,128 @@ function referenceGiornataForPagellone(){
 function pagelloneEmptyMessage(giornata){
   return giornata ? `Nessuna valutazione caricata per la giornata ${giornata}.` : 'Nessuna valutazione caricata.';
 }
-/* Recupera il risultato della partita tra due squadre di una giornata, cercando nei CSV
-   di risultati/calendario già caricati (stessa convenzione di colonne usata altrove
-   nell'app). Se non trova nulla (nomi diversi, file non caricati, partita non ancora
-   giocata) restituisce null e la card mostrerà comunque le due squadre con "-". */
-function matchInfoForPagelloneTeams(teamA,teamB,giornataNum){
-  const a=norm(teamA), b=norm(teamB);
-  if(!a||!b) return null;
-  for(const kind of ['risultati','calendario']){
-    for(const f of sectionFiles(kind)){
-      for(const r of rowsToObjects(state.rows[f])){
-        const gText=firstPresent(r,[['giornata','turno','round']]);
-        const gn=giornataNumberFromText(gText);
-        if(giornataNum && gn && parseInt(gn,10)!==giornataNum) continue;
-        const home=col(r,['squadra casa','casa','home','squadra 1'])||Object.values(r)[0]||'';
-        const away=col(r,['squadra trasferta','trasferta','ospite','away','squadra 2'])||Object.values(r)[1]||'';
-        const nh=norm(home), na=norm(away);
-        if(!((nh===a&&na===b)||(nh===b&&na===a))) continue;
-        const score=col(r,['risultato','score'])||[col(r,['goal casa','reti casa']),col(r,['goal trasferta','reti trasferta'])].filter(x=>x!==''&&x!=null).join(' - ');
-        const data=col(r,['data','giorno','date']);
-        return {home,away,score:score||'',data:data||''};
-      }
-    }
-  }
-  return null;
+function pagelloneGiornataKeyFromFile(f){
+  const n=pagelloneGiornataNumber(f);
+  return n ? String(n) : norm(prettyFileName(f));
 }
-/* Card riassuntiva della partita (loghi + "vs" + risultato), da inserire prima dei due
-   pagelloni della coppia di squadre — stesso stile visivo già usato in Riepilogo giornate,
-   così non introduce un nuovo linguaggio grafico. */
+function pagelloneAddGiornataOption(map,key,label){
+  const n=giornataNumberFromText(label) || giornataNumberFromText(key);
+  if(!n) return;
+  const finalKey=String(parseInt(n,10));
+  if(finalKey && !map.has(finalKey)) map.set(finalKey,'Giornata '+finalKey);
+}
+function pagelloneGiornateOptions(){
+  const map=new Map();
+
+  // Solo giornate numeriche: evita che nomi squadra o altre etichette finiscano nel filtro giornata.
+  calendarioGiornateOptions().forEach(([key,label])=>pagelloneAddGiornataOption(map,key,label));
+  riepilogoGiornateOptions(sectionFiles('riepilogo'),{fast:true}).forEach(([key,label])=>pagelloneAddGiornataOption(map,key,label));
+  sectionTextFiles('pagellone').forEach(f=>{
+    const n=pagelloneGiornataNumber(f);
+    if(n) pagelloneAddGiornataOption(map,n,'Giornata '+n);
+  });
+
+  return [...map.entries()].sort((a,b)=>parseInt(a[0],10)-parseInt(b[0],10));
+}
+function pagelloneDefaultGiornataKey(options){
+  const ref=referenceGiornataForPagellone();
+  if(ref){
+    const refKey=String(ref);
+    const found=(options||[]).find(([key])=>String(key)===refKey);
+    if(found) return String(found[0]);
+  }
+  return options&&options.length ? String(options[options.length-1][0]) : '';
+}
+function pagelloneFileForGiornataKey(key){
+  const wanted=String(key||'');
+  return sectionTextFiles('pagellone').find(f=>pagelloneGiornataKeyFromFile(f)===wanted) || '';
+}
+function pagelloneOptionLabel(key,options){
+  const found=(options||[]).find(([k])=>String(k)===String(key));
+  return found ? found[1] : '';
+}
+function pagelloneOptionNumber(key,label,file){
+  return giornataNumberFromText(label) || giornataNumberFromText(key) || (file?pagelloneGiornataNumber(file):'');
+}
+function pagelloneSelectLabel(key,label){
+  const n=pagelloneOptionNumber(key,label,'');
+  return n ? (n+'ª giornata') : String(label||key||'Giornata');
+}
+function pagelloneTeamKey(value){
+  return teamMatchKey(value) || norm(teamDisplayNameForChart(value));
+}
+function pagelloneTeamsSame(a,b){
+  const ak=pagelloneTeamKey(a), bk=pagelloneTeamKey(b);
+  return !!ak && !!bk && (ak===bk || ak.includes(bk) || bk.includes(ak));
+}
+function pagelloneMatchIdentity(giornataNum,teamA,teamB){
+  const keys=[pagelloneTeamKey(teamA),pagelloneTeamKey(teamB)].filter(Boolean).sort();
+  return [giornataNum||'',...keys].join('|');
+}
+function pagelloneMatchScoreFromRow(r){
+  const score=resultText(r);
+  return parseScorePair(score) ? score : '';
+}
+function pagelloneKnownMatches(){
+  const map=new Map();
+  const add=(giornataNum,home,away,score,data,source)=>{
+    const h=teamDisplayNameForChart(home), a=teamDisplayNameForChart(away);
+    if(!h || !a) return;
+    const gn=parseInt(giornataNum||0,10)||0;
+    const key=pagelloneMatchIdentity(gn,h,a);
+    if(!key) return;
+    const prev=map.get(key);
+    const cleanScore=parseScorePair(score) ? score : '';
+    const item={giornataNum:gn,home:h,away:a,score:cleanScore||'',data:data||'',source:source||''};
+    // Se troviamo la stessa partita più volte, preferiamo la fonte che ha il risultato.
+    if(!prev || (!prev.score && item.score) || (!prev.data && item.data)){
+      const previous=prev||{};
+      map.set(key,{...previous,...item,score:item.score||previous.score||'',data:item.data||previous.data||''});
+    }
+  };
+
+  sectionFiles('risultati').forEach(f=>rowsToObjects(state.rows[f]||[]).forEach((r,i)=>{
+    const [home,away]=matchTeamsFromRow(r);
+    const gn=giornataNumberFromText(firstPresent(r,[['giornata','turno','round']])) || giornataNumberFromText(f) || 0;
+    add(gn,home,away,pagelloneMatchScoreFromRow(r),firstPresent(r,[['data','giorno','date']]),'risultati');
+  }));
+
+  sectionFiles('riepilogo').forEach(f=>{
+    const parsed=parseRiepilogoFile(f);
+    (parsed.partite||[]).forEach((r,i)=>{
+      const [home,away]=matchTeamsFromRow(r);
+      const gn=giornataNumberFromText(firstPresent(r,[['giornata','turno','round']])) || giornataNumberFromText(f) || 0;
+      add(gn,home,away,pagelloneMatchScoreFromRow(r),firstPresent(r,[['data','giorno','date']]),'riepilogo');
+    });
+  });
+
+  sectionFiles('calendario').forEach(f=>{
+    const raw=state.files[f]||'';
+    parseBlockCalendar(raw).forEach(g=>{
+      const gn=giornataNumberFromText(g.label)||giornataNumberFromText(f)||0;
+      (g.partite||[]).forEach(p=>add(gn,p.casa,p.trasferta,'',p.note,'calendario'));
+    });
+    rowsToObjects(state.rows[f]||[]).forEach((r,i)=>{
+      const [home,away]=matchTeamsFromRow(r);
+      const gn=giornataNumberFromText(firstPresent(r,[['giornata','turno','round']])) || giornataNumberFromText(f) || 0;
+      add(gn,home,away,pagelloneMatchScoreFromRow(r),firstPresent(r,[['data','giorno','date','note']]),'calendario');
+    });
+  });
+
+  return [...map.values()].sort((a,b)=>(a.giornataNum-b.giornataNum)||String(a.home).localeCompare(String(b.home),'it',{numeric:true}));
+}
+/* Recupera il risultato della partita tra due squadre di una giornata, cercando prima
+   nei risultati/referti e poi nel calendario. Il confronto è morbido sui nomi squadra,
+   quindi funziona anche se una fonte usa una sigla o una variante del nome. */
+function matchInfoForPagelloneTeams(teamA,teamB,giornataNum){
+  const gn=parseInt(giornataNum||0,10)||0;
+  const direct=pagelloneKnownMatches().find(m=>
+    (!gn || !m.giornataNum || m.giornataNum===gn) &&
+    ((pagelloneTeamsSame(m.home,teamA)&&pagelloneTeamsSame(m.away,teamB)) ||
+     (pagelloneTeamsSame(m.home,teamB)&&pagelloneTeamsSame(m.away,teamA)))
+  );
+  return direct || null;
+}
 function buildPagelloneMatchCard(teamA,teamB,giornataNum){
   const info=matchInfoForPagelloneTeams(teamA,teamB,giornataNum);
   const home=(info&&info.home)||teamA, away=(info&&info.away)||teamB;
@@ -7246,152 +7404,93 @@ function buildPagelloneMatchCard(teamA,teamB,giornataNum){
   wrap.appendChild(m);
   return wrap;
 }
-function pagelloneGiornataKeyFromFile(f){
-  const n=pagelloneGiornataNumber(f);
-  return n ? String(n) : norm(prettyFileName(f));
+function pagelloneBuildEntries(options){
+  const optionMap=new Map((options||[]).map(([k,v])=>[String(k),v]));
+  return sectionTextFiles('pagellone').map(f=>{
+    const key=pagelloneGiornataKeyFromFile(f);
+    const label=optionMap.get(String(key)) || (pagelloneGiornataNumber(f)?('Giornata '+pagelloneGiornataNumber(f)):prettyFileName(f));
+    const num=pagelloneOptionNumber(key,label,f);
+    const squadre=parsePagellone(state.files[f]||'');
+    const pairs=[];
+    for(let i=0;i<squadre.length;i+=2){
+      const teamA=squadre[i], teamB=squadre[i+1]||null;
+      const pairKey='g'+String(key)+'|p'+i;
+      pairs.push({key:pairKey,localKey:String(i),giornataKey:String(key),giornataLabel:label,giornataNum:num,teamA,teamB});
+    }
+    return {file:f,key:String(key),label,num,squadre,pairs};
+  }).sort((a,b)=>(parseInt(a.num||0,10)-parseInt(b.num||0,10))||String(a.label).localeCompare(String(b.label),'it',{numeric:true}));
 }
-function pagelloneAddGiornataOption(map,key,label){
-  const k=String(key||'').trim();
-  const l=String(label||'').trim();
-  if(!k && !l) return;
-  const finalKey=k || norm(l);
-  const finalLabel=l || (giornataNumberFromText(finalKey)?('Giornata '+giornataNumberFromText(finalKey)):finalKey);
-  if(finalKey && !map.has(finalKey)) map.set(finalKey,finalLabel);
-}
-function pagelloneGiornateOptions(){
+function pagelloneTeamOptions(entries){
   const map=new Map();
-
-  // 1) Fonte principale: calendario, cioè tutte le giornate previste.
-  calendarioGiornateOptions().forEach(([key,label])=>{
-    const n=giornataNumberFromText(label)||giornataNumberFromText(key);
-    pagelloneAddGiornataOption(map,n||key,label);
-  });
-
-  // 2) Giornate già caricate come riepilogo/referto, anche se non presenti nel calendario.
-  riepilogoGiornateOptions(sectionFiles('riepilogo'),{fast:true}).forEach(([key,label])=>{
-    const n=giornataNumberFromText(label)||giornataNumberFromText(key);
-    pagelloneAddGiornataOption(map,n||key,label);
-  });
-
-  // 3) Giornate che hanno già un pagellone, anche se il calendario non è disponibile.
-  sectionTextFiles('pagellone').forEach(f=>{
-    const n=pagelloneGiornataNumber(f);
-    pagelloneAddGiornataOption(map,n||pagelloneGiornataKeyFromFile(f),n?('Giornata '+n):prettyFileName(f));
-  });
-
-  return [...map.entries()].sort((a,b)=>{
-    const an=parseInt(giornataNumberFromText(a[1])||giornataNumberFromText(a[0])||'',10);
-    const bn=parseInt(giornataNumberFromText(b[1])||giornataNumberFromText(b[0])||'',10);
-    if(Number.isFinite(an)&&Number.isFinite(bn)&&an!==bn) return an-bn;
-    return String(a[1]).localeCompare(String(b[1]),'it',{numeric:true});
-  });
+  const add=(name)=>{
+    const label=teamDisplayNameForChart(name);
+    const key=pagelloneTeamKey(label);
+    if(key && !map.has(key)) map.set(key,label);
+  };
+  teamNamesForCharts().forEach(add);
+  (entries||[]).forEach(e=>(e.squadre||[]).forEach(sq=>add(sq.squadra)));
+  return [...map.entries()].sort((a,b)=>String(a[1]).localeCompare(String(b[1]),'it',{numeric:true}));
 }
-function pagelloneDefaultGiornataKey(options){
-  const ref=referenceGiornataForPagellone();
-  if(ref){
-    const refKey=String(ref);
-    const found=(options||[]).find(([key,label])=>String(key)===refKey || String(giornataNumberFromText(label)||'')===refKey);
-    if(found) return String(found[0]);
+function pagelloneMatchOptionLabel(pair,withGiornata){
+  const teams=pair.teamB ? `${pair.teamA.squadra} vs ${pair.teamB.squadra}` : pair.teamA.squadra;
+  if(withGiornata){
+    const n=pair.giornataNum || giornataNumberFromText(pair.giornataLabel);
+    return (n?('Giornata '+n):pair.giornataLabel)+' · '+teams;
   }
-  return options&&options.length ? String(options[options.length-1][0]) : '';
+  return teams;
 }
-function pagelloneFileForGiornataKey(key){
-  const wanted=String(key||'');
-  return sectionTextFiles('pagellone').find(f=>pagelloneGiornataKeyFromFile(f)===wanted) || '';
+function pagelloneSchedulePairsForGiornata(key){
+  const gn=parseInt(key||0,10)||0;
+  if(!gn) return [];
+  return pagelloneKnownMatches().filter(m=>m.giornataNum===gn).map((m,i)=>({
+    key:'cal-g'+gn+'|p'+i,
+    localKey:String(i),
+    giornataKey:String(gn),
+    giornataLabel:'Giornata '+gn,
+    giornataNum:gn,
+    teamA:{squadra:m.home,giocatori:[]},
+    teamB:{squadra:m.away,giocatori:[]}
+  }));
 }
-function pagelloneOptionLabel(key,options){
-  const found=(options||[]).find(([k])=>String(k)===String(key));
-  return found ? found[1] : '';
+function pagellonePairsForGiornata(entry,key){
+  const pairs=(entry&&entry.pairs&&entry.pairs.length) ? entry.pairs.filter(p=>p.teamB) : pagelloneSchedulePairsForGiornata(key);
+  return pairs;
 }
-function pagelloneOptionNumber(key,label,file){
-  return giornataNumberFromText(label) || giornataNumberFromText(key) || (file?pagelloneGiornataNumber(file):'');
+function pagellonePairsForTeam(entries,teamKey){
+  const map=new Map();
+  const addPair=(p)=>{
+    if(!p || !p.teamA || !p.teamB) return;
+    if(!pagelloneTeamsSame(p.teamA.squadra,teamKey) && !pagelloneTeamsSame(p.teamB.squadra,teamKey)) return;
+    const id=pagelloneMatchIdentity(p.giornataNum,p.teamA.squadra,p.teamB.squadra);
+    if(id && !map.has(id)) map.set(id,p);
+  };
+  (entries||[]).forEach(e=>(e.pairs||[]).forEach(addPair));
+  pagelloneKnownMatches().forEach((m,i)=>addPair({
+    key:'cal-g'+m.giornataNum+'|p'+i,
+    localKey:String(i),
+    giornataKey:String(m.giornataNum),
+    giornataLabel:'Giornata '+m.giornataNum,
+    giornataNum:m.giornataNum,
+    teamA:{squadra:m.home,giocatori:[]},
+    teamB:{squadra:m.away,giocatori:[]}
+  }));
+  return [...map.values()].sort((a,b)=>(parseInt(a.giornataNum||0,10)-parseInt(b.giornataNum||0,10))||pagelloneMatchOptionLabel(a,false).localeCompare(pagelloneMatchOptionLabel(b,false),'it',{numeric:true}));
 }
-function pagelloneSelectLabel(key,label){
-  const n=pagelloneOptionNumber(key,label,'');
-  return n ? (n+'ª giornata') : String(label||key||'Giornata');
+function pagelloneSelectHtml(id,label,options,value,emptyLabel){
+  const rows=(options||[]).map(([key,text])=>`<option value="${esc(key)}" ${String(key)===String(value)?'selected':''}>${esc(text)}</option>`).join('');
+  const empty=emptyLabel!=null ? `<option value="" ${!value?'selected':''}>${esc(emptyLabel)}</option>` : '';
+  return `<label class="pg-selector" for="${esc(id)}"><span class="pg-selector-label">${esc(label)}</span><select id="${esc(id)}">${empty}${rows}</select></label>`;
 }
-function renderPagellone(){
-  const el=document.getElementById('pagellone');
-  if(!el) return;
-
-  const files=sectionTextFiles('pagellone');
-  const options=pagelloneGiornateOptions();
-  if(!options.length){
-    el.innerHTML=`<div class="card pg-empty"><div class="pg-empty-icon">📣</div><h3>${esc(pagelloneEmptyMessage())}</h3><p>Appena vengono caricati calendario, riepilogo o pagellone, la rubrica comparirà qui.</p></div>`;
-    return;
-  }
-
-  const validKeys=options.map(([key])=>String(key));
-  if(!state.selectedPagelloneGiornata || !validKeys.includes(String(state.selectedPagelloneGiornata))){
-    // Default: ultima giornata caricata/di riferimento, non ultimo file pagellone disponibile.
-    // Così, se la giornata X è stata caricata ma il suo pagellone manca, il filtro resta su X.
-    state.selectedPagelloneGiornata=pagelloneDefaultGiornataKey(options);
-  }
-
-  const currentKey=String(state.selectedPagelloneGiornata);
-  const currentLabel=pagelloneOptionLabel(currentKey,options);
-  const currentFile=pagelloneFileForGiornataKey(currentKey);
-  const num=pagelloneOptionNumber(currentKey,currentLabel,currentFile);
-  const squadre=currentFile ? parsePagellone(state.files[currentFile]||'') : [];
-
-  // Ogni 2 squadre = 1 partita della giornata (stesso ordine in cui compaiono nel file).
-  // pairKey è l'indice della prima squadra della coppia, riusato anche per gli slot-risultato.
-  const pairs=[];
-  for(let i=0;i<squadre.length;i+=2) pairs.push({key:String(i),teamA:squadre[i],teamB:squadre[i+1]});
-  const validPairKeys=pairs.filter(p=>p.teamB).map(p=>p.key);
-  if(state.selectedPagellonePartita && !validPairKeys.includes(state.selectedPagellonePartita)){
-    state.selectedPagellonePartita='';
-  }
-
-  // Il filtro mostra sempre tutte le giornate note, non solo quelle con pagellone caricato.
-  const selectorHtml = `<div class="pg-selector"><select id="pgGiornataSelect" aria-label="Seleziona giornata">${
-    options.map(([key,label])=>`<option value="${esc(key)}" ${String(key)===currentKey?'selected':''}>${esc(pagelloneSelectLabel(key,label))}</option>`).join('')
-  }</select></div>`;
-
-  // Il filtro per partita compare solo se in questa giornata ci sono almeno 2 partite:
-  // con una sola non avrebbe nulla da filtrare.
-  const partitaSelectorHtml = validPairKeys.length>1 ? `<div class="pg-selector"><select id="pgPartitaSelect" aria-label="Seleziona partita">
-    <option value="">Tutte le partite della giornata</option>
-    ${pairs.filter(p=>p.teamB).map(p=>`<option value="${esc(p.key)}" ${state.selectedPagellonePartita===p.key?'selected':''}>${esc(p.teamA.squadra)} vs ${esc(p.teamB.squadra)}</option>`).join('')}
-  </select></div>` : '';
-
-  // Squadre effettivamente da disegnare: tutte, oppure solo quelle della partita scelta.
-  const selectedPair=state.selectedPagellonePartita ? pairs.find(p=>p.key===state.selectedPagellonePartita) : null;
-  const displaySquadre = selectedPair ? [selectedPair.teamA, selectedPair.teamB] : squadre;
-  const bannerTitle=num ? (num+'ª GG') : esc(currentLabel||prettyFileName(currentFile)||'Giornata');
-
-  let html = `
-    <div class="pg-banner">
-      <div class="pg-banner-content">
-        <span class="pg-banner-flag">📣🟥</span>
-        <span class="pg-banner-text">Rubrica pagellone ignorante<b>${bannerTitle}</b></span>
-        <span class="pg-banner-flag">🟥📣</span>
-      </div>
-    </div>
-    <div class="pg-selectors">${selectorHtml}${partitaSelectorHtml}</div>`;
-
-  if(!currentFile){
-    // Nessun file per la giornata selezionata. Se non esiste nessun pagellone in assoluto,
-    // la dicitura resta generica come richiesto; altrimenti cita la giornata di riferimento.
-    const msg=files.length ? pagelloneEmptyMessage(num||currentLabel) : pagelloneEmptyMessage();
-    html += `<div class="card pg-empty"><div class="pg-empty-icon">📣</div><h3>${esc(msg)}</h3><p>Il filtro resta disponibile per tutte le giornate, anche quando il file del pagellone non è ancora presente.</p></div>`;
-  }else if(!squadre.length){
-    // Qui il file esiste ma è vuoto/malformato: la giornata è nota, quindi il messaggio cita il numero.
-    const msg=pagelloneEmptyMessage(num||currentLabel);
-    html += `<div class="card pg-empty"><h3>${esc(msg)}</h3><p>Il file di questa giornata non è nel formato atteso (SQUADRA / GIOCATORE / TESTO / PARAGONE / VOTO).</p></div>`;
-  }else{
-    displaySquadre.forEach((sq,i)=>{
-      // Ogni 2 squadre = 1 partita: prima della coppia inserisco lo slot per il risultato.
-      if(i%2===0) html += `<div class="pg-match-slot" data-pair-index="${i}"></div>`;
-      html += `<div class="pg-team">
-        <div class="pg-team-head"><div class="pg-team-logo"></div><h3 class="pg-team-name">${esc(sq.squadra)}</h3></div>
-        <div class="pg-grid">`;
-      sq.giocatori.forEach((g,i)=>{
+function pagelloneTeamHtml(sq){
+  return `<div class="pg-team">
+    <div class="pg-team-head"><div class="pg-team-logo"></div><h3 class="pg-team-name">${esc(sq.squadra)}</h3></div>
+    <div class="pg-grid">
+      ${(sq.giocatori||[]).map((g,i)=>{
         const rot=(i%2===0?-1.3:1.1);
-        html += `<div class="pg-card" style="--pg-rot:${rot}deg">
+        return `<div class="pg-card" style="--pg-rot:${rot}deg">
           <div class="pg-card-top">
             <div class="pg-card-photo"></div>
-            <div class="pg-card-name"><span class="pg-role-icon">${pagelloneRoleIcon(g.nome)}</span>${esc(g.nome)}</div>
+            <div class="pg-card-name"><span class="pg-role-icon" title="Ruolo">${pagelloneRoleIcon(g.nome,sq.squadra)}</span>${esc(g.nome)}</div>
           </div>
           <p class="pg-card-text">${g.testo?esc(g.testo):'<span class="pg-muted">Nessun commento.</span>'}</p>
           <div class="pg-card-bottom">
@@ -7399,39 +7498,149 @@ function renderPagellone(){
             <div class="pg-voto ${votoGradeClass(g.voto)}">${esc(votoDisplay(g.voto,g.votoLabel))}</div>
           </div>
         </div>`;
-      });
-      html += `</div></div>`;
-    });
-  }
-
-  el.innerHTML=html;
-
-  // Riempie gli slot delle partite con la card risultato (o li rimuove se la squadra
-  // è rimasta senza un'avversaria in questo file, es. pagellone caricato di una sola squadra).
-  el.querySelectorAll('.pg-match-slot').forEach(slot=>{
-    const i=parseInt(slot.dataset.pairIndex,10);
-    const teamA=displaySquadre[i], teamB=displaySquadre[i+1];
-    if(teamA && teamB) slot.replaceWith(buildPagelloneMatchCard(teamA.squadra,teamB.squadra,num));
-    else slot.remove();
-  });
-
-  // Aggancia le foto reali sui placeholder, nello stesso ordine in cui sono stati generati.
+      }).join('')}
+    </div>
+  </div>`;
+}
+function pagelloneAttachImages(el,displayTeams){
   const teamLogoSlots=el.querySelectorAll('.pg-team-logo');
-  displaySquadre.forEach((sq,i)=>{ if(teamLogoSlots[i]) teamLogoSlots[i].appendChild(imgOrInitialEl('team',sq.squadra,'pg-team-logo-img')); });
+  displayTeams.forEach((sq,i)=>{ if(teamLogoSlots[i]) teamLogoSlots[i].appendChild(imgOrInitialEl('team',sq.squadra,'pg-team-logo-img')); });
   const photoSlots=el.querySelectorAll('.pg-card-photo');
   let k=0;
-  displaySquadre.forEach(sq=>sq.giocatori.forEach(g=>{
+  displayTeams.forEach(sq=>(sq.giocatori||[]).forEach(g=>{
     if(photoSlots[k]){
-      const found=pagelloneMatchRosterPlayer(g.nome);
-      // Passo entrambi i nomi (canonico + quello scritto nel pagellone): imgOrInitialEl
-      // prova tutti gli alias in ordine, così funziona anche se il match di rosa fallisce.
-      photoSlots[k].appendChild(imgOrInitialEl('player', found?[found.nome,g.nome]:g.nome, 'pg-avatar'));
+      const found=pagelloneMatchRosterPlayer(g.nome,sq.squadra);
+      const imageNames=(found && found.imageNames && found.imageNames.length) ? found.imageNames : (found ? [found.nome] : [g.nome]);
+      // Non aggiungere il cognome isolato quando la rosa ha già risolto il giocatore: con omonimi
+      // farebbe rientrare nel resolver immagini anche il profilo dell'altra squadra.
+      photoSlots[k].appendChild(imgOrInitialEl('player', imageNames, 'pg-avatar'));
     }
     k++;
   }));
+}
+function renderPagellone(){
+  const el=document.getElementById('pagellone');
+  if(!el) return;
 
-  const sel=document.getElementById('pgGiornataSelect');
-  if(sel) sel.onchange=()=>{ state.selectedPagelloneGiornata=sel.value; state.selectedPagellonePartita=''; renderPagellone(); };
+  const files=sectionTextFiles('pagellone');
+  const options=pagelloneGiornateOptions();
+  const entries=pagelloneBuildEntries(options);
+  const teamOptions=pagelloneTeamOptions(entries);
+
+  if(!options.length && !teamOptions.length){
+    el.innerHTML=`<div class="card pg-empty"><div class="pg-empty-icon">📣</div><h3>${esc(pagelloneEmptyMessage())}</h3><p>Appena vengono caricati calendario, squadre, riepilogo o pagellone, la rubrica comparirà qui.</p></div>`;
+    return;
+  }
+
+  if(!['giornata','squadra'].includes(state.selectedPagelloneMode)) state.selectedPagelloneMode='giornata';
+  if(state.selectedPagelloneMode==='giornata' && !options.length && teamOptions.length) state.selectedPagelloneMode='squadra';
+  if(state.selectedPagelloneMode==='squadra' && !teamOptions.length && options.length) state.selectedPagelloneMode='giornata';
+
+  const mode=state.selectedPagelloneMode;
+  const displayTeams=[];
+  let html='';
+  let bannerTitle='Pagelloni';
+  let selectedPairs=[];
+  let pairOptions=[];
+
+  const modeOptions=[['giornata','Per giornata'],['squadra','Per squadra']];
+  let selectors=pagelloneSelectHtml('pgModeSelect','Filtro',modeOptions,mode,null);
+
+  if(mode==='giornata'){
+    const validKeys=options.map(([key])=>String(key));
+    if(!state.selectedPagelloneGiornata || !validKeys.includes(String(state.selectedPagelloneGiornata))){
+      state.selectedPagelloneGiornata=pagelloneDefaultGiornataKey(options);
+    }
+    const currentKey=String(state.selectedPagelloneGiornata||'');
+    const currentLabel=pagelloneOptionLabel(currentKey,options);
+    const currentFile=pagelloneFileForGiornataKey(currentKey);
+    const num=pagelloneOptionNumber(currentKey,currentLabel,currentFile);
+    const entry=entries.find(e=>e.key===currentKey);
+    const pairs=pagellonePairsForGiornata(entry,currentKey);
+    pairOptions=pairs.map(p=>[p.key,pagelloneMatchOptionLabel(p,false)]);
+    if(state.selectedPagellonePartita && !pairOptions.some(([k])=>String(k)===String(state.selectedPagellonePartita))) state.selectedPagellonePartita='';
+    selectors += pagelloneSelectHtml('pgGiornataSelect','Giornata',options.map(([key,label])=>[key,pagelloneSelectLabel(key,label)]),currentKey,null);
+    selectors += pagelloneSelectHtml('pgPartitaSelect','Partita',pairOptions,state.selectedPagellonePartita,'Tutte le partite');
+    bannerTitle=num ? (num+'ª GG') : esc(currentLabel||'Giornata');
+
+    selectedPairs=state.selectedPagellonePartita ? pairs.filter(p=>String(p.key)===String(state.selectedPagellonePartita)) : pairs;
+
+    html = `
+      <div class="pg-banner">
+        <div class="pg-banner-content">
+          <span class="pg-banner-flag">📣🟥</span>
+          <span class="pg-banner-text">Rubrica pagellone ignorante<b>${bannerTitle}</b></span>
+          <span class="pg-banner-flag">🟥📣</span>
+        </div>
+      </div>
+      <div class="pg-selectors">${selectors}</div>`;
+
+    if(!currentFile){
+      const msg=files.length ? pagelloneEmptyMessage(num||currentLabel) : pagelloneEmptyMessage();
+      html += `<div class="card pg-empty"><div class="pg-empty-icon">📣</div><h3>${esc(msg)}</h3><p>Il filtro resta disponibile per tutte le giornate e per le partite della giornata, anche quando il file del pagellone non è ancora presente.</p></div>`;
+    }else if(!entry || !entry.squadre.length){
+      const msg=pagelloneEmptyMessage(num||currentLabel);
+      html += `<div class="card pg-empty"><h3>${esc(msg)}</h3><p>Il file di questa giornata non è nel formato atteso (SQUADRA / GIOCATORE / TESTO / PARAGONE / VOTO).</p></div>`;
+    }else{
+      const groups=selectedPairs.length ? selectedPairs : (entry.pairs||[]);
+      groups.forEach(pair=>{
+        if(pair.teamA && pair.teamB) html += `<div class="pg-match-slot" data-team-a="${esc(pair.teamA.squadra)}" data-team-b="${esc(pair.teamB.squadra)}" data-giornata="${esc(pair.giornataNum||'')}"></div>`;
+        [pair.teamA,pair.teamB].filter(Boolean).forEach(sq=>{ displayTeams.push(sq); html += pagelloneTeamHtml(sq); });
+      });
+    }
+  }else{
+    if(!state.selectedPagelloneSquadra || !teamOptions.some(([key])=>String(key)===String(state.selectedPagelloneSquadra))){
+      state.selectedPagelloneSquadra=teamOptions.length ? String(teamOptions[0][0]) : '';
+    }
+    const teamKey=String(state.selectedPagelloneSquadra||'');
+    const teamLabel=(teamOptions.find(([key])=>String(key)===teamKey)||[])[1] || 'Squadra';
+    const allPairs=pagellonePairsForTeam(entries,teamKey);
+    pairOptions=allPairs.map(p=>[p.key,pagelloneMatchOptionLabel(p,true)]);
+    if(state.selectedPagellonePartita && !pairOptions.some(([k])=>String(k)===String(state.selectedPagellonePartita))) state.selectedPagellonePartita='';
+    selectors += pagelloneSelectHtml('pgSquadraSelect','Squadra',teamOptions,teamKey,null);
+    selectors += pagelloneSelectHtml('pgPartitaSelect','Partita',pairOptions,state.selectedPagellonePartita,'Tutte le partite');
+    bannerTitle=teamLabel;
+    html = `
+      <div class="pg-banner">
+        <div class="pg-banner-content">
+          <span class="pg-banner-flag">📌</span>
+          <span class="pg-banner-text">Pagelle affisse per squadra<b>${esc(bannerTitle)}</b></span>
+          <span class="pg-banner-flag">📌</span>
+        </div>
+      </div>
+      <div class="pg-selectors">${selectors}</div>`;
+
+    const selectedPairKeys=state.selectedPagellonePartita ? new Set([String(state.selectedPagellonePartita)]) : null;
+    entries.forEach(entry=>{
+      (entry.pairs||[]).forEach(pair=>{
+        if(selectedPairKeys && !selectedPairKeys.has(String(pair.key))) return;
+        const teams=[pair.teamA,pair.teamB].filter(Boolean).filter(sq=>pagelloneTeamsSame(sq.squadra,teamKey));
+        if(!teams.length) return;
+        if(pair.teamA && pair.teamB) html += `<div class="pg-match-slot" data-team-a="${esc(pair.teamA.squadra)}" data-team-b="${esc(pair.teamB.squadra)}" data-giornata="${esc(pair.giornataNum||'')}"></div>`;
+        teams.forEach(sq=>{ displayTeams.push(sq); html += pagelloneTeamHtml(sq); });
+      });
+    });
+    if(!displayTeams.length){
+      html += `<div class="card pg-empty"><div class="pg-empty-icon">📣</div><h3>${esc('Nessuna valutazione caricata per '+teamLabel+'.')}</h3><p>Puoi cambiare squadra o restringere il filtro a una partita specifica.</p></div>`;
+    }
+  }
+
+  el.innerHTML=html;
+  el.querySelectorAll('.pg-match-slot').forEach(slot=>{
+    const teamA=slot.dataset.teamA||'';
+    const teamB=slot.dataset.teamB||'';
+    const giornata=parseInt(slot.dataset.giornata||0,10)||0;
+    if(teamA && teamB) slot.replaceWith(buildPagelloneMatchCard(teamA,teamB,giornata));
+    else slot.remove();
+  });
+  pagelloneAttachImages(el,displayTeams);
+
+  const modeSel=document.getElementById('pgModeSelect');
+  if(modeSel) modeSel.onchange=()=>{ state.selectedPagelloneMode=modeSel.value; state.selectedPagellonePartita=''; renderPagellone(); };
+  const daySel=document.getElementById('pgGiornataSelect');
+  if(daySel) daySel.onchange=()=>{ state.selectedPagelloneGiornata=daySel.value; state.selectedPagellonePartita=''; renderPagellone(); };
+  const teamSel=document.getElementById('pgSquadraSelect');
+  if(teamSel) teamSel.onchange=()=>{ state.selectedPagelloneSquadra=teamSel.value; state.selectedPagellonePartita=''; renderPagellone(); };
   const partitaSel=document.getElementById('pgPartitaSelect');
   if(partitaSel) partitaSel.onchange=()=>{ state.selectedPagellonePartita=partitaSel.value; renderPagellone(); };
 }
