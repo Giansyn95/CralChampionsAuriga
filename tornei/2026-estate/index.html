@@ -1140,6 +1140,24 @@
       .pg-card{transform:none}
       .pg-card:hover{transform:translateY(-2px)}
     }
+
+    /* Pagellone: layout più fluido e leggero su desktop/mobile */
+    .pg-team{content-visibility:auto;contain-intrinsic-size:560px;}
+    .pg-grid{align-items:start;grid-template-columns:repeat(auto-fill,minmax(min(260px,100%),1fr));}
+    .pg-card{will-change:transform;backface-visibility:hidden;contain:layout paint;}
+    .pg-card-photo{background:var(--panel);}
+    .pg-voto{font-variant-numeric:tabular-nums;}
+    @media(max-width:720px){
+      .pg-selectors{display:grid;grid-template-columns:1fr;gap:8px;margin-bottom:12px}
+      .pg-selector{width:100%}
+      .pg-selector select{min-height:44px;font-size:15px}
+      .pg-banner{margin-bottom:12px}
+      .pg-team{margin-bottom:18px}
+      .pg-team-head{position:sticky;top:0;z-index:2;background:linear-gradient(90deg,rgba(22,32,51,.94),rgba(22,32,51,.74));backdrop-filter:blur(8px);border-radius:14px;padding:8px 10px;margin-bottom:12px}
+      .pg-card{padding:18px 15px 15px}
+      .pg-card-text{font-size:13px;line-height:1.45}
+      .pg-match-wrap .riepilogo-match{padding:13px 12px}
+    }
 </style>
 </head>
 <body>
@@ -7169,17 +7187,32 @@ function votoGradeClass(v){
   return 'pg-vt-top';
 }
 function votoDisplay(v,label){
-  if(label) return String(label).replace('.',',');
-  if(v==null||isNaN(v)) return '—';
-  const rounded=Math.round(Number(v)*100)/100;
-  const base=Math.floor(rounded);
-  const frac=Math.round((rounded-base)*100);
-  // Nei dati i voti con + / - valgono 0.25 in più o in meno nei calcoli,
-  // ma in UI restano in forma calcistica: 6+ invece di 6,25; 6- invece di 5,75.
-  if(frac===25) return String(base)+'+';
-  if(frac===75) return String(base+1)+'-';
-  if(Number.isInteger(rounded)) return String(rounded);
-  return String(rounded).replace('.',',');
+  const formatNumeric=(value)=>{
+    if(value==null || isNaN(value)) return '—';
+    const rounded=Math.round(Number(value)*100)/100;
+    const base=Math.floor(rounded);
+    const frac=Math.round((rounded-base)*100);
+    // Nei dati i voti con + / - valgono 0.25 in più o in meno nei calcoli,
+    // ma nel Pagellone devono restare in forma calcistica: 6+ invece di 6,25; 6- invece di 5,75.
+    if(frac===25) return String(base)+'+';
+    if(frac===75) return String(base+1)+'-';
+    if(Number.isInteger(rounded)) return String(rounded);
+    return String(rounded).replace('.',',');
+  };
+
+  const raw=String(label||'').trim();
+  if(raw){
+    // Se il file contiene già il simbolo, preservalo esattamente.
+    const signed=raw.match(/^([0-9]+(?:[.,][05])?)\s*([+-])$/);
+    if(signed) return signed[1].replace('.',',')+signed[2];
+
+    // Se una versione precedente del file ha salvato 6,25 / 5,75, riconvertila in 6+ / 6-.
+    const numeric=raw.replace(',','.').match(/^[-+]?\d+(?:\.\d+)?$/);
+    if(numeric) return formatNumeric(parseFloat(raw.replace(',','.')));
+
+    return raw.replace('.',',');
+  }
+  return formatNumeric(v);
 }
 /* Abbina il nome scritto nel pagellone (spesso solo il cognome) al giocatore corrispondente
    nella rosa ufficiale (stesso elenco usato dal resto dell'app). Restituisce il record intero,
@@ -7316,71 +7349,158 @@ function pagelloneMatchIdentity(giornataNum,teamA,teamB){
   return [giornataNum||'',...keys].join('|');
 }
 function pagelloneMatchScoreFromRow(r){
-  const score=resultText(r);
-  return parseScorePair(score) ? score : '';
+  const text=resultText(r);
+  return pagelloneCleanScoreText(text);
 }
-function pagelloneKnownMatches(){
+function pagelloneCleanScoreText(value){
+  const raw=String(value||'').trim();
+  if(!raw || raw==='-' || /^[-–—]+$/.test(raw)) return '';
+  const direct=raw.match(/(\d+)\s*[-:–]\s*(\d+)/);
+  if(direct) return direct[1]+' - '+direct[2];
+  const pair=parseScorePair(raw);
+  return pair ? (pair[0]+' - '+pair[1]) : '';
+}
+function pagelloneIsRiposaTeam(value){
+  const n=norm(value);
+  return !!n && (n.startsWith('riposa') || n.includes('turnodiriposo') || n==='bye');
+}
+function pagelloneValidMatchTeam(value){
+  const text=String(value||'').trim();
+  const n=norm(text);
+  if(!text || !n || pagelloneIsRiposaTeam(text)) return false;
+  if(['partita','partite','match','gara','incontro','giornata','risultato','score'].includes(n)) return false;
+  return true;
+}
+function pagelloneTeamsFromMatchText(value){
+  const text=String(value||'').trim();
+  if(!text) return ['', ''];
+
+  const named=teamNamesForCharts()
+    .filter(Boolean)
+    .map(name=>({name:teamDisplayNameForChart(name), key:pagelloneTeamKey(name)}))
+    .filter(x=>x.name && x.key)
+    .sort((a,b)=>b.key.length-a.key.length);
+  const hay=pagelloneTeamKey(text);
+  const found=[];
+  named.forEach(item=>{
+    if(found.length>=2) return;
+    if(hay.includes(item.key) && !found.some(x=>x.key===item.key)) found.push(item);
+  });
+  if(found.length>=2) return [found[0].name, found[1].name];
+
+  const split=text.split(/\s+(?:vs\.?|v\.?|contro)\s+|\s+[-–]\s+/i).map(x=>x.trim()).filter(Boolean);
+  if(split.length>=2) return [teamDisplayNameForChart(split[0]), teamDisplayNameForChart(split.slice(1).join(' - '))];
+  return ['', ''];
+}
+function pagelloneTeamsFromRiepilogoRow(r){
+  let home=exactVal(r,['squadra casa','casa','home','squadra 1','team casa','team home','squadra ospitante']);
+  let away=exactVal(r,['squadra trasferta','trasferta','ospite','away','squadra 2','team trasferta','team away','squadra ospite']);
+  home=teamDisplayNameForChart(home);
+  away=teamDisplayNameForChart(away);
+  if(pagelloneValidMatchTeam(home) && pagelloneValidMatchTeam(away)) return [home,away];
+
+  const matchText=firstPresent(r,[['partita','match','gara','incontro']]) ||
+    (sectionKeyFromText(exactVal(r,['sezione']))==='partite' ? (exactVal(r,['statistica','voce','dato','descrizione','valore']) || '') : '');
+  const fromText=pagelloneTeamsFromMatchText(matchText);
+  if(pagelloneValidMatchTeam(fromText[0]) && pagelloneValidMatchTeam(fromText[1])) return fromText;
+
+  // Ultimo fallback controllato: prova la vecchia logica, ma scarta righe chiaramente non valide.
+  const old=matchTeamsFromRow(r);
+  if(pagelloneValidMatchTeam(old[0]) && pagelloneValidMatchTeam(old[1])) return old;
+  return ['', ''];
+}
+function pagelloneRiepilogoMatches(){
   const map=new Map();
-  const add=(giornataNum,home,away,score,data,source)=>{
+  const add=(giornataNum,home,away,score,data,rowIndex,file)=>{
     const h=teamDisplayNameForChart(home), a=teamDisplayNameForChart(away);
-    if(!h || !a) return;
+    if(!pagelloneValidMatchTeam(h) || !pagelloneValidMatchTeam(a)) return;
     const gn=parseInt(giornataNum||0,10)||0;
     const key=pagelloneMatchIdentity(gn,h,a);
-    if(!key) return;
+    const item={
+      giornataNum:gn,
+      home:h,
+      away:a,
+      score:pagelloneCleanScoreText(score),
+      data:data||'',
+      source:'riepilogo',
+      rowIndex:Number.isFinite(rowIndex)?rowIndex:0,
+      file:file||''
+    };
     const prev=map.get(key);
-    const cleanScore=parseScorePair(score) ? score : '';
-    const item={giornataNum:gn,home:h,away:a,score:cleanScore||'',data:data||'',source:source||''};
-    // Se troviamo la stessa partita più volte, preferiamo la fonte che ha il risultato.
-    if(!prev || (!prev.score && item.score) || (!prev.data && item.data)){
-      const previous=prev||{};
-      map.set(key,{...previous,...item,score:item.score||previous.score||'',data:item.data||previous.data||''});
-    }
+    if(!prev || (!prev.score && item.score) || (!prev.data && item.data)) map.set(key,{...prev,...item,score:item.score||prev?.score||'',data:item.data||prev?.data||''});
   };
-
-  sectionFiles('risultati').forEach(f=>rowsToObjects(state.rows[f]||[]).forEach((r,i)=>{
-    const [home,away]=matchTeamsFromRow(r);
-    const gn=giornataNumberFromText(firstPresent(r,[['giornata','turno','round']])) || giornataNumberFromText(f) || 0;
-    add(gn,home,away,pagelloneMatchScoreFromRow(r),firstPresent(r,[['data','giorno','date']]),'risultati');
-  }));
 
   sectionFiles('riepilogo').forEach(f=>{
     const parsed=parseRiepilogoFile(f);
     (parsed.partite||[]).forEach((r,i)=>{
-      const [home,away]=matchTeamsFromRow(r);
-      const gn=giornataNumberFromText(firstPresent(r,[['giornata','turno','round']])) || giornataNumberFromText(f) || 0;
-      add(gn,home,away,pagelloneMatchScoreFromRow(r),firstPresent(r,[['data','giorno','date']]),'riepilogo');
+      const [home,away]=pagelloneTeamsFromRiepilogoRow(r);
+      const gn=giornataNumberFromText(firstPresent(r,[['giornata','turno','round']])) || giornataNumberFromText(f) || rowGiornataKey(r,f) || 0;
+      const data=firstPresent(r,[['data','giorno','date','note']]);
+      add(gn,home,away,resultText(r),data,i,f);
     });
   });
+
+  return [...map.values()].sort((a,b)=>(a.giornataNum-b.giornataNum)||(a.rowIndex-b.rowIndex)||String(a.home).localeCompare(String(b.home),'it',{numeric:true}));
+}
+function pagelloneKnownMatches(){
+  const map=new Map();
+  const priority={calendario:1,risultati:2,riepilogo:3};
+  const add=(giornataNum,home,away,score,data,source,rowIndex)=>{
+    const h=teamDisplayNameForChart(home), a=teamDisplayNameForChart(away);
+    if(!pagelloneValidMatchTeam(h) || !pagelloneValidMatchTeam(a)) return;
+    const gn=parseInt(giornataNum||0,10)||0;
+    const key=pagelloneMatchIdentity(gn,h,a);
+    if(!key) return;
+    const item={giornataNum:gn,home:h,away:a,score:pagelloneCleanScoreText(score),data:data||'',source:source||'',rowIndex:Number.isFinite(rowIndex)?rowIndex:0};
+    const prev=map.get(key);
+    const prevPriority=priority[prev?.source]||0;
+    const itemPriority=priority[item.source]||0;
+    if(!prev || itemPriority>prevPriority || (itemPriority===prevPriority && ((!prev.score && item.score) || (!prev.data && item.data)))){
+      map.set(key,{...prev,...item,score:item.score||prev?.score||'',data:item.data||prev?.data||''});
+    }
+  };
+
+  pagelloneRiepilogoMatches().forEach((m,i)=>add(m.giornataNum,m.home,m.away,m.score,m.data,'riepilogo',i));
+
+  sectionFiles('risultati').forEach(f=>rowsToObjects(state.rows[f]||[]).forEach((r,i)=>{
+    const [home,away]=matchTeamsFromRow(r);
+    const gn=giornataNumberFromText(firstPresent(r,[['giornata','turno','round']])) || giornataNumberFromText(f) || 0;
+    add(gn,home,away,pagelloneMatchScoreFromRow(r),firstPresent(r,[['data','giorno','date']]),'risultati',i);
+  }));
 
   sectionFiles('calendario').forEach(f=>{
     const raw=state.files[f]||'';
     parseBlockCalendar(raw).forEach(g=>{
       const gn=giornataNumberFromText(g.label)||giornataNumberFromText(f)||0;
-      (g.partite||[]).forEach(p=>add(gn,p.casa,p.trasferta,'',p.note,'calendario'));
+      (g.partite||[]).forEach((p,i)=>add(gn,p.casa,p.trasferta,'',p.note,'calendario',i));
     });
     rowsToObjects(state.rows[f]||[]).forEach((r,i)=>{
       const [home,away]=matchTeamsFromRow(r);
       const gn=giornataNumberFromText(firstPresent(r,[['giornata','turno','round']])) || giornataNumberFromText(f) || 0;
-      add(gn,home,away,pagelloneMatchScoreFromRow(r),firstPresent(r,[['data','giorno','date','note']]),'calendario');
+      add(gn,home,away,pagelloneMatchScoreFromRow(r),firstPresent(r,[['data','giorno','date','note']]),'calendario',i);
     });
   });
 
-  return [...map.values()].sort((a,b)=>(a.giornataNum-b.giornataNum)||String(a.home).localeCompare(String(b.home),'it',{numeric:true}));
+  return [...map.values()].sort((a,b)=>(a.giornataNum-b.giornataNum)||(a.rowIndex-b.rowIndex)||String(a.home).localeCompare(String(b.home),'it',{numeric:true}));
 }
-/* Recupera il risultato della partita tra due squadre di una giornata, cercando prima
-   nei risultati/referti e poi nel calendario. Il confronto è morbido sui nomi squadra,
-   quindi funziona anche se una fonte usa una sigla o una variante del nome. */
+/* Recupera il risultato della partita tra due squadre di una giornata.
+   Quando il riepilogo contiene la giornata, quello è la fonte ufficiale per evitare
+   accoppiamenti sbagliati tra squadre del pagellone e calendario/risultati generici. */
 function matchInfoForPagelloneTeams(teamA,teamB,giornataNum){
   const gn=parseInt(giornataNum||0,10)||0;
-  const direct=pagelloneKnownMatches().find(m=>
+  const riepilogo=pagelloneRiepilogoMatches();
+  const findIn=(list)=>list.find(m=>
     (!gn || !m.giornataNum || m.giornataNum===gn) &&
     ((pagelloneTeamsSame(m.home,teamA)&&pagelloneTeamsSame(m.away,teamB)) ||
      (pagelloneTeamsSame(m.home,teamB)&&pagelloneTeamsSame(m.away,teamA)))
   );
-  return direct || null;
+  const byRiepilogo=findIn(riepilogo);
+  if(byRiepilogo) return byRiepilogo;
+  if(gn && riepilogo.some(m=>m.giornataNum===gn)) return null;
+  return findIn(pagelloneKnownMatches()) || null;
 }
-function buildPagelloneMatchCard(teamA,teamB,giornataNum){
-  const info=matchInfoForPagelloneTeams(teamA,teamB,giornataNum);
+function buildPagelloneMatchCard(teamA,teamB,giornataNum,forcedInfo){
+  const info=forcedInfo || matchInfoForPagelloneTeams(teamA,teamB,giornataNum);
   const home=(info&&info.home)||teamA, away=(info&&info.away)||teamB;
   const m=document.createElement('div'); m.className='match riepilogo-match';
   const left=document.createElement('div'); left.style.cssText='min-width:0;flex:1';
@@ -7404,6 +7524,84 @@ function buildPagelloneMatchCard(teamA,teamB,giornataNum){
   wrap.appendChild(m);
   return wrap;
 }
+function pagelloneTeamHasPagelle(sq){
+  return !!(sq && Array.isArray(sq.giocatori) && sq.giocatori.length);
+}
+function pagelloneFindTeamBlock(squadre,teamName,used){
+  for(let i=0;i<(squadre||[]).length;i++){
+    const sq=squadre[i];
+    if(used&&used.has(i)) continue;
+    if(!pagelloneTeamHasPagelle(sq) || pagelloneIsRiposaTeam(sq.squadra)) continue;
+    if(pagelloneTeamsSame(sq.squadra,teamName)) return {index:i,squadra:sq};
+  }
+  return null;
+}
+function pagellonePlaceholderTeam(name){
+  return {squadra:teamDisplayNameForChart(name),giocatori:[],isPlaceholder:true};
+}
+function pagelloneMatchesForGiornata(key){
+  const gn=parseInt(key||0,10)||0;
+  if(!gn) return [];
+  const riepilogo=pagelloneRiepilogoMatches().filter(m=>m.giornataNum===gn);
+  if(riepilogo.length) return riepilogo;
+  return pagelloneKnownMatches().filter(m=>m.giornataNum===gn);
+}
+function pagellonePairKeyForMatch(giornataKey,m,index){
+  return 'g'+String(giornataKey)+'|m'+String(index)+'|'+pagelloneMatchIdentity(m.giornataNum,m.home,m.away);
+}
+function pagelloneBuildPairsForSquadre(key,label,num,squadre){
+  const cleanSquadre=(squadre||[]).filter(sq=>pagelloneTeamHasPagelle(sq) && !pagelloneIsRiposaTeam(sq.squadra));
+  const matches=pagelloneMatchesForGiornata(num||key);
+  const pairs=[];
+  const used=new Set();
+
+  if(matches.length){
+    matches.forEach((m,i)=>{
+      const a=pagelloneFindTeamBlock(squadre,m.home,used);
+      if(a) used.add(a.index);
+      const b=pagelloneFindTeamBlock(squadre,m.away,used);
+      if(b) used.add(b.index);
+      pairs.push({
+        key:pagellonePairKeyForMatch(key,m,i),
+        localKey:String(i),
+        giornataKey:String(key),
+        giornataLabel:label,
+        giornataNum:m.giornataNum||num,
+        teamA:a?a.squadra:pagellonePlaceholderTeam(m.home),
+        teamB:b?b.squadra:pagellonePlaceholderTeam(m.away),
+        matchInfo:m
+      });
+    });
+    cleanSquadre.forEach((sq,i)=>{
+      const originalIndex=(squadre||[]).indexOf(sq);
+      if(used.has(originalIndex)) return;
+      pairs.push({
+        key:'g'+String(key)+'|extra|'+String(originalIndex),
+        localKey:'extra-'+String(originalIndex),
+        giornataKey:String(key),
+        giornataLabel:label,
+        giornataNum:num,
+        teamA:sq,
+        teamB:null,
+        matchInfo:null
+      });
+    });
+    return pairs;
+  }
+
+  // Se non c'è ancora un riepilogo/calendario attendibile, non inventare accoppiamenti:
+  // mostra le pagelle squadra per squadra e lascia il risultato della partita vuoto.
+  return cleanSquadre.map((sq,i)=>({
+    key:'g'+String(key)+'|team|'+String(i)+'|'+pagelloneTeamKey(sq.squadra),
+    localKey:String(i),
+    giornataKey:String(key),
+    giornataLabel:label,
+    giornataNum:num,
+    teamA:sq,
+    teamB:null,
+    matchInfo:null
+  }));
+}
 function pagelloneBuildEntries(options){
   const optionMap=new Map((options||[]).map(([k,v])=>[String(k),v]));
   return sectionTextFiles('pagellone').map(f=>{
@@ -7411,12 +7609,7 @@ function pagelloneBuildEntries(options){
     const label=optionMap.get(String(key)) || (pagelloneGiornataNumber(f)?('Giornata '+pagelloneGiornataNumber(f)):prettyFileName(f));
     const num=pagelloneOptionNumber(key,label,f);
     const squadre=parsePagellone(state.files[f]||'');
-    const pairs=[];
-    for(let i=0;i<squadre.length;i+=2){
-      const teamA=squadre[i], teamB=squadre[i+1]||null;
-      const pairKey='g'+String(key)+'|p'+i;
-      pairs.push({key:pairKey,localKey:String(i),giornataKey:String(key),giornataLabel:label,giornataNum:num,teamA,teamB});
-    }
+    const pairs=pagelloneBuildPairsForSquadre(key,label,num,squadre);
     return {file:f,key:String(key),label,num,squadre,pairs};
   }).sort((a,b)=>(parseInt(a.num||0,10)-parseInt(b.num||0,10))||String(a.label).localeCompare(String(b.label),'it',{numeric:true}));
 }
@@ -7424,6 +7617,7 @@ function pagelloneTeamOptions(entries){
   const map=new Map();
   const add=(name)=>{
     const label=teamDisplayNameForChart(name);
+    if(pagelloneIsRiposaTeam(label)) return;
     const key=pagelloneTeamKey(label);
     if(key && !map.has(key)) map.set(key,label);
   };
@@ -7432,7 +7626,10 @@ function pagelloneTeamOptions(entries){
   return [...map.entries()].sort((a,b)=>String(a[1]).localeCompare(String(b[1]),'it',{numeric:true}));
 }
 function pagelloneMatchOptionLabel(pair,withGiornata){
-  const teams=pair.teamB ? `${pair.teamA.squadra} vs ${pair.teamB.squadra}` : pair.teamA.squadra;
+  const info=pair&&pair.matchInfo;
+  const home=info?.home || pair?.teamA?.squadra || '';
+  const away=info?.away || pair?.teamB?.squadra || '';
+  const teams=away ? `${home} vs ${away}` : home;
   if(withGiornata){
     const n=pair.giornataNum || giornataNumberFromText(pair.giornataLabel);
     return (n?('Giornata '+n):pair.giornataLabel)+' · '+teams;
@@ -7442,39 +7639,57 @@ function pagelloneMatchOptionLabel(pair,withGiornata){
 function pagelloneSchedulePairsForGiornata(key){
   const gn=parseInt(key||0,10)||0;
   if(!gn) return [];
-  return pagelloneKnownMatches().filter(m=>m.giornataNum===gn).map((m,i)=>({
-    key:'cal-g'+gn+'|p'+i,
+  return pagelloneMatchesForGiornata(gn).map((m,i)=>({
+    key:pagellonePairKeyForMatch(gn,m,i),
     localKey:String(i),
     giornataKey:String(gn),
     giornataLabel:'Giornata '+gn,
     giornataNum:gn,
-    teamA:{squadra:m.home,giocatori:[]},
-    teamB:{squadra:m.away,giocatori:[]}
+    teamA:pagellonePlaceholderTeam(m.home),
+    teamB:pagellonePlaceholderTeam(m.away),
+    matchInfo:m
   }));
 }
 function pagellonePairsForGiornata(entry,key){
-  const pairs=(entry&&entry.pairs&&entry.pairs.length) ? entry.pairs.filter(p=>p.teamB) : pagelloneSchedulePairsForGiornata(key);
-  return pairs;
+  return (entry&&entry.pairs&&entry.pairs.length) ? entry.pairs : pagelloneSchedulePairsForGiornata(key);
+}
+function pagellonePairBelongsToTeam(pair,teamKey){
+  if(!pair) return false;
+  const info=pair.matchInfo;
+  if(info && (pagelloneTeamsSame(info.home,teamKey) || pagelloneTeamsSame(info.away,teamKey))) return true;
+  return [pair.teamA,pair.teamB].filter(Boolean).some(sq=>pagelloneTeamsSame(sq.squadra,teamKey));
 }
 function pagellonePairsForTeam(entries,teamKey){
   const map=new Map();
   const addPair=(p)=>{
-    if(!p || !p.teamA || !p.teamB) return;
-    if(!pagelloneTeamsSame(p.teamA.squadra,teamKey) && !pagelloneTeamsSame(p.teamB.squadra,teamKey)) return;
-    const id=pagelloneMatchIdentity(p.giornataNum,p.teamA.squadra,p.teamB.squadra);
+    if(!p || !pagellonePairBelongsToTeam(p,teamKey)) return;
+    const info=p.matchInfo;
+    const id=info ? pagelloneMatchIdentity(info.giornataNum,info.home,info.away) : (p.key||pagelloneMatchOptionLabel(p,true));
     if(id && !map.has(id)) map.set(id,p);
   };
   (entries||[]).forEach(e=>(e.pairs||[]).forEach(addPair));
   pagelloneKnownMatches().forEach((m,i)=>addPair({
-    key:'cal-g'+m.giornataNum+'|p'+i,
+    key:pagellonePairKeyForMatch(m.giornataNum,m,i),
     localKey:String(i),
     giornataKey:String(m.giornataNum),
     giornataLabel:'Giornata '+m.giornataNum,
     giornataNum:m.giornataNum,
-    teamA:{squadra:m.home,giocatori:[]},
-    teamB:{squadra:m.away,giocatori:[]}
+    teamA:pagellonePlaceholderTeam(m.home),
+    teamB:pagellonePlaceholderTeam(m.away),
+    matchInfo:m
   }));
   return [...map.values()].sort((a,b)=>(parseInt(a.giornataNum||0,10)-parseInt(b.giornataNum||0,10))||pagelloneMatchOptionLabel(a,false).localeCompare(pagelloneMatchOptionLabel(b,false),'it',{numeric:true}));
+}
+function pagelloneMatchSlotHtml(pair){
+  if(!pair) return '';
+  const info=pair.matchInfo;
+  const home=(info&&info.home) || pair.teamA?.squadra || '';
+  const away=(info&&info.away) || pair.teamB?.squadra || '';
+  if(!home || !away) return '';
+  return `<div class="pg-match-slot" data-team-a="${esc(home)}" data-team-b="${esc(away)}" data-giornata="${esc(pair.giornataNum||'')}" data-score="${esc(info?.score||'')}" data-data="${esc(info?.data||'')}"></div>`;
+}
+function pagelloneTeamsToRenderForPair(pair){
+  return [pair?.teamA,pair?.teamB].filter(sq=>pagelloneTeamHasPagelle(sq));
 }
 function pagelloneSelectHtml(id,label,options,value,emptyLabel){
   const rows=(options||[]).map(([key,text])=>`<option value="${esc(key)}" ${String(key)===String(value)?'selected':''}>${esc(text)}</option>`).join('');
@@ -7584,8 +7799,8 @@ function renderPagellone(){
     }else{
       const groups=selectedPairs.length ? selectedPairs : (entry.pairs||[]);
       groups.forEach(pair=>{
-        if(pair.teamA && pair.teamB) html += `<div class="pg-match-slot" data-team-a="${esc(pair.teamA.squadra)}" data-team-b="${esc(pair.teamB.squadra)}" data-giornata="${esc(pair.giornataNum||'')}"></div>`;
-        [pair.teamA,pair.teamB].filter(Boolean).forEach(sq=>{ displayTeams.push(sq); html += pagelloneTeamHtml(sq); });
+        html += pagelloneMatchSlotHtml(pair);
+        pagelloneTeamsToRenderForPair(pair).forEach(sq=>{ displayTeams.push(sq); html += pagelloneTeamHtml(sq); });
       });
     }
   }else{
@@ -7614,9 +7829,10 @@ function renderPagellone(){
     entries.forEach(entry=>{
       (entry.pairs||[]).forEach(pair=>{
         if(selectedPairKeys && !selectedPairKeys.has(String(pair.key))) return;
-        const teams=[pair.teamA,pair.teamB].filter(Boolean).filter(sq=>pagelloneTeamsSame(sq.squadra,teamKey));
+        if(!pagellonePairBelongsToTeam(pair,teamKey)) return;
+        const teams=pagelloneTeamsToRenderForPair(pair).filter(sq=>pagelloneTeamsSame(sq.squadra,teamKey));
         if(!teams.length) return;
-        if(pair.teamA && pair.teamB) html += `<div class="pg-match-slot" data-team-a="${esc(pair.teamA.squadra)}" data-team-b="${esc(pair.teamB.squadra)}" data-giornata="${esc(pair.giornataNum||'')}"></div>`;
+        html += pagelloneMatchSlotHtml(pair);
         teams.forEach(sq=>{ displayTeams.push(sq); html += pagelloneTeamHtml(sq); });
       });
     });
@@ -7630,7 +7846,8 @@ function renderPagellone(){
     const teamA=slot.dataset.teamA||'';
     const teamB=slot.dataset.teamB||'';
     const giornata=parseInt(slot.dataset.giornata||0,10)||0;
-    if(teamA && teamB) slot.replaceWith(buildPagelloneMatchCard(teamA,teamB,giornata));
+    const forcedInfo=(teamA&&teamB&&slot.dataset.score) ? {home:teamA,away:teamB,score:slot.dataset.score,data:slot.dataset.data||'',giornataNum:giornata,source:'riepilogo'} : null;
+    if(teamA && teamB) slot.replaceWith(buildPagelloneMatchCard(teamA,teamB,giornata,forcedInfo));
     else slot.remove();
   });
   pagelloneAttachImages(el,displayTeams);
