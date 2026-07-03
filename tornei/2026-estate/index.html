@@ -491,6 +491,8 @@
     .player-pagella-day{display:inline-flex;align-items:center;justify-content:center;border-radius:999px;background:var(--blue);color:#fff;font-size:12px;font-weight:900;padding:5px 8px;font-variant-numeric:tabular-nums;white-space:nowrap}
     .player-pagella-main{min-width:0}
     .player-pagella-match{display:block;font-size:13px;font-weight:900;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+    .player-pagella-mobile-day{display:none;font-weight:900;color:var(--blue);margin-right:5px;white-space:nowrap}
     .player-pagella-meta{display:flex;align-items:center;gap:6px;margin-top:4px;color:var(--muted);font-size:11px;font-weight:800;overflow:hidden;white-space:nowrap;min-width:0}
     .player-pagella-meta-label{display:inline-block;min-width:0;overflow:hidden;text-overflow:ellipsis;vertical-align:middle}
     .player-pagella-score-badge{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;min-width:46px;padding:2px 7px;border-radius:999px;border:1px solid var(--line);background:rgba(102,112,133,.12);color:var(--muted);font-size:10.5px;font-weight:900;font-variant-numeric:tabular-nums;line-height:1.25;box-shadow:0 4px 10px var(--shadow)}
@@ -504,7 +506,7 @@
     .player-pagella-preview::before{content:'';position:absolute;top:-9px;left:50%;width:96px;height:24px;transform:translateX(-50%) rotate(-2deg);border-radius:3px;background:rgba(255,226,133,.72);box-shadow:0 4px 10px rgba(0,0,0,.12)}
     .player-pagella-preview-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px;position:relative;z-index:1}
     .player-pagella-preview-title{min-width:0}
-    .player-pagella-preview-title b{display:block;font-family:'Oswald',Arial,sans-serif;font-size:18px;color:#172033;line-height:1.12;text-transform:uppercase;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .player-pagella-preview-title b{display:block;font-family:'Oswald',Arial,sans-serif;font-size:18px;color:#172033;line-height:1.32;text-transform:uppercase;overflow:visible;text-overflow:clip;white-space:normal;padding-top:1px}
     .player-pagella-preview-meta{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:5px;color:#5f6b7a;font-size:12px;font-weight:800;line-height:1.3}
     .player-pagella-preview-meta-text{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
     .player-pagella-preview .player-pagella-score-badge{background:#fff8e8;box-shadow:none}
@@ -518,7 +520,7 @@
     .player-pagella-preview-text{font-size:13.5px;line-height:1.5;font-style:italic;margin:0 0 10px;color:#172033;position:relative;z-index:1}
     .player-pagella-preview-paragone{display:flex;gap:7px;color:#5f6b7a;font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.02em;line-height:1.35;position:relative;z-index:1}
     .player-pagelle-note{margin-top:9px;color:var(--muted);font-size:11.5px;line-height:1.35}
-    @media(max-width:720px){.player-pagelle-summary{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.player-pagelle-list{max-height:none;overflow:visible;padding-right:0}.player-pagella-row{grid-template-columns:minmax(0,1fr) 40px;gap:8px;padding:10px 9px}.player-pagella-row .player-pagella-day,.player-pagella-row .player-pagella-meta{display:none}.player-pagella-match{font-size:12.8px;line-height:1.25}.player-pagella-vote{width:38px;height:38px;font-size:14px}.player-pagella-preview{border-radius:17px;padding:14px 13px}.player-pagella-preview-title b{font-size:16px;white-space:normal}.player-pagella-preview-meta{gap:6px}.player-pagella-preview-meta-text{white-space:normal}.player-pagella-preview .player-pagella-score-badge{min-width:44px;padding:3px 8px;font-size:10.5px}.player-pagella-preview-text{font-size:13px}}
+    @media(max-width:720px){.player-pagelle-summary{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.player-pagelle-list{max-height:none;overflow:visible;padding-right:0}.player-pagella-row{grid-template-columns:minmax(0,1fr) 40px;gap:8px;padding:10px 9px}.player-pagella-row .player-pagella-day,.player-pagella-row .player-pagella-meta{display:none}.player-pagella-main{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.player-pagella-mobile-day{display:inline}.player-pagella-match{display:inline;font-size:12.8px;line-height:1.25;white-space:inherit;overflow:visible;text-overflow:clip}.player-pagella-vote{width:38px;height:38px;font-size:14px}.player-pagella-preview{border-radius:17px;padding:14px 13px}.player-pagella-preview-title b{font-size:16px;white-space:normal}.player-pagella-preview-meta{gap:6px}.player-pagella-preview-meta-text{white-space:normal}.player-pagella-preview .player-pagella-score-badge{min-width:44px;padding:3px 8px;font-size:10.5px}.player-pagella-preview-text{font-size:13px}}
     body.player-modal-open{overflow:hidden}
 
     /* ── Partite ── */
@@ -5237,10 +5239,11 @@ function profilePagelleSection(items){
     const btn=document.createElement('button'); btn.type='button'; btn.className='player-pagella-row'; btn.dataset.index=String(idx); btn.setAttribute('aria-expanded','false');
     const day=document.createElement('span'); day.className='player-pagella-day'; day.textContent=item.giornataNum?('G'+item.giornataNum):profileShortGiornataLabel(item.giornataLabel);
     const main=document.createElement('span'); main.className='player-pagella-main';
+    const mobileDay=document.createElement('span'); mobileDay.className='player-pagella-mobile-day'; mobileDay.textContent=(item.giornataNum?('G'+item.giornataNum):profileShortGiornataLabel(item.giornataLabel))+' -';
     const match=document.createElement('span'); match.className='player-pagella-match'; match.textContent=fixItalianAccents(item.matchLabel||item.team||'Pagella');
     const meta=document.createElement('span'); meta.className='player-pagella-meta';
     appendPlayerPagellaInlineMeta(meta,item,{team:true});
-    main.appendChild(match); main.appendChild(meta);
+    main.appendChild(mobileDay); main.appendChild(match); main.appendChild(meta);
     const vote=document.createElement('span'); vote.className='player-pagella-vote '+votoGradeClass(item.voto); vote.textContent=votoDisplay(item.voto,item.votoLabel);
     btn.appendChild(day); btn.appendChild(main); btn.appendChild(vote); list.appendChild(btn);
   });
@@ -5262,7 +5265,7 @@ function profilePagelleSection(items){
     profilePagellaPreview(preview,item);
   });
   section.appendChild(list); section.appendChild(preview);
-  const note=document.createElement('div'); note.className='player-pagelle-note'; note.textContent='Lista ordinata dalla pagella pi\u00f9 recente alla pi\u00f9 vecchia. Il voto mantiene + e - in visualizzazione, ma la media usa il valore numerico equivalente.';
+  const note=document.createElement('div'); note.className='player-pagelle-note'; note.textContent='Lista ordinata dalla pagella pi\u00f9 recente.';
   section.appendChild(note);
   return section;
 }
@@ -8056,7 +8059,7 @@ function renderPagellone(){
 
     if(!currentFile){
       const msg=files.length ? pagelloneEmptyMessage(num||currentLabel) : pagelloneEmptyMessage();
-      html += `<div class="card pg-empty"><div class="pg-empty-icon">📣</div><h3>${esc(msg)}</h3><p>Il filtro resta disponibile per tutte le giornate e per le partite della giornata, anche quando il file del pagellone non è ancora presente.</p></div>`;
+      html += `<div class="card pg-empty"><div class="pg-empty-icon">📣</div><h3>${esc(msg)}</h3><p>Stay tuned!</p></div>`;
     }else if(!entry || !entry.squadre.length){
       const msg=pagelloneEmptyMessage(num||currentLabel);
       html += `<div class="card pg-empty"><h3>${esc(msg)}</h3><p>Il file di questa giornata non è nel formato atteso (SQUADRA / GIOCATORE / TESTO / PARAGONE / VOTO).</p></div>`;
