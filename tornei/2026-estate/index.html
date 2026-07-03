@@ -7466,7 +7466,7 @@ function votoGradeClass(v){
 }
 function votoDisplay(v,label){
   const formatNumeric=(value)=>{
-    if(value==null || isNaN(value)) return '—';
+    if(value==null || isNaN(value)) return 'SV';
     const rounded=Math.round(Number(value)*100)/100;
     const base=Math.floor(rounded);
     const frac=Math.round((rounded-base)*100);
