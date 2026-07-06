@@ -2116,7 +2116,7 @@ function renderTabs(){
 function syncGlobalSearchVisibility(){
   const searchEl=document.getElementById('search');
   if(!searchEl) return;
-  const hide=state.activeTab==='fantacalcio'||state.activeTab==='pagellone';
+  const hide=state.activeTab==='home'||state.activeTab==='fantacalcio'||state.activeTab==='pagellone';
   searchEl.hidden=hide;
   searchEl.setAttribute('aria-hidden',hide?'true':'false');
 }
@@ -8417,9 +8417,9 @@ function renderRiepilogoGiornate(){
 function renderMatchSection(sectionId, kind){
   const el=document.getElementById(sectionId); el.innerHTML='';
 
-  // Con un filtro riconosciuto come giocatore, i risultati partita non sono
-  // dati del singolo giocatore: lascia il tab vuoto, come gia avviene per il calendario.
-  if(kind==='risultati' && isPlayerSearchActive()) return;
+  // Con un filtro riconosciuto come giocatore, risultati e calendario non sono
+  // dati del singolo giocatore: lascia il tab vuoto perché contengono solo riferimenti alle squadre.
+  if((kind==='risultati'||kind==='calendario') && isPlayerSearchActive()) return;
 
   const files=sectionFiles(kind);
   if(!files.length){ el.appendChild(buildEl('div','empty','Nessuna partita trovata.')); return; }
