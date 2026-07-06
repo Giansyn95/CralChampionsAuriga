@@ -1,21 +1,21 @@
 {
   "titolo": "CRAL Champions Auriga",
   "sottotitolo": "Tutte le edizioni del torneo aziendale CRAL Champions Auriga: torneo corrente, ultime edizioni e archivio storico.",
-  "logo": "tornei/2026-estate/immagini/logo_cral.png",
+  "logo": "tornei/2026-spring/immagini/logo_cral.png",
   "archivio": {
     "primoPiano": 1
   },
   "tornei": [
     {
-      "id": "2026-estate",
+      "id": "2026-spring",
       "anno": "2026",
-      "stagione": "Estate",
-      "slug": "estate",
-      "nome": "Estate",
-      "cartella": "tornei/2026-estate",
-      "titolo": "CRAL Champions - Torneo di calcio a 5 presso OLIMPIC CENTER",
-      "descrizione": "Classifiche, calendario, risultati, squadre e statistiche giocatori dell'edizione estiva.",
-      "url": "tornei/2026-estate/",
+      "stagione": "Primavera",
+      "slug": "primavera",
+      "nome": "Primavera",
+      "cartella": "tornei/2026-spring",
+      "titolo": "CRAL Spring Champions - Torneo di calcio a 5 presso OLIMPIC CENTER",
+      "descrizione": "Classifiche, calendario, risultati, squadre e statistiche giocatori dell'edizione primaverile/estiva.",
+      "url": "tornei/2026-spring/",
       "stato": "in-corso",
       "corrente": true,
       "ordine": 20261,
