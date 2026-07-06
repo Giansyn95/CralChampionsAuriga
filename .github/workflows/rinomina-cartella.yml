@@ -46,22 +46,24 @@ jobs:
           mkdir -p "$(dirname "$NEW_PATH")"
           git mv "$OLD_PATH" "$NEW_PATH"
 
-      - name: Aggiorna riferimenti nei file
+      - name: Aggiorna riferimenti nei file non-workflow
         run: |
-          OLD_NAME="${{ github.event.inputs.old_path }}"
-          NEW_NAME="${{ github.event.inputs.new_path }}"
-          OLD_FOLDER="$(basename "$OLD_NAME")"
-          NEW_FOLDER="$(basename "$NEW_NAME")"
+          OLD_PATH="${{ github.event.inputs.old_path }}"
+          NEW_PATH="${{ github.event.inputs.new_path }}"
+          OLD_FOLDER="$(basename "$OLD_PATH")"
+          NEW_FOLDER="$(basename "$NEW_PATH")"
 
-          grep -rl "$OLD_NAME\|$OLD_FOLDER" . \
+          grep -rl "$OLD_PATH\|$OLD_FOLDER" . \
             --exclude-dir=.git \
             --exclude-dir=node_modules \
+            --exclude-dir=.github \
             || true
 
-          grep -rl "$OLD_NAME\|$OLD_FOLDER" . \
+          grep -rl "$OLD_PATH\|$OLD_FOLDER" . \
             --exclude-dir=.git \
             --exclude-dir=node_modules \
-            | xargs -r sed -i "s|$OLD_NAME|$NEW_NAME|g; s|$OLD_FOLDER|$NEW_FOLDER|g"
+            --exclude-dir=.github \
+            | xargs -r sed -i "s|$OLD_PATH|$NEW_PATH|g; s|$OLD_FOLDER|$NEW_FOLDER|g"
 
       - name: Commit e push
         run: |
