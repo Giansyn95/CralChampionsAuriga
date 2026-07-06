@@ -5544,16 +5544,30 @@ function renderSquadre(){
   const el=document.getElementById('squadre'); el.innerHTML='';
   const files=sectionFiles('squadra');
   if(!files.length){ el.appendChild(buildEl('div','empty','Nessun CSV squadra trovato. Usa nomi tipo squadra_NomeSquadra.csv.')); return; }
+
+  const q=norm(state.search);
   const playerSearch=isPlayerSearchActive();
+  const teamMatchesQuery=(name)=>{
+    if(!q) return true;
+    const teamKey=teamMatchKey(name) || norm(name);
+    return !!teamKey && (teamKey.includes(q) || q.includes(teamKey));
+  };
+  const hasTeamSearch=q && files.some(f=>teamMatchesQuery(teamNameFromFile(f)));
+
   const wrap=document.createElement('div'); wrap.className='teams';
   files.forEach(f=>{
     const name=teamNameFromFile(f);
     const players=rowsToObjects(state.rows[f]);
-    const filtered=playerSearch ? players.filter(rowMatchesPersonSearch) : filterRows(players);
+    const matchesTeam=hasTeamSearch && teamMatchesQuery(name);
+    const filtered=playerSearch ? players.filter(rowMatchesPersonSearch) : (matchesTeam ? players : filterRows(players));
 
-    // Se il filtro è riconosciuto come ricerca giocatore, mostra solo la squadra
-    // che contiene quel giocatore. Le altre card spariscono invece di restare vuote.
-    if(playerSearch && !filtered.length) return;
+    // Se sto filtrando per squadra, mostro solo la/le squadre agganciate al testo
+    // cercato e sempre con tutta la rosa. Le altre card non restano più vuote.
+    if(hasTeamSearch && !matchesTeam) return;
+
+    // Per ricerche giocatore o ricerche generiche, nascondo comunque le squadre
+    // senza risultati, così non compaiono card vuote accanto a quella utile.
+    if(q && !filtered.length) return;
 
     const card=document.createElement('div'); card.className='teamCard';
     const head=document.createElement('div'); head.className='teamHead';
@@ -5585,7 +5599,8 @@ function renderSquadre(){
     });
     wrap.appendChild(card);
   });
-  if(playerSearch && !wrap.children.length) return;
+
+  if(q && !wrap.children.length) return;
   el.appendChild(wrap);
 }
 
