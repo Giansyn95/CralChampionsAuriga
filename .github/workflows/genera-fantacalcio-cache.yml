@@ -6,6 +6,7 @@ on:
       - main
       - master
     paths:
+      - 'tornei.json'
       - 'tornei/**/index.html'
       - 'tornei/**/data/**/*.csv'
       - 'tools/genera_fantacalcio_cache.js'
@@ -13,9 +14,9 @@ on:
   workflow_dispatch:
     inputs:
       torneo_dir:
-        description: 'Cartella torneo da elaborare, es. tornei/2026-spring. Scrivi all per elaborare tutti i tornei trovati.'
+        description: 'Cartella torneo da elaborare, es. tornei/2026-spring. Usa current per il torneo corrente da tornei.json, oppure all per tutti.'
         required: false
-        default: 'tornei/2026-spring'
+        default: 'current'
 
 concurrency:
   group: genera-fantacalcio-cache-${{ github.ref }}
@@ -47,13 +48,37 @@ jobs:
         id: tornei
         shell: bash
         run: |
+          current_dir="$(node - <<'NODE'
+          const fs = require('fs');
+
+          const cfg = JSON.parse(fs.readFileSync('tornei.json', 'utf8'));
+          const tornei = Array.isArray(cfg.tornei) ? cfg.tornei : [];
+
+          const torneo =
+            tornei.find(t => t.corrente === true && t.attivo !== false) ||
+            tornei.find(t => t.stato === 'in-corso' && t.attivo !== false) ||
+            tornei.find(t => t.attivo === true);
+
+          if (!torneo || !torneo.cartella) {
+            console.error('Nessun torneo corrente/attivo con cartella trovato in tornei.json');
+            process.exit(1);
+          }
+
+          process.stdout.write(torneo.cartella);
+          NODE
+          )"
+
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             input="${{ inputs.torneo_dir }}"
-            if [ -z "$input" ]; then
-              input="tornei/2026-spring"
+
+            if [ -z "$input" ] || [ "$input" = "current" ]; then
+              dirs="$current_dir"
+            else
+              dirs="$input"
             fi
-            echo "dirs=$input" >> "$GITHUB_OUTPUT"
-            echo "Tornei richiesti: $input"
+
+            echo "dirs=$dirs" >> "$GITHUB_OUTPUT"
+            echo "Tornei richiesti: $dirs"
             exit 0
           fi
 
@@ -61,9 +86,14 @@ jobs:
           after="${{ github.sha }}"
           git diff --name-only "$before" "$after" > changed_files.txt 2>/dev/null || git diff --name-only HEAD~1 HEAD > changed_files.txt
 
-          dirs=$(awk -F/ '/^tornei\/[^/]+\// {print $1"/"$2}' changed_files.txt | sort -u | tr '\n' ' ' | sed 's/[[:space:]]*$//')
-          if [ -z "$dirs" ]; then
-            dirs="tornei/2026-spring"
+          if grep -qx 'tornei.json' changed_files.txt; then
+            dirs="$current_dir"
+          else
+            dirs=$(awk -F/ '/^tornei\/[^/]+\// {print $1"/"$2}' changed_files.txt | sort -u | tr '\n' ' ' | sed 's/[[:space:]]*$//')
+
+            if [ -z "$dirs" ]; then
+              dirs="$current_dir"
+            fi
           fi
 
           echo "dirs=$dirs" >> "$GITHUB_OUTPUT"
