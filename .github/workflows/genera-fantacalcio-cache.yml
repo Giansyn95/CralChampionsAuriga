@@ -13,9 +13,9 @@ on:
   workflow_dispatch:
     inputs:
       torneo_dir:
-        description: 'Cartella torneo da elaborare, es. tornei/2026-estate. Scrivi all per elaborare tutti i tornei trovati.'
+        description: 'Cartella torneo da elaborare, es. tornei/2026-spring. Scrivi all per elaborare tutti i tornei trovati.'
         required: false
-        default: 'tornei/2026-estate'
+        default: 'tornei/2026-spring'
 
 concurrency:
   group: genera-fantacalcio-cache-${{ github.ref }}
@@ -50,7 +50,7 @@ jobs:
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             input="${{ inputs.torneo_dir }}"
             if [ -z "$input" ]; then
-              input="tornei/2026-estate"
+              input="tornei/2026-spring"
             fi
             echo "dirs=$input" >> "$GITHUB_OUTPUT"
             echo "Tornei richiesti: $input"
@@ -63,7 +63,7 @@ jobs:
 
           dirs=$(awk -F/ '/^tornei\/[^/]+\// {print $1"/"$2}' changed_files.txt | sort -u | tr '\n' ' ' | sed 's/[[:space:]]*$//')
           if [ -z "$dirs" ]; then
-            dirs="tornei/2026-estate"
+            dirs="tornei/2026-spring"
           fi
 
           echo "dirs=$dirs" >> "$GITHUB_OUTPUT"
