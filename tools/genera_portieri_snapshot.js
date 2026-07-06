@@ -355,7 +355,7 @@ function main() {
 
   if (args.help) {
     console.log(`Uso:
-  node tools/genera_portieri_snapshot.js tornei/2026-estate
+  node tools/genera_portieri_snapshot.js tornei/2026-spring
   node tools/genera_portieri_snapshot.js --all
 
 Output:

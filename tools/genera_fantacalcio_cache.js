@@ -66,8 +66,8 @@ function parseArgs(argv) {
 
 function printHelp() {
   console.log(`Uso:
-  node tools/genera_fantacalcio_cache.js tornei/2026-estate
-  node tools/genera_fantacalcio_cache.js tornei/2026-estate tornei/2027-estate
+  node tools/genera_fantacalcio_cache.js tornei/2026-spring
+  node tools/genera_fantacalcio_cache.js tornei/2026-spring tornei/2027-estate
   node tools/genera_fantacalcio_cache.js --all
 
 Struttura attesa per ogni torneo:
@@ -108,7 +108,7 @@ function discoverTournamentDirs() {
 
   const torneiDir = path.join(repoRoot, 'tornei');
   if (existsDir(torneiDir)) {
-    // Max depth 2 under tornei is enough for tornei/2026-estate, but still allows one extra grouping folder.
+    // Max depth 2 under tornei is enough for tornei/2026-spring, but still allows one extra grouping folder.
     candidates.push(...walkDirs(torneiDir, 2).filter(isTournamentDir));
   }
 
@@ -137,7 +137,7 @@ function getBuildConfigs(args) {
   if (args.all || !explicitDirs.length) {
     const discovered = discoverTournamentDirs();
     if (!discovered.length) {
-      throw new Error('Nessun torneo trovato. Esegui ad esempio: node tools/genera_fantacalcio_cache.js tornei/2026-estate');
+      throw new Error('Nessun torneo trovato. Esegui ad esempio: node tools/genera_fantacalcio_cache.js tornei/2026-spring');
     }
     return discovered.map(dir => configForSiteDir(toRepoRelative(dir), false));
   }
