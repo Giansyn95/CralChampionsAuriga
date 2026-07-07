@@ -4905,12 +4905,70 @@ function playerGoalProfile(name,candidates,teamHint){
   const totalFromClassifica=profileTotalFromClassifica('marcatori',name,candidates,['goal','goal','reti','g','totale','punti'],teamHint);
   return {total:totalFromClassifica || totalFromEntries, entries:sortProfileEntries(entries)};
 }
+function profileCleanAwardPersonToken(value){
+  // Alcuni riepiloghi inseriscono il premio come testo libero, ad es.
+  // "Iacobellis PT - 6 punti" o "Iacobellis (6 pt)". Per la scheda giocatore
+  // deve restare solo il token-persona: i punti sono già letti da profilePointsFromRow().
+  return cleanPersonTokenForTeamLookup(String(value||'')
+    .replace(/\([^)]*\)/g,' ')
+    .replace(/\b\d+(?:[,.]\d+)?\s*(?:punti?|pts?|points?|mvp|pt)\b/ig,' ')
+    .replace(/\b(?:punti?|points?|pts?|totale|giornata|miglior|migliore|premio|assegnato|assegnata)\b/ig,' '));
+}
+function profileAwardTokensMatch(a,b,teamA,teamB){
+  const left=profileCleanAwardPersonToken(a);
+  const right=profileCleanAwardPersonToken(b);
+  if(!left || !right) return false;
+  if(personTokensReferToSamePlayer(left,right,teamA,teamB)) return true;
+  const leftRec=uniqueRosterRecordForPersonToken(left,teamA);
+  const rightRec=uniqueRosterRecordForPersonToken(right,teamB);
+  if(leftRec || rightRec) return !!(leftRec && rightRec && leftRec.identityKey===rightRec.identityKey);
+  const lw=personMatchWords(left), rw=personMatchWords(right);
+  if(!lw.length || !rw.length) return false;
+  if(lw.length>=2 || rw.length>=2) return personWordsSubset(lw,rw) || personWordsSubset(rw,lw);
+  return lw[0]===rw[0];
+}
+function profileAwardNameTokens(row,kind){
+  const out=[];
+  const add=value=>{
+    String(value||'').split(/\s*(?:\n|\r|\||,|;|\+)\s*/).forEach(part=>{
+      const clean=profileCleanAwardPersonToken(part);
+      if(clean && personMatchKey(clean) && !out.some(x=>personMatchKey(x)===personMatchKey(clean))) out.push(clean);
+    });
+  };
+  const preferred = kind==='keeper'
+    ? ['portiere','miglior portiere','migliorportiere','best keeper','goalkeeper','giocatore','nome giocatore','nome completo','calciatore','player','nome']
+    : ['giocatore','mvp','migliore in campo','man of the match','motm','nome giocatore','nome completo','calciatore','player','nome'];
+  add(firstPresent(row,[preferred]));
+  add(playerNameFromRow(row));
+  personIdentityValuesFromRow(row).forEach(add);
+  return out;
+}
+function profileAwardRowMatchesPlayer(row,name,candidates,teamHint,kind){
+  if(rowMatchesAnyPlayerCandidate(row,candidates,teamHint) || matchPersonTokenToRow(name,row,teamHint)) return true;
+  const tokens=[name,...(candidates||[])].map(profileCleanAwardPersonToken).filter(Boolean);
+  const rowTokens=profileAwardNameTokens(row,kind);
+  const rowTeam=teamHintFromRow(row);
+  return rowTokens.some(rowToken=>tokens.some(token=>profileAwardTokensMatch(token,rowToken,teamHint,rowTeam)));
+}
+function profileAwardEntryKey(row,file,kind,value){
+  return [
+    rowGiornataKey(row,file)||rowGiornataLabel(row,file)||'',
+    teamMatchKey(teamHintFromRow(row)||firstPresent(row,[['squadra','team','club']])||''),
+    profileAwardNameTokens(row,kind).map(personMatchKey).filter(Boolean).join(','),
+    String(value)
+  ].join('|');
+}
 function playerMvpProfile(name,candidates,teamHint){
   const entries=[];
+  const seen=new Set();
   sectionFiles('riepilogo').forEach(f=>{
     const rows=parseRiepilogoFile(f).mvp||[];
-    rows.filter(r=>rowMatchesAnyPlayerCandidate(r,candidates,teamHint) || matchPersonTokenToRow(name,r,teamHint)).forEach(r=>{
-      entries.push({giornata:rowGiornataLabel(r,f),value:profilePointsFromRow(r),label:'punti'});
+    rows.filter(r=>profileAwardRowMatchesPlayer(r,name,candidates,teamHint,'mvp')).forEach(r=>{
+      const value=profilePointsFromRow(r);
+      const key=profileAwardEntryKey(r,f,'mvp',value);
+      if(seen.has(key)) return;
+      seen.add(key);
+      entries.push({giornata:rowGiornataLabel(r,f),value,label:'punti'});
     });
   });
   const totalFromEntries=entries.reduce((s,e)=>s+num(e.value),0);
@@ -4919,15 +4977,26 @@ function playerMvpProfile(name,candidates,teamHint){
 }
 function playerKeeperProfile(name,candidates,teamHint){
   const entries=[];
+  const seen=new Set();
   sectionFiles('riepilogo').forEach(f=>{
     const rows=parseRiepilogoFile(f).portiere||[];
-    rows.filter(r=>rowMatchesAnyPlayerCandidate(r,candidates,teamHint) || matchPersonTokenToRow(name,r,teamHint)).forEach(r=>{
-      entries.push({giornata:rowGiornataLabel(r,f),value:profilePointsFromRow(r),label:'punti'});
+    rows.filter(r=>profileAwardRowMatchesPlayer(r,name,candidates,teamHint,'keeper')).forEach(r=>{
+      const value=profilePointsFromRow(r);
+      const key=profileAwardEntryKey(r,f,'keeper',value);
+      if(seen.has(key)) return;
+      seen.add(key);
+      entries.push({giornata:rowGiornataLabel(r,f),value,label:'punti'});
     });
   });
   const totalFromEntries=entries.reduce((s,e)=>s+num(e.value),0);
   const totalFromClassifica=profileTotalFromClassifica('portieri',name,candidates,['punti portiere','punti pt','puntipt','punti','pts','points','totale'],teamHint);
-  return {total:totalFromClassifica || totalFromEntries, entries:sortProfileEntries(entries)};
+  const total=totalFromClassifica || totalFromEntries;
+  const sortedEntries=sortProfileEntries(entries);
+  // Fallback anti-contraddizione: se la classifica portieri ha punti ma nei riepiloghi
+  // non si riesce a ricostruire la singola giornata, mostra comunque il totale nel
+  // pannello invece di dichiarare "nessun miglior portiere registrato".
+  const displayEntries = sortedEntries.length ? sortedEntries : (total>0 ? [{giornata:'Totale classifica portieri',value:total,label:'punti',source:'classifica'}] : []);
+  return {total, entries:displayEntries};
 }
 function teamStandingsRow(team){
   const key=norm(team);
@@ -5031,7 +5100,7 @@ function profileGiornateText(entries){
   return labels.length ? labels.join(', ') : '—';
 }
 function profileKeeperSubText(keeper){
-  const entries=keeper.entries||[];
+  const entries=(keeper.entries||[]).filter(e=>e.source!=='classifica');
   const count=entries.length;
   const points=formatProfileNumber(keeper.total);
   if(count) return count+' giornat'+(count===1?'a':'e')+' miglior portiere: '+profileGiornateText(entries);
