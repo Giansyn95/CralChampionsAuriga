@@ -528,7 +528,11 @@
     .player-pagella-preview-text{font-size:13.5px;line-height:1.5;font-style:italic;margin:0 0 10px;color:#172033;position:relative;z-index:1}
     .player-pagella-preview-paragone{display:flex;gap:7px;color:#5f6b7a;font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.02em;line-height:1.35;position:relative;z-index:1}
     .player-pagelle-note{margin-top:9px;color:var(--muted);font-size:11.5px;line-height:1.35}
-    @media(max-width:720px){.player-pagelle-summary{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.player-pagelle-list{max-height:none;overflow:visible;padding-right:0}.player-pagella-row{grid-template-columns:minmax(0,1fr) 40px;gap:8px;padding:10px 9px}.player-pagella-row .player-pagella-day,.player-pagella-row .player-pagella-meta{display:none}.player-pagella-main{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.player-pagella-mobile-day{display:inline-flex}.player-pagella-match{display:inline;font-size:12.8px;line-height:1.25;white-space:inherit;overflow:visible;text-overflow:clip}.player-pagella-vote{width:38px;height:38px;font-size:14px}.player-pagella-preview{border-radius:17px;padding:14px 13px}.player-pagella-preview-title b{font-size:16px;white-space:normal}.player-pagella-preview-meta{gap:6px}.player-pagella-preview-meta-text{white-space:normal}.player-pagella-preview .player-pagella-score-badge{min-width:44px;padding:3px 8px;font-size:10.5px}.player-pagella-preview-text{font-size:13px}}
+    .player-pagelle-more-row{display:none;margin:10px 0 0}
+    .player-pagelle-more-btn{width:100%;border:1px solid rgba(15,90,168,.28);border-radius:999px;background:rgba(15,90,168,.10);color:var(--blue);font-weight:900;padding:10px 13px;cursor:pointer;font-size:12.5px;font-family:inherit}
+    .player-pagelle-more-btn:hover{background:rgba(15,90,168,.18)}
+    [data-theme="dark"] .player-pagelle-more-btn{border-color:rgba(59,130,246,.36);background:rgba(59,130,246,.16);color:#93c5fd}
+    @media(max-width:720px){.player-pagelle-summary{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.player-pagelle-list{max-height:min(300px,42svh);overflow:auto;padding-right:3px}.player-pagelle-more-row{display:block}.player-pagella-row{grid-template-columns:minmax(0,1fr) 40px;gap:8px;padding:10px 9px}.player-pagella-row .player-pagella-day,.player-pagella-row .player-pagella-meta{display:none}.player-pagella-main{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.player-pagella-mobile-day{display:inline-flex}.player-pagella-match{display:inline;font-size:12.8px;line-height:1.25;white-space:inherit;overflow:visible;text-overflow:clip}.player-pagella-vote{width:38px;height:38px;font-size:14px}.player-pagella-preview{border-radius:17px;padding:14px 13px}.player-pagella-preview-title b{font-size:16px;white-space:normal}.player-pagella-preview-meta{gap:6px}.player-pagella-preview-meta-text{white-space:normal}.player-pagella-preview .player-pagella-score-badge{min-width:44px;padding:3px 8px;font-size:10.5px}.player-pagella-preview-text{font-size:13px}}
     body.player-modal-open{overflow:hidden}
 
     /* ── Partite ── */
@@ -5239,11 +5243,13 @@ function profilePagelleSection(items){
   addKpi(String(items.length),'Pagelle');
   addKpi(numeric.length?formatProfileVoteAverage(avg):'—','Media voto');
   addKpi(best?votoDisplay(best.voto,best.votoLabel):'—','Miglior voto');
-  addKpi(latest?votoDisplay(latest.voto,latest.votoLabel):'—','Ultimo voto');
+  addKpi(latest?votoDisplay(latest.voto,latest.votoLabel):'—','Ultima pagella ricevuta');
   section.appendChild(summary);
   const list=document.createElement('div'); list.className='player-pagelle-list';
   const preview=document.createElement('div'); preview.className='player-pagella-preview'; preview.hidden=true;
-  items.forEach((item,idx)=>{
+  const isMobilePagelle=window.matchMedia && window.matchMedia('(max-width:720px)').matches;
+  const initialVisibleCount=isMobilePagelle ? 1 : items.length;
+  const makePagellaRow=(item,idx)=>{
     const btn=document.createElement('button'); btn.type='button'; btn.className='player-pagella-row'; btn.dataset.index=String(idx); btn.setAttribute('aria-expanded','false');
     const outcome=playerPagellaOutcome(item);
     const day=document.createElement('span'); day.className='player-pagella-day'+(outcome?' is-'+outcome:''); day.textContent=item.giornataNum?('G'+item.giornataNum):profileShortGiornataLabel(item.giornataLabel);
@@ -5254,8 +5260,16 @@ function profilePagelleSection(items){
     appendPlayerPagellaInlineMeta(meta,item,{team:true});
     main.appendChild(mobileDay); main.appendChild(match); main.appendChild(meta);
     const vote=document.createElement('span'); vote.className='player-pagella-vote '+votoGradeClass(item.voto); vote.textContent=votoDisplay(item.voto,item.votoLabel);
-    btn.appendChild(day); btn.appendChild(main); btn.appendChild(vote); list.appendChild(btn);
-  });
+    btn.appendChild(day); btn.appendChild(main); btn.appendChild(vote);
+    return btn;
+  };
+  let renderedCount=0;
+  const appendPagellaRows=(toIndex)=>{
+    const limit=Math.min(toIndex,items.length);
+    for(let idx=renderedCount;idx<limit;idx++) list.appendChild(makePagellaRow(items[idx],idx));
+    renderedCount=limit;
+  };
+  appendPagellaRows(initialVisibleCount);
   list.addEventListener('click',ev=>{
     const btn=ev.target.closest('.player-pagella-row');
     if(!btn) return;
@@ -5273,8 +5287,22 @@ function profilePagelleSection(items){
     btn.setAttribute('aria-expanded','true');
     profilePagellaPreview(preview,item);
   });
-  section.appendChild(list); section.appendChild(preview);
-  const note=document.createElement('div'); note.className='player-pagelle-note'; note.textContent='Lista ordinata dalla pagella pi\u00f9 recente.';
+  const moreRow=document.createElement('div'); moreRow.className='player-pagelle-more-row';
+  if(renderedCount<items.length){
+    const moreBtn=document.createElement('button'); moreBtn.type='button'; moreBtn.className='player-pagelle-more-btn';
+    const remaining=items.length-renderedCount;
+    moreBtn.textContent='Mostra tutte le '+items.length+' pagelle ('+remaining+' nascoste)';
+    moreBtn.setAttribute('aria-label','Mostra tutte le pagelle di questo giocatore');
+    moreBtn.addEventListener('click',()=>{
+      appendPagellaRows(items.length);
+      moreRow.remove();
+    });
+    moreRow.appendChild(moreBtn);
+  }
+  section.appendChild(list);
+  if(moreRow.childNodes.length) section.appendChild(moreRow);
+  section.appendChild(preview);
+  const note=document.createElement('div'); note.className='player-pagelle-note'; note.textContent=(initialVisibleCount<items.length?'Su mobile vedi subito l\'ultima pagella ricevuta; usa “Mostra tutte” per aprire lo storico. ':'')+'Lista ordinata dalla pagella pi\u00f9 recente.';
   section.appendChild(note);
   return section;
 }
