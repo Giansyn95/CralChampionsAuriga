@@ -5103,7 +5103,7 @@ function profileKeeperSubText(keeper){
   const entries=(keeper.entries||[]).filter(e=>e.source!=='classifica');
   const count=entries.length;
   const points=formatProfileNumber(keeper.total);
-  if(count) return count+' giornat'+(count===1?'a':'e')+' miglior portiere: '+profileGiornateText(entries);
+  if(count) return count+' giornat'+(count===1?'a':'e')+' miglior portiere';
   if(num(keeper.total)>0) return points+' punti totali';
   return 'Nessuna giornata';
 }
