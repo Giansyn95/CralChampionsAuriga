@@ -5018,15 +5018,23 @@ function profileShortGiornataLabel(value){
   return n ? ('G'+n) : fixItalianAccents(String(value||'Giornata'));
 }
 function profileGiornateText(entries){
-  const labels=[...(entries||[])]
-    .map(e=>profileShortGiornataLabel(e.giornata))
-    .filter(Boolean);
+  const seen=new Set();
+  const labels=[];
+  [...(entries||[])].forEach(e=>{
+    const label=profileShortGiornataLabel(e.giornata);
+    const key=norm(label);
+    if(label && !seen.has(key)){
+      seen.add(key);
+      labels.push(label);
+    }
+  });
   return labels.length ? labels.join(', ') : '—';
 }
 function profileKeeperSubText(keeper){
-  const count=(keeper.entries||[]).length;
+  const entries=keeper.entries||[];
+  const count=entries.length;
   const points=formatProfileNumber(keeper.total);
-  if(count) return count+' giornat'+(count===1?'a':'e')+' · '+points+' punti';
+  if(count) return count+' giornat'+(count===1?'a':'e')+' miglior portiere: '+profileGiornateText(entries);
   if(num(keeper.total)>0) return points+' punti totali';
   return 'Nessuna giornata';
 }
@@ -5347,7 +5355,7 @@ function openPlayerProfile(name,contextRow){
   if(!data.isKeeper || data.goals.total>0) stats.appendChild(profileStatTile('Goal segnati',formatProfileNumber(data.goals.total),data.goals.entries.length ? data.goals.entries.length+' giornate registrate' : 'Totale classifica',true));
   if(data.mediaGol) stats.appendChild(profileStatTile('Media goal/partita',data.mediaGol.media.toFixed(2).replace('.',','),data.mediaGol.partite+' partite',false));
   if(data.isKeeper){
-    stats.appendChild(profileStatTile('Punti Miglior portiere',formatProfileNumber(data.keeper.total),'',true));
+    stats.appendChild(profileStatTile('Punti Miglior portiere',formatProfileNumber(data.keeper.total),profileKeeperSubText(data.keeper),true));
     stats.appendChild(profileStatTile('Goal subiti squadra',data.conceded===null?'—':formatProfileNumber(data.conceded),data.team||'Squadra non indicata',false));
   } else {
     stats.appendChild(profileStatTile('Punti MVP',formatProfileNumber(data.mvp.total),data.mvp.entries.length ? data.mvp.entries.length+' giornate MVP' : 'Totale classifica',false));
@@ -5356,7 +5364,9 @@ function openPlayerProfile(name,contextRow){
 
   const panels=document.createElement('div'); panels.className='player-profile-panels';
   if(!data.isKeeper || data.goals.total>0) panels.appendChild(profileTimelineSection('Goal per giornata','⚽',data.goals.entries,{detail:'',valueSuffix:''},'Nessun dettaglio giornata disponibile per i goal.'));
-  if(!data.isKeeper){
+  if(data.isKeeper){
+    panels.appendChild(profileTimelineSection('MIGLIOR PORTIERE DELLA GIORNATA','🧤',data.keeper.entries,{detail:'',valueSuffix:'pt'},'Nessun miglior portiere registrato nelle giornate.'));
+  } else {
     panels.appendChild(profileTimelineSection('MVP DELLA GIORNATA','⭐',data.mvp.entries,{detail:'',valueSuffix:'pt'},'Nessun MVP registrato nelle giornate.'));
   }
   if(pagelle.length) panels.appendChild(profilePagelleSection(pagelle));
