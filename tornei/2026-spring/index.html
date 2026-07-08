@@ -12,6 +12,13 @@
   <link rel="icon" type="image/png" href="immagini/logo_cral.png" />
   <link rel="apple-touch-icon" sizes="180x180" href="immagini/logo_cral.png" />
   <link rel="apple-touch-icon" href="immagini/logo_cral.png" />
+  <!-- Il logo CRAL resta lo stesso tra un'edizione e l'altra del torneo: lo
+       precarichiamo con priorità alta così il browser inizia a scaricarlo
+       nell'istante in cui legge l'head, prima ancora che parta lo script.
+       Lavora insieme al Service Worker (sw.js) che lo mette in cache
+       permanente: dal secondo caricamento in poi non viene più richiesto
+       in rete, quindi appare istantaneo anche offline. -->
+  <link rel="preload" as="image" href="immagini/logo_cral.png" fetchpriority="high" />
   <title>CRAL Champions</title>
   <!-- Open Graph: anteprima link su WhatsApp, Telegram, Facebook ecc.
        Letti dai crawler senza eseguire JavaScript, quindi i valori restano fissi
@@ -723,7 +730,7 @@
     .player-profile-role-badge{display:inline-flex;align-items:center;justify-content:flex-start;min-width:0;max-width:100%;text-align:left}
     .player-profile-role-badge span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     @media(max-width:720px){.player-profile-backdrop{padding:7px;align-items:center}.player-profile-card{width:calc(100vw - 14px);max-width:calc(100vw - 14px);max-height:calc(100svh - 14px);border-radius:22px}.player-profile-hero{grid-template-columns:74px minmax(0,1fr);gap:11px;padding:16px 14px 14px;border-radius:22px 22px 0 0}.player-profile-photo{width:72px;height:72px;border-radius:18px;font-size:23px}.player-profile-title{padding-right:38px;gap:8px}.player-profile-title h2{font-size:clamp(22px,7vw,30px);line-height:1.02}.player-profile-sub{gap:6px;font-size:12px;align-items:flex-start}.player-profile-team-badge{padding:4px 7px}.player-profile-team-name{max-width:min(42vw,260px)}.player-profile-role-badge{max-width:min(42vw,260px)}.player-profile-badge{font-size:11px;padding:5px 8px}.player-profile-body{padding:13px 12px 16px}.player-profile-stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.player-profile-stat{min-height:78px;padding:10px;border-radius:16px}.player-profile-stat .n{font-size:23px}.player-profile-stat .l{font-size:10px}.player-profile-panels{grid-template-columns:1fr;gap:10px}.player-profile-section{border-radius:18px;padding:12px}.player-profile-entry{align-items:flex-start;padding:9px 10px}.player-profile-close{top:9px;right:9px;width:36px;height:36px;border-radius:12px}.chart-container.is-tall{height:340px}}
-    @media(max-width:560px){.wrap{padding:14px}.grid{grid-template-columns:1fr}.hero{padding:22px}.riepilogo-match{display:block}.score{margin:6px 0}.riepilogo-match .match-team{max-width:none}.riepilogo-match .match-name{font-size:16px}.riepilogo-match .score{text-align:left;font-size:26px;min-width:0}.riepilogo-kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.riepilogo-kpi.is-wide,.riepilogo-kpi.is-match-max,.riepilogo-kpi.is-scorer{grid-column:1/-1}.tableWrap{font-size:13px}th,td{padding:9px 9px}table.tbl-aligned th[data-col-role=rank],table.tbl-aligned td[data-col-role=rank]{min-width:40px;max-width:54px}table.tbl-aligned th[data-col-role=section],table.tbl-aligned td[data-col-role=section]{min-width:70px;max-width:110px}table.tbl-aligned th[data-col-role=team],table.tbl-aligned td[data-col-role=team],table.tbl-aligned th[data-col-role=person],table.tbl-aligned td[data-col-role=person]{min-width:118px;max-width:150px}table.tbl-aligned th[data-col-role=metric],table.tbl-aligned td[data-col-role=metric]{min-width:48px;max-width:68px}table.tbl-aligned th[data-col-role=quantity],table.tbl-aligned td[data-col-role=quantity]{min-width:88px;max-width:112px}.tbl-logo,.tbl-avatar{width:24px;height:24px}.mini-logo{width:22px;height:22px}.name-cell{gap:7px}.player{gap:9px}.player-link-inline{display:inline-block;line-height:1.18}.chart-container.is-tall{height:380px}}
+    @media(max-width:560px){.wrap{padding:14px}.grid{grid-template-columns:1fr}.hero{padding:22px}.riepilogo-match{display:block}.score{margin:6px 0}.riepilogo-match .match-team{max-width:none}.riepilogo-match .match-name{font-size:16px}.riepilogo-match .score{text-align:left;font-size:26px;min-width:0}.riepilogo-kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.riepilogo-kpi.is-wide,.riepilogo-kpi.is-match-max,.riepilogo-kpi.is-scorer{grid-column:1/-1}.tableWrap{font-size:13px}th,td{padding:9px 9px}table.tbl-aligned th[data-col-role=rank],table.tbl-aligned td[data-col-role=rank]{min-width:40px;max-width:54px}table.tbl-aligned th[data-col-role=section],table.tbl-aligned td[data-col-role=section]{min-width:70px;max-width:110px}table.tbl-aligned th[data-col-role=team],table.tbl-aligned td[data-col-role=team],table.tbl-aligned th[data-col-role=person],table.tbl-aligned td[data-col-role=person]{min-width:118px;max-width:150px}table.tbl-aligned th[data-col-role=metric],table.tbl-aligned td[data-col-role=metric]{min-width:48px;max-width:68px}table.tbl-aligned th[data-col-role=quantity],table.tbl-aligned td[data-col-role=quantity]{min-width:88px;max-width:112px}.tbl-logo,.tbl-avatar{width:24px;height:24px}.mini-logo{width:22px;height:22px}.name-cell{gap:7px}.player{gap:9px}.player-link-inline{display:inline-block;line-height:1.18}.chart-container.is-tall{height:380px}.trophy-badge{font-size:13px}}
     @media print{.toolbar,.tabs,.search,#errorBanner{display:none}.section{display:block}.wrap{max-width:none}.card,.hero{box-shadow:none}}
     @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
   
@@ -1292,11 +1299,16 @@ const FANTA_CACHE_FILE   = 'fantacalcio/fantacalcio_cache.json';
 const PAGELLONE_SUBFOLDER = 'data/pagelloni/';
 const PORTIERI_SNAPSHOT_FILE = 'portieri_snapshot.json';
 const FANTA_CACHE_SCHEMA = 1;
+// Interruttore unico per nascondere Pagellone e Fantacalcio in produzione per quest'anno:
+// oltre a togliere i tab (vedi TABS sotto), forza a "niente pagelle" anche nella scheda
+// giocatore, così la sezione non ricompare da sola se restasse in giro un file pagellone
+// caricato per errore. Per riattivare tutto l'anno prossimo: rimettere a false.
+const HIDE_PAGELLONE_FANTACALCIO = true;
 const TABS = [
   ['home','🏠 Home'],['classifiche','🏆 Classifiche'],['statistiche','📊 Statistiche'],
   ['squadre','👕 Squadre'],['calendario','📅 Calendario'],['risultati','⚽ Risultati'],
   ['riepilogo','📝 Riepilogo giornate'],['pagellone','📣 Pagellone ignorante'],['fantacalcio','Fantacalcio']
-];
+].filter(([id])=>!HIDE_PAGELLONE_FANTACALCIO || (id!=='pagellone' && id!=='fantacalcio'));
 
 /* ── Stato globale ── */
 let state = {
@@ -5458,7 +5470,7 @@ function openPlayerProfile(name,contextRow){
   } else {
     panels.appendChild(profileTimelineSection('MVP DELLA GIORNATA','⭐',data.mvp.entries,{detail:'',valueSuffix:'pt'},'Nessun MVP registrato nelle giornate.'));
   }
-  if(pagelle.length) panels.appendChild(profilePagelleSection(pagelle));
+  if(pagelle.length && !HIDE_PAGELLONE_FANTACALCIO) panels.appendChild(profilePagelleSection(pagelle));
   if(panels.children.length) body.appendChild(panels);
 
   const compareRow=document.createElement('div'); compareRow.className='compare-trigger-row';
@@ -5943,7 +5955,13 @@ function buildCalendarioProgress(rounds){
 
   const progressItems=ordered.map(item=>{
     const info=playedInfo.get(item.key);
-    const expected=item.expectedMatches||0;
+    // Se il calendario non indica quante partite sono attese per questa giornata
+    // (expected=0), non possiamo fidarci ciecamente della sola presenza del
+    // riepilogo: usiamo il numero di righe partita effettivamente trovate nel
+    // riepilogo come "atteso di fatto", così una giornata con risultati solo
+    // parziali (es. ultima giornata caricata a metà) non risulta "Disputata".
+    const hasRoundInfo=info && Number.isFinite(info.totalRows) && info.totalRows>0;
+    const expected=item.expectedMatches || (hasRoundInfo ? info.totalRows : 0);
     const rawPlayed=info ? info.played : (legacyPlayed.has(item.key) ? Infinity : 0);
     const playedMatches=Number.isFinite(rawPlayed) ? rawPlayed : expected;
     const displayPlayed=expected ? Math.min(playedMatches,expected) : (playedMatches||0);
@@ -11083,6 +11101,16 @@ document.getElementById('search').addEventListener('input',e=>{
 
 /* ── Avvio ── */
 initTheme(); renderTabs(); updateTitle(); tryLoadLogo(); loadAuto();
+
+/* Service Worker: mette il logo CRAL in cache permanente (vedi sw.js).
+   Registrato dopo il load per non competere col caricamento della pagina;
+   se il browser non lo supporta o il file manca, il sito funziona lo
+   stesso esattamente come prima (fallback silenzioso). */
+if('serviceWorker' in navigator){
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  });
+}
 </script>
 </body>
 </html>
