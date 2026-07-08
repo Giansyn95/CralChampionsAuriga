@@ -225,6 +225,7 @@
     [data-theme="dark"] .initials-fallback{background:#243450;color:#93c5fd}
     .mini-logo{width:26px;height:26px;border-radius:7px;object-fit:cover;background:#dbe7f6;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:10px;color:var(--blue);flex:0 0 auto}
     .name-cell{display:flex;align-items:center;gap:9px;min-width:0}
+    .trophy-badge{font-size:15px;line-height:1;flex:0 0 auto}
     .name-cell span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
     .name-cell .player-link{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;display:block}
     /* ── Squadre ── */
@@ -2678,7 +2679,7 @@ function buildTable(rows, tableId, imgType, priorityNames, highlightName){
   if(hasSearch) body=body.filter(rowMatchesSearch);
   if(!body.length) return buildEl('div','empty',hasSearch?'Nessun risultato per la ricerca.':'Nessun dato disponibile.');
   const order=reorderIndices(headers,priorityNames);
-  if(order){ headers=order.map(i=>headers[i]); body=body.map(r=>{ const nr=order.map(i=>r[i]); if(r._noLink) nr._noLink=true; return nr; }); }
+  if(order){ headers=order.map(i=>headers[i]); body=body.map(r=>{ const nr=order.map(i=>r[i]); if(r._noLink) nr._noLink=true; if(r._trophy) nr._trophy=r._trophy; return nr; }); }
   if(!tableId){ tableId='tbl_'+(++_tableCounter); }
   const sort=state.sortState[tableId]||{col:-1,dir:'asc'};
   const nameColIdx = imgType ? findNameColIndex(headers, imgType) : -1;
@@ -2750,6 +2751,13 @@ function buildTable(rows, tableId, imgType, priorityNames, highlightName){
         }
         labelEl.textContent=name;
         cell.appendChild(labelEl);
+        if(row._trophy){
+          const trophyEl=document.createElement('span');
+          trophyEl.className='trophy-badge';
+          trophyEl.textContent=row._trophy;
+          trophyEl.setAttribute('aria-hidden','true');
+          cell.appendChild(trophyEl);
+        }
         td.appendChild(cell);
       } else {
         const cellText=fixItalianAccents(row[i]??'');
@@ -3691,6 +3699,10 @@ function renderClassifiche(){
   const el=document.getElementById('classifiche'); el.innerHTML='';
   const playerSearch=isPlayerSearchActive();
   const goalkeeperSearch=isGoalkeeperSearchActive();
+  // Icona trofeo diversa per tipo di classifica, mostrata solo sul 1° classificato
+  // e solo a torneo concluso (stessa condizione usata per il Wrapped di fine stagione).
+  const trophyIcons={classifica_squadre:'🏆',marcatori:'⚽',mvp:'⭐',portieri:'🧤'};
+  const showTrophies=isTournamentComplete();
   const sections=[
     ['classifica_squadre','CLASSIFICA SQUADRE','team',['posizione','squadra','puntifinali'],['puntifinali']],
     ['marcatori','CLASSIFICA MARCATORI','player',['posizione','pos','rank','giocatore','goal','goal','reti'],['goal','reti']],
@@ -3733,6 +3745,14 @@ function renderClassifiche(){
         const sortedObjs=sortPortieriRowsByPointsThenTeamRank(rowsToObjects(state.rows[f]));
         tableRows=[headers,...sortedObjs.map(r=>headers.map(h=>r[h]??''))];
         tableRows=renumberPositionColumn(tableRows);
+      }
+
+      // Trofeo sul 1° classificato: solo a torneo concluso e solo in vista normale
+      // (con ricerca giocatore attiva la tabella mostra righe filtrate, non l'intera
+      // classifica, quindi la riga "prima" non è necessariamente il vero 1° posto).
+      if(showTrophies && !playerSearch && tableRows.length>1){
+        tableRows[1]=tableRows[1].slice();
+        tableRows[1]._trophy=trophyIcons[kind];
       }
 
       // In ricerca giocatore non mostrare card vuote: se quel giocatore non è
