@@ -1614,11 +1614,22 @@ const STATIC_TEAM_IMAGE_KEYS=new Set([
   'aurigajuniors','blackjack','blackjackii','blackjackjogabonitoii',
   'boteball','fcstealthydribblers','stealthydribblers','outofofficefc'
 ]);
-function staticImageSrcFor(type,key){
+function staticImageCandidatesFor(type,key){
   const k=norm(key);
-  if(type==='player' && STATIC_PLAYER_IMAGE_KEYS.has(k)) return 'immagini/giocatori/thumb/'+k+'.webp';
-  if(type==='team' && STATIC_TEAM_IMAGE_KEYS.has(k)) return 'immagini/squadre/'+k+'.webp';
-  return '';
+  if(type==='player' && STATIC_PLAYER_IMAGE_KEYS.has(k)){
+    // Le foto giocatore possono stare nella cartella principale oppure in thumb/.
+    // GitHub Pages e Safari sono case-sensitive: il nome generato deve combaciare
+    // esattamente con il file deployato. Proviamo prima il path principale, poi thumb.
+    return [
+      'immagini/giocatori/'+k+'.webp',
+      'immagini/giocatori/thumb/'+k+'.webp'
+    ];
+  }
+  if(type==='team' && STATIC_TEAM_IMAGE_KEYS.has(k)) return ['immagini/squadre/'+k+'.webp'];
+  return [];
+}
+function staticImageSrcFor(type,key){
+  return staticImageCandidatesFor(type,key)[0] || '';
 }
 
 function rememberImage(relPath,file){
@@ -1680,7 +1691,7 @@ const _imageProbeCache=new Map();
    Serve soprattutto quando si cambia tab: gli elementi <img> vengono ricreati,
    ma il src già trovato può essere assegnato subito senza mostrare placeholder/probe. */
 const _resolvedImageURLCache=new Map();
-const PLAYER_IMAGE_URL_CACHE_KEY='cral.playerImageURLCache.v3';
+const PLAYER_IMAGE_URL_CACHE_KEY='cral.playerImageURLCache.v4';
 let _persistentPlayerImageURLCache=null;
 let _persistentPlayerImageURLCacheTimer=null;
 function imageCacheCompositeKey(type,names){
@@ -1842,8 +1853,8 @@ function imageCandidatesFor(type,name){
   names.forEach(n=>addCandidate(imageFor(type,n)));
 
   // 2) File statici noti e realmente presenti nel repo.
-  //    Nessuna prova su png/jpg/jpeg e nessuna prova su giocatori senza foto.
-  names.forEach(n=>addCandidate(staticImageSrcFor(type,n)));
+  //    Per i giocatori proviamo sia immagini/giocatori/*.webp sia immagini/giocatori/thumb/*.webp.
+  names.forEach(n=>staticImageCandidatesFor(type,n).forEach(addCandidate));
 
   return candidates;
 }
