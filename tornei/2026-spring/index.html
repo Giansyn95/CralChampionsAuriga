@@ -9623,7 +9623,17 @@ function fantaDisplayPres(result){
   if(result.presPoints!==null && result.presPoints!==undefined) return result.presPoints;
   return (result.pres||0)*6;
 }
-function fantaRankMedal(index){ return index===0?'🥇':(index===1?'🥈':(index===2?'🥉':'')); }
+function fantaShouldShowMedals(){
+  // Stessa logica dei trofei nelle classifiche: le emoji premio compaiono
+  // solo quando il torneo è davvero concluso. Nel Fantacalcio le medaglie
+  // rappresentano il podio finale, quindi restano nascoste nelle singole
+  // giornate e durante il torneo in corso.
+  return (state.selectedFantaGiornata||'totale')==='totale' && isTournamentComplete();
+}
+function fantaRankMedal(index){
+  if(!fantaShouldShowMedals()) return '';
+  return index===0?'🥇':(index===1?'🥈':(index===2?'🥉':''));
+}
 function fantaResultSortValue(row,col,index){
   switch(col){
     case 0: return index+1;
