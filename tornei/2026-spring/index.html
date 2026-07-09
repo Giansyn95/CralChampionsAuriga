@@ -11131,13 +11131,16 @@ document.getElementById('search').addEventListener('input',e=>{
 /* ── Avvio ── */
 initTheme(); renderTabs(); updateTitle(); tryLoadLogo(); loadAuto();
 
-/* Service Worker: mette il logo CRAL in cache permanente (vedi sw.js).
+/* Service Worker: cache del logo CRAL (vedi sw.js), condiviso con tutte le
+   pagine del sito. sw.js vive nella ROOT del sito (due livelli sopra questa
+   pagina, che sta in tornei/<edizione>/), non in questa cartella: lo scope
+   risultante copre così anche la landing page e le altre edizioni.
    Registrato dopo il load per non competere col caricamento della pagina;
    se il browser non lo supporta o il file manca, il sito funziona lo
    stesso esattamente come prima (fallback silenzioso). */
 if('serviceWorker' in navigator){
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js').catch(() => {});
+    navigator.serviceWorker.register('../../sw.js').catch(() => {});
   });
 }
 </script>
