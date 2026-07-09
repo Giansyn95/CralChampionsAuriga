@@ -1603,6 +1603,24 @@ function imageExts(){ return ['webp','png','jpg','jpeg']; }
 function baseNoExt(path){ return String(path||'').split('/').pop().replace(/\.[^.]+$/,''); }
 function imageFolderToken(type){ return type==='team'?'immaginisquadre':'immaginigiocatori'; }
 
+/* Immagini statiche realmente presenti nel repo.
+   Evita centinaia di 404: il browser non puo elencare una cartella su GitHub Pages,
+   quindi non proviamo piu estensioni/nomi a caso per ogni giocatore. */
+const STATIC_PLAYER_IMAGE_KEYS=new Set([
+  'arenamichele','detomanicola','fiorellagiacomo','menolascinanicolandrea',
+  'saracinogianvito','spinolasalvatore','turipaolo'
+]);
+const STATIC_TEAM_IMAGE_KEYS=new Set([
+  'aurigajuniors','blackjack','blackjackii','blackjackjogabonitoii',
+  'boteball','fcstealthydribblers','stealthydribblers','outofofficefc'
+]);
+function staticImageSrcFor(type,key){
+  const k=norm(key);
+  if(type==='player' && STATIC_PLAYER_IMAGE_KEYS.has(k)) return 'immagini/giocatori/thumb/'+k+'.webp';
+  if(type==='team' && STATIC_TEAM_IMAGE_KEYS.has(k)) return 'immagini/squadre/'+k+'.webp';
+  return '';
+}
+
 function rememberImage(relPath,file){
   const rel=String(relPath||file?.name||'');
   const url=URL.createObjectURL(file);
@@ -1640,12 +1658,9 @@ function imageFor(type,name){
   }).filter(x=>x.score<999).sort((a,b)=>a.score-b.score);
   if(candidates.length) return candidates[0].url;
 
-  const prefix=type==='team'?'immagini/squadre/':'immagini/giocatori/';
-  const dataPrefix=type==='team'?'data/immagini/squadre/':'data/immagini/giocatori/';
-  // Fallback statici: per i giocatori usa prima le thumbnail WebP leggere.
-  // Gli originali restano come fallback nelle candidate generate da imageCandidatesFor().
-  if(type==='player') return 'immagini/giocatori/thumb/'+key+'.webp';
-  return prefix+key+'.png';
+  // Fallback statico solo se sappiamo che il file esiste davvero.
+  // Se non esiste una corrispondenza, restano le iniziali: niente richieste 404.
+  return staticImageSrcFor(type,key);
 }
 
 function imagePlaceholderEl(cls,name){
@@ -1787,39 +1802,43 @@ function probeFirstWorkingImage(candidates, options={}){
   if(!unique.length) return Promise.resolve(null);
   const cacheKey=unique.join('\n');
   if(_imageProbeCache.has(cacheKey)) return _imageProbeCache.get(cacheKey);
+
+  // Sequenziale: si ferma al primo file valido.
+  // Questo evita la raffica di richieste 404 generata dal vecchio probe parallelo.
   const promise=new Promise(resolve=>{
-    let pending=unique.length, settled=false;
-    unique.forEach(src=>{
+    let i=0;
+    const tryNext=()=>{
+      if(i>=unique.length){ resolve(null); return; }
+      const src=unique[i++];
       const probe=new Image();
       probe.decoding='async';
       if(options.fetchPriority && 'fetchPriority' in probe) probe.fetchPriority=options.fetchPriority;
-      probe.onload=()=>{ if(!settled){ settled=true; resolve(src); } };
-      probe.onerror=()=>{ pending--; if(!settled && pending<=0) resolve(null); };
+      probe.onload=()=>resolve(src);
+      probe.onerror=tryNext;
       probe.src=src;
-    });
+    };
+    tryNext();
   }).catch(()=>null);
   _imageProbeCache.set(cacheKey,promise);
   return promise;
 }
 
+
 function imageCandidatesFor(type,name){
   const names=(Array.isArray(name)?name:[name]).map(x=>smartSpace(x)).filter(Boolean);
-  const prefixes=type==='team'
-    ? ['immagini/squadre/','data/immagini/squadre/']
-    : ['immagini/giocatori/thumb/','data/immagini/giocatori/thumb/','immagini/giocatori/','data/immagini/giocatori/'];
   const candidates=[];
   const addCandidate=(src)=>{ if(src && !candidates.includes(src)) candidates.push(src); };
 
-  // Prima alias reali caricati dal picker/cartella, poi fallback statici.
+  // 1) Alias reali caricati manualmente dal picker/cartella.
   names.forEach(n=>addCandidate(imageFor(type,n)));
-  names.forEach(n=>{
-    const key=norm(n);
-    for(const pref of prefixes){
-      for(const ext of imageExts()) addCandidate(pref+key+'.'+ext);
-    }
-  });
+
+  // 2) File statici noti e realmente presenti nel repo.
+  //    Nessuna prova su png/jpg/jpeg e nessuna prova su giocatori senza foto.
+  names.forEach(n=>addCandidate(staticImageSrcFor(type,n)));
+
   return candidates;
 }
+
 
 function createInitialFallback(cls,name){
   const d=document.createElement('div');
@@ -6936,13 +6955,7 @@ function riepilogoScorerPhotoEl(value){
   img.decoding='async';
   img.loading='lazy';
   if(!name) return img;
-  const key=norm(name);
-  const candidates=[];
-  const add=(src)=>{ if(src && !candidates.includes(src)) candidates.push(src); };
-  add(imageFor('player',name));
-  ['immagini/giocatori/','data/immagini/giocatori/'].forEach(prefix=>{
-    imageExts().forEach(ext=>add(prefix+key+'.'+ext));
-  });
+  const candidates=imageCandidatesFor('player',name);
 
   const cached=cachedResolvedImage('player',[name]);
   if(cached){
@@ -10739,10 +10752,12 @@ async function loadAuto(fresh){
   // si vedrebbe un flash ad ogni refresh. tryLoadLogo(), chiamata più sotto e
   // nei vari punti del flusso, è comunque no-op se il logo è già a posto.
 
-  // Avvia SUBITO i CSV base noti nel codice, incluso manifest.csv.
-  // Prima si aspettava manifest.csv e solo dopo partivano classifica/marcatori/calendario:
-  // così si pagava un giro di rete in più sul percorso critico del primo caricamento.
-  const defaultCsvList=[...new Set(DEFAULT_FILES.filter(x=>/\.csv$/i.test(x)))];
+  // Avvia solo i file minimi.
+  // Prima venivano richiesti tutti i possibili CSV storici/alternativi: se mancavano,
+  // la pagina funzionava comunque ma la Network tab si riempiva di 404.
+  // Ora manifest.csv resta la fonte dei file reali del torneo.
+  const BOOT_FILES=['config.csv','manifest.csv'];
+  const defaultCsvList=[...new Set(BOOT_FILES.filter(x=>/\.csv$/i.test(x)))];
   const defaultFetches=new Map(defaultCsvList.map(f=>[
     f,
     fetchText(f,fresh)
@@ -10750,15 +10765,19 @@ async function loadAuto(fresh){
       .catch(reason=>({status:'rejected',reason,f}))
   ]));
 
-  let list=[...DEFAULT_FILES];
+  let list=[...BOOT_FILES];
   const manifestResult=await defaultFetches.get('manifest.csv');
   if(manifestResult && manifestResult.status==='fulfilled'){
     const mt=manifestResult.value.txt;
     const mr=parseCsv(mt);
     const objs=rowsToObjects(mr);
     const files=objs.length?objs.map(o=>col(o,['file','nome','filename'])).filter(Boolean):mr.flat().filter(x=>x&&x.toLowerCase()!=='file');
-    list=[...new Set([...list,...files])];
+    list=[...new Set([...BOOT_FILES,...files])];
     state.rows['manifest.csv']=mr; state.files['manifest.csv']=mt;
+  }else{
+    // Compatibilita con vecchie installazioni senza manifest.csv.
+    // In quel caso si torna ai nomi storici, accettando eventuali 404.
+    list=[...DEFAULT_FILES];
   }
 
   /* Tutti i CSV base vengono richiesti in parallelo. I CSV Fantacalcio
