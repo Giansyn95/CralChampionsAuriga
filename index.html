@@ -8,13 +8,13 @@
   <title>CRAL Champions Auriga</title>
   <meta name="description" content="Tutte le edizioni del torneo aziendale CRAL Champions Auriga: torneo corrente, ultime edizioni e archivio storico." />
 
-  <link rel="icon" type="image/png" href="tornei/2026-estate/immagini/logo_cral.png" />
-  <link rel="apple-touch-icon" sizes="180x180" href="tornei/2026-estate/immagini/logo_cral.png" />
+  <link rel="icon" type="image/png" href="tornei/2026-spring/immagini/logo_cral.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="tornei/2026-spring/immagini/logo_cral.png" />
   <!-- Precarica subito il logo dell'edizione corrente (di default), in parallelo
        col resto della pagina e ancora prima che parta il fetch di tornei.json.
        Se tornei.json indicherà un logo diverso, lo script più sotto lo sostituisce;
        se coincide (caso normale), non fa nulla e non c'è alcun flash. -->
-  <link rel="preload" as="image" href="tornei/2026-estate/immagini/logo_cral.png" fetchpriority="high" />
+  <link rel="preload" as="image" href="tornei/2026-spring/immagini/logo_cral.png" fetchpriority="high" />
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -157,7 +157,7 @@
                  dello script principale). Se tornei.json indica un logo diverso,
                  setLogo() lo sostituirà; se combacia (caso normale) non tocca nulla. -->
             <img id="heroLogoDefaultImg" alt="Logo CRAL" decoding="async" fetchpriority="high"
-                 src="tornei/2026-estate/immagini/logo_cral.png"
+                 src="tornei/2026-spring/immagini/logo_cral.png"
                  onload="window.__cralLogoStatic=this.src;"
                  onerror="window.__cralLogoStatic=false;this.remove();">
           </div>
@@ -221,13 +221,13 @@
     const FALLBACK = {
       titolo: 'CRAL Champions Auriga',
       sottotitolo: 'Tutte le edizioni del torneo aziendale, in un unico archivio.',
-      logo: 'tornei/2026-estate/immagini/logo_cral.png',
+      logo: 'tornei/2026-spring/immagini/logo_cral.png',
       archivio: { primoPiano: 2 },
       tornei: [{
-        id: '2026-estate', anno: '2026', stagione: 'Estate', slug: 'estate', nome: 'Estate',
+        id: '2026-spring', anno: '2026', stagione: 'Spring', slug: 'spring', nome: 'Spring',
         titolo: 'CRAL Champions - Auriga',
-        descrizione: 'Classifiche, calendario, risultati, squadre e statistiche giocatori dell\'edizione estiva.',
-        url: 'tornei/2026-estate/', stato: 'in-corso', corrente: true, ordine: 20262, attivo: true
+        descrizione: 'Classifiche, calendario, risultati, squadre e statistiche giocatori dell\'edizione Spring.',
+        url: 'tornei/2026-spring/', stato: 'in-corso', corrente: true, ordine: 20261, attivo: true
       }]
     };
 
