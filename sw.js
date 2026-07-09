@@ -1,85 +1,117 @@
 /*
-  Service Worker per CRAL Champions Auriga — cache del logo CRAL.
-  Vive nella ROOT del sito: il suo scope copre sia questa landing page
-  (index.html) sia tutte le sottocartelle tornei/<edizione>/, quindi funziona
-  automaticamente su qualunque pagina, senza bisogno di un file separato per
-  ogni edizione.
+  Service Worker per CRAL Champions - cache solo del logo CRAL.
 
-  Obiettivo: il logo non deve MAI far vedere un caricamento, nemmeno al primo
-  refresh dopo l'installazione, e deve aggiornarsi da solo se sostituite
-  un'immagine mantenendo lo stesso nome/percorso.
+  Compatibile con entrambe le strutture:
+  - CralChampions2026:        /immagini/logo_cral.png
+  - CralChampionsAuriga:      /tornei/<edizione>/immagini/logo_cral.png
 
-  IMPORTANTE — perché non c'è un URL fisso da precaricare in "install":
-  ogni edizione ha il proprio logo in un percorso diverso
-  (es. tornei/2026-estate/immagini/logo_cral.png, tornei/2027-inverno/...),
-  e la landing page in root cambia edizione "corrente" nel tempo. Precaricare
-  un unico percorso fisso in fase di installazione andrebbe quindi
-  regolarmente aggiornato a mano e si romperebbe ad ogni nuova edizione.
-  Si usa invece una cache generica "per pattern" (vedi isLogoRequest): la
-  PRIMA richiesta reale di un logo (qualunque pagina/edizione) lo mette in
-  cache; da quel momento in poi è sempre istantaneo per quella pagina,
-  ovunque sia. Non tocca nient'altro: tutte le altre richieste (CSV, altre
-  immagini, ecc.) passano dritte in rete come sempre.
+  Obiettivo:
+  - non intercettare CSV, HTML, JS, CSS o altre immagini;
+  - usare la cache solo per il file logo_cral.* nella cartella immagini;
+  - servire il logo dalla cache quando disponibile e aggiornarlo in background.
 
-  Come funziona per ogni richiesta di logo:
-  - se è già in cache, viene servita SUBITO, zero attesa di rete → zero flash;
-  - in parallelo, in background (stale-while-revalidate), viene ri-scaricata
-    dalla rete e la cache aggiornata: se cambiate un'immagine mantenendo lo
-    stesso nome/percorso, la versione nuova sarà pronta dal prossimo
-    caricamento, senza bisogno di alzare manualmente CACHE_NAME.
-
-  Se cambiate la LOGICA di questo file (non solo le immagini), alzate
-  CACHE_NAME di 1: le cache vecchie vengono ripulite in "activate".
+  Quando modifichi la logica del service worker, aumenta CACHE_NAME.
 */
-const CACHE_NAME = 'cral-logo-v3';
 
-function isLogoRequest(request) {
+const CACHE_PREFIX = 'cral-logo-';
+const CACHE_NAME = `${CACHE_PREFIX}v4`;
+
+// Accetta solo il logo CRAL vero e proprio, non qualunque immagine che contenga
+// casualmente le parole "logo" e "cral" nel percorso.
+const CRAL_LOGO_FILE_RE = /^(?:logo[_-]?cral|logocral)\.(?:png|jpe?g|webp|svg)$/i;
+
+function getNormalizedCacheKey(request) {
+  const url = new URL(request.url);
+  url.search = '';
+  url.hash = '';
+  return url.toString();
+}
+
+function isCralLogoRequest(request) {
   if (request.method !== 'GET') return false;
-  const path = new URL(request.url).pathname.toLowerCase();
-  // Stessa convenzione già usata in tutto il sito: il file deve contenere sia
-  // "logo" sia "cral" nel percorso (es. .../immagini/logo_cral.png), a
-  // prescindere da quale edizione/cartella lo serva.
-  return path.includes('logo') && path.includes('cral');
+
+  // Le richieste non-image non vengono mai gestite dal SW.
+  // In alcuni browser/contesti request.destination puo essere vuoto: in quel
+  // caso si continua con il controllo stretto sul percorso del file.
+  if (request.destination && request.destination !== 'image') return false;
+
+  const url = new URL(request.url);
+  if (url.origin !== self.location.origin) return false;
+
+  let pathname = url.pathname;
+  try {
+    pathname = decodeURIComponent(pathname);
+  } catch (_) {
+    // Se il path non e decodificabile, usa comunque il valore originale.
+  }
+
+  const parts = pathname.toLowerCase().split('/').filter(Boolean);
+  const filename = parts[parts.length - 1] || '';
+  const parentFolder = parts[parts.length - 2] || '';
+
+  // Copre sia /immagini/logo_cral.png sia
+  // /tornei/<edizione>/immagini/logo_cral.png, senza toccare giocatori/squadre.
+  return parentFolder === 'immagini' && CRAL_LOGO_FILE_RE.test(filename);
+}
+
+async function fetchAndUpdateLogoCache(request, cache, cacheKey) {
+  try {
+    const response = await fetch(request, { cache: 'no-cache' });
+
+    if (response && response.ok) {
+      await cache.put(cacheKey, response.clone());
+    }
+
+    return response;
+  } catch (_) {
+    return null;
+  }
+}
+
+async function getCralLogoResponseAndUpdate(request) {
+  const cache = await caches.open(CACHE_NAME);
+  const cacheKey = getNormalizedCacheKey(request);
+  const cached = await cache.match(cacheKey);
+  const updatePromise = fetchAndUpdateLogoCache(request, cache, cacheKey);
+
+  if (cached) {
+    // Risposta immediata dalla cache: la rete aggiorna solo per il prossimo giro.
+    return { response: cached, updatePromise };
+  }
+
+  // Prima visita o cache pulita: solo il logo aspetta la rete una volta.
+  const fresh = await updatePromise;
+  return {
+    response: fresh || new Response('Logo CRAL non disponibile.', {
+      status: 504,
+      statusText: 'Logo CRAL non disponibile',
+      headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+    }),
+    updatePromise,
+  };
 }
 
 self.addEventListener('install', (event) => {
-  // Attiva subito il nuovo SW, senza aspettare la chiusura di tutte le schede
-  // aperte: dal punto di vista del logo non c'è nulla da rompere.
   event.waitUntil(self.skipWaiting());
 });
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys()
-      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k))))
+      .then((keys) => Promise.all(
+        keys
+          .filter((key) => key.startsWith(CACHE_PREFIX) && key !== CACHE_NAME)
+          .map((key) => caches.delete(key))
+      ))
       .then(() => self.clients.claim())
   );
 });
 
 self.addEventListener('fetch', (event) => {
-  if (!isLogoRequest(event.request)) return; // non è un logo: lascia fare al browser normalmente
+  if (!isCralLogoRequest(event.request)) return;
 
-  event.respondWith(
-    caches.open(CACHE_NAME).then(async (cache) => {
-      const cached = await cache.match(event.request);
+  const work = getCralLogoResponseAndUpdate(event.request);
 
-      // Rivalidazione in background: non blocca la risposta, aggiorna solo
-      // la cache per la prossima volta se il contenuto in rete è cambiato.
-      const revalidate = fetch(event.request)
-        .then((response) => {
-          if (response && response.ok) cache.put(event.request, response.clone());
-          return response;
-        })
-        .catch(() => null);
-
-      if (cached) return cached; // istantaneo: nessuna attesa di rete, nessun flash
-
-      // Niente ancora in cache per questo logo (prima visita in assoluto per
-      // questa pagina/edizione): aspetta la rete una volta sola. Da qui in
-      // poi sarà sempre servito dalla cache.
-      const fresh = await revalidate;
-      if (fresh) return fresh;
-      throw new Error('Logo non disponibile: né in cache né raggiungibile in rete.');
-    })
-  );
+  event.respondWith(work.then(({ response }) => response));
+  event.waitUntil(work.then(({ updatePromise }) => updatePromise).catch(() => null));
 });
