@@ -1680,7 +1680,7 @@ const _imageProbeCache=new Map();
    Serve soprattutto quando si cambia tab: gli elementi <img> vengono ricreati,
    ma il src già trovato può essere assegnato subito senza mostrare placeholder/probe. */
 const _resolvedImageURLCache=new Map();
-const PLAYER_IMAGE_URL_CACHE_KEY='cral.playerImageURLCache.v2';
+const PLAYER_IMAGE_URL_CACHE_KEY='cral.playerImageURLCache.v3';
 let _persistentPlayerImageURLCache=null;
 let _persistentPlayerImageURLCacheTimer=null;
 function imageCacheCompositeKey(type,names){
@@ -1804,18 +1804,27 @@ function probeFirstWorkingImage(candidates, options={}){
   if(_imageProbeCache.has(cacheKey)) return _imageProbeCache.get(cacheKey);
 
   // Sequenziale: si ferma al primo file valido.
-  // Questo evita la raffica di richieste 404 generata dal vecchio probe parallelo.
+  // Safari/iOS a volte non invia onload quando l'immagine è già calda in cache
+  // o è stata appena caricata da un Image() di probe. Per questo controlliamo
+  // anche decode() e complete/naturalWidth con piccoli ritardi.
   const promise=new Promise(resolve=>{
     let i=0;
     const tryNext=()=>{
       if(i>=unique.length){ resolve(null); return; }
       const src=unique[i++];
       const probe=new Image();
+      let done=false;
+      const ok=()=>{ if(done) return; done=true; resolve(src); };
+      const fail=()=>{ if(done) return; done=true; tryNext(); };
       probe.decoding='async';
       if(options.fetchPriority && 'fetchPriority' in probe) probe.fetchPriority=options.fetchPriority;
-      probe.onload=()=>resolve(src);
-      probe.onerror=tryNext;
+      probe.onload=ok;
+      probe.onerror=fail;
       probe.src=src;
+      if(probe.decode){ probe.decode().then(ok).catch(()=>{}); }
+      requestAnimationFrame(()=>{ if(!done && probe.complete && probe.naturalWidth>0) ok(); });
+      setTimeout(()=>{ if(!done && probe.complete && probe.naturalWidth>0) ok(); },250);
+      setTimeout(()=>{ if(!done && probe.complete && probe.naturalWidth>0) ok(); },1000);
     };
     tryNext();
   }).catch(()=>null);
@@ -1858,13 +1867,23 @@ function createResolvedImageEl(type,name,cls,src,options={},onError){
   img.loading=options.loading || (options.priority==='high' ? 'eager' : 'lazy');
   if(options.priority==='high' && 'fetchPriority' in img) img.fetchPriority='high';
   else if('fetchPriority' in img) img.fetchPriority=options.fetchPriority || 'low';
-  img.onload=()=>img.classList.add('is-loaded');
+
+  const markLoaded=()=>img.classList.add('is-loaded');
+  img.onload=markLoaded;
   img.onerror=()=>{
     img.classList.remove('is-loaded');
     if(typeof onError==='function') onError(img);
   };
   img.src=src;
-  if(img.complete && img.naturalWidth>0) queueMicrotask(()=>img.classList.add('is-loaded'));
+
+  // Fix Safari/iOS: se il file è già stato validato dal probe o arriva dalla cache,
+  // onload può non bastare. Con decode() + controlli differiti evitiamo che
+  // .img-fade resti con opacity:0 pur avendo naturalWidth > 0.
+  if(img.decode){ img.decode().then(markLoaded).catch(()=>{}); }
+  queueMicrotask(()=>{ if(img.complete && img.naturalWidth>0) markLoaded(); });
+  requestAnimationFrame(()=>{ if(img.complete && img.naturalWidth>0) markLoaded(); });
+  setTimeout(()=>{ if(img.complete && img.naturalWidth>0) markLoaded(); },250);
+  setTimeout(()=>{ if(img.complete && img.naturalWidth>0) markLoaded(); },1000);
   return img;
 }
 
