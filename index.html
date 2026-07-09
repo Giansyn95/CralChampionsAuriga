@@ -8,8 +8,13 @@
   <title>CRAL Champions Auriga</title>
   <meta name="description" content="Tutte le edizioni del torneo aziendale CRAL Champions Auriga: torneo corrente, ultime edizioni e archivio storico." />
 
-  <link rel="icon" type="image/png" href="tornei/2026-spring/immagini/logo_cral.png" />
-  <link rel="apple-touch-icon" sizes="180x180" href="tornei/2026-spring/immagini/logo_cral.png" />
+  <link rel="icon" type="image/png" href="tornei/2026-estate/immagini/logo_cral.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="tornei/2026-estate/immagini/logo_cral.png" />
+  <!-- Precarica subito il logo dell'edizione corrente (di default), in parallelo
+       col resto della pagina e ancora prima che parta il fetch di tornei.json.
+       Se tornei.json indicherà un logo diverso, lo script più sotto lo sostituisce;
+       se coincide (caso normale), non fa nulla e non c'è alcun flash. -->
+  <link rel="preload" as="image" href="tornei/2026-estate/immagini/logo_cral.png" fetchpriority="high" />
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -44,8 +49,11 @@
     .hero::after{content:'';position:absolute;left:-70px;bottom:-95px;width:220px;height:220px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.08),transparent 70%);pointer-events:none}
     .hero-inner{position:relative;z-index:1;display:flex;gap:18px;align-items:center;justify-content:space-between;flex-wrap:wrap}
     .brand{display:flex;gap:16px;align-items:center;min-width:0}
-    .hero-logo{width:68px;height:68px;border-radius:18px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);padding:6px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;overflow:hidden}
-    .hero-logo img{width:100%;height:100%;object-fit:contain;border-radius:12px}
+    .hero-logo{width:68px;height:68px;border-radius:18px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);padding:6px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative}
+    /* position:absolute sovrappone l'img esattamente al testo "CRAL" di fallback,
+       invece di affiancarli: anche nel frame in cui entrambi fossero presenti
+       nel DOM non si vede mai un doppio logo, indipendentemente dal timing. */
+    .hero-logo img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;border-radius:12px}
     .hero-logo-fallback{font-family:'Oswald',Arial,Helvetica,sans-serif;font-size:18px;font-weight:700;color:var(--gold);letter-spacing:.03em}
     .hero h1{margin:0;font-family:'Oswald',Arial,Helvetica,sans-serif;font-size:clamp(28px,5vw,52px);font-weight:700;letter-spacing:.02em;line-height:1;text-transform:uppercase}
     .hero-sub{max-width:760px;margin:8px 0 0;color:#dbeaff;font-size:16px;line-height:1.5}
@@ -142,6 +150,16 @@
         <div class="brand">
           <div class="hero-logo" id="logoBox" aria-hidden="true">
             <span class="hero-logo-fallback">CRAL</span>
+            <!-- Logo di default, caricato subito dall'HTML: non aspetta il fetch
+                 di tornei.json né lo script più sotto. Insieme al Service Worker
+                 (sw.js), dal secondo accesso in poi è istantaneo, senza flash.
+                 onload/onerror inline e autosufficienti (non toccano variabili
+                 dello script principale). Se tornei.json indica un logo diverso,
+                 setLogo() lo sostituirà; se combacia (caso normale) non tocca nulla. -->
+            <img id="heroLogoDefaultImg" alt="Logo CRAL" decoding="async" fetchpriority="high"
+                 src="tornei/2026-estate/immagini/logo_cral.png"
+                 onload="window.__cralLogoStatic=this.src;"
+                 onerror="window.__cralLogoStatic=false;this.remove();">
           </div>
           <div>
             <h1 id="pageTitle">CRAL Champions Auriga</h1>
@@ -203,13 +221,13 @@
     const FALLBACK = {
       titolo: 'CRAL Champions Auriga',
       sottotitolo: 'Tutte le edizioni del torneo aziendale, in un unico archivio.',
-      logo: 'tornei/2026-spring/immagini/logo_cral.png',
+      logo: 'tornei/2026-estate/immagini/logo_cral.png',
       archivio: { primoPiano: 2 },
       tornei: [{
-        id: '2026-spring', anno: '2026', stagione: 'Estate', slug: 'estate', nome: 'Estate',
+        id: '2026-estate', anno: '2026', stagione: 'Estate', slug: 'estate', nome: 'Estate',
         titolo: 'CRAL Champions - Auriga',
         descrizione: 'Classifiche, calendario, risultati, squadre e statistiche giocatori dell\'edizione estiva.',
-        url: 'tornei/2026-spring/', stato: 'in-corso', corrente: true, ordine: 20262, attivo: true
+        url: 'tornei/2026-estate/', stato: 'in-corso', corrente: true, ordine: 20262, attivo: true
       }]
     };
 
@@ -273,11 +291,24 @@
 
     function setLogo(src){
       if (!src) return;
+      const box = document.getElementById('logoBox');
+      const staticImg = document.getElementById('heroLogoDefaultImg');
+
+      // Risolve src a URL assoluto per confrontarlo con window.__cralLogoStatic
+      // (anch'esso assoluto, impostato dall'onload inline sull'img statico).
+      const resolved = new URL(src, document.baseURI).href;
+
+      if (staticImg && window.__cralLogoStatic === resolved) {
+        // Il logo statico già visibile è esattamente quello richiesto da
+        // tornei.json: non tocchiamo il DOM, zero flash.
+        document.querySelectorAll('link[rel="icon"], link[rel="apple-touch-icon"]').forEach(link => { link.href = src; });
+        return;
+      }
+
       const img = new Image();
       img.decoding = 'async';
       img.onload = () => {
         img.alt = 'Logo CRAL';
-        const box = document.getElementById('logoBox');
         box.innerHTML = '';
         box.appendChild(img);
       };
@@ -418,6 +449,17 @@
       .then(r => { if (!r.ok) throw new Error('Config non disponibile'); return r.json(); })
       .then(renderLanding)
       .catch(() => renderLanding(FALLBACK));
+
+    /* Service Worker: cache del logo CRAL (vedi sw.js), in comune con tutte le
+       pagine del sito (sw.js è nella root, quindi il suo scope copre anche
+       tornei/<edizione>/). Registrato dopo il load per non competere col
+       caricamento della pagina; se il browser non lo supporta o il file manca,
+       il sito funziona lo stesso esattamente come prima (fallback silenzioso). */
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js').catch(() => {});
+      });
+    }
   </script>
 </body>
 </html>
