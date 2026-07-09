@@ -234,6 +234,9 @@
     .tbl-avatar{border-radius:50%}
     .initials-fallback{background:#dbe7f6;color:var(--blue);display:flex;align-items:center;justify-content:center;font-weight:900;text-transform:uppercase}
     [data-theme="dark"] .initials-fallback{background:#243450;color:#93c5fd}
+    .img-fade{opacity:0;transition:opacity .14s ease}
+    .img-fade.is-loaded{opacity:1}
+    @media(prefers-reduced-motion:reduce){.img-fade{transition:none}}
     .mini-logo{width:26px;height:26px;border-radius:7px;object-fit:cover;background:#dbe7f6;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:10px;color:var(--blue);flex:0 0 auto}
     .name-cell{display:flex;align-items:center;gap:9px;min-width:0}
     .trophy-badge{font-size:15px;line-height:1;flex:0 0 auto}
@@ -1596,7 +1599,7 @@ function sectionTextFiles(kind){ return Object.keys(state.files).filter(f=>!stat
 /* ══════════════════════════════════
    IMMAGINI
    ══════════════════════════════════ */
-function imageExts(){ return ['png','jpg','jpeg']; }
+function imageExts(){ return ['webp','png','jpg','jpeg']; }
 function baseNoExt(path){ return String(path||'').split('/').pop().replace(/\.[^.]+$/,''); }
 function imageFolderToken(type){ return type==='team'?'immaginisquadre':'immaginigiocatori'; }
 
@@ -1624,7 +1627,7 @@ function imageFor(type,name){
 
   const folder=imageFolderToken(type);
   const candidates=Object.entries(state.imageURLs||{}).map(([k,url])=>{
-    const rawBase=(k.split('/').pop()||k).replace(/(png|jpg|jpeg)$/i,'');
+    const rawBase=(k.split('/').pop()||k).replace(/\.(webp|png|jpe?g)$/i,'');
     const base=norm(rawBase);
     let score=999;
     if(k.includes(folder) && base===key) score=0;
@@ -1639,7 +1642,9 @@ function imageFor(type,name){
 
   const prefix=type==='team'?'immagini/squadre/':'immagini/giocatori/';
   const dataPrefix=type==='team'?'data/immagini/squadre/':'data/immagini/giocatori/';
-  // Fallback statici: prova solo PNG/JPG/JPEG. Utile quando apri index.html senza selezionare cartella.
+  // Fallback statici: per i giocatori usa prima le thumbnail WebP leggere.
+  // Gli originali restano come fallback nelle candidate generate da imageCandidatesFor().
+  if(type==='player') return 'immagini/giocatori/thumb/'+key+'.webp';
   return prefix+key+'.png';
 }
 
@@ -1660,7 +1665,7 @@ const _imageProbeCache=new Map();
    Serve soprattutto quando si cambia tab: gli elementi <img> vengono ricreati,
    ma il src già trovato può essere assegnato subito senza mostrare placeholder/probe. */
 const _resolvedImageURLCache=new Map();
-const PLAYER_IMAGE_URL_CACHE_KEY='cral.playerImageURLCache.v1';
+const PLAYER_IMAGE_URL_CACHE_KEY='cral.playerImageURLCache.v2';
 let _persistentPlayerImageURLCache=null;
 let _persistentPlayerImageURLCacheTimer=null;
 function imageCacheCompositeKey(type,names){
@@ -1799,7 +1804,9 @@ function probeFirstWorkingImage(candidates, options={}){
 
 function imageCandidatesFor(type,name){
   const names=(Array.isArray(name)?name:[name]).map(x=>smartSpace(x)).filter(Boolean);
-  const prefixes=type==='team'?['immagini/squadre/','data/immagini/squadre/']:['immagini/giocatori/','data/immagini/giocatori/'];
+  const prefixes=type==='team'
+    ? ['immagini/squadre/','data/immagini/squadre/']
+    : ['immagini/giocatori/thumb/','data/immagini/giocatori/thumb/','immagini/giocatori/','data/immagini/giocatori/'];
   const candidates=[];
   const addCandidate=(src)=>{ if(src && !candidates.includes(src)) candidates.push(src); };
 
@@ -1825,15 +1832,20 @@ function createInitialFallback(cls,name){
 
 function createResolvedImageEl(type,name,cls,src,options={},onError){
   const img=document.createElement('img');
-  img.className=cls;
+  img.className=(cls||'')+' img-fade';
   img.alt=name||'';
   img.title=name||'';
   img.decoding='async';
   img.loading=options.loading || (options.priority==='high' ? 'eager' : 'lazy');
   if(options.priority==='high' && 'fetchPriority' in img) img.fetchPriority='high';
   else if('fetchPriority' in img) img.fetchPriority=options.fetchPriority || 'low';
-  if(typeof onError==='function') img.onerror=()=>onError(img);
+  img.onload=()=>img.classList.add('is-loaded');
+  img.onerror=()=>{
+    img.classList.remove('is-loaded');
+    if(typeof onError==='function') onError(img);
+  };
   img.src=src;
+  if(img.complete && img.naturalWidth>0) queueMicrotask(()=>img.classList.add('is-loaded'));
   return img;
 }
 
@@ -1976,7 +1988,7 @@ function logoCandidates(){
   // Fallback statici: funzionano sia con index.html nella root sia con asset dentro data/,
   // provando più nomi/estensioni comuni nel caso il file non si chiami esattamente logo_cral.png.
   const names=['logo_cral','logo-cral','logocral','cral_logo','cral-logo','cral','logo'];
-  const exts=['png','jpg','jpeg'];
+  const exts=['png','jpg','jpeg','webp'];
   const dirs=['immagini/','data/immagini/','./immagini/','./data/immagini/'];
   const generated=[];
   dirs.forEach(d=>names.forEach(n=>exts.forEach(e=>generated.push(d+n+'.'+e))));
@@ -3975,37 +3987,6 @@ function warmPlayerProfileCaches(){
   };
   if('requestIdleCallback' in window) requestIdleCallback(run,{timeout:1400});
   else setTimeout(run,80);
-}
-
-/* Precarica in background (a piccoli lotti, nei momenti di inattività, priorità bassa)
-   le immagini di squadre e giocatori usate nelle tab diverse dalla Home.
-   Così quando l'utente apre una tab l'immagine è già in cache del browser
-   (e già risolta in _resolvedImageURLCache) e appare subito, invece di partire
-   solo al primo render di quella sezione. Non tocca il DOM delle altre tab:
-   usa solo resolveImageForNames(), che fa il probe reale via new Image(). */
-let _tabImagePreloadToken=0;
-function scheduleBackgroundTabImagePreload(){
-  const token=++_tabImagePreloadToken;
-  let jobs=[];
-  try{
-    teamNamesForCharts().forEach(name=>{ if(name) jobs.push({type:'team',names:[name]}); });
-    allPlayersFromTeams().forEach(p=>{ if(p&&p.nome) jobs.push({type:'player',names:[p.nome]}); });
-  }catch(e){ /* preload non critico: non deve mai bloccare il caricamento della pagina */ }
-  // Salta chi ha già una risposta (positiva o negativa) in cache, per non ripetere probe inutili.
-  jobs=jobs.filter(j=>cachedResolvedImage(j.type,j.names)===undefined);
-  if(!jobs.length) return;
-  const CHUNK=3;
-  function process(i){
-    if(token!==_tabImagePreloadToken || i>=jobs.length) return;
-    jobs.slice(i,i+CHUNK).forEach(job=>{
-      resolveImageForNames(job.type,job.names,{priority:'low'}).catch(()=>null);
-    });
-    const next=()=>process(i+CHUNK);
-    if('requestIdleCallback' in window) requestIdleCallback(next,{timeout:1000});
-    else setTimeout(next,120);
-  }
-  if('requestIdleCallback' in window) requestIdleCallback(()=>process(0),{timeout:1500});
-  else setTimeout(()=>process(0),300);
 }
 
 /* Identità giocatore: matching stretto per evitare interferenze tra omonimi.
@@ -10817,7 +10798,6 @@ async function loadAuto(fresh){
      non sovrascrivere i dati più recenti già mostrati. */
   if(manualLoadActive) return;
   applyConfig(); showErrors(); renderAll(); tryLoadLogo(); warmPlayerProfileCaches();
-  scheduleBackgroundTabImagePreload();
   ensureFantaDataInBackground(fresh);
   loadPortieriSnapshot(fresh);
   if(ok || state.rows['manifest.csv']) setStatus(dataLoadStatus(ok+(state.rows['manifest.csv']?1:0)),true);
@@ -10880,7 +10860,7 @@ async function safeFileText(file, relPath){
 /* Lettura robusta per Chrome: immagini senza await, CSV con timeout e fallback. */
 async function ingestPickedFile(file, relPath, basename){
   const name=basename||file.name;
-  if(/\.(jpg|jpeg|png)$/i.test(name)){
+  if(/\.(jpg|jpeg|png|webp)$/i.test(name)){
     rememberImage(relPath||name,file);
     state._imgCount=(state._imgCount||0)+1;
     return true;
@@ -11090,7 +11070,7 @@ async function loadFolder(fileList){
     .filter(file=>/\.csv$/i.test(file.name))
     .sort((a,b)=>String(a.webkitRelativePath||a.name).localeCompare(String(b.webkitRelativePath||b.name),'it'));
   const imageFiles=files
-    .filter(file=>/\.(jpg|jpeg|png)$/i.test(file.name))
+    .filter(file=>/\.(jpg|jpeg|png|webp)$/i.test(file.name))
     .sort((a,b)=>String(a.webkitRelativePath||a.name).localeCompare(String(b.webkitRelativePath||b.name),'it'));
 
   if(!csvFiles.length){
