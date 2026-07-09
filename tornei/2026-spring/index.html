@@ -3977,6 +3977,37 @@ function warmPlayerProfileCaches(){
   else setTimeout(run,80);
 }
 
+/* Precarica in background (a piccoli lotti, nei momenti di inattività, priorità bassa)
+   le immagini di squadre e giocatori usate nelle tab diverse dalla Home.
+   Così quando l'utente apre una tab l'immagine è già in cache del browser
+   (e già risolta in _resolvedImageURLCache) e appare subito, invece di partire
+   solo al primo render di quella sezione. Non tocca il DOM delle altre tab:
+   usa solo resolveImageForNames(), che fa il probe reale via new Image(). */
+let _tabImagePreloadToken=0;
+function scheduleBackgroundTabImagePreload(){
+  const token=++_tabImagePreloadToken;
+  let jobs=[];
+  try{
+    teamNamesForCharts().forEach(name=>{ if(name) jobs.push({type:'team',names:[name]}); });
+    allPlayersFromTeams().forEach(p=>{ if(p&&p.nome) jobs.push({type:'player',names:[p.nome]}); });
+  }catch(e){ /* preload non critico: non deve mai bloccare il caricamento della pagina */ }
+  // Salta chi ha già una risposta (positiva o negativa) in cache, per non ripetere probe inutili.
+  jobs=jobs.filter(j=>cachedResolvedImage(j.type,j.names)===undefined);
+  if(!jobs.length) return;
+  const CHUNK=3;
+  function process(i){
+    if(token!==_tabImagePreloadToken || i>=jobs.length) return;
+    jobs.slice(i,i+CHUNK).forEach(job=>{
+      resolveImageForNames(job.type,job.names,{priority:'low'}).catch(()=>null);
+    });
+    const next=()=>process(i+CHUNK);
+    if('requestIdleCallback' in window) requestIdleCallback(next,{timeout:1000});
+    else setTimeout(next,120);
+  }
+  if('requestIdleCallback' in window) requestIdleCallback(()=>process(0),{timeout:1500});
+  else setTimeout(()=>process(0),300);
+}
+
 /* Identità giocatore: matching stretto per evitare interferenze tra omonimi.
    I dati del dettaglio giocatore devono agganciarsi al giocatore completo
    (Nome+Cognome e, quando disponibile, squadra/record rosa), non a un solo cognome. */
@@ -10786,6 +10817,7 @@ async function loadAuto(fresh){
      non sovrascrivere i dati più recenti già mostrati. */
   if(manualLoadActive) return;
   applyConfig(); showErrors(); renderAll(); tryLoadLogo(); warmPlayerProfileCaches();
+  scheduleBackgroundTabImagePreload();
   ensureFantaDataInBackground(fresh);
   loadPortieriSnapshot(fresh);
   if(ok || state.rows['manifest.csv']) setStatus(dataLoadStatus(ok+(state.rows['manifest.csv']?1:0)),true);
