@@ -59,8 +59,12 @@
     /* ── Hero ── */
     .hero{background:linear-gradient(135deg,var(--dark),var(--blue));color:#fff;border-radius:26px;padding:30px;margin-bottom:18px;box-shadow:0 14px 36px var(--shadow)}
     .hero-top{display:flex;gap:20px;align-items:center}
-    .hero-logo{width:72px;height:72px;border-radius:18px;object-fit:contain;background:rgba(255,255,255,.12);padding:6px;flex:0 0 auto;display:flex;align-items:center;justify-content:center}
-    .hero-logo img{width:100%;height:100%;object-fit:contain;border-radius:12px}
+    .hero-logo{width:72px;height:72px;border-radius:18px;object-fit:contain;background:rgba(255,255,255,.12);padding:6px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;position:relative}
+    /* position:absolute toglie l'img dal flusso flex e la sovrappone esattamente
+       allo SVG sottostante: anche nel frame in cui entrambi fossero presenti nel
+       DOM non si vedono mai due loghi affiancati (niente flash), indipendentemente
+       dal timing con cui l'immagine finisce di caricare. */
+    .hero-logo img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;border-radius:12px}
     .hero-logo svg{width:100%;height:100%}
     .hero h1{margin:0;font-size:clamp(24px,4vw,48px);letter-spacing:.02em;font-family:'Oswald',Arial,Helvetica,sans-serif}
     .hero p{margin:8px 0 0;color:#dbeaff;font-size:17px}
@@ -1226,12 +1230,28 @@
   <div class="hero">
     <div class="hero-top">
       <div class="hero-logo" id="heroLogoWrap">
-        <!-- Logo SVG di fallback (stemma CRAL generico) -->
-        <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Logo CRAL">
+        <!-- Logo SVG di fallback (stemma CRAL generico): resta sempre nel DOM,
+             sotto l'immagine vera, e si vede solo se quest'ultima manca
+             (rimossa dall'onerror qui sotto). -->
+        <svg id="heroLogoFallback" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Logo CRAL">
           <circle cx="32" cy="32" r="30" fill="rgba(255,255,255,.15)" stroke="rgba(255,255,255,.4)" stroke-width="2"/>
           <path d="M32 10 L38 24 H54 L42 33 L46 47 L32 38 L18 47 L22 33 L10 24 H26 Z" fill="#f5b942" opacity=".9"/>
           <text x="32" y="56" text-anchor="middle" font-family="Arial,sans-serif" font-size="8" font-weight="900" fill="rgba(255,255,255,.8)">CRAL</text>
         </svg>
+        <!-- Logo vero, caricato subito dall'HTML: non aspetta nessuno script.
+             Sovrapposto (position:absolute, vedi CSS .hero-logo img) esattamente
+             sopra allo SVG, così anche nel primissimo istante di rendering non si
+             vedono mai "due loghi" affiancati, qualunque sia il timing di rete.
+             Insieme al Service Worker (sw.js), che lo tiene precaricato in cache
+             fin dall'installazione con auto-aggiornamento in background, dal
+             secondo accesso in poi appare istantaneo, senza alcun flash, anche
+             su refresh molto rapidi. onload/onerror sono inline e autosufficienti
+             (non toccano variabili dello script principale più sotto) proprio per
+             poter reagire subito, prima ancora che il resto della pagina sia pronto. -->
+        <img id="heroLogoImg" alt="Logo CRAL" decoding="async" fetchpriority="high"
+             src="immagini/logo_cral.png"
+             onload="window.__cralLogoStatic=true;"
+             onerror="window.__cralLogoStatic=false;this.remove();">
       </div>
       <div>
         <h1 id="siteTitle">CRAL Champions</h1>
@@ -1915,8 +1935,13 @@ function imgOrInitialEl(type,name,cls,options={}){
 /* ══════════════════════════════════
    LOGO CRAL
    ══════════════════════════════════ */
-const HERO_LOGO_FALLBACK = document.getElementById('heroLogoWrap')?.innerHTML || '';
-let heroLogoLoaded=false;
+// Il markup statico (img#heroLogoImg + svg#heroLogoFallback, sovrapposti via CSS)
+// è già nell'HTML e si carica/mostra senza aspettare questo script: l'attributo
+// inline onload sul tag <img> ha già impostato window.__cralLogoStatic quando
+// il file esiste, spesso ancora prima che questo script (in fondo alla pagina)
+// venga eseguito. Se è già true, il logo è a posto: non tocchiamo il DOM.
+const HERO_LOGO_FALLBACK = document.getElementById('heroLogoFallback')?.outerHTML || '';
+let heroLogoLoaded = !!window.__cralLogoStatic;
 let _heroLogoLoadToken=0;
 
 function resetHeroLogo(){
@@ -1924,6 +1949,11 @@ function resetHeroLogo(){
   if(wrap && HERO_LOGO_FALLBACK) wrap.innerHTML=HERO_LOGO_FALLBACK;
 }
 function invalidateHeroLogo(){
+  // Da chiamare SOLO quando l'utente carica manualmente una cartella con
+  // immagini proprie (potrebbe contenere un logo diverso da quello di
+  // default): resetta e fa ripartire la ricerca. NON va chiamata sui
+  // refresh automatici dei dati (loadAuto), altrimenti il logo statico già
+  // visibile verrebbe smontato e rimontato ad ogni refresh → flash.
   heroLogoLoaded=false;
   _heroLogoLoadToken++;
   resetHeroLogo();
@@ -1954,11 +1984,17 @@ function logoCandidates(){
 }
 
 function tryLoadLogo(){
-  if(heroLogoLoaded) return; // già caricato: evita di azzerarlo e riprovare inutilmente
+  // Se il logo statico (img#heroLogoImg, caricato subito dall'HTML) è già a
+  // posto — caso normale dal secondo accesso in poi grazie al Service Worker —
+  // qui non c'è nulla da fare: nessun reset, nessun nuovo caricamento, nessun
+  // flash. Il probing sotto scatta solo se manca ancora un logo valido
+  // (prima visita in assoluto, file statico non trovato, o dopo
+  // invalidateHeroLogo() a seguito di un caricamento manuale di cartella).
+  if(heroLogoLoaded) return;
   const wrap=document.getElementById('heroLogoWrap'); if(!wrap) return;
   const candidates=logoCandidates();
+  if(!candidates.length) return;
   const token=++_heroLogoLoadToken;
-  resetHeroLogo();
 
   // Stessa logica veloce degli avatar: niente catena logo_1 -> logo_2 -> ...
   // Se nessuna candidata esiste, resta lo SVG di fallback già presente nell'header.
@@ -10675,7 +10711,11 @@ async function loadAuto(fresh){
   state.fantaPrecomputedData=null; state.fantaPrecomputedAttempted=false; state.fantaPrecomputedLoading=false;
   clearImageProbeCache();
   clearDerivedDataCaches();
-  invalidateHeroLogo();
+  // NB: qui non chiamiamo invalidateHeroLogo(). Il logo CRAL è lo stesso file
+  // per tutte le edizioni del torneo: un refresh dei dati (avvio pagina o
+  // pulsante 🔄) non deve smontare/rimontare il logo già visibile, altrimenti
+  // si vedrebbe un flash ad ogni refresh. tryLoadLogo(), chiamata più sotto e
+  // nei vari punti del flusso, è comunque no-op se il logo è già a posto.
 
   // Avvia SUBITO i CSV base noti nel codice, incluso manifest.csv.
   // Prima si aspettava manifest.csv e solo dopo partivano classifica/marcatori/calendario:
