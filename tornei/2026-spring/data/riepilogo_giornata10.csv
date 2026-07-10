@@ -1,19 +1,33 @@
 Sezione;Giornata;Casa;Trasferta;GolCasa;GolTrasferta;Esito;Squadra;Giocatore;Gol;PuntiMVP;Portiere;PuntiPortiere;Partita;Voce;Valore;Note
-Partita;10;Out Of Office FC;BlackJack;;;;;;;;;;Out Of Office FC vs BlackJack;;;Marcatori: — | MVP: — | Riposa: FC Stealthy Dribblers
+Partita;10;Out Of Office FC;BlackJack;6;5;V/S;;;;;;;Out Of Office FC vs BlackJack;;;Marcatori: Saracino x4, Mondelli, Lorusso, Lo Riso x2, Fiorella, Menolascina x2 | MVP: Lorusso | Riposa: FC Stealthy Dribblers
 Partita;10;Auriga Juniors;BOT & BALL;9;0;V/S;;;;;;;Auriga Juniors vs BOT & BALL;;;Marcatori: Iacobellis, Tauro x2, De Toma x4, Spinola x2 | MVP: De Toma
 Marcatore;10;;;;;;Auriga Juniors;Iacobellis PT;1;;;;;;;
 Marcatore;10;;;;;;Auriga Juniors;Tauro Giovanni;2;;;;;;;
 Marcatore;10;;;;;;Auriga Juniors;De Toma Nicola;4;;;;;;;
 Marcatore;10;;;;;;Auriga Juniors;Spinola Salvatore;2;;;;;;;
+Marcatore;10;;;;;;Out Of Office FC;Saracino Gianvito;4;;;;;;;
+Marcatore;10;;;;;;Out Of Office FC;Mondelli Francesco;1;;;;;;;
+Marcatore;10;;;;;;Out Of Office FC;Lorusso Salvatore;1;;;;;;;
+Marcatore;10;;;;;;BlackJack;Lo Riso Alessandro;2;;;;;;;
+Marcatore;10;;;;;;BlackJack;Fiorella Giacomo;1;;;;;;;
+Marcatore;10;;;;;;BlackJack;Menolascina Gerardo;2;;;;;;;
 Totale marcatore giornata;10;;;;;;Auriga Juniors;De Toma Nicola;4;;;;;;;
+Totale marcatore giornata;10;;;;;;Out Of Office FC;Saracino Gianvito;4;;;;;;;
 Totale marcatore giornata;10;;;;;;Auriga Juniors;Spinola Salvatore;2;;;;;;;
 Totale marcatore giornata;10;;;;;;Auriga Juniors;Tauro Giovanni;2;;;;;;;
+Totale marcatore giornata;10;;;;;;BlackJack;Lo Riso Alessandro;2;;;;;;;
+Totale marcatore giornata;10;;;;;;BlackJack;Menolascina Gerardo;2;;;;;;;
 Totale marcatore giornata;10;;;;;;Auriga Juniors;Iacobellis PT;1;;;;;;;
+Totale marcatore giornata;10;;;;;;BlackJack;Fiorella Giacomo;1;;;;;;;
+Totale marcatore giornata;10;;;;;;Out Of Office FC;Lorusso Salvatore;1;;;;;;;
+Totale marcatore giornata;10;;;;;;Out Of Office FC;Mondelli Francesco;1;;;;;;;
 MVP;10;;;;;;Auriga Juniors;De Toma Nicola;;4;;;;;;
+MVP;10;;;;;;Out Of Office FC;Lorusso Salvatore;;4;;;;;;
 Miglior portiere;10;;;;;;Auriga Juniors;;;;Iacobellis PT;1;Auriga Juniors vs BOT & BALL;;;
-Statistica;10;;;;;;;;;;;;;Gol totali;9;
-Statistica;10;;;;;;;;;;;;;Media gol/partita;9.0;
+Miglior portiere;10;;;;;;Out Of Office FC;;;;Colangiuli PT;1;Out Of Office FC vs BlackJack;;;
+Statistica;10;;;;;;;;;;;;;Gol totali;20;
+Statistica;10;;;;;;;;;;;;;Media gol/partita;10.0;
 Statistica;10;;;;;;;;;;;;;Clean sheet;1;
-Statistica;10;;;;;;;;;;;;;Partita con piu gol;Auriga Juniors 9-0 BOT & BALL;
+Statistica;10;;;;;;;;;;;;;Partita con piu gol;Out Of Office FC 6-5 BlackJack;
 Statistica;10;;;;;;;;;;;;;Miglior marcatore;De Toma Nicola (4 gol);
-Statistica;10;;;;;;;;;;;;;Partite giocate;1;
+Statistica;10;;;;;;;;;;;;;Partite giocate;2;
