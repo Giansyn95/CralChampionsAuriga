@@ -490,6 +490,51 @@
     @keyframes wrappedOrbFloat{from{transform:translate3d(0,0,0) scale(1)}to{transform:translate3d(22px,-28px,0) scale(1.12)}}
     @media(max-width:560px){.wrapped-slide{inset:12px;width:calc(100vw - 24px);min-height:calc(100svh - 128px);border-radius:28px;padding:20px}.wrapped-slide .ws-photo,.wrapped-slide .ws-logo{width:112px;height:112px;border-radius:26px}.wrapped-slide .ws-detail{font-size:14.5px}}
     @media(prefers-reduced-motion:reduce){.wrapped-overlay::before,.wrapped-overlay::after,.wrapped-slide::before,.wrapped-slide::after,.wrapped-slide.is-current{animation:none}.wrapped-slide{transform:none}}
+
+
+    /* Wrapped export Story: il componente HTML/CSS viene montato a 432x768 e
+       rasterizzato a 2.5x, quindi il video resta esattamente 1080x1920.
+       Il frame esterno e' trasparente: lo sfondo dinamico, i bagliori, lo shimmer
+       e le scintille vengono ridisegnati dal compositore video a 30 fps. */
+    .wrapped-export-host{position:fixed;left:-10000px;top:0;width:432px;height:768px;overflow:hidden;pointer-events:none;user-select:none;z-index:-2147483647;contain:strict}
+    .wrapped-export-frame{position:relative!important;inset:auto!important;width:432px!important;height:768px!important;min-height:0!important;opacity:1!important;display:flex!important;z-index:auto!important;transition:none!important;background:transparent!important}
+    .wrapped-export-frame::before,.wrapped-export-frame::after{display:none!important}
+    .wrapped-export-frame .wrapped-stage{position:relative;flex:1;min-height:0;width:100%;padding:54px 18px 82px;overflow:hidden;perspective:none}
+    .wrapped-export-frame .wrapped-slide{position:relative!important;inset:auto!important;width:100%!important;height:100%!important;min-height:0!important;margin:0!important;opacity:1!important;transform:none!important;transition:none!important;animation:none!important;padding:32px 27px!important;border-radius:32px!important;gap:7px!important}
+    .wrapped-export-frame .wrapped-slide::before,.wrapped-export-frame .wrapped-slide::after{animation:none!important}
+    .wrapped-export-frame .wrapped-slide::after{right:22px;top:52px;font-size:38px}
+    .wrapped-export-frame .wrapped-slide .ws-eyebrow{margin-bottom:12px;padding:7px 12px;font-size:12px}
+    .wrapped-export-frame .wrapped-slide .ws-name{max-width:350px;margin-bottom:8px;font-size:38px;line-height:1.02}
+    .wrapped-export-frame .wrapped-slide .ws-sub{margin-bottom:10px;font-size:14px}
+    .wrapped-export-frame .wrapped-slide .ws-big{margin:6px 0 10px;font-size:112px;line-height:.9}
+    .wrapped-export-frame .wrapped-slide .ws-detail{max-width:340px;font-size:15px;line-height:1.42}
+    .wrapped-export-frame .wrapped-slide .ws-stats-row{margin-top:13px;gap:8px}
+    .wrapped-export-frame .wrapped-slide .ws-stat{min-width:82px;padding:9px 10px}
+    .wrapped-export-frame .wrapped-slide .ws-stat .n{font-size:28px}
+
+    /* Dimensioni dedicate all'esportazione: soggetti piu' grandi e contenuti
+       centrati nella zona sicura della Story, senza alterare il Wrapped a video. */
+    .wrapped-export-frame .wrapped-cover{padding-top:26px!important}
+    .wrapped-export-frame .wrapped-cover .ws-cral-logo{width:154px;height:154px;margin-bottom:10px;border-radius:34px}
+    .wrapped-export-frame .wrapped-cover .ws-name{font-size:42px!important}
+    .wrapped-export-frame .wrapped-cover .ws-big-word{font-size:78px;margin:8px 0 14px}
+    .wrapped-export-frame .wrapped-scorer .ws-photo{width:178px;height:178px;border-radius:38px;margin-bottom:17px}
+    .wrapped-export-frame .wrapped-scorer .ws-name{font-size:42px}
+    .wrapped-export-frame .wrapped-average .ws-photo,
+    .wrapped-export-frame .wrapped-mvp .ws-photo,
+    .wrapped-export-frame .wrapped-keeper .ws-photo{width:164px;height:164px;border-radius:36px;margin-bottom:16px}
+    .wrapped-export-frame .wrapped-champion .ws-logo{width:190px;height:190px;border-radius:42px;margin-bottom:18px;padding:13px}
+    .wrapped-export-frame .wrapped-champion .ws-name{font-size:43px}
+    .wrapped-export-frame .wrapped-champion .ws-big{font-size:104px;margin-top:2px}
+    .wrapped-export-frame .wrapped-crazy{padding-left:20px!important;padding-right:20px!important}
+    .wrapped-export-frame .wrapped-crazy .wrapped-crazy-match{max-width:100%;gap:8px;margin:4px auto 12px}
+    .wrapped-export-frame .wrapped-crazy .wrapped-crazy-team .ws-logo{width:126px;height:126px;border-radius:28px;padding:8px}
+    .wrapped-export-frame .wrapped-crazy .wrapped-crazy-score{min-width:86px;padding:10px 11px;font-size:46px}
+    .wrapped-export-frame .wrapped-crazy .wrapped-crazy-team-name{max-width:118px;font-size:14px}
+    .wrapped-export-frame .wrapped-crazy .ws-big{font-size:92px;margin:2px 0 6px}
+    .wrapped-export-frame .wrapped-totals .ws-big{font-size:138px}
+    .wrapped-export-frame .wrapped-closing .ws-big-emoji{font-size:138px;margin-bottom:16px}
+    .wrapped-export-frame .wrapped-closing .ws-name{font-size:40px!important;line-height:1.08}
     .player-profile-stat.is-gold{background:linear-gradient(145deg,rgba(245,185,66,.23),var(--panel));border-color:rgba(245,185,66,.48)}
     .player-profile-stat .n{font-size:32px;line-height:1;font-weight:900;color:var(--blue);font-variant-numeric:tabular-nums}
     .player-profile-stat.is-gold .n{color:#b77900}
@@ -4356,6 +4401,23 @@ function wrappedBestKeeper(){
   if(!giocatore) return null;
   return { name:giocatore, team:col(top,['squadra','team'])||'', points:num(col(top,['punti portiere','punti pt','puntipt','punti','pts','points'])) };
 }
+function wrappedTeamRecordFromResults(team){
+  const key=norm(team);
+  if(!key) return null;
+  let v=0,n=0,p=0,played=0;
+  collectPlayedMatchesForTrend().forEach(match=>{
+    const isHome=norm(match.home)===key;
+    const isAway=norm(match.away)===key;
+    if(!isHome && !isAway) return;
+    const goalsFor=isHome?match.gh:match.ga;
+    const goalsAgainst=isHome?match.ga:match.gh;
+    played++;
+    if(goalsFor>goalsAgainst) v++;
+    else if(goalsFor===goalsAgainst) n++;
+    else p++;
+  });
+  return played?{v,n,p,played}:null;
+}
 function wrappedChampionTeam(){
   const f=sectionFiles('classifica_squadre')[0];
   if(!f) return null;
@@ -4363,12 +4425,19 @@ function wrappedChampionTeam(){
   const top=rows[0]; if(!top) return null;
   const team=col(top,['squadra','team','nome','club'])||Object.values(top)[0]||'';
   if(!team) return null;
+
+  // La squadra campione e i punti restano quelli della classifica ufficiale.
+  // V/N/P vengono invece ricavati dalle partite realmente giocate, già
+  // deduplicate tra risultati e riepiloghi, così il totale coincide con le gare.
+  const record=wrappedTeamRecordFromResults(team);
   return {
     team,
     points:num(col(top,['punti finali','puntifinali','punti totali','punti','pts','points'])),
-    v:num(col(top,['v','vittorie','vinte'])),
-    n:num(col(top,['n','pareggi','pareggiate'])),
-    p:num(col(top,['p','sconfitte','perse']))
+    // Fallback sul CSV: per le sigle di una lettera è obbligatorio exactVal().
+    // col() usa anche includes(): `n` poteva leggere "Posizione" e `p` "Punti".
+    v:record?record.v:num(exactVal(top,['v','vittorie','vinte'])),
+    n:record?record.n:num(exactVal(top,['n','pareggi','pareggiate'])),
+    p:record?record.p:num(exactVal(top,['p','sconfitte','perse']))
   };
 }
 function wrappedCraziestMatch(){
@@ -4547,7 +4616,12 @@ function buildWrappedSlideEl(slide){
   }
   return el;
 }
-const wrappedState={ slides:[], index:0, timer:null, barEls:[], paused:false, slideDuration:5000, videoBlob:null, videoReady:false };
+const wrappedState={
+  slides:[], index:0, timer:null, barEls:[], paused:false, slideDuration:5000,
+  videoBlob:null, videoReady:false, videoAbort:null, videoRecorder:null,
+  videoStream:null, videoFrameTimer:null, exportHost:null, exportHostOwner:null,
+  html2canvasPromise:null
+};
 function wrappedIsMobileDevice(){
   // Il Wrapped e la sua condivisione sono disponibili esclusivamente da mobile.
   // Non basta la larghezza della finestra: un browser desktop ristretto deve
@@ -4567,20 +4641,272 @@ function wrappedCanShareFiles(){
   // resta nascosto invece di offrire un download "muto" senza spiegazione.
   if(!wrappedIsMobileDevice()) return false;
   if(!navigator.share || !navigator.canShare) return false;
+  if(!window.MediaRecorder || !HTMLCanvasElement.prototype.captureStream) return false;
   try{
     const probe=new File([new Blob(['x'],{type:'video/mp4'})],'probe.mp4',{type:'video/mp4'});
     return navigator.canShare({files:[probe]});
   }catch(e){ return false; }
 }
+function wrappedAbortError(){
+  try{ return new DOMException('Generazione Wrapped annullata','AbortError'); }
+  catch(e){ const err=new Error('Generazione Wrapped annullata'); err.name='AbortError'; return err; }
+}
+function wrappedThrowIfAborted(signal){
+  if(signal && signal.aborted) throw wrappedAbortError();
+}
+function wrappedAwaitWithAbort(promise,signal){
+  if(!signal) return promise;
+  wrappedThrowIfAborted(signal);
+  return new Promise((resolve,reject)=>{
+    const onAbort=()=>{ cleanup(); reject(wrappedAbortError()); };
+    const cleanup=()=>signal.removeEventListener('abort',onAbort);
+    signal.addEventListener('abort',onAbort,{once:true});
+    Promise.resolve(promise).then(
+      value=>{ cleanup(); resolve(value); },
+      error=>{ cleanup(); reject(error); }
+    );
+  });
+}
+function wrappedAbortableDelay(ms,signal){
+  return new Promise((resolve,reject)=>{
+    wrappedThrowIfAborted(signal);
+    const timer=setTimeout(()=>{ cleanup(); resolve(); },ms);
+    const onAbort=()=>{ clearTimeout(timer); cleanup(); reject(wrappedAbortError()); };
+    const cleanup=()=>signal && signal.removeEventListener('abort',onAbort);
+    if(signal) signal.addEventListener('abort',onAbort,{once:true});
+  });
+}
+function wrappedRemoveExportHost(owner){
+  if(owner && wrappedState.exportHostOwner && wrappedState.exportHostOwner!==owner) return;
+  if(wrappedState.exportHost) wrappedState.exportHost.remove();
+  wrappedState.exportHost=null;
+  wrappedState.exportHostOwner=null;
+}
+function wrappedCancelVideoGeneration(){
+  const controller=wrappedState.videoAbort;
+  wrappedState.videoAbort=null;
+  if(controller && !controller.signal.aborted) controller.abort();
+  wrappedCleanupHtml2CanvasContainers(controller);
+
+  const recorder=wrappedState.videoRecorder;
+  wrappedState.videoRecorder=null;
+  if(recorder && recorder.state!=='inactive'){
+    try{ recorder.stop(); }catch(e){}
+  }
+
+  const frameTimer=wrappedState.videoFrameTimer;
+  wrappedState.videoFrameTimer=null;
+  if(frameTimer) clearTimeout(frameTimer);
+
+  const stream=wrappedState.videoStream;
+  wrappedState.videoStream=null;
+  if(stream) stream.getTracks().forEach(track=>{ try{ track.stop(); }catch(e){} });
+
+  wrappedRemoveExportHost();
+  wrappedState.videoBlob=null;
+  wrappedState.videoReady=false;
+}
+function wrappedCleanupHtml2CanvasContainers(owner){
+  const containers=owner && owner._wrappedHtml2CanvasContainers;
+  if(!containers) return;
+  containers.forEach(node=>{ if(node && node.isConnected) node.remove(); });
+  containers.clear();
+}
+function wrappedTrackHtml2CanvasContainers(owner,signal){
+  const containers=owner ? (owner._wrappedHtml2CanvasContainers||new Set()) : new Set();
+  if(owner) owner._wrappedHtml2CanvasContainers=containers;
+  const collect=node=>{
+    if(!(node instanceof Element)) return;
+    const found=[];
+    if(node.matches && node.matches('.html2canvas-container')) found.push(node);
+    if(node.querySelectorAll) found.push(...node.querySelectorAll('.html2canvas-container'));
+    found.forEach(container=>{
+      containers.add(container);
+      if(signal && signal.aborted) container.remove();
+    });
+  };
+  const observer=new MutationObserver(records=>records.forEach(record=>record.addedNodes.forEach(collect)));
+  observer.observe(document.documentElement,{childList:true,subtree:true});
+  return ()=>{
+    observer.disconnect();
+    wrappedCleanupHtml2CanvasContainers(owner);
+  };
+}
+function wrappedEnsureHtml2Canvas(signal){
+  if(typeof window.html2canvas==='function') return Promise.resolve(window.html2canvas);
+  if(!wrappedState.html2canvasPromise){
+    wrappedState.html2canvasPromise=new Promise((resolve,reject)=>{
+      let script=document.querySelector('script[data-wrapped-html2canvas="1"]');
+      const onLoad=()=>{
+        if(typeof window.html2canvas==='function') resolve(window.html2canvas);
+        else reject(new Error('html2canvas non disponibile dopo il caricamento'));
+      };
+      const onError=()=>{
+        wrappedState.html2canvasPromise=null;
+        if(script) script.remove();
+        reject(new Error('Impossibile caricare html2canvas'));
+      };
+      if(script){
+        script.addEventListener('load',onLoad,{once:true});
+        script.addEventListener('error',onError,{once:true});
+        return;
+      }
+      script=document.createElement('script');
+      script.src='https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+      script.async=true;
+      script.crossOrigin='anonymous';
+      script.referrerPolicy='no-referrer';
+      script.dataset.wrappedHtml2canvas='1';
+      script.addEventListener('load',onLoad,{once:true});
+      script.addEventListener('error',onError,{once:true});
+      document.head.appendChild(script);
+    });
+  }
+  return wrappedAwaitWithAbort(wrappedState.html2canvasPromise,signal);
+}
+async function wrappedPrimeSlideAssets(slide,signal){
+  const d=slide.data||{};
+  const jobs=[];
+  if(['scorer','average','mvp','keeper'].includes(slide.type)){
+    const names=(d.imageNames||[d.name]).filter(Boolean);
+    if(names.length) jobs.push(resolveImageForNames('player',names,{priority:'high',eager:true}));
+    if(d.team) jobs.push(resolveImageForNames('team',[d.team],{priority:'high',eager:true}));
+  }else if(slide.type==='champion' && d.team){
+    jobs.push(resolveImageForNames('team',[d.team],{priority:'high',eager:true}));
+  }else if(slide.type==='crazy'){
+    if(d.home) jobs.push(resolveImageForNames('team',[d.home],{priority:'high',eager:true}));
+    if(d.away) jobs.push(resolveImageForNames('team',[d.away],{priority:'high',eager:true}));
+  }
+  if(jobs.length) await wrappedAwaitWithAbort(Promise.allSettled(jobs),signal);
+}
+function wrappedWaitForImage(img,signal){
+  if(img.complete) return img.decode ? wrappedAwaitWithAbort(img.decode().catch(()=>{}),signal) : Promise.resolve();
+  return new Promise((resolve,reject)=>{
+    wrappedThrowIfAborted(signal);
+    let timeout=null;
+    const cleanup=()=>{
+      if(timeout) clearTimeout(timeout);
+      img.removeEventListener('load',done);
+      img.removeEventListener('error',done);
+      if(signal) signal.removeEventListener('abort',onAbort);
+    };
+    const done=()=>{ cleanup(); resolve(); };
+    const onAbort=()=>{ cleanup(); reject(wrappedAbortError()); };
+    img.addEventListener('load',done,{once:true});
+    img.addEventListener('error',done,{once:true});
+    if(signal) signal.addEventListener('abort',onAbort,{once:true});
+    timeout=setTimeout(done,4000);
+  });
+}
+function wrappedWaitForDomIdle(root,signal,idleMs=120,maxMs=1200){
+  return new Promise((resolve,reject)=>{
+    wrappedThrowIfAborted(signal);
+    let idleTimer=null;
+    let maxTimer=null;
+    const finish=()=>{
+      if(idleTimer) clearTimeout(idleTimer);
+      if(maxTimer) clearTimeout(maxTimer);
+      observer.disconnect();
+      if(signal) signal.removeEventListener('abort',onAbort);
+      resolve();
+    };
+    const onAbort=()=>{
+      if(idleTimer) clearTimeout(idleTimer);
+      if(maxTimer) clearTimeout(maxTimer);
+      observer.disconnect();
+      reject(wrappedAbortError());
+    };
+    const arm=()=>{
+      if(idleTimer) clearTimeout(idleTimer);
+      idleTimer=setTimeout(finish,idleMs);
+    };
+    const observer=new MutationObserver(arm);
+    observer.observe(root,{subtree:true,childList:true,attributes:true});
+    if(signal) signal.addEventListener('abort',onAbort,{once:true});
+    maxTimer=setTimeout(finish,maxMs);
+    requestAnimationFrame(()=>requestAnimationFrame(arm));
+  });
+}
+async function wrappedWaitForExportAssets(frame,signal){
+  if(document.fonts && document.fonts.ready){
+    await wrappedAwaitWithAbort(document.fonts.ready,signal);
+  }
+  await wrappedWaitForDomIdle(frame,signal);
+  const images=[...frame.querySelectorAll('img')];
+  await Promise.all(images.map(img=>wrappedWaitForImage(img,signal)));
+  await wrappedAbortableDelay(60,signal);
+}
+function wrappedMountExportFrame(slide,owner){
+  wrappedRemoveExportHost(owner);
+  const host=document.createElement('div');
+  host.className='wrapped-export-host';
+  host.setAttribute('aria-hidden','true');
+
+  const frame=document.createElement('div');
+  frame.className='wrapped-overlay wrapped-export-frame is-open';
+  const stage=document.createElement('div');
+  stage.className='wrapped-stage';
+  const slideEl=buildWrappedSlideEl(slide);
+  slideEl.classList.add('is-current');
+  stage.appendChild(slideEl);
+  frame.appendChild(stage);
+  host.appendChild(frame);
+  document.body.appendChild(host);
+  wrappedState.exportHost=host;
+  wrappedState.exportHostOwner=owner||null;
+  return frame;
+}
+async function wrappedCaptureSlideFromDom(slide,html2canvasFn,signal,owner){
+  wrappedThrowIfAborted(signal);
+  await wrappedPrimeSlideAssets(slide,signal);
+  const frame=wrappedMountExportFrame(slide,owner);
+  await wrappedWaitForExportAssets(frame,signal);
+  wrappedThrowIfAborted(signal);
+  const stopTracking=wrappedTrackHtml2CanvasContainers(owner,signal);
+  let capturePromise;
+  try{
+    capturePromise=html2canvasFn(frame,{
+      backgroundColor:null,
+      scale:2.5,
+      width:432,
+      height:768,
+      windowWidth:432,
+      windowHeight:768,
+      scrollX:0,
+      scrollY:0,
+      useCORS:true,
+      allowTaint:false,
+      imageTimeout:5000,
+      logging:false,
+      removeContainer:true,
+      onclone:()=>wrappedThrowIfAborted(signal)
+    });
+  }catch(error){
+    stopTracking();
+    throw error;
+  }
+  // La Promise originale continua a occuparsi del proprio clone anche se il
+  // wrapper viene annullato: il tracker rimuove subito eventuali iframe DOM
+  // rimasti e resta attivo fino alla conclusione reale di html2canvas.
+  Promise.resolve(capturePromise).then(stopTracking,stopTracking);
+  const captured=await wrappedAwaitWithAbort(capturePromise,signal);
+  wrappedThrowIfAborted(signal);
+  return captured;
+}
 function wrappedLoadImageSafe(src){
-  // Carica un'immagine per disegnarla su canvas; in caso di errore o mancanza
-  // del file risolve comunque con null, così il video continua a generarsi
-  // mostrando solo testo invece di bloccarsi per una foto assente.
+  // Le immagini usate dal fallback vengono anche decodificate prima di essere
+  // consegnate al renderer: la registrazione non parte mai con foto o loghi
+  // ancora in fase di decoding.
   return new Promise(resolve=>{
     if(!src){ resolve(null); return; }
     const img=new Image();
     if(/^https?:/i.test(src)) img.crossOrigin='anonymous';
-    img.onload=()=>resolve(img);
+    img.onload=async()=>{
+      if(img.decode){
+        try{ await img.decode(); }catch(e){}
+      }
+      resolve(img);
+    };
     img.onerror=()=>resolve(null);
     img.src=src;
   });
@@ -4717,40 +5043,380 @@ function wrappedWrapText(ctx,text,cx,y,maxWidth,lineHeight){
   if(line) lines.push(line);
   lines.forEach((l,i)=>ctx.fillText(l,cx,y+i*lineHeight));
 }
+function wrappedVideoClamp(value,min=0,max=1){
+  return Math.max(min,Math.min(max,value));
+}
+function wrappedVideoEaseOut(value){
+  const t=wrappedVideoClamp(value);
+  return 1-Math.pow(1-t,3);
+}
+function wrappedVideoEaseInOut(value){
+  const t=wrappedVideoClamp(value);
+  return t<.5 ? 4*t*t*t : 1-Math.pow(-2*t+2,3)/2;
+}
+function wrappedVideoAccent(type){
+  const accents={
+    cover:[245,185,66], scorer:[255,207,74], average:[52,211,153],
+    mvp:[168,85,247], keeper:[96,165,250], champion:[245,185,66],
+    crazy:[251,113,133], totals:[167,139,250], closing:[245,185,66]
+  };
+  return accents[type]||[96,165,250];
+}
+function wrappedVideoSeed(index,salt){
+  const x=Math.sin((index+1)*127.1+(salt+1)*311.7)*43758.5453;
+  return x-Math.floor(x);
+}
+function wrappedDrawVideoBackground(ctx,w,h,timeMs,currentType,nextType,mix){
+  const a=wrappedVideoAccent(currentType);
+  const b=wrappedVideoAccent(nextType||currentType);
+  const blend=(i)=>Math.round(a[i]+(b[i]-a[i])*wrappedVideoClamp(mix));
+  const r=blend(0),g=blend(1),bl=blend(2);
+
+  const base=ctx.createLinearGradient(0,0,w,h);
+  base.addColorStop(0,'#040713');
+  base.addColorStop(.48,'#10112a');
+  base.addColorStop(1,'#050816');
+  ctx.fillStyle=base;
+  ctx.fillRect(0,0,w,h);
+
+  const t=timeMs/1000;
+  const orbs=[
+    {x:.17+.055*Math.sin(t*.72),y:.16+.045*Math.cos(t*.61),radius:.48,alpha:.28},
+    {x:.84+.05*Math.cos(t*.58),y:.32+.06*Math.sin(t*.49),radius:.43,alpha:.22},
+    {x:.48+.08*Math.sin(t*.37),y:.91+.04*Math.cos(t*.43),radius:.52,alpha:.20}
+  ];
+  orbs.forEach((orb,i)=>{
+    const ox=w*orb.x, oy=h*orb.y, radius=w*orb.radius*(i===2?1.55:1);
+    const grad=ctx.createRadialGradient(ox,oy,0,ox,oy,radius);
+    const rr=i===1?96:r, gg=i===1?165:g, bb=i===1?250:bl;
+    grad.addColorStop(0,`rgba(${rr},${gg},${bb},${orb.alpha})`);
+    grad.addColorStop(1,`rgba(${rr},${gg},${bb},0)`);
+    ctx.fillStyle=grad;
+    ctx.fillRect(0,0,w,h);
+  });
+
+  ctx.save();
+  ctx.globalAlpha=.07;
+  ctx.strokeStyle='#ffffff';
+  ctx.lineWidth=2;
+  const drift=(timeMs*.025)%72;
+  for(let y=-h;y<h*1.5;y+=72){
+    ctx.beginPath();
+    ctx.moveTo(-w,y+drift);
+    ctx.lineTo(w*2,y+w+drift);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+function wrappedDrawVideoSparkles(ctx,w,h,timeMs,slideIndex,accent){
+  const t=timeMs/1000;
+  ctx.save();
+  ctx.globalCompositeOperation='screen';
+  for(let i=0;i<24;i++){
+    const baseX=wrappedVideoSeed(slideIndex,i*3)*w;
+    const baseY=wrappedVideoSeed(slideIndex,i*3+1)*h;
+    const phase=wrappedVideoSeed(slideIndex,i*3+2)*Math.PI*2;
+    const pulse=.5+.5*Math.sin(t*(1.25+wrappedVideoSeed(i,slideIndex)*1.6)+phase);
+    const x=baseX+Math.sin(t*.45+phase)*18;
+    const y=(baseY-t*(10+wrappedVideoSeed(i,7)*18)+h*2)%h;
+    const size=2+7*pulse;
+    ctx.globalAlpha=.18+.68*pulse;
+    ctx.fillStyle=i%3===0?`rgb(${accent[0]},${accent[1]},${accent[2]})`:'#ffffff';
+    ctx.beginPath();
+    ctx.moveTo(x,y-size);
+    ctx.lineTo(x+size*.34,y-size*.34);
+    ctx.lineTo(x+size,y);
+    ctx.lineTo(x+size*.34,y+size*.34);
+    ctx.lineTo(x,y+size);
+    ctx.lineTo(x-size*.34,y+size*.34);
+    ctx.lineTo(x-size,y);
+    ctx.lineTo(x-size*.34,y-size*.34);
+    ctx.closePath();
+    ctx.fill();
+  }
+  ctx.restore();
+}
+function wrappedDrawVideoSlideImage(ctx,image,w,h,alpha,translateY,scale,glowAccent){
+  if(!image || alpha<=0) return;
+  ctx.save();
+  ctx.globalAlpha=wrappedVideoClamp(alpha);
+  ctx.translate(w/2,h/2+translateY);
+  ctx.scale(scale,scale);
+  ctx.shadowColor=`rgba(${glowAccent[0]},${glowAccent[1]},${glowAccent[2]},.30)`;
+  ctx.shadowBlur=58;
+  ctx.drawImage(image,-w/2,-h/2,w,h);
+  ctx.restore();
+}
+function wrappedDrawVideoShimmer(ctx,w,h,timeMs,accent){
+  const cycle=2100;
+  const p=(timeMs%cycle)/cycle;
+  const center=-w*.55+p*w*2.1;
+  ctx.save();
+  ctx.globalCompositeOperation='screen';
+  ctx.translate(center,h*.5);
+  ctx.rotate(-.28);
+  const grad=ctx.createLinearGradient(-150,0,150,0);
+  grad.addColorStop(0,'rgba(255,255,255,0)');
+  grad.addColorStop(.45,`rgba(${accent[0]},${accent[1]},${accent[2]},.03)`);
+  grad.addColorStop(.5,'rgba(255,255,255,.20)');
+  grad.addColorStop(.55,`rgba(${accent[0]},${accent[1]},${accent[2]},.04)`);
+  grad.addColorStop(1,'rgba(255,255,255,0)');
+  ctx.fillStyle=grad;
+  ctx.fillRect(-170,-h,340,h*2);
+  ctx.restore();
+}
+function wrappedDrawVideoFrame(ctx,renderedSlides,timeMs){
+  const W=ctx.canvas.width,H=ctx.canvas.height;
+  const perSlideMs=2800;
+  const transitionMs=560;
+  const count=renderedSlides.length;
+  if(!count) return;
+
+  const bounded=Math.max(0,Math.min(timeMs,count*perSlideMs-1));
+  const index=Math.min(count-1,Math.floor(bounded/perSlideMs));
+  const local=bounded-index*perSlideMs;
+  const current=renderedSlides[index];
+  const next=index<count-1?renderedSlides[index+1]:null;
+  const transitionStart=perSlideMs-transitionMs;
+  const transition=next && local>transitionStart ? wrappedVideoEaseInOut((local-transitionStart)/transitionMs) : 0;
+  const enter=wrappedVideoEaseOut(Math.min(1,local/470));
+  const currentAlpha=(.10+.90*enter)*(1-transition);
+  const currentY=(1-enter)*88-transition*72;
+  const currentScale=.925+.075*enter-transition*.035;
+  const nextEnter=transition;
+  const nextAlpha=nextEnter;
+  const nextY=(1-nextEnter)*105;
+  const nextScale=.93+.07*nextEnter;
+  const currentType=current.slide.type;
+  const nextType=next?next.slide.type:currentType;
+  const accent=wrappedVideoAccent(currentType);
+
+  wrappedDrawVideoBackground(ctx,W,H,timeMs,currentType,nextType,transition);
+  wrappedDrawVideoSlideImage(ctx,current.canvas,W,H,currentAlpha,currentY,currentScale,accent);
+  if(next){
+    wrappedDrawVideoSlideImage(ctx,next.canvas,W,H,nextAlpha,nextY,nextScale,wrappedVideoAccent(nextType));
+  }
+  wrappedDrawVideoShimmer(ctx,W,H,timeMs,transition>.55?wrappedVideoAccent(nextType):accent);
+  wrappedDrawVideoSparkles(ctx,W,H,timeMs,index,transition>.55?wrappedVideoAccent(nextType):accent);
+
+  // Bagliore respirante lungo i bordi della Story; varia a ogni frame e forza
+  // Safari a produrre campioni continui anche quando il contenuto e' fermo.
+  const pulse=.5+.5*Math.sin(timeMs/520);
+  ctx.save();
+  const edge=ctx.createLinearGradient(0,0,W,H);
+  edge.addColorStop(0,`rgba(${accent[0]},${accent[1]},${accent[2]},${.06+.05*pulse})`);
+  edge.addColorStop(.5,'rgba(255,255,255,0)');
+  edge.addColorStop(1,`rgba(${accent[0]},${accent[1]},${accent[2]},${.04+.04*(1-pulse)})`);
+  ctx.strokeStyle=edge;
+  ctx.lineWidth=18;
+  ctx.strokeRect(9,9,W-18,H-18);
+  ctx.restore();
+}
+async function wrappedPreRenderVideoSlides(slides,html2canvasFn,signal,controller,shareBtn){
+  const W=1080,H=1920;
+  const rendered=[];
+
+  // Risoluzione e decoding preventivi: nessuna registrazione parte finche'
+  // tutte le immagini necessarie non sono state caricate o dichiarate assenti.
+  await wrappedAwaitWithAbort(Promise.all(slides.map(slide=>wrappedPrimeSlideAssets(slide,signal))),signal);
+  if(document.fonts && document.fonts.ready) await wrappedAwaitWithAbort(document.fonts.ready,signal);
+
+  for(let i=0;i<slides.length;i++){
+    wrappedThrowIfAborted(signal);
+    if(!document.getElementById('wrappedOverlay')) throw wrappedAbortError();
+    const slide=slides[i];
+    if(shareBtn && shareBtn.isConnected){
+      shareBtn.innerHTML=`⏳ Preparo ${i+1}/${slides.length}…`;
+    }
+    const output=document.createElement('canvas');
+    output.width=W; output.height=H;
+    const outputCtx=output.getContext('2d',{alpha:true});
+    if(!outputCtx) throw new Error('Canvas slide non disponibile');
+
+    let renderedFromDom=false;
+    if(html2canvasFn){
+      try{
+        const captured=await wrappedCaptureSlideFromDom(slide,html2canvasFn,signal,controller);
+        outputCtx.clearRect(0,0,W,H);
+        outputCtx.drawImage(captured,0,0,W,H);
+        renderedFromDom=true;
+      }catch(error){
+        if(error && error.name==='AbortError') throw error;
+        console.warn('Wrapped: cattura DOM fallita, uso il renderer fallback.',slide.type,error);
+      }finally{
+        wrappedRemoveExportHost(controller);
+      }
+    }
+    if(!renderedFromDom){
+      await wrappedDrawSlideOnCanvas(outputCtx,slide,W,H);
+    }
+    rendered.push({slide,canvas:output});
+  }
+  return rendered;
+}
+function wrappedRunVideoFrameLoop(ctx,renderedSlides,durationMs,signal,track){
+  const fps=30;
+  const frameMs=1000/fps;
+  return new Promise((resolve,reject)=>{
+    wrappedThrowIfAborted(signal);
+    const startedAt=performance.now();
+    let frame=0;
+    let settled=false;
+    const cleanup=()=>{
+      if(wrappedState.videoFrameTimer){
+        clearTimeout(wrappedState.videoFrameTimer);
+        wrappedState.videoFrameTimer=null;
+      }
+      if(signal) signal.removeEventListener('abort',onAbort);
+    };
+    const finish=(error)=>{
+      if(settled) return;
+      settled=true;
+      cleanup();
+      if(error) reject(error); else resolve();
+    };
+    const onAbort=()=>finish(wrappedAbortError());
+    const tick=()=>{
+      if(signal && signal.aborted){ onAbort(); return; }
+      const elapsed=Math.min(durationMs,performance.now()-startedAt);
+      wrappedDrawVideoFrame(ctx,renderedSlides,elapsed);
+      if(track && typeof track.requestFrame==='function'){
+        try{ track.requestFrame(); }catch(e){}
+      }
+      if(elapsed>=durationMs){ finish(); return; }
+      // Se il dispositivo e' in ritardo salta direttamente al prossimo slot
+      // temporale, senza tentare di recuperare con molti frame ravvicinati.
+      frame=Math.floor((performance.now()-startedAt)/frameMs)+1;
+      const nextAt=startedAt+frame*frameMs;
+      const delay=Math.max(0,nextAt-performance.now());
+      wrappedState.videoFrameTimer=setTimeout(tick,delay);
+    };
+    if(signal) signal.addEventListener('abort',onAbort,{once:true});
+    tick();
+  });
+}
 async function wrappedPrepareVideoInBackground(shareBtn){
-  // Genera il video silenziosamente mentre l'utente guarda le slide.
-  // Quando è pronto, aggiorna il pulsante. Se l'utente chiude il Wrapped
-  // prima che finisca, wrappedState.videoBlob resta null e il pulsante
-  // non viene trovato più nel DOM — tutto si pulisce da solo.
-  wrappedState.videoBlob=null; wrappedState.videoReady=false;
-  if(shareBtn){ shareBtn.disabled=true; shareBtn.innerHTML='⏳ Preparo il video…'; }
+  // Le slide vengono prima catturate dal DOM e decodificate integralmente.
+  // Solo dopo parte una composizione continua a 30 fps con transizioni ed
+  // effetti dinamici, mantenendo il renderer manuale come fallback.
+  wrappedCancelVideoGeneration();
+  const controller=new AbortController();
+  const signal=controller.signal;
+  wrappedState.videoAbort=controller;
+  wrappedState.videoBlob=null;
+  wrappedState.videoReady=false;
+  if(shareBtn){ shareBtn.disabled=true; shareBtn.innerHTML='⏳ Preparo immagini e font…'; }
+
+  let stream=null;
+  let recorder=null;
   try{
-    const W=1080,H=1920;
-    const canvas=document.createElement('canvas'); canvas.width=W; canvas.height=H;
-    const ctx=canvas.getContext('2d');
-    const stream=canvas.captureStream(30);
+    wrappedThrowIfAborted(signal);
+    if(!window.MediaRecorder) throw new Error('Registrazione video non supportata');
+    if(!wrappedState.slides.length) throw new Error('Nessuna slide disponibile per il video');
+
+    let html2canvasFn=null;
+    try{
+      html2canvasFn=await wrappedEnsureHtml2Canvas(signal);
+    }catch(error){
+      if(error && error.name==='AbortError') throw error;
+      console.warn('Wrapped: cattura DOM non disponibile, uso il renderer fallback.',error);
+    }
+
+    const renderedSlides=await wrappedPreRenderVideoSlides(
+      wrappedState.slides,html2canvasFn,signal,controller,shareBtn
+    );
+    wrappedThrowIfAborted(signal);
+
+    const W=1080,H=1920,FPS=30,PER_SLIDE_MS=2800;
+    const canvas=document.createElement('canvas');
+    canvas.width=W; canvas.height=H;
+    const ctx=canvas.getContext('2d',{alpha:false,desynchronized:false});
+    if(!ctx) throw new Error('Canvas video non disponibile');
+
+    // Workaround Safari: la copertina esiste sul canvas prima ancora che venga
+    // creato lo stream, poi viene ridisegnata subito dopo l'evento start.
+    wrappedDrawVideoFrame(ctx,renderedSlides,0);
+    stream=canvas.captureStream(FPS);
+    wrappedState.videoStream=stream;
+    const track=stream.getVideoTracks()[0]||null;
     const mimeType=['video/mp4;codecs=h264','video/mp4','video/webm;codecs=vp9','video/webm']
-      .find(t=>window.MediaRecorder && MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(t))||'';
-    if(!window.MediaRecorder) return;
-    const recorder=new MediaRecorder(stream, mimeType?{mimeType}:undefined);
+      .find(t=>MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(t))||'';
+    const recorderOptions={videoBitsPerSecond:9000000};
+    if(mimeType) recorderOptions.mimeType=mimeType;
+    recorder=new MediaRecorder(stream,recorderOptions);
+    wrappedState.videoRecorder=recorder;
+
     const chunks=[];
     recorder.ondataavailable=ev=>{ if(ev.data&&ev.data.size) chunks.push(ev.data); };
-    const finished=new Promise(resolve=>{ recorder.onstop=resolve; });
-    recorder.start();
-    const perSlideMs=2200;
-    for(const slide of wrappedState.slides){
-      if(!document.getElementById('wrappedOverlay')) return; // overlay chiuso durante la generazione
-      await wrappedDrawSlideOnCanvas(ctx,slide,W,H);
-      await new Promise(r=>setTimeout(r,perSlideMs));
+    const finished=new Promise((resolve,reject)=>{
+      recorder.addEventListener('stop',resolve,{once:true});
+      recorder.addEventListener('error',ev=>reject(ev.error||new Error('Errore MediaRecorder')),{once:true});
+    });
+    const started=new Promise((resolve,reject)=>{
+      recorder.addEventListener('start',resolve,{once:true});
+      recorder.addEventListener('error',ev=>reject(ev.error||new Error('Errore avvio MediaRecorder')),{once:true});
+    });
+
+    if(shareBtn && shareBtn.isConnected) shareBtn.innerHTML='⏳ Registro il video…';
+    recorder.start(500);
+    await wrappedAwaitWithAbort(started,signal);
+
+    // Secondo disegno esplicito della copertina: evita il primo frame nero sui
+    // Safari che non campionano il contenuto gia' presente prima di recorder.start().
+    wrappedDrawVideoFrame(ctx,renderedSlides,1);
+    if(track && typeof track.requestFrame==='function'){
+      try{ track.requestFrame(); }catch(e){}
+    }
+
+    await wrappedRunVideoFrameLoop(
+      ctx,renderedSlides,renderedSlides.length*PER_SLIDE_MS,signal,track
+    );
+    wrappedThrowIfAborted(signal);
+
+    // Tre campioni finali, ancora a circa 30 fps: Safari ha cosi' il tempo di
+    // accodare l'ultima schermata senza introdurre un tratto statico non ridisegnato.
+    for(let tailFrame=0;tailFrame<3;tailFrame++){
+      wrappedDrawVideoFrame(ctx,renderedSlides,renderedSlides.length*PER_SLIDE_MS-1+tailFrame);
+      if(track && typeof track.requestFrame==='function'){
+        try{ track.requestFrame(); }catch(e){}
+      }
+      await wrappedAbortableDelay(34,signal);
     }
     recorder.stop();
-    await finished;
+    await wrappedAwaitWithAbort(finished,signal);
+    wrappedThrowIfAborted(signal);
+    if(!chunks.length) throw new Error('Il video generato e\' vuoto');
+
     const finalType=mimeType&&mimeType.includes('mp4')?'video/mp4':'video/webm';
     wrappedState.videoBlob=new Blob(chunks,{type:finalType});
     wrappedState.videoReady=true;
-    if(shareBtn && shareBtn.isConnected){ shareBtn.disabled=false; shareBtn.innerHTML='📲 Condividi su Instagram'; }
-  }catch(e){
-    if(shareBtn && shareBtn.isConnected){ shareBtn.disabled=false; shareBtn.innerHTML='📲 Condividi su Instagram'; }
+    if(shareBtn && shareBtn.isConnected){
+      shareBtn.disabled=false;
+      shareBtn.innerHTML='📲 Condividi su Instagram';
+      shareBtn.onclick=()=>wrappedShareVideo(shareBtn);
+    }
+  }catch(error){
+    if(!error || error.name!=='AbortError'){
+      console.error('Wrapped: generazione video non riuscita.',error);
+      if(shareBtn && shareBtn.isConnected){
+        shareBtn.disabled=false;
+        shareBtn.innerHTML='↻ Riprova la preparazione';
+        shareBtn.onclick=()=>wrappedPrepareVideoInBackground(shareBtn);
+      }
+    }
+  }finally{
+    wrappedRemoveExportHost(controller);
+    if(wrappedState.videoFrameTimer){
+      clearTimeout(wrappedState.videoFrameTimer);
+      wrappedState.videoFrameTimer=null;
+    }
+    if(recorder && recorder.state!=='inactive'){
+      try{ recorder.stop(); }catch(e){}
+    }
+    if(stream) stream.getTracks().forEach(track=>{ try{ track.stop(); }catch(e){} });
+    if(wrappedState.videoRecorder===recorder) wrappedState.videoRecorder=null;
+    if(wrappedState.videoStream===stream) wrappedState.videoStream=null;
+    if(wrappedState.videoAbort===controller) wrappedState.videoAbort=null;
   }
 }
 function wrappedShareVideo(btn){
@@ -4767,13 +5433,19 @@ function wrappedShareVideo(btn){
   if(navigator.canShare && navigator.canShare({files:[file]})){
     navigator.share({ files:[file], title:'CRAL Champions — Wrapped' })
       .catch(e=>{ if(e&&e.name!=='AbortError') alert('Condivisione non riuscita: '+(e.message||e)); });
+  }else{
+    alert('Questo browser non può condividere il formato video generato.');
   }
 }
 function closeWrapped(){
+  if(wrappedState.timer){ clearTimeout(wrappedState.timer); wrappedState.timer=null; }
+  wrappedCancelVideoGeneration();
   const old=document.getElementById('wrappedOverlay');
   if(old) old.remove();
-  if(wrappedState.timer){ clearTimeout(wrappedState.timer); wrappedState.timer=null; }
-  wrappedState.videoBlob=null; wrappedState.videoReady=false;
+  wrappedState.barEls=[];
+  wrappedState.slides=[];
+  wrappedState.index=0;
+  wrappedState.paused=false;
   document.removeEventListener('keydown',wrappedKeyHandler);
   document.body.classList.remove('player-modal-open');
 }
