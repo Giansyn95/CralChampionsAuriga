@@ -426,7 +426,9 @@
     .wrapped-crazy-team{display:flex;flex-direction:column;align-items:center;gap:9px;min-width:0}
     .wrapped-crazy-team .ws-logo{width:104px;height:104px;margin:0;transform:none;border-radius:26px}
     .wrapped-crazy-team-name{max-width:120px;font-family:'Oswald',Arial,sans-serif;font-size:15px;font-weight:800;line-height:1.05;text-transform:uppercase;overflow-wrap:anywhere;text-shadow:0 8px 18px rgba(0,0,0,.36)}
-    .wrapped-crazy-score{display:flex;align-items:center;justify-content:center;min-width:94px;padding:12px 14px;border-radius:24px;background:linear-gradient(135deg,rgba(255,255,255,.18),rgba(255,255,255,.07));border:1px solid rgba(255,255,255,.28);box-shadow:0 18px 38px rgba(0,0,0,.30),inset 0 1px 0 rgba(255,255,255,.22);font-family:'Oswald',Arial,sans-serif;font-size:clamp(34px,10vw,54px);font-weight:900;line-height:1;color:#fff;text-shadow:0 0 22px rgba(251,113,133,.58)}
+    .wrapped-crazy-score{display:inline-grid;grid-template-columns:auto auto auto;align-items:center;justify-content:center;min-width:98px;padding:12px 12px;border-radius:24px;background:linear-gradient(135deg,rgba(255,255,255,.18),rgba(255,255,255,.07));border:1px solid rgba(255,255,255,.28);box-shadow:0 18px 38px rgba(0,0,0,.30),inset 0 1px 0 rgba(255,255,255,.22);font-family:'Oswald',Arial,sans-serif;font-size:clamp(34px,9.4vw,54px);font-weight:900;line-height:1;color:#fff;text-shadow:0 0 22px rgba(251,113,133,.58);white-space:nowrap;word-break:keep-all;overflow-wrap:normal;font-variant-numeric:tabular-nums;letter-spacing:-.035em}
+    .wrapped-crazy-score .score-side{display:inline-block;min-width:.58em;text-align:center}
+    .wrapped-crazy-score .score-separator{display:inline-block;margin:0 .055em;color:var(--accent);transform:translateY(-.025em);text-shadow:0 0 16px rgba(var(--accent-rgb),.88)}
     @media(max-width:380px){.wrapped-crazy-match{gap:8px}.wrapped-crazy-team .ws-logo{width:84px;height:84px}.wrapped-crazy-score{min-width:78px;padding:10px 11px}.wrapped-crazy-team-name{font-size:13px;max-width:96px}.wrapped-slide .ws-cral-logo{width:92px;height:92px}}
 
     /* ── Wrapped 2.0: story/poster premium ── */
@@ -481,6 +483,11 @@
     .wrapped-champion{--accent:#f5b942;--accent-rgb:245,185,66;--accent2-rgb:34,197,94}
     .wrapped-crazy{--accent:#fb7185;--accent-rgb:251,113,133;--accent2-rgb:249,115,22}
     .wrapped-totals{--accent:#a78bfa;--accent-rgb:167,139,250;--accent2-rgb:56,189,248}
+    /* KPI senza pannello: nelle slide Campione e Numeri del torneo i valori
+       restano leggibili sul fondo premium senza riquadri semitrasparenti. */
+    .wrapped-champion .ws-stat,.wrapped-totals .ws-stat{min-width:0;padding:4px 14px;border:0;background:transparent;backdrop-filter:none;box-shadow:none}
+    .wrapped-champion .ws-stat .n,.wrapped-totals .ws-stat .n{text-shadow:0 5px 18px rgba(0,0,0,.46),0 0 20px rgba(var(--accent-rgb),.30)}
+    .wrapped-champion .ws-stat .l,.wrapped-totals .ws-stat .l{color:rgba(255,255,255,.76);text-shadow:0 3px 12px rgba(0,0,0,.52)}
     .wrapped-closing{--accent:#f5b942;--accent-rgb:245,185,66;--accent2-rgb:255,255,255}
     .wrapped-footer{position:relative;z-index:6}
     .wrapped-replay,.wrapped-share{backdrop-filter:blur(12px);box-shadow:0 12px 32px rgba(0,0,0,.28)}
@@ -533,10 +540,10 @@
     .wrapped-export-frame .wrapped-champion .ws-name{font-size:43px;max-width:330px}
     .wrapped-export-frame .wrapped-champion .ws-big{font-size:104px;margin-top:2px}
     .wrapped-export-frame .wrapped-crazy{padding-left:18px!important;padding-right:18px!important}
-    .wrapped-export-frame .wrapped-crazy .wrapped-crazy-match{grid-template-columns:minmax(0,1fr) 82px minmax(0,1fr);max-width:100%;width:100%;gap:8px;margin:5px auto 13px}
+    .wrapped-export-frame .wrapped-crazy .wrapped-crazy-match{grid-template-columns:minmax(0,1fr) 100px minmax(0,1fr);max-width:100%;width:100%;gap:8px;margin:5px auto 13px}
     .wrapped-export-frame .wrapped-crazy .wrapped-crazy-team{width:100%;min-width:0}
     .wrapped-export-frame .wrapped-crazy .wrapped-crazy-team .ws-logo{width:116px;height:116px;max-width:100%;border-radius:26px;padding:8px;object-fit:contain!important;background:rgba(255,255,255,.96);margin:0 auto}
-    .wrapped-export-frame .wrapped-crazy .wrapped-crazy-score{width:82px;min-width:82px;padding:10px 7px;font-size:43px;border-radius:21px}
+    .wrapped-export-frame .wrapped-crazy .wrapped-crazy-score{width:100px;min-width:100px;padding:10px 6px;font-size:42px;border-radius:21px;letter-spacing:-.045em}
     .wrapped-export-frame .wrapped-crazy .wrapped-crazy-team-name{width:100%;max-width:122px;font-size:13.5px;line-height:1.08}
     .wrapped-export-frame .wrapped-crazy .ws-big{font-size:90px;margin:2px 0 6px}
     .wrapped-export-frame .wrapped-totals .ws-big{font-size:138px}
@@ -4611,7 +4618,17 @@ function buildWrappedSlideEl(slide){
     const home=document.createElement('div'); home.className='wrapped-crazy-team';
     home.appendChild(wrappedTeamVisualEl(d.home,slide._wrappedAssets&&slide._wrappedAssets.home));
     home.insertAdjacentHTML('beforeend',`<div class="wrapped-crazy-team-name">${esc(d.home)}</div>`);
-    const score=document.createElement('div'); score.className='wrapped-crazy-score'; score.textContent=d.result;
+    const score=document.createElement('div'); score.className='wrapped-crazy-score';
+    const scoreMatch=String(d.result||'').match(/^\s*(\d+)\s*[-–—:]\s*(\d+)\s*$/);
+    if(scoreMatch){
+      const homeScore=document.createElement('span'); homeScore.className='score-side'; homeScore.textContent=scoreMatch[1];
+      const separator=document.createElement('span'); separator.className='score-separator'; separator.textContent='–';
+      const awayScore=document.createElement('span'); awayScore.className='score-side'; awayScore.textContent=scoreMatch[2];
+      score.append(homeScore,separator,awayScore);
+      score.setAttribute('aria-label',`${scoreMatch[1]} a ${scoreMatch[2]}`);
+    }else{
+      score.textContent=d.result||'';
+    }
     const away=document.createElement('div'); away.className='wrapped-crazy-team';
     away.appendChild(wrappedTeamVisualEl(d.away,slide._wrappedAssets&&slide._wrappedAssets.away));
     away.insertAdjacentHTML('beforeend',`<div class="wrapped-crazy-team-name">${esc(d.away)}</div>`);
