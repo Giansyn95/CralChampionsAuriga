@@ -523,15 +523,22 @@
     .wrapped-export-frame .wrapped-average .ws-photo,
     .wrapped-export-frame .wrapped-mvp .ws-photo,
     .wrapped-export-frame .wrapped-keeper .ws-photo{width:164px;height:164px;border-radius:36px;margin-bottom:16px}
-    .wrapped-export-frame .wrapped-champion .ws-logo{width:190px;height:190px;border-radius:42px;margin-bottom:18px;padding:13px}
-    .wrapped-export-frame .wrapped-champion .ws-name{font-size:43px}
+    /* Safari può lasciare opacity:0 sulle immagini già presenti in cache se il
+       relativo onload non viene ridispatchato nel frame off-screen. Nell'export
+       la decodifica viene comunque attesa via JS: qui rendiamo esplicitamente
+       visibili foto e loghi validi, senza dipendere dall'animazione img-fade. */
+    .wrapped-export-frame img.ws-logo,
+    .wrapped-export-frame img.ws-photo{opacity:1!important;visibility:visible!important}
+    .wrapped-export-frame .wrapped-champion .ws-logo{width:184px;height:184px;max-width:74%;border-radius:40px;margin:0 auto 16px;padding:14px;object-fit:contain!important;background:rgba(255,255,255,.96)}
+    .wrapped-export-frame .wrapped-champion .ws-name{font-size:43px;max-width:330px}
     .wrapped-export-frame .wrapped-champion .ws-big{font-size:104px;margin-top:2px}
-    .wrapped-export-frame .wrapped-crazy{padding-left:20px!important;padding-right:20px!important}
-    .wrapped-export-frame .wrapped-crazy .wrapped-crazy-match{max-width:100%;gap:8px;margin:4px auto 12px}
-    .wrapped-export-frame .wrapped-crazy .wrapped-crazy-team .ws-logo{width:126px;height:126px;border-radius:28px;padding:8px}
-    .wrapped-export-frame .wrapped-crazy .wrapped-crazy-score{min-width:86px;padding:10px 11px;font-size:46px}
-    .wrapped-export-frame .wrapped-crazy .wrapped-crazy-team-name{max-width:118px;font-size:14px}
-    .wrapped-export-frame .wrapped-crazy .ws-big{font-size:92px;margin:2px 0 6px}
+    .wrapped-export-frame .wrapped-crazy{padding-left:18px!important;padding-right:18px!important}
+    .wrapped-export-frame .wrapped-crazy .wrapped-crazy-match{grid-template-columns:minmax(0,1fr) 82px minmax(0,1fr);max-width:100%;width:100%;gap:8px;margin:5px auto 13px}
+    .wrapped-export-frame .wrapped-crazy .wrapped-crazy-team{width:100%;min-width:0}
+    .wrapped-export-frame .wrapped-crazy .wrapped-crazy-team .ws-logo{width:116px;height:116px;max-width:100%;border-radius:26px;padding:8px;object-fit:contain!important;background:rgba(255,255,255,.96);margin:0 auto}
+    .wrapped-export-frame .wrapped-crazy .wrapped-crazy-score{width:82px;min-width:82px;padding:10px 7px;font-size:43px;border-radius:21px}
+    .wrapped-export-frame .wrapped-crazy .wrapped-crazy-team-name{width:100%;max-width:122px;font-size:13.5px;line-height:1.08}
+    .wrapped-export-frame .wrapped-crazy .ws-big{font-size:90px;margin:2px 0 6px}
     .wrapped-export-frame .wrapped-totals .ws-big{font-size:138px}
     .wrapped-export-frame .wrapped-closing .ws-big-emoji{font-size:138px;margin-bottom:16px}
     .wrapped-export-frame .wrapped-closing .ws-name{font-size:40px!important;line-height:1.08}
@@ -4525,6 +4532,19 @@ function wrappedPlayerVisualEl(d){
   return fallback;
 }
 
+function wrappedTeamVisualEl(name,resolvedSrc){
+  const options={loading:'eager',fetchPriority:'high',priority:'high',eager:true};
+  const mainName=smartSpace(name)||'';
+  if(resolvedSrc){
+    return createResolvedImageEl('team',mainName,'ws-logo',resolvedSrc,options,failed=>{
+      if(failed.isConnected) failed.replaceWith(createInitialFallback('ws-logo',mainName));
+    });
+  }
+  // I loghi del Wrapped devono essere eager anche nel frame di esportazione,
+  // che vive fuori viewport: loading=lazy su Safari può non partire mai.
+  return imgOrInitialEl('team',[mainName],'ws-logo',options);
+}
+
 function buildWrappedSlideEl(slide){
   const el=document.createElement('div'); el.className='wrapped-slide wrapped-'+slide.type;
   const d=slide.data;
@@ -4574,7 +4594,7 @@ function buildWrappedSlideEl(slide){
       <div class="ws-big">${esc(formatProfileNumber(d.points))}</div>
       <div class="ws-detail">punti come miglior portiere</div>`);
   } else if(slide.type==='champion'){
-    el.appendChild(imgOrInitialEl('team',[d.team],'ws-logo'));
+    el.appendChild(wrappedTeamVisualEl(d.team,slide._wrappedAssets&&slide._wrappedAssets.team));
     el.insertAdjacentHTML('beforeend', `
       <div class="ws-eyebrow">🏆 Squadra campione</div>
       <div class="ws-name">${esc(d.team)}</div>
@@ -4589,11 +4609,11 @@ function buildWrappedSlideEl(slide){
     el.insertAdjacentHTML('beforeend','<div class="ws-eyebrow">🔥 Partita più pazza</div>');
     const match=document.createElement('div'); match.className='wrapped-crazy-match';
     const home=document.createElement('div'); home.className='wrapped-crazy-team';
-    home.appendChild(imgOrInitialEl('team',[d.home],'ws-logo'));
+    home.appendChild(wrappedTeamVisualEl(d.home,slide._wrappedAssets&&slide._wrappedAssets.home));
     home.insertAdjacentHTML('beforeend',`<div class="wrapped-crazy-team-name">${esc(d.home)}</div>`);
     const score=document.createElement('div'); score.className='wrapped-crazy-score'; score.textContent=d.result;
     const away=document.createElement('div'); away.className='wrapped-crazy-team';
-    away.appendChild(imgOrInitialEl('team',[d.away],'ws-logo'));
+    away.appendChild(wrappedTeamVisualEl(d.away,slide._wrappedAssets&&slide._wrappedAssets.away));
     away.insertAdjacentHTML('beforeend',`<div class="wrapped-crazy-team-name">${esc(d.away)}</div>`);
     match.append(home,score,away); el.appendChild(match);
     el.insertAdjacentHTML('beforeend',`
@@ -4766,21 +4786,54 @@ function wrappedEnsureHtml2Canvas(signal){
 }
 async function wrappedPrimeSlideAssets(slide,signal){
   const d=slide.data||{};
-  const jobs=[];
+  const assets=slide._wrappedAssets||(slide._wrappedAssets={});
+  const resolveSafe=async(type,names)=>{
+    try{
+      return await wrappedAwaitWithAbort(
+        resolveImageForNames(type,(names||[]).filter(Boolean),{priority:'high',eager:true,fetchPriority:'high'}),
+        signal
+      );
+    }catch(error){
+      if(error && error.name==='AbortError') throw error;
+      return null;
+    }
+  };
+
   if(['scorer','average','mvp','keeper'].includes(slide.type)){
     const names=(d.imageNames||[d.name]).filter(Boolean);
-    if(names.length) jobs.push(resolveImageForNames('player',names,{priority:'high',eager:true}));
-    if(d.team) jobs.push(resolveImageForNames('team',[d.team],{priority:'high',eager:true}));
+    const [playerSrc,teamSrc]=await Promise.all([
+      names.length?resolveSafe('player',names):Promise.resolve(null),
+      d.team?resolveSafe('team',[d.team]):Promise.resolve(null)
+    ]);
+    assets.player=playerSrc||assets.player||null;
+    assets.team=teamSrc||assets.team||null;
   }else if(slide.type==='champion' && d.team){
-    jobs.push(resolveImageForNames('team',[d.team],{priority:'high',eager:true}));
+    assets.team=await resolveSafe('team',[d.team]);
   }else if(slide.type==='crazy'){
-    if(d.home) jobs.push(resolveImageForNames('team',[d.home],{priority:'high',eager:true}));
-    if(d.away) jobs.push(resolveImageForNames('team',[d.away],{priority:'high',eager:true}));
+    const [homeSrc,awaySrc]=await Promise.all([
+      d.home?resolveSafe('team',[d.home]):Promise.resolve(null),
+      d.away?resolveSafe('team',[d.away]):Promise.resolve(null)
+    ]);
+    assets.home=homeSrc;
+    assets.away=awaySrc;
   }
-  if(jobs.length) await wrappedAwaitWithAbort(Promise.allSettled(jobs),signal);
 }
+
 function wrappedWaitForImage(img,signal){
-  if(img.complete) return img.decode ? wrappedAwaitWithAbort(img.decode().catch(()=>{}),signal) : Promise.resolve();
+  const markReady=()=>{
+    if(img && img.naturalWidth>0){
+      img.classList.add('is-loaded');
+      img.style.opacity='1';
+      img.style.visibility='visible';
+    }
+  };
+  const decodeReady=async()=>{
+    if(img.decode){ try{ await wrappedAwaitWithAbort(img.decode(),signal); }catch(error){ if(error&&error.name==='AbortError') throw error; } }
+    markReady();
+  };
+  if(img.complete){
+    return decodeReady();
+  }
   return new Promise((resolve,reject)=>{
     wrappedThrowIfAborted(signal);
     let timeout=null;
@@ -4790,14 +4843,21 @@ function wrappedWaitForImage(img,signal){
       img.removeEventListener('error',done);
       if(signal) signal.removeEventListener('abort',onAbort);
     };
-    const done=()=>{ cleanup(); resolve(); };
+    const done=async()=>{
+      cleanup();
+      try{ await decodeReady(); }catch(error){ reject(error); return; }
+      resolve();
+    };
     const onAbort=()=>{ cleanup(); reject(wrappedAbortError()); };
+    img.loading='eager';
+    if('fetchPriority' in img) img.fetchPriority='high';
     img.addEventListener('load',done,{once:true});
     img.addEventListener('error',done,{once:true});
     if(signal) signal.addEventListener('abort',onAbort,{once:true});
-    timeout=setTimeout(done,4000);
+    timeout=setTimeout(done,5000);
   });
 }
+
 function wrappedWaitForDomIdle(root,signal,idleMs=120,maxMs=1200){
   return new Promise((resolve,reject)=>{
     wrappedThrowIfAborted(signal);
@@ -4831,10 +4891,25 @@ async function wrappedWaitForExportAssets(frame,signal){
   if(document.fonts && document.fonts.ready){
     await wrappedAwaitWithAbort(document.fonts.ready,signal);
   }
-  await wrappedWaitForDomIdle(frame,signal);
+  await wrappedWaitForDomIdle(frame,signal,150,1800);
   const images=[...frame.querySelectorAll('img')];
+  images.forEach(img=>{
+    img.loading='eager';
+    img.decoding='sync';
+    if('fetchPriority' in img) img.fetchPriority='high';
+  });
   await Promise.all(images.map(img=>wrappedWaitForImage(img,signal)));
-  await wrappedAbortableDelay(60,signal);
+  // Due paint completi permettono a Safari di applicare is-loaded e le regole
+  // object-fit prima che html2canvas cloni il frame.
+  await wrappedAwaitWithAbort(new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))),signal);
+  images.forEach(img=>{
+    if(img.naturalWidth>0){
+      img.classList.add('is-loaded');
+      img.style.opacity='1';
+      img.style.visibility='visible';
+    }
+  });
+  await wrappedAbortableDelay(90,signal);
 }
 function wrappedMountExportFrame(slide,owner){
   wrappedRemoveExportHost(owner);
@@ -4955,7 +5030,7 @@ async function wrappedDrawSlideOnCanvas(ctx,slide,w,h){
     photoSrc=imageFor('player',names[0]);
     fallbackTeamSrc=d.team?imageFor('team',d.team):null;
   } else if(slide.type==='champion'){
-    photoSrc=imageFor('team',d.team);
+    photoSrc=(slide._wrappedAssets&&slide._wrappedAssets.team)||imageFor('team',d.team);
   }
   let img=photoSrc?await wrappedLoadImageSafe(photoSrc):null;
   if(!img && fallbackTeamSrc) img=await wrappedLoadImageSafe(fallbackTeamSrc);
@@ -4984,8 +5059,8 @@ async function wrappedDrawSlideOnCanvas(ctx,slide,w,h){
   ctx.fillText(eyebrowMap[slide.type]||'', cx, y); y+=70;
 
   if(slide.type==='crazy' && d){
-    const homeImg=await wrappedLoadImageSafe(imageFor('team',d.home));
-    const awayImg=await wrappedLoadImageSafe(imageFor('team',d.away));
+    const homeImg=await wrappedLoadImageSafe((slide._wrappedAssets&&slide._wrappedAssets.home)||imageFor('team',d.home));
+    const awayImg=await wrappedLoadImageSafe((slide._wrappedAssets&&slide._wrappedAssets.away)||imageFor('team',d.away));
     const logoSize=190, logoY=y+20;
     if(homeImg) wrappedDrawRoundedImage(ctx,homeImg,cx-270,logoY,logoSize,44);
     if(awayImg) wrappedDrawRoundedImage(ctx,awayImg,cx+80,logoY,logoSize,44);
@@ -5054,6 +5129,14 @@ function wrappedVideoEaseInOut(value){
   const t=wrappedVideoClamp(value);
   return t<.5 ? 4*t*t*t : 1-Math.pow(-2*t+2,3)/2;
 }
+function wrappedVideoSmootherStep(value){
+  const t=wrappedVideoClamp(value);
+  return t*t*t*(t*(t*6-15)+10);
+}
+function wrappedVideoMixAccent(a,b,mix){
+  const t=wrappedVideoClamp(mix);
+  return a.map((value,index)=>Math.round(value+(b[index]-value)*t));
+}
 function wrappedVideoAccent(type){
   const accents={
     cover:[245,185,66], scorer:[255,207,74], average:[52,211,153],
@@ -5108,8 +5191,10 @@ function wrappedDrawVideoBackground(ctx,w,h,timeMs,currentType,nextType,mix){
   }
   ctx.restore();
 }
-function wrappedDrawVideoSparkles(ctx,w,h,timeMs,slideIndex,accent){
+function wrappedDrawVideoSparkles(ctx,w,h,timeMs,slideIndex,accent,opacity=1){
   const t=timeMs/1000;
+  const layerAlpha=wrappedVideoClamp(opacity);
+  if(layerAlpha<=0) return;
   ctx.save();
   ctx.globalCompositeOperation='screen';
   for(let i=0;i<24;i++){
@@ -5120,7 +5205,7 @@ function wrappedDrawVideoSparkles(ctx,w,h,timeMs,slideIndex,accent){
     const x=baseX+Math.sin(t*.45+phase)*18;
     const y=(baseY-t*(10+wrappedVideoSeed(i,7)*18)+h*2)%h;
     const size=2+7*pulse;
-    ctx.globalAlpha=.18+.68*pulse;
+    ctx.globalAlpha=layerAlpha*(.18+.68*pulse);
     ctx.fillStyle=i%3===0?`rgb(${accent[0]},${accent[1]},${accent[2]})`:'#ffffff';
     ctx.beginPath();
     ctx.moveTo(x,y-size);
@@ -5136,17 +5221,48 @@ function wrappedDrawVideoSparkles(ctx,w,h,timeMs,slideIndex,accent){
   }
   ctx.restore();
 }
-function wrappedDrawVideoSlideImage(ctx,image,w,h,alpha,translateY,scale,glowAccent){
+
+function wrappedDrawVideoSlideImage(ctx,image,w,h,alpha,translateY,scale,glowAccent,options={}){
   if(!image || alpha<=0) return;
+  const blur=Math.max(0,Number(options.blur)||0);
+  const rotation=Number(options.rotation)||0;
+  const translateX=Number(options.translateX)||0;
   ctx.save();
   ctx.globalAlpha=wrappedVideoClamp(alpha);
-  ctx.translate(w/2,h/2+translateY);
+  ctx.translate(w/2+translateX,h/2+translateY);
+  if(rotation) ctx.rotate(rotation);
   ctx.scale(scale,scale);
+  if(blur && 'filter' in ctx) ctx.filter=`blur(${blur}px)`;
   ctx.shadowColor=`rgba(${glowAccent[0]},${glowAccent[1]},${glowAccent[2]},.30)`;
   ctx.shadowBlur=58;
   ctx.drawImage(image,-w/2,-h/2,w,h);
   ctx.restore();
 }
+function wrappedDrawVideoTransitionGlow(ctx,w,h,progress,fromAccent,toAccent){
+  if(progress<=0 || progress>=1) return;
+  const bell=Math.sin(Math.PI*wrappedVideoClamp(progress));
+  const accent=wrappedVideoMixAccent(fromAccent,toAccent,progress);
+  ctx.save();
+  ctx.globalCompositeOperation='screen';
+  const glow=ctx.createRadialGradient(w*.5,h*.52,0,w*.5,h*.52,w*.72);
+  glow.addColorStop(0,`rgba(255,255,255,${.12*bell})`);
+  glow.addColorStop(.28,`rgba(${accent[0]},${accent[1]},${accent[2]},${.13*bell})`);
+  glow.addColorStop(1,'rgba(255,255,255,0)');
+  ctx.fillStyle=glow;
+  ctx.fillRect(0,0,w,h);
+
+  const sweepX=(-.25+progress*1.5)*w;
+  ctx.translate(sweepX,h*.5);
+  ctx.rotate(-.18);
+  const sweep=ctx.createLinearGradient(-120,0,120,0);
+  sweep.addColorStop(0,'rgba(255,255,255,0)');
+  sweep.addColorStop(.5,`rgba(255,255,255,${.22*bell})`);
+  sweep.addColorStop(1,'rgba(255,255,255,0)');
+  ctx.fillStyle=sweep;
+  ctx.fillRect(-130,-h,260,h*2);
+  ctx.restore();
+}
+
 function wrappedDrawVideoShimmer(ctx,w,h,timeMs,accent){
   const cycle=2100;
   const p=(timeMs%cycle)/cycle;
@@ -5168,7 +5284,7 @@ function wrappedDrawVideoShimmer(ctx,w,h,timeMs,accent){
 function wrappedDrawVideoFrame(ctx,renderedSlides,timeMs){
   const W=ctx.canvas.width,H=ctx.canvas.height;
   const perSlideMs=2800;
-  const transitionMs=560;
+  const transitionMs=760;
   const count=renderedSlides.length;
   if(!count) return;
 
@@ -5178,40 +5294,76 @@ function wrappedDrawVideoFrame(ctx,renderedSlides,timeMs){
   const current=renderedSlides[index];
   const next=index<count-1?renderedSlides[index+1]:null;
   const transitionStart=perSlideMs-transitionMs;
-  const transition=next && local>transitionStart ? wrappedVideoEaseInOut((local-transitionStart)/transitionMs) : 0;
-  const enter=wrappedVideoEaseOut(Math.min(1,local/470));
-  const currentAlpha=(.10+.90*enter)*(1-transition);
-  const currentY=(1-enter)*88-transition*72;
-  const currentScale=.925+.075*enter-transition*.035;
-  const nextEnter=transition;
-  const nextAlpha=nextEnter;
-  const nextY=(1-nextEnter)*105;
-  const nextScale=.93+.07*nextEnter;
+  const rawTransition=next && local>transitionStart ? (local-transitionStart)/transitionMs : 0;
+  const transition=wrappedVideoSmootherStep(rawTransition);
   const currentType=current.slide.type;
   const nextType=next?next.slide.type:currentType;
-  const accent=wrappedVideoAccent(currentType);
+  const currentAccent=wrappedVideoAccent(currentType);
+  const nextAccent=wrappedVideoAccent(nextType);
+  const mixedAccent=wrappedVideoMixAccent(currentAccent,nextAccent,transition);
+
+  // Moto continuo molto leggero durante la permanenza della slide. Il valore
+  // usa indice e tempo globale: la slide che entra mantiene esattamente la
+  // stessa posizione quando diventa la slide corrente, senza salto al cambio indice.
+  const currentFloatY=Math.sin(timeMs/880+index*.83)*4.5;
+  const currentFloatScale=1+Math.sin(timeMs/1150+index*.61)*.0035;
+  const nextFloatY=Math.sin(timeMs/880+(index+1)*.83)*4.5;
+  const nextFloatScale=1+Math.sin(timeMs/1150+(index+1)*.61)*.0035;
+
+  // La copertina è pienamente visibile fin dal frame zero: niente fade da nero
+  // su Safari. Viene solo fatta assestare dolcemente nei primi 650 ms.
+  const coverSettle=index===0 ? wrappedVideoEaseOut(Math.min(1,local/650)) : 1;
+  let currentAlpha=1-transition;
+  let currentY=currentFloatY-transition*58;
+  let currentX=-transition*20;
+  let currentScale=currentFloatScale*(1+transition*.022);
+  let currentBlur=transition*11;
+  let currentRotation=-transition*.005;
+  if(index===0 && local<650){
+    currentY+=(1-coverSettle)*24;
+    currentScale*=.985+.015*coverSettle;
+  }
+
+  const nextAlpha=transition;
+  const nextY=nextFloatY+(1-transition)*82;
+  const nextX=(1-transition)*26;
+  const nextScale=nextFloatScale*(.965+.035*transition);
+  const nextBlur=(1-transition)*14;
+  const nextRotation=(1-transition)*.006;
 
   wrappedDrawVideoBackground(ctx,W,H,timeMs,currentType,nextType,transition);
-  wrappedDrawVideoSlideImage(ctx,current.canvas,W,H,currentAlpha,currentY,currentScale,accent);
+  wrappedDrawVideoSlideImage(ctx,current.canvas,W,H,currentAlpha,currentY,currentScale,currentAccent,{
+    blur:currentBlur,rotation:currentRotation,translateX:currentX
+  });
   if(next){
-    wrappedDrawVideoSlideImage(ctx,next.canvas,W,H,nextAlpha,nextY,nextScale,wrappedVideoAccent(nextType));
+    wrappedDrawVideoSlideImage(ctx,next.canvas,W,H,nextAlpha,nextY,nextScale,nextAccent,{
+      blur:nextBlur,rotation:nextRotation,translateX:nextX
+    });
   }
-  wrappedDrawVideoShimmer(ctx,W,H,timeMs,transition>.55?wrappedVideoAccent(nextType):accent);
-  wrappedDrawVideoSparkles(ctx,W,H,timeMs,index,transition>.55?wrappedVideoAccent(nextType):accent);
+
+  wrappedDrawVideoTransitionGlow(ctx,W,H,transition,currentAccent,nextAccent);
+  wrappedDrawVideoShimmer(ctx,W,H,timeMs,mixedAccent);
+  if(next && transition>0){
+    wrappedDrawVideoSparkles(ctx,W,H,timeMs,index,currentAccent,1-transition);
+    wrappedDrawVideoSparkles(ctx,W,H,timeMs,index+1,nextAccent,transition);
+  }else{
+    wrappedDrawVideoSparkles(ctx,W,H,timeMs,index,currentAccent,1);
+  }
 
   // Bagliore respirante lungo i bordi della Story; varia a ogni frame e forza
   // Safari a produrre campioni continui anche quando il contenuto e' fermo.
   const pulse=.5+.5*Math.sin(timeMs/520);
   ctx.save();
   const edge=ctx.createLinearGradient(0,0,W,H);
-  edge.addColorStop(0,`rgba(${accent[0]},${accent[1]},${accent[2]},${.06+.05*pulse})`);
+  edge.addColorStop(0,`rgba(${mixedAccent[0]},${mixedAccent[1]},${mixedAccent[2]},${.06+.05*pulse})`);
   edge.addColorStop(.5,'rgba(255,255,255,0)');
-  edge.addColorStop(1,`rgba(${accent[0]},${accent[1]},${accent[2]},${.04+.04*(1-pulse)})`);
+  edge.addColorStop(1,`rgba(${mixedAccent[0]},${mixedAccent[1]},${mixedAccent[2]},${.04+.04*(1-pulse)})`);
   ctx.strokeStyle=edge;
   ctx.lineWidth=18;
   ctx.strokeRect(9,9,W-18,H-18);
   ctx.restore();
 }
+
 async function wrappedPreRenderVideoSlides(slides,html2canvasFn,signal,controller,shareBtn){
   const W=1080,H=1920;
   const rendered=[];
