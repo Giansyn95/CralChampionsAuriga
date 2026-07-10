@@ -419,6 +419,16 @@
     .wrapped-share:disabled{opacity:.6;cursor:wait}
     @media(prefers-reduced-motion:reduce){.wrapped-slide{transition:opacity .2s}}
     @media(max-width:560px){.wrapped-slide{inset:14px;padding:18px}.wrapped-slide .ws-photo{width:96px;height:96px;border-radius:22px}}
+
+    /* Wrapped: branding CRAL, fallback giocatore -> squadra e risultato illustrato */
+    .wrapped-slide .ws-cral-logo{width:108px;height:108px;object-fit:contain;padding:10px;margin-bottom:8px;border-radius:28px;background:rgba(255,255,255,.94);border:3px solid rgba(255,255,255,.86);box-shadow:0 20px 44px rgba(0,0,0,.42),0 0 0 8px rgba(245,185,66,.20)}
+    .wrapped-crazy-match{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:14px;width:100%;max-width:360px;margin:8px auto 18px}
+    .wrapped-crazy-team{display:flex;flex-direction:column;align-items:center;gap:9px;min-width:0}
+    .wrapped-crazy-team .ws-logo{width:104px;height:104px;margin:0;transform:none;border-radius:26px}
+    .wrapped-crazy-team-name{max-width:120px;font-family:'Oswald',Arial,sans-serif;font-size:15px;font-weight:800;line-height:1.05;text-transform:uppercase;overflow-wrap:anywhere;text-shadow:0 8px 18px rgba(0,0,0,.36)}
+    .wrapped-crazy-score{display:flex;align-items:center;justify-content:center;min-width:94px;padding:12px 14px;border-radius:24px;background:linear-gradient(135deg,rgba(255,255,255,.18),rgba(255,255,255,.07));border:1px solid rgba(255,255,255,.28);box-shadow:0 18px 38px rgba(0,0,0,.30),inset 0 1px 0 rgba(255,255,255,.22);font-family:'Oswald',Arial,sans-serif;font-size:clamp(34px,10vw,54px);font-weight:900;line-height:1;color:#fff;text-shadow:0 0 22px rgba(251,113,133,.58)}
+    @media(max-width:380px){.wrapped-crazy-match{gap:8px}.wrapped-crazy-team .ws-logo{width:84px;height:84px}.wrapped-crazy-score{min-width:78px;padding:10px 11px}.wrapped-crazy-team-name{font-size:13px;max-width:96px}.wrapped-slide .ws-cral-logo{width:92px;height:92px}}
+
     /* ── Wrapped 2.0: story/poster premium ── */
     .wrapped-overlay{
       background:
@@ -4418,19 +4428,52 @@ function wrappedSlidesData(){
   slides.push({ type:'closing' });
   return slides;
 }
+
+function wrappedPlayerVisualEl(d){
+  const names=(d.imageNames||[d.name]).filter(Boolean);
+  const mainName=d.name||names[0]||'';
+  const fallback=createInitialFallback('ws-photo',mainName);
+  fallback.setAttribute('aria-label',mainName||'Giocatore');
+  (async()=>{
+    let src=await resolveImageForNames('player',names,{});
+    let type='player';
+    if(!src && d.team){
+      src=await resolveImageForNames('team',[d.team],{});
+      type='team';
+    }
+    if(!src || !fallback.isConnected) return;
+    const img=createResolvedImageEl(type,mainName,'ws-photo',src,{loading:'eager',fetchPriority:'high'},failed=>{
+      if(failed.isConnected) failed.replaceWith(createInitialFallback('ws-photo',mainName));
+    });
+    if(type==='team'){
+      img.style.objectFit='contain';
+      img.style.padding='10px';
+      img.style.background='rgba(255,255,255,.92)';
+      img.setAttribute('aria-label','Logo '+d.team+' — '+mainName);
+    }
+    fallback.replaceWith(img);
+  })();
+  return fallback;
+}
+
 function buildWrappedSlideEl(slide){
   const el=document.createElement('div'); el.className='wrapped-slide wrapped-'+slide.type;
   const d=slide.data;
   if(slide.type==='cover'){
     el.classList.add('cover');
     const total=wrappedTournamentTotals();
-    el.innerHTML=`
+    const cralLogo=document.createElement('img');
+    cralLogo.className='ws-cral-logo';
+    cralLogo.src='immagini/logo_cral.png';
+    cralLogo.alt='Logo CRAL';
+    el.appendChild(cralLogo);
+    el.insertAdjacentHTML('beforeend',`
       <div class="ws-eyebrow">🎉 Torneo concluso</div>
       <div class="ws-name" style="font-size:clamp(28px,8vw,44px)">CRAL Champions</div>
       <div class="ws-big ws-big-word">WRAPPED</div>
-      <div class="ws-detail">${total?esc(total.played)+' partite giocate, pronti a scoprire i numeri del torneo?':'Ecco i numeri del torneo!'}</div>`;
+      <div class="ws-detail">${total?esc(total.played)+' partite giocate, pronti a scoprire i numeri del torneo?':'Ecco i numeri del torneo!'}</div>`);
   } else if(slide.type==='scorer'){
-    el.appendChild(imgOrInitialEl('player',[d.name],'ws-photo'));
+    el.appendChild(wrappedPlayerVisualEl(d));
     el.insertAdjacentHTML('beforeend', `
       <div class="ws-eyebrow">💣 Capocannoniere</div>
       <div class="ws-name">${esc(d.name)}</div>
@@ -4438,7 +4481,7 @@ function buildWrappedSlideEl(slide){
       <div class="ws-big">${esc(d.goals)}</div>
       <div class="ws-detail">goal segnati nel torneo</div>`);
   } else if(slide.type==='average'){
-    el.appendChild(imgOrInitialEl('player',[d.name],'ws-photo'));
+    el.appendChild(wrappedPlayerVisualEl(d));
     el.insertAdjacentHTML('beforeend', `
       <div class="ws-eyebrow">📈 Miglior media goal</div>
       <div class="ws-name">${esc(d.name)}</div>
@@ -4446,7 +4489,7 @@ function buildWrappedSlideEl(slide){
       <div class="ws-big">${esc(d.media.toFixed(2).replace('.',','))}</div>
       <div class="ws-detail">goal a partita (${esc(d.goal)} goal in ${esc(d.partite)} partite)</div>`);
   } else if(slide.type==='mvp'){
-    el.appendChild(imgOrInitialEl('player',d.imageNames||[d.name],'ws-photo'));
+    el.appendChild(wrappedPlayerVisualEl(d));
     el.insertAdjacentHTML('beforeend', `
       <div class="ws-eyebrow">⭐ MVP del torneo</div>
       <div class="ws-name">${esc(d.name)}</div>
@@ -4454,7 +4497,7 @@ function buildWrappedSlideEl(slide){
       <div class="ws-big">${esc(formatProfileNumber(d.points))}</div>
       <div class="ws-detail">punti MVP totalizzati</div>`);
   } else if(slide.type==='keeper'){
-    el.appendChild(imgOrInitialEl('player',[d.name],'ws-photo'));
+    el.appendChild(wrappedPlayerVisualEl(d));
     el.insertAdjacentHTML('beforeend', `
       <div class="ws-eyebrow">🧤 Miglior portiere</div>
       <div class="ws-name">${esc(d.name)}</div>
@@ -4474,11 +4517,19 @@ function buildWrappedSlideEl(slide){
         <div class="ws-stat"><div class="n">${esc(d.p)}</div><div class="l">Sconfitte</div></div>
       </div>`);
   } else if(slide.type==='crazy'){
-    el.innerHTML=`
-      <div class="ws-eyebrow">🔥 Partita più pazza</div>
-      <div class="ws-name">${esc(d.home)} ${esc(d.result)} ${esc(d.away)}</div>
+    el.insertAdjacentHTML('beforeend','<div class="ws-eyebrow">🔥 Partita più pazza</div>');
+    const match=document.createElement('div'); match.className='wrapped-crazy-match';
+    const home=document.createElement('div'); home.className='wrapped-crazy-team';
+    home.appendChild(imgOrInitialEl('team',[d.home],'ws-logo'));
+    home.insertAdjacentHTML('beforeend',`<div class="wrapped-crazy-team-name">${esc(d.home)}</div>`);
+    const score=document.createElement('div'); score.className='wrapped-crazy-score'; score.textContent=d.result;
+    const away=document.createElement('div'); away.className='wrapped-crazy-team';
+    away.appendChild(imgOrInitialEl('team',[d.away],'ws-logo'));
+    away.insertAdjacentHTML('beforeend',`<div class="wrapped-crazy-team-name">${esc(d.away)}</div>`);
+    match.append(home,score,away); el.appendChild(match);
+    el.insertAdjacentHTML('beforeend',`
       <div class="ws-big">${esc(d.totalGoals)}</div>
-      <div class="ws-detail">goal totali in una sola partita</div>`;
+      <div class="ws-detail">goal totali in una sola partita</div>`);
   } else if(slide.type==='totals'){
     el.innerHTML=`
       <div class="ws-eyebrow">📊 Numeri del torneo</div>
@@ -4570,14 +4621,18 @@ async function wrappedDrawSlideOnCanvas(ctx,slide,w,h){
   ctx.fillStyle='#f5b942';
   ctx.font='700 32px Oswald, Arial, sans-serif';
 
-  let photoSrc=null;
-  if(slide.type==='scorer'||slide.type==='average'||slide.type==='mvp'||slide.type==='keeper'){
+  let photoSrc=null, fallbackTeamSrc=null;
+  if(slide.type==='cover'){
+    photoSrc='immagini/logo_cral.png';
+  } else if(slide.type==='scorer'||slide.type==='average'||slide.type==='mvp'||slide.type==='keeper'){
     const names=d.imageNames||[d.name];
     photoSrc=imageFor('player',names[0]);
+    fallbackTeamSrc=d.team?imageFor('team',d.team):null;
   } else if(slide.type==='champion'){
     photoSrc=imageFor('team',d.team);
   }
-  const img=photoSrc?await wrappedLoadImageSafe(photoSrc):null;
+  let img=photoSrc?await wrappedLoadImageSafe(photoSrc):null;
+  if(!img && fallbackTeamSrc) img=await wrappedLoadImageSafe(fallbackTeamSrc);
 
   let y=h*0.34;
   if(img){
@@ -4602,9 +4657,23 @@ async function wrappedDrawSlideOnCanvas(ctx,slide,w,h){
   ctx.font='700 30px Oswald, Arial, sans-serif';
   ctx.fillText(eyebrowMap[slide.type]||'', cx, y); y+=70;
 
+  if(slide.type==='crazy' && d){
+    const homeImg=await wrappedLoadImageSafe(imageFor('team',d.home));
+    const awayImg=await wrappedLoadImageSafe(imageFor('team',d.away));
+    const logoSize=190, logoY=y+20;
+    if(homeImg) wrappedDrawRoundedImage(ctx,homeImg,cx-270,logoY,logoSize,44);
+    if(awayImg) wrappedDrawRoundedImage(ctx,awayImg,cx+80,logoY,logoSize,44);
+    ctx.fillStyle='#ffffff'; ctx.font='900 92px Oswald, Arial, sans-serif';
+    ctx.fillText(d.result,cx,logoY+118);
+    ctx.font='800 34px Oswald, Arial, sans-serif';
+    wrappedWrapText(ctx,d.home.toUpperCase(),cx-175,logoY+235,250,38);
+    wrappedWrapText(ctx,d.away.toUpperCase(),cx+175,logoY+235,250,38);
+    y=logoY+315;
+  }
+
   ctx.fillStyle='#ffffff';
   ctx.font='800 56px Oswald, Arial, sans-serif';
-  const nameLine = d ? (d.name||(slide.type==='champion'?d.team:'')||(slide.type==='crazy'?(d.home+' '+d.result+' '+d.away):'')) : '';
+  const nameLine = d ? (d.name||(slide.type==='champion'?d.team:'')) : '';
   if(nameLine){ wrappedWrapText(ctx,nameLine.toUpperCase(),cx,y,w-160,62); y+= (nameLine.length>22?140:74); }
 
   if(d && d.team && slide.type!=='champion' && slide.type!=='crazy'){
