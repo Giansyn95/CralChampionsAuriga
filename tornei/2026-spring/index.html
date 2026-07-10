@@ -4497,11 +4497,24 @@ function buildWrappedSlideEl(slide){
   return el;
 }
 const wrappedState={ slides:[], index:0, timer:null, barEls:[], paused:false, slideDuration:5000, videoBlob:null, videoReady:false };
+function wrappedIsMobileDevice(){
+  // Il Wrapped e la sua condivisione sono disponibili esclusivamente da mobile.
+  // Non basta la larghezza della finestra: un browser desktop ristretto deve
+  // continuare a essere considerato desktop e non deve mostrare il Wrapped.
+  if(navigator.userAgentData && typeof navigator.userAgentData.mobile==='boolean'){
+    return navigator.userAgentData.mobile;
+  }
+  const ua=navigator.userAgent||'';
+  const mobileUa=/Android|webOS|iPhone|iPod|BlackBerry|IEMobile|Opera Mini|Mobile/i.test(ua);
+  const iPadOS=navigator.platform==='MacIntel' && navigator.maxTouchPoints>1;
+  return mobileUa || iPadOS;
+}
 function wrappedCanShareFiles(){
   // Mostra il pulsante "Condividi" solo se il browser supporta davvero la
   // condivisione nativa di file video (navigator.share + canShare con files):
   // su desktop questa API non esiste o non accetta file, quindi il pulsante
   // resta nascosto invece di offrire un download "muto" senza spiegazione.
+  if(!wrappedIsMobileDevice()) return false;
   if(!navigator.share || !navigator.canShare) return false;
   try{
     const probe=new File([new Blob(['x'],{type:'video/mp4'})],'probe.mp4',{type:'video/mp4'});
@@ -4756,6 +4769,7 @@ function wrappedSetPaused(paused){
   }
 }
 function openWrapped(){
+  if(!wrappedIsMobileDevice()) return;
   const slides=wrappedSlidesData();
   if(slides.length<=2) return; // solo cover+closing: niente dati interessanti da mostrare
   wrappedState.slides=slides; wrappedState.index=0; wrappedState.paused=false;
@@ -4825,6 +4839,7 @@ function openWrapped(){
   wrappedRenderCurrent();
 }
 function renderWrappedBanner(){
+  if(!wrappedIsMobileDevice()) return null;
   if(!isTournamentComplete()) return null;
   const slides=wrappedSlidesData();
   if(slides.length<=2) return null; // niente da mostrare: nessuna classifica/risultato disponibile
