@@ -14,7 +14,7 @@
 */
 
 const CACHE_PREFIX = 'cral-logo-';
-const CACHE_NAME = `${CACHE_PREFIX}v4`;
+const CACHE_NAME = `${CACHE_PREFIX}v5`;
 
 // Accetta solo il logo CRAL vero e proprio, non qualunque immagine che contenga
 // casualmente le parole "logo" e "cral" nel percorso.
@@ -72,22 +72,26 @@ async function getCralLogoResponseAndUpdate(request) {
   const cache = await caches.open(CACHE_NAME);
   const cacheKey = getNormalizedCacheKey(request);
   const cached = await cache.match(cacheKey);
-  const updatePromise = fetchAndUpdateLogoCache(request, cache, cacheKey);
 
+  // Strategia cache-first pura: se il logo e gia presente, non viene
+  // effettuata alcuna richiesta di rete in background.
   if (cached) {
-    // Risposta immediata dalla cache: la rete aggiorna solo per il prossimo giro.
-    return { response: cached, updatePromise };
+    return {
+      response: cached,
+      updatePromise: Promise.resolve(null),
+    };
   }
 
-  // Prima visita o cache pulita: solo il logo aspetta la rete una volta.
-  const fresh = await updatePromise;
+  // Prima visita o cache pulita: il logo viene scaricato una sola volta
+  // e salvato nella Cache API per i caricamenti successivi.
+  const fresh = await fetchAndUpdateLogoCache(request, cache, cacheKey);
   return {
     response: fresh || new Response('Logo CRAL non disponibile.', {
       status: 504,
       statusText: 'Logo CRAL non disponibile',
       headers: { 'Content-Type': 'text/plain; charset=utf-8' },
     }),
-    updatePromise,
+    updatePromise: Promise.resolve(null),
   };
 }
 
