@@ -291,30 +291,56 @@
 
     function setLogo(src){
       if (!src) return;
+
       const box = document.getElementById('logoBox');
       const staticImg = document.getElementById('heroLogoDefaultImg');
-
-      // Risolve src a URL assoluto per confrontarlo con window.__cralLogoStatic
-      // (anch'esso assoluto, impostato dall'onload inline sull'img statico).
       const resolved = new URL(src, document.baseURI).href;
 
-      if (staticImg && window.__cralLogoStatic === resolved) {
-        // Il logo statico già visibile è esattamente quello richiesto da
-        // tornei.json: non tocchiamo il DOM, zero flash.
-        document.querySelectorAll('link[rel="icon"], link[rel="apple-touch-icon"]').forEach(link => { link.href = src; });
-        return;
+      // Aggiorna subito favicon e icona iOS.
+      document.querySelectorAll('link[rel="icon"], link[rel="apple-touch-icon"]').forEach(link => {
+        link.href = src;
+      });
+
+      if (staticImg) {
+        const staticResolved = new URL(staticImg.currentSrc || staticImg.src, document.baseURI).href;
+
+        // Il logo richiesto coincide con quello già inserito nell'HTML.
+        // Se è caricato, non facciamo nulla. Se è ancora in caricamento,
+        // aspettiamo il suo evento load/error senza creare una seconda Image().
+        if (staticResolved === resolved) {
+          if (staticImg.complete && staticImg.naturalWidth > 0) {
+            window.__cralLogoStatic = resolved;
+            return;
+          }
+
+          if (!staticImg.complete) {
+            if (staticImg.dataset.logoListenersAdded !== '1') {
+              staticImg.dataset.logoListenersAdded = '1';
+
+              staticImg.addEventListener('load', () => {
+                window.__cralLogoStatic = resolved;
+              }, { once: true });
+
+              staticImg.addEventListener('error', () => {
+                window.__cralLogoStatic = false;
+              }, { once: true });
+            }
+            return;
+          }
+        }
       }
 
+      // Il JSON indica davvero un logo diverso oppure il logo statico è fallito:
+      // carica il nuovo file e sostituiscilo solo quando è pronto.
       const img = new Image();
       img.decoding = 'async';
       img.onload = () => {
         img.alt = 'Logo CRAL';
         box.innerHTML = '';
         box.appendChild(img);
+        window.__cralLogoStatic = resolved;
       };
       img.src = src;
-
-      document.querySelectorAll('link[rel="icon"], link[rel="apple-touch-icon"]').forEach(link => { link.href = src; });
     }
 
     function renderCorrente(t){
