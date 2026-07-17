@@ -10,12 +10,6 @@
 
   <link rel="icon" type="image/png" href="tornei/2026-spring/immagini/logo_cral.png" />
   <link rel="apple-touch-icon" sizes="180x180" href="tornei/2026-spring/immagini/logo_cral.png" />
-  <!-- Precarica subito il logo dell'edizione corrente (di default), in parallelo
-       col resto della pagina e ancora prima che parta il fetch di tornei.json.
-       Se tornei.json indicherà un logo diverso, lo script più sotto lo sostituisce;
-       se coincide (caso normale), non fa nulla e non c'è alcun flash. -->
-  <link rel="preload" as="image" href="tornei/2026-spring/immagini/logo_cral.png" fetchpriority="high" />
-
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@600;700&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -296,51 +290,31 @@
       const staticImg = document.getElementById('heroLogoDefaultImg');
       const resolved = new URL(src, document.baseURI).href;
 
-      // Aggiorna subito favicon e icona iOS.
-      document.querySelectorAll('link[rel="icon"], link[rel="apple-touch-icon"]').forEach(link => {
-        link.href = src;
-      });
-
+      // Confronta direttamente l'URL richiesto con quello già presente
+      // nell'immagine statica, anche quando il caricamento non è ancora finito.
+      // In questo modo non viene creata una seconda Image() per lo stesso logo.
       if (staticImg) {
-        const staticResolved = new URL(staticImg.currentSrc || staticImg.src, document.baseURI).href;
-
-        // Il logo richiesto coincide con quello già inserito nell'HTML.
-        // Se è caricato, non facciamo nulla. Se è ancora in caricamento,
-        // aspettiamo il suo evento load/error senza creare una seconda Image().
+        const staticResolved = new URL(staticImg.src, document.baseURI).href;
         if (staticResolved === resolved) {
-          if (staticImg.complete && staticImg.naturalWidth > 0) {
-            window.__cralLogoStatic = resolved;
-            return;
-          }
-
-          if (!staticImg.complete) {
-            if (staticImg.dataset.logoListenersAdded !== '1') {
-              staticImg.dataset.logoListenersAdded = '1';
-
-              staticImg.addEventListener('load', () => {
-                window.__cralLogoStatic = resolved;
-              }, { once: true });
-
-              staticImg.addEventListener('error', () => {
-                window.__cralLogoStatic = false;
-              }, { once: true });
-            }
-            return;
-          }
+          document.querySelectorAll('link[rel="icon"], link[rel="apple-touch-icon"]').forEach(link => {
+            link.href = src;
+          });
+          return;
         }
       }
 
-      // Il JSON indica davvero un logo diverso oppure il logo statico è fallito:
-      // carica il nuovo file e sostituiscilo solo quando è pronto.
       const img = new Image();
       img.decoding = 'async';
       img.onload = () => {
         img.alt = 'Logo CRAL';
         box.innerHTML = '';
         box.appendChild(img);
-        window.__cralLogoStatic = resolved;
       };
       img.src = src;
+
+      document.querySelectorAll('link[rel="icon"], link[rel="apple-touch-icon"]').forEach(link => {
+        link.href = src;
+      });
     }
 
     function renderCorrente(t){
