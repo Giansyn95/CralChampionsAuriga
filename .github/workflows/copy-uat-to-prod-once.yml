@@ -1,0 +1,48 @@
+name: Copia UAT su PROD una tantum
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: "Scrivi COPIA_UAT_SU_PROD per confermare la sovrascrittura di PROD"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  copy-uat-to-prod:
+    name: Copia main UAT su main PROD
+    if: ${{ github.event.inputs.confirm == 'COPIA_UAT_SU_PROD' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo UAT
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Configura Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Aggiungi remoto PROD
+        env:
+          PROD_REPO_TOKEN: ${{ secrets.PROD_REPO_TOKEN }}
+        run: |
+          git remote add prod "https://x-access-token:${PROD_REPO_TOKEN}@github.com/cralauriga/CralChampions2026.git"
+          git fetch prod main:refs/remotes/prod/main
+
+      - name: Crea backup della main PROD
+        run: |
+          BACKUP_BRANCH="backup/prod-before-uat-copy-$(date -u +'%Y%m%d-%H%M%S')"
+          echo "Backup branch: ${BACKUP_BRANCH}"
+          git push prod refs/remotes/prod/main:refs/heads/${BACKUP_BRANCH}
+
+      - name: Sovrascrivi main PROD con main UAT
+        run: |
+          PROD_SHA=$(git rev-parse refs/remotes/prod/main)
+          git push prod HEAD:main --force-with-lease=refs/heads/main:${PROD_SHA}
