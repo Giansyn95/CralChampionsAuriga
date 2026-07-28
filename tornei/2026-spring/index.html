@@ -10536,19 +10536,35 @@ async function loadPortieriSnapshot(fresh){
 }
 function ensureFantaDataInBackground(fresh){
   if(manualLoadActive) return Promise.resolve(false);
-  if(state.fantaPrecomputedData && !fresh){ state.fantaLoading=false; return Promise.resolve(true); }
-  if(_fantaEnsureDataPromise && !fresh) return _fantaEnsureDataPromise;
+
+  if(state.fantaPrecomputedData && !fresh){
+    state.fantaLoading=false;
+    return Promise.resolve(true);
+  }
+
+  // Riusa sempre l'eventuale controllo già in corso, anche quando il secondo
+  // chiamante richiede fresh=true: evita due fetch contemporanee dello stesso JSON.
+  if(_fantaEnsureDataPromise) return _fantaEnsureDataPromise;
+
+  // Dopo un tentativo fallito non riprovare durante la stessa sessione, salvo
+  // un aggiornamento esplicito con fresh=true.
+  if(state.fantaPrecomputedAttempted && !fresh){
+    state.fantaLoading=false;
+    return Promise.resolve(false);
+  }
+
   state.fantaLoading=true;
   _fantaEnsureDataPromise=(async()=>{
     const cacheOk=await loadFantaPrecomputedCache(!!fresh);
-    if(cacheOk){
-      state.fantaLoading=false;
-      if(state.activeTab==='fantacalcio') renderFantacalcio();
-      return true;
-    }
-    await loadFantaFilesInBackground(!!fresh);
-    return false;
+
+    // Se la cache Fantacalcio non esiste, la funzionalita viene considerata
+    // non disponibile. Non vengono interrogate le API GitHub e non vengono
+    // effettuati tentativi verso le directory data e data/.
+    state.fantaLoading=false;
+    if(state.activeTab==='fantacalcio') renderFantacalcio();
+    return cacheOk;
   })().finally(()=>{ _fantaEnsureDataPromise=null; });
+
   return _fantaEnsureDataPromise;
 }
 
@@ -11784,8 +11800,8 @@ async function loadAuto(fresh){
      non sovrascrivere i dati più recenti già mostrati. */
   if(manualLoadActive) return;
   applyConfig(); showErrors(); renderAll(); tryLoadLogo(); warmPlayerProfileCaches();
-  ensureFantaDataInBackground(fresh);
-  loadPortieriSnapshot(fresh);
+  const fantaAvailable=await ensureFantaDataInBackground(fresh);
+  if(fantaAvailable) loadPortieriSnapshot(fresh);
   if(ok || state.rows['manifest.csv']) setStatus(dataLoadStatus(ok+(state.rows['manifest.csv']?1:0)),true);
   else setStatus('Autocaricamento bloccato — usa Seleziona cartella');
 }
