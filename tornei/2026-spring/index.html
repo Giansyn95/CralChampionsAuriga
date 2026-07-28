@@ -10508,7 +10508,10 @@ async function loadFantaPrecomputedCache(fresh){
   if(state.fantaPrecomputedData && !fresh) return true;
   state.fantaPrecomputedLoading=true;
   try{
-    const txt=await fetchText(FANTA_CACHE_FILE,!!fresh);
+    const bust=fresh?('?t='+Date.now()):'';
+    const response=await fetch(FANTA_CACHE_FILE+bust);
+    if(!response.ok) throw new Error(FANTA_CACHE_FILE);
+    const txt=await response.text();
     const payload=JSON.parse(txt);
     const data=fantaDataFromCachePayload(payload);
     if(!data || !data.results.length) return false;
