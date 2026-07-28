@@ -23,6 +23,16 @@ jobs:
         with:
           ref: main
           fetch-depth: 0
+          persist-credentials: false
+
+      - name: Verifica secret PROD
+        env:
+          PROD_REPO_TOKEN: ${{ secrets.PROD_REPO_TOKEN }}
+        run: |
+          if [ -z "${PROD_REPO_TOKEN}" ]; then
+            echo "::error::Il secret PROD_REPO_TOKEN non e configurato o non e disponibile."
+            exit 1
+          fi
 
       - name: Configura Git
         run: |
