@@ -458,10 +458,6 @@ Per mantenere corretta l'associazione delle pagelle alle partite, aggiorna anche
 
 ## Licenza
 
-Aggiungi qui la licenza del progetto, se prevista.
-
-Esempio:
-
 ```text
-MIT
+CRAL AURIGA, Gianvito Saracino
 ```
