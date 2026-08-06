@@ -464,7 +464,7 @@
     .wrapped-slide::after{content:'✦';position:absolute;right:28px;top:70px;color:var(--accent);font-size:42px;text-shadow:0 0 20px rgba(var(--accent-rgb),.70),0 0 44px rgba(var(--accent2-rgb),.45);animation:wrappedStarPulse 1.7s ease-in-out infinite alternate;pointer-events:none}
     .wrapped-slide > *{position:relative;z-index:2}
     .wrapped-slide .ws-eyebrow{display:inline-flex;align-items:center;justify-content:center;padding:8px 13px;margin-bottom:18px;border-radius:999px;color:#071d3a;background:linear-gradient(120deg,var(--accent),#fff2bf);box-shadow:0 10px 28px rgba(var(--accent-rgb),.34);letter-spacing:.13em}
-    .wrapped-slide .ws-photo,.wrapped-slide .ws-logo{width:138px;height:138px;border-radius:32px;margin-bottom:20px;border:3px solid rgba(255,255,255,.82);box-shadow:0 22px 46px rgba(0,0,0,.46),0 0 0 8px rgba(var(--accent-rgb),.22),0 0 46px rgba(var(--accent-rgb),.35);transform:rotate(-2deg)}
+    .wrapped-slide .ws-photo,.wrapped-slide .ws-logo{width:112px;height:112px;border-radius:28px;margin-bottom:20px;border:3px solid rgba(255,255,255,.82);box-shadow:0 22px 46px rgba(0,0,0,.46),0 0 0 8px rgba(var(--accent-rgb),.22),0 0 46px rgba(var(--accent-rgb),.35);transform:rotate(-2deg)}
     .wrapped-slide .ws-logo{object-fit:contain;padding:10px;background:rgba(255,255,255,.92)}
     /* Immagini Wrapped: riquadro realmente quadrato, contenuto più grande e
        nessuna piastra bianca dietro. Loghi e foto restano interamente
@@ -503,7 +503,7 @@
     @keyframes wrappedShimmer{0%,100%{transform:translateX(-5%) rotate(8deg)}50%{transform:translateX(5%) rotate(8deg)}}
     @keyframes wrappedStarPulse{from{transform:scale(.92) rotate(-8deg);opacity:.65}to{transform:scale(1.12) rotate(8deg);opacity:1}}
     @keyframes wrappedOrbFloat{from{transform:translate3d(0,0,0) scale(1)}to{transform:translate3d(22px,-28px,0) scale(1.12)}}
-    @media(max-width:560px){.wrapped-slide{inset:12px;width:calc(100vw - 24px);min-height:calc(100svh - 128px);border-radius:28px;padding:20px}.wrapped-slide .ws-photo,.wrapped-slide .ws-logo{width:112px;height:112px;border-radius:26px}.wrapped-slide .ws-detail{font-size:14.5px}}
+    @media(max-width:560px){.wrapped-slide{inset:12px;width:calc(100vw - 24px);min-height:calc(100svh - 128px);border-radius:28px;padding:20px}.wrapped-slide .ws-photo,.wrapped-slide .ws-logo{width:92px;height:92px;border-radius:22px}.wrapped-slide .ws-detail{font-size:14.5px}}
     @media(prefers-reduced-motion:reduce){.wrapped-overlay::before,.wrapped-overlay::after,.wrapped-slide::before,.wrapped-slide::after,.wrapped-slide.is-current{animation:none}.wrapped-slide{transform:none}}
 
 
@@ -516,8 +516,7 @@
     .wrapped-export-frame::before,.wrapped-export-frame::after{display:none!important}
     .wrapped-export-frame .wrapped-stage{position:relative;flex:1;min-height:0;width:100%;padding:54px 18px 82px;overflow:hidden;perspective:none}
     .wrapped-export-frame .wrapped-slide{position:relative!important;inset:auto!important;width:100%!important;height:100%!important;min-height:0!important;margin:0!important;opacity:1!important;transform:none!important;transition:none!important;animation:none!important;padding:32px 27px!important;border-radius:32px!important;gap:7px!important}
-    .wrapped-export-frame .wrapped-slide::before,.wrapped-export-frame .wrapped-slide::after{animation:none!important}
-    .wrapped-export-frame .wrapped-slide::after{right:22px;top:52px;font-size:38px}
+    .wrapped-export-frame .wrapped-slide::before,.wrapped-export-frame .wrapped-slide::after{display:none!important}
     .wrapped-export-frame .wrapped-slide .ws-eyebrow{margin-bottom:12px;padding:7px 12px;font-size:12px}
     .wrapped-export-frame .wrapped-slide .ws-name{max-width:350px;margin-bottom:8px;font-size:38px;line-height:1.02}
     .wrapped-export-frame .wrapped-slide .ws-sub{margin-bottom:10px;font-size:14px}
@@ -530,27 +529,27 @@
     /* Dimensioni dedicate all'esportazione: soggetti piu' grandi e contenuti
        centrati nella zona sicura della Story, senza alterare il Wrapped a video. */
     .wrapped-export-frame .wrapped-cover{padding-top:26px!important}
-    .wrapped-export-frame .wrapped-cover .ws-cral-logo{width:154px;height:154px;margin-bottom:10px;border-radius:34px}
+    .wrapped-export-frame .wrapped-cover .ws-cral-logo{width:136px;height:136px;margin-bottom:10px;border-radius:30px}
     .wrapped-export-frame .wrapped-cover .ws-name{font-size:42px!important}
     .wrapped-export-frame .wrapped-cover .ws-big-word{font-size:78px;margin:8px 0 14px}
-    .wrapped-export-frame .wrapped-scorer .ws-photo{width:178px;height:178px;border-radius:38px;margin-bottom:17px}
+    .wrapped-export-frame .wrapped-scorer .ws-photo{width:146px;height:146px;border-radius:32px;margin-bottom:17px}
     .wrapped-export-frame .wrapped-scorer .ws-name{font-size:42px}
     .wrapped-export-frame .wrapped-average .ws-photo,
     .wrapped-export-frame .wrapped-mvp .ws-photo,
-    .wrapped-export-frame .wrapped-keeper .ws-photo{width:164px;height:164px;border-radius:36px;margin-bottom:16px}
+    .wrapped-export-frame .wrapped-keeper .ws-photo{width:134px;height:134px;border-radius:30px;margin-bottom:16px}
     /* Safari può lasciare opacity:0 sulle immagini già presenti in cache se il
        relativo onload non viene ridispatchato nel frame off-screen. Nell'export
        la decodifica viene comunque attesa via JS: qui rendiamo esplicitamente
        visibili foto e loghi validi, senza dipendere dall'animazione img-fade. */
     .wrapped-export-frame img.ws-logo,
     .wrapped-export-frame img.ws-photo{opacity:1!important;visibility:visible!important}
-    .wrapped-export-frame .wrapped-champion .ws-logo{width:184px;height:184px;max-width:74%;border-radius:40px;margin:0 auto 16px;padding:14px;object-fit:contain!important;background:rgba(255,255,255,.96)}
+    .wrapped-export-frame .wrapped-champion .ws-logo{width:160px;height:160px;max-width:66%;border-radius:36px;margin:0 auto 16px;padding:14px;object-fit:contain!important;background:rgba(255,255,255,.96)}
     .wrapped-export-frame .wrapped-champion .ws-name{font-size:43px;max-width:330px}
     .wrapped-export-frame .wrapped-champion .ws-big{font-size:104px;margin-top:2px}
     .wrapped-export-frame .wrapped-crazy{padding-left:18px!important;padding-right:18px!important}
     .wrapped-export-frame .wrapped-crazy .wrapped-crazy-match{grid-template-columns:minmax(0,1fr) 100px minmax(0,1fr);max-width:100%;width:100%;gap:8px;margin:5px auto 13px}
     .wrapped-export-frame .wrapped-crazy .wrapped-crazy-team{width:100%;min-width:0}
-    .wrapped-export-frame .wrapped-crazy .wrapped-crazy-team .ws-logo{width:116px;height:116px;max-width:100%;border-radius:26px;padding:8px;object-fit:contain!important;background:rgba(255,255,255,.96);margin:0 auto}
+    .wrapped-export-frame .wrapped-crazy .wrapped-crazy-team .ws-logo{width:98px;height:98px;max-width:100%;border-radius:22px;padding:8px;object-fit:contain!important;background:rgba(255,255,255,.96);margin:0 auto}
     .wrapped-export-frame .wrapped-crazy .wrapped-crazy-score{width:100px;min-width:100px;padding:10px 6px;font-size:42px;border-radius:21px;letter-spacing:-.045em}
     .wrapped-export-frame .wrapped-crazy .wrapped-crazy-team-name{width:100%;max-width:122px;font-size:13.5px;line-height:1.08}
     .wrapped-export-frame .wrapped-crazy .ws-big{font-size:90px;margin:2px 0 6px}
@@ -4669,8 +4668,21 @@ const wrappedState={
   slides:[], index:0, timer:null, barEls:[], paused:false, slideDuration:5000,
   videoBlob:null, videoReady:false, videoAbort:null, videoRecorder:null,
   videoStream:null, videoFrameTimer:null, exportHost:null, exportHostOwner:null,
-  html2canvasPromise:null
+  html2canvasPromise:null,
+  // Permettono alla generazione del video di continuare in background anche
+  // dopo che l'utente ha chiuso l'overlay: videoSlidesSignature identifica i
+  // dati con cui è stata avviata la generazione corrente/ultima, activeShareBtn
+  // è sempre il bottone "Condividi" attualmente nel DOM (cambia ad ogni riapertura,
+  // ma la generazione in corso deve continuare ad aggiornare quello giusto).
+  videoSlidesSignature:null, activeShareBtn:null
 };
+function wrappedSlidesSignature(slides){
+  // Firma leggera dei dati delle slide (non del DOM): serve solo a capire se,
+  // riaprendo il Wrapped, i contenuti sono gli stessi di una generazione già
+  // avviata/completata in precedenza, così da non ricominciare da zero.
+  try{ return JSON.stringify(slides.map(s=>({t:s.type,d:s.data||null}))); }
+  catch(e){ return null; }
+}
 function wrappedIsMobileDevice(){
   // Il Wrapped e la sua condivisione sono disponibili esclusivamente da mobile.
   // Non basta la larghezza della finestra: un browser desktop ristretto deve
@@ -4971,7 +4983,7 @@ async function wrappedCaptureSlideFromDom(slide,html2canvasFn,signal,owner){
   try{
     capturePromise=html2canvasFn(frame,{
       backgroundColor:null,
-      scale:2.5,
+      scale:2.15,
       width:432,
       height:768,
       windowWidth:432,
@@ -5310,9 +5322,10 @@ function wrappedDrawVideoShimmer(ctx,w,h,timeMs,accent){
   ctx.fillRect(-170,-h,340,h*2);
   ctx.restore();
 }
+const WRAPPED_VIDEO_PER_SLIDE_MS=2300; // unica fonte di verità: usata sia per generare il video sia per disegnare i frame
 function wrappedDrawVideoFrame(ctx,renderedSlides,timeMs){
   const W=ctx.canvas.width,H=ctx.canvas.height;
-  const perSlideMs=2800;
+  const perSlideMs=WRAPPED_VIDEO_PER_SLIDE_MS;
   const transitionMs=760;
   const count=renderedSlides.length;
   if(!count) return;
@@ -5393,7 +5406,7 @@ function wrappedDrawVideoFrame(ctx,renderedSlides,timeMs){
   ctx.restore();
 }
 
-async function wrappedPreRenderVideoSlides(slides,html2canvasFn,signal,controller,shareBtn){
+async function wrappedPreRenderVideoSlides(slides,html2canvasFn,signal,controller){
   const W=1080,H=1920;
   const rendered=[];
 
@@ -5404,8 +5417,11 @@ async function wrappedPreRenderVideoSlides(slides,html2canvasFn,signal,controlle
 
   for(let i=0;i<slides.length;i++){
     wrappedThrowIfAborted(signal);
-    if(!document.getElementById('wrappedOverlay')) throw wrappedAbortError();
+    // Nota: la generazione NON viene più interrotta se l'utente chiude l'overlay
+    // (il Wrapped può essere visto e chiuso mentre il video continua a prepararsi
+    // in background). L'unico modo per interromperla è l'AbortController (signal).
     const slide=slides[i];
+    const shareBtn=wrappedState.activeShareBtn;
     if(shareBtn && shareBtn.isConnected){
       shareBtn.innerHTML=`⏳ Preparo ${i+1}/${slides.length}…`;
     }
@@ -5476,17 +5492,24 @@ function wrappedRunVideoFrameLoop(ctx,renderedSlides,durationMs,signal,track){
     tick();
   });
 }
-async function wrappedPrepareVideoInBackground(shareBtn){
+async function wrappedPrepareVideoInBackground(signature){
   // Le slide vengono prima catturate dal DOM e decodificate integralmente.
   // Solo dopo parte una composizione continua a 30 fps con transizioni ed
   // effetti dinamici, mantenendo il renderer manuale come fallback.
+  // Il bottone "Condividi" NON viene passato come parametro fisso: si legge
+  // sempre da wrappedState.activeShareBtn, che openWrapped aggiorna ad ogni
+  // apertura. In questo modo, se l'utente chiude e riapre il Wrapped mentre
+  // questa funzione è ancora in corso, gli aggiornamenti di stato arrivano
+  // automaticamente al nuovo bottone (quello vecchio non esiste più nel DOM).
   wrappedCancelVideoGeneration();
   const controller=new AbortController();
   const signal=controller.signal;
   wrappedState.videoAbort=controller;
   wrappedState.videoBlob=null;
   wrappedState.videoReady=false;
-  if(shareBtn){ shareBtn.disabled=true; shareBtn.innerHTML='⏳ Preparo immagini e font…'; }
+  wrappedState.videoSlidesSignature=signature||null;
+  const btn=()=>wrappedState.activeShareBtn;
+  if(btn() && btn().isConnected){ btn().disabled=true; btn().innerHTML='⏳ Preparo immagini e font…'; }
 
   let stream=null;
   let recorder=null;
@@ -5504,11 +5527,11 @@ async function wrappedPrepareVideoInBackground(shareBtn){
     }
 
     const renderedSlides=await wrappedPreRenderVideoSlides(
-      wrappedState.slides,html2canvasFn,signal,controller,shareBtn
+      wrappedState.slides,html2canvasFn,signal,controller
     );
     wrappedThrowIfAborted(signal);
 
-    const W=1080,H=1920,FPS=30,PER_SLIDE_MS=2800;
+    const W=1080,H=1920,FPS=30,PER_SLIDE_MS=WRAPPED_VIDEO_PER_SLIDE_MS;
     const canvas=document.createElement('canvas');
     canvas.width=W; canvas.height=H;
     const ctx=canvas.getContext('2d',{alpha:false,desynchronized:false});
@@ -5538,7 +5561,7 @@ async function wrappedPrepareVideoInBackground(shareBtn){
       recorder.addEventListener('error',ev=>reject(ev.error||new Error('Errore avvio MediaRecorder')),{once:true});
     });
 
-    if(shareBtn && shareBtn.isConnected) shareBtn.innerHTML='⏳ Registro il video…';
+    if(btn() && btn().isConnected) btn().innerHTML='⏳ Registro il video…';
     recorder.start(500);
     await wrappedAwaitWithAbort(started,signal);
 
@@ -5571,18 +5594,18 @@ async function wrappedPrepareVideoInBackground(shareBtn){
     const finalType=mimeType&&mimeType.includes('mp4')?'video/mp4':'video/webm';
     wrappedState.videoBlob=new Blob(chunks,{type:finalType});
     wrappedState.videoReady=true;
-    if(shareBtn && shareBtn.isConnected){
-      shareBtn.disabled=false;
-      shareBtn.innerHTML='📲 Condividi su Instagram';
-      shareBtn.onclick=()=>wrappedShareVideo(shareBtn);
+    if(btn() && btn().isConnected){
+      btn().disabled=false;
+      btn().innerHTML='📲 Condividi su Instagram';
+      btn().onclick=()=>wrappedShareVideo(btn());
     }
   }catch(error){
     if(!error || error.name!=='AbortError'){
       console.error('Wrapped: generazione video non riuscita.',error);
-      if(shareBtn && shareBtn.isConnected){
-        shareBtn.disabled=false;
-        shareBtn.innerHTML='↻ Riprova la preparazione';
-        shareBtn.onclick=()=>wrappedPrepareVideoInBackground(shareBtn);
+      if(btn() && btn().isConnected){
+        btn().disabled=false;
+        btn().innerHTML='↻ Riprova la preparazione';
+        btn().onclick=()=>wrappedPrepareVideoInBackground(wrappedState.videoSlidesSignature);
       }
     }
   }finally{
@@ -5620,11 +5643,16 @@ function wrappedShareVideo(btn){
 }
 function closeWrapped(){
   if(wrappedState.timer){ clearTimeout(wrappedState.timer); wrappedState.timer=null; }
-  wrappedCancelVideoGeneration();
+  // Nota: NON annulliamo più wrappedCancelVideoGeneration() qui. Se il video
+  // per la condivisione è ancora in preparazione, continua a essere generato
+  // in background anche a overlay chiuso, così se l'utente riapre il Wrapped
+  // (o torna più tardi) il tasto "Condividi" può essere già pronto invece di
+  // ripartire da zero. wrappedState.activeShareBtn punta comunque a un bottone
+  // ormai rimosso dal DOM: gli aggiornamenti verso di esso vengono ignorati
+  // (isConnected===false) senza causare errori.
   const old=document.getElementById('wrappedOverlay');
   if(old) old.remove();
   wrappedState.barEls=[];
-  wrappedState.slides=[];
   wrappedState.index=0;
   wrappedState.paused=false;
   document.removeEventListener('keydown',wrappedKeyHandler);
@@ -5725,13 +5753,38 @@ function openWrapped(){
 
   if(wrappedCanShareFiles()){
     const shareBtn=document.createElement('button'); shareBtn.type='button'; shareBtn.className='wrapped-share';
-    shareBtn.innerHTML='📲 Condividi su Instagram';
-    shareBtn.onclick=()=>wrappedShareVideo(shareBtn);
     footer.appendChild(shareBtn);
-    // Avvia la generazione video in background subito dopo che l'overlay è nel DOM,
-    // così quando l'utente clicca "Condividi" il blob è già pronto e navigator.share
-    // può essere chiamato sincrono nel click handler (senza await che rompe la user gesture).
-    requestAnimationFrame(()=>wrappedPrepareVideoInBackground(shareBtn));
+    // wrappedState.activeShareBtn è il bottone "vivo": se una generazione era
+    // già partita in una apertura precedente e non è mai stata annullata, gli
+    // aggiornamenti di stato (progresso, video pronto, errore) devono arrivare
+    // a QUESTO bottone, non a quello — ormai rimosso dal DOM — di prima.
+    wrappedState.activeShareBtn=shareBtn;
+
+    const signature=wrappedSlidesSignature(slides);
+    const sameData=signature!==null && signature===wrappedState.videoSlidesSignature;
+    const stillGenerating=!!(wrappedState.videoAbort && !wrappedState.videoAbort.signal.aborted);
+
+    if(sameData && wrappedState.videoReady && wrappedState.videoBlob){
+      // Il video era già pronto da prima (creato mentre il Wrapped era stato
+      // chiuso e poi riaperto): il tasto Condividi è utilizzabile da subito.
+      shareBtn.innerHTML='📲 Condividi su Instagram';
+      shareBtn.onclick=()=>wrappedShareVideo(shareBtn);
+    } else if(sameData && stillGenerating){
+      // Generazione già avviata in precedenza e ancora in corso: la lasciamo
+      // proseguire così com'è, senza ricominciare da capo. Il bottone si
+      // aggiornerà da solo (vedi wrappedPrepareVideoInBackground) man mano
+      // che la preparazione avanza, fino a diventare cliccabile.
+      shareBtn.disabled=true;
+      shareBtn.innerHTML='⏳ Preparo il video…';
+    } else {
+      // Nessuna generazione utilizzabile in corso (dati diversi, mai avviata,
+      // o interrotta da un errore): (ri)parte da zero. Avviata subito dopo che
+      // l'overlay è nel DOM, così quando l'utente clicca "Condividi" il blob è
+      // già pronto e navigator.share può essere chiamato sincrono nel click
+      // handler (senza await che rompe la user gesture).
+      shareBtn.innerHTML='📲 Condividi su Instagram';
+      requestAnimationFrame(()=>wrappedPrepareVideoInBackground(signature));
+    }
   }
   overlay.appendChild(footer);
 
