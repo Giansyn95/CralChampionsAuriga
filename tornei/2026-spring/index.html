@@ -5322,7 +5322,7 @@ function wrappedDrawVideoShimmer(ctx,w,h,timeMs,accent){
   ctx.fillRect(-170,-h,340,h*2);
   ctx.restore();
 }
-const WRAPPED_VIDEO_PER_SLIDE_MS=2300; // unica fonte di verità: usata sia per generare il video sia per disegnare i frame
+const WRAPPED_VIDEO_PER_SLIDE_MS=3200; // unica fonte di verità: usata sia per generare il video sia per disegnare i frame
 function wrappedDrawVideoFrame(ctx,renderedSlides,timeMs){
   const W=ctx.canvas.width,H=ctx.canvas.height;
   const perSlideMs=WRAPPED_VIDEO_PER_SLIDE_MS;
@@ -5596,7 +5596,7 @@ async function wrappedPrepareVideoInBackground(signature){
     wrappedState.videoReady=true;
     if(btn() && btn().isConnected){
       btn().disabled=false;
-      btn().innerHTML='📲 Condividi su Instagram';
+      btn().innerHTML='📲 Condividi';
       btn().onclick=()=>wrappedShareVideo(btn());
     }
   }catch(error){
@@ -5767,7 +5767,7 @@ function openWrapped(){
     if(sameData && wrappedState.videoReady && wrappedState.videoBlob){
       // Il video era già pronto da prima (creato mentre il Wrapped era stato
       // chiuso e poi riaperto): il tasto Condividi è utilizzabile da subito.
-      shareBtn.innerHTML='📲 Condividi su Instagram';
+      shareBtn.innerHTML='📲 Condividi';
       shareBtn.onclick=()=>wrappedShareVideo(shareBtn);
     } else if(sameData && stillGenerating){
       // Generazione già avviata in precedenza e ancora in corso: la lasciamo
@@ -5782,7 +5782,7 @@ function openWrapped(){
       // l'overlay è nel DOM, così quando l'utente clicca "Condividi" il blob è
       // già pronto e navigator.share può essere chiamato sincrono nel click
       // handler (senza await che rompe la user gesture).
-      shareBtn.innerHTML='📲 Condividi su Instagram';
+      shareBtn.innerHTML='📲 Condividi';
       requestAnimationFrame(()=>wrappedPrepareVideoInBackground(signature));
     }
   }
