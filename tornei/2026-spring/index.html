@@ -875,6 +875,20 @@
       #riepilogo .riepilogo-match .small{font-size:11.5px;line-height:1.4}
     }
 
+    /* Riepilogo su mobile: evita il troncamento delle intestazioni/valori chiave.
+       La colonna Sezione del Miglior portiere e tutte le colonne che iniziano con
+       "Punti" restano abbastanza larghe da essere lette per intero; il desktop non cambia. */
+    @media(max-width:560px){
+      #riepilogo table[data-table-id$="_portiere"] th[data-col-role=section],
+      #riepilogo table[data-table-id$="_portiere"] td[data-col-role=section]{
+        min-width:132px;max-width:none;white-space:nowrap;overflow:visible;text-overflow:clip
+      }
+      #riepilogo table.tbl-aligned th.col-points,
+      #riepilogo table.tbl-aligned td.col-points{
+        min-width:108px;max-width:none;white-space:nowrap;overflow:visible;text-overflow:clip
+      }
+    }
+
     /* La dicitura lunga del KPI Fantacalcio può andare su due righe senza uscire dalla card. */
     .fanta-mini-card{min-width:0}
     .fanta-mini-card .l{white-space:normal;overflow-wrap:anywhere;word-break:normal;line-height:1.2}
@@ -2981,11 +2995,13 @@ function buildTable(rows, tableId, imgType, priorityNames, highlightName, defaul
   const wrap=document.createElement('div'); wrap.className='tableWrap';
   const tbl=document.createElement('table');
   tbl.className='tbl-aligned';
+  tbl.dataset.tableId=tableId;
   const thead=document.createElement('thead');
   const hrow=document.createElement('tr');
   headers.forEach((h,i)=>{
     const th=document.createElement('th');
     th.dataset.colRole=columnRoles[i];
+    if(norm(h).startsWith('punti')) th.classList.add('col-points');
     if(i<stickyCount) th.classList.add('col-sticky-'+(i+1));
     if(i===stickyCount-1) th.classList.add('col-sticky-edge');
     if(i===highlightIdx) th.classList.add('col-highlight');
@@ -3009,6 +3025,7 @@ function buildTable(rows, tableId, imgType, priorityNames, highlightName, defaul
     headers.forEach((_,i)=>{
       const td=document.createElement('td');
       td.dataset.colRole=columnRoles[i];
+      if(norm(headers[i]).startsWith('punti')) td.classList.add('col-points');
       if(i<stickyCount) td.classList.add('col-sticky-'+(i+1));
       if(i===stickyCount-1) td.classList.add('col-sticky-edge');
       if(i===highlightIdx) td.classList.add('col-highlight');
@@ -4075,7 +4092,7 @@ function renderStatistiche(){
     card.appendChild(hint);
     const headers=['Giocatore','Media goal/partita','Squadra','Goal','Partite'];
     const body=rows.map(x=>[x.giocatore,x.media.toFixed(2).replace('.',','),x.squadra,x.goal,x.partite]);
-    card.appendChild(buildTable([headers,...body],'stats_giocatori',null,null,'media goal/partita'));
+    card.appendChild(buildTable([headers,...body],'stats_giocatori','player',null,'media goal/partita'));
   }
   el.appendChild(card);
 }
