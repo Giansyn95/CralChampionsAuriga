@@ -875,17 +875,34 @@
       #riepilogo .riepilogo-match .small{font-size:11.5px;line-height:1.4}
     }
 
-    /* Riepilogo su mobile: evita il troncamento delle intestazioni/valori chiave.
-       La colonna Sezione del Miglior portiere e tutte le colonne che iniziano con
-       "Punti" restano abbastanza larghe da essere lette per intero; il desktop non cambia. */
+    /* Mobile: evita il troncamento delle intestazioni/valori chiave.
+       Nel Riepilogo la colonna Sezione del Miglior portiere resta leggibile;
+       in TUTTE le tabelle, ogni colonna la cui intestazione inizia con "Punti"
+       (es. Punti MVP, Punti Miglior portiere, Punti totali, ecc.) viene mostrata
+       per intero. Se serve spazio extra, la tabella continua a scorrere orizzontalmente. */
     @media(max-width:560px){
       #riepilogo table[data-table-id$="_portiere"] th[data-col-role=section],
       #riepilogo table[data-table-id$="_portiere"] td[data-col-role=section]{
         min-width:132px;max-width:none;white-space:nowrap;overflow:visible;text-overflow:clip
       }
-      #riepilogo table.tbl-aligned th.col-points,
-      #riepilogo table.tbl-aligned td.col-points{
-        min-width:108px;max-width:none;white-space:nowrap;overflow:visible;text-overflow:clip
+    }
+    @media(max-width:720px){
+      table.tbl-aligned th.col-points,
+      table.tbl-aligned td.col-points{
+        min-width:108px;max-width:none;width:auto;white-space:nowrap;overflow:visible;text-overflow:clip
+      }
+    }
+
+    /* Mobile: le intestazioni di QUALUNQUE tabella non vengono mai abbreviate
+       con i puntini. La larghezza della colonna si adatta al testo completo e,
+       quando non entra nello schermo, resta disponibile lo scroll orizzontale. */
+    @media(max-width:720px){
+      table th{
+        max-width:none!important;
+        width:auto!important;
+        white-space:nowrap!important;
+        overflow:visible!important;
+        text-overflow:clip!important
       }
     }
 
