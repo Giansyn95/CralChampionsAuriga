@@ -878,6 +878,29 @@
     /* La dicitura lunga del KPI Fantacalcio può andare su due righe senza uscire dalla card. */
     .fanta-mini-card{min-width:0}
     .fanta-mini-card .l{white-space:normal;overflow-wrap:anywhere;word-break:normal;line-height:1.2}
+    /* Il KPI "Miglior punteggio" privilegia la leggibilità del partecipante:
+       il valore può andare a capo, ma non viene mai abbreviato con i puntini. */
+    .fanta-mini-card.is-best-score .n{font-size:19px;line-height:1.15;white-space:normal;overflow:visible;text-overflow:clip;overflow-wrap:normal;word-break:normal}
+
+    /* Riepilogo giornate: scorciatoia mobile per tornare rapidamente al filtro in alto.
+       Il bottone viene creato via JS solo quando è selezionato "Tutte le giornate". */
+    .riepilogo-back-top{display:none;position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:9000;border:1px solid rgba(255,255,255,.28);border-radius:999px;background:var(--blue);color:#fff;box-shadow:0 10px 28px rgba(7,29,58,.28);padding:11px 15px;font-family:inherit;font-size:13px;font-weight:900;line-height:1;cursor:pointer;opacity:0;transform:translateY(10px);pointer-events:none;transition:opacity .16s ease,transform .16s ease}
+    @media(max-width:720px){
+      .riepilogo-back-top{display:inline-flex;align-items:center;justify-content:center;gap:6px}
+      .riepilogo-back-top.is-visible{opacity:1;transform:translateY(0);pointer-events:auto}
+      .fanta-mini-card.is-best-score .n{font-size:16.5px;line-height:1.18}
+    }
+
+    /* Risultati su mobile: squadre su righe separate e nomi completi, senza ellissi. */
+    @media(max-width:560px){
+      #risultati .match{align-items:flex-start;gap:9px;padding:12px 10px}
+      #risultati .match-meta{width:100%}
+      #risultati .match-teams{width:100%;flex-direction:column;align-items:flex-start;gap:7px}
+      #risultati .match-team{width:100%;max-width:100%;align-items:flex-start;gap:8px}
+      #risultati .match-name{white-space:normal;overflow:visible;text-overflow:clip;line-height:1.2;overflow-wrap:anywhere;font-size:14.5px;font-weight:700}
+      #risultati .match-vs{display:none}
+      #risultati .score{margin:0;min-width:54px;padding:5px 6px;border:1px solid var(--line);border-radius:11px;background:var(--soft);text-align:center;font-size:21px;line-height:1.05}
+    }
     @media print{.toolbar,.tabs,.search,#errorBanner{display:none}.section{display:block}.wrap{max-width:none}.card,.hero{box-shadow:none}}
     @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
   
@@ -9443,8 +9466,42 @@ function renderPagellone(){
   if(partitaSel) partitaSel.onchange=()=>{ state.selectedPagellonePartita=partitaSel.value; renderPagellone(); };
 }
 
+let _riepilogoBackTopHandlers=null;
+function clearRiepilogoBackToTop(){
+  if(!_riepilogoBackTopHandlers) return;
+  window.removeEventListener('scroll',_riepilogoBackTopHandlers.update);
+  window.removeEventListener('resize',_riepilogoBackTopHandlers.update);
+  _riepilogoBackTopHandlers=null;
+}
+function setupRiepilogoBackToTop(el){
+  clearRiepilogoBackToTop();
+  const btn=document.createElement('button');
+  btn.type='button';
+  btn.className='riepilogo-back-top';
+  btn.setAttribute('aria-label','Torna in alto nel riepilogo giornate');
+  btn.textContent='↑ Su';
+  btn.onclick=()=>{
+    const top=el.getBoundingClientRect().top+window.scrollY-10;
+    window.scrollTo({top:Math.max(0,top),behavior:'smooth'});
+  };
+  el.appendChild(btn);
+  const update=()=>{
+    const sectionTop=el.getBoundingClientRect().top+window.scrollY;
+    const show=window.matchMedia('(max-width:720px)').matches &&
+      state.activeTab==='riepilogo' &&
+      !state.selectedRiepilogoGiornata &&
+      window.scrollY>sectionTop+420;
+    btn.classList.toggle('is-visible',show);
+  };
+  _riepilogoBackTopHandlers={update};
+  window.addEventListener('scroll',update,{passive:true});
+  window.addEventListener('resize',update,{passive:true});
+  update();
+}
+
 function renderRiepilogoGiornate(){
 
+  clearRiepilogoBackToTop();
   const el=document.getElementById('riepilogo'); el.innerHTML='';
   const files=sectionFiles('riepilogo');
   if(!files.length){
@@ -9466,6 +9523,7 @@ function renderRiepilogoGiornate(){
   // renderizziamo subito SOLO quella giornata; il resto viene solo preriscaldato in
   // background, così lo switch su altre giornate o su "Tutte" riusa cache già pronte.
   const selectedKey=state.selectedRiepilogoGiornata;
+  if(!selectedKey) setupRiepilogoBackToTop(el);
   const selectedFile=selectedKey ? sorted.find(f=>riepilogoFileHasGiornata(f,selectedKey)) : null;
   const priorityFile=selectedFile || sorted[sorted.length-1];
   const renderOnlySelected=!!selectedKey;
@@ -11110,10 +11168,21 @@ function fantaBestDayResult(data){
     const key=fantaNormText(r.name);
     if(key && !players.has(key)) players.set(key,r);
   });
+  const winners=[...players.values()];
+  const first=winners[0] || bestRows[0];
+  const shortNames=winners.map(r=>fantaShortParticipantName(r.name));
+  let displayName=shortNames[0] || fantaShortParticipantName(first&&first.name);
+  if(shortNames.length===2) displayName=shortNames.join(' / ');
+  else if(shortNames.length>2) displayName=shortNames.slice(0,2).join(' / ')+' +'+(shortNames.length-2);
+  const value=(selected==='totale')
+    ? displayName
+    : 'G'+(first&&first.day||day||'-')+' - '+displayName;
   const pointsText=fantaFormatDecimal(maxPoints);
-  if(players.size>1) return {tie:true,points:maxPoints,value:pointsText+' pt',label:'🏅 Miglior punteggio giornata'};
-  const first=[...players.values()][0] || bestRows[0];
-  return {tie:false,points:maxPoints,value:'G'+(first.day||day||'-')+' - '+(first.name||'-')+' '+pointsText+'pt',label:'🏅 Miglior punteggio giornata'};
+  const fullNames=winners.map(r=>r.name||'-').join(', ');
+  const title=(selected==='totale')
+    ? fullNames+' — '+pointsText+' pt'
+    : 'G'+(first&&first.day||day||'-')+' — '+fullNames+' — '+pointsText+' pt';
+  return {tie:winners.length>1,points:maxPoints,value,label:'🏅 Miglior punteggio',title};
 }
 function fantaAveragePoints(rows,data){
   const selected=state.selectedFantaGiornata||'totale';
@@ -11133,15 +11202,16 @@ function fantaSummaryCards(parent,rows,data){
   const avg=fantaAveragePoints(rows,data);
   const best=fantaBestDayResult(data);
   const bestValue=best ? (best.value||'-') : '-';
-  const bestLabel=best ? (best.label||'🏅 Miglior punteggio giornata') : '🏅 Miglior punteggio giornata';
+  const bestLabel=best ? (best.label||'🏅 Miglior punteggio') : '🏅 Miglior punteggio';
   const cards=[
     {value:rows.length,label:'👥 Partecipanti'},
     {value:leader,label:'👑 Leader'},
     {value:avg,label:'📊 Media punti'},
-    {value:bestValue,label:bestLabel}
+    {value:bestValue,label:bestLabel,className:'is-best-score',title:best&&best.title}
   ];
-  cards.forEach(({value,label})=>{
-    const c=document.createElement('div'); c.className='fanta-mini-card';
+  cards.forEach(({value,label,className,title})=>{
+    const c=document.createElement('div'); c.className='fanta-mini-card'+(className?' '+className:'');
+    if(title) c.title=title;
     const numEl=document.createElement('div'); numEl.className='n'; numEl.textContent=value;
     const lab=document.createElement('span'); lab.className='l'; lab.textContent=label;
     c.appendChild(numEl); c.appendChild(lab); wrap.appendChild(c);
