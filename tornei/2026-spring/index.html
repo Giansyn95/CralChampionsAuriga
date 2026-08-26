@@ -839,6 +839,10 @@
     @media(max-width:560px){
       table.tbl-aligned th[data-col-role=team],table.tbl-aligned td[data-col-role=team],
       table.tbl-aligned th[data-col-role=person],table.tbl-aligned td[data-col-role=person]{min-width:145px;max-width:180px}
+      /* La colonna posizione resta compatta ma abbastanza larga da mostrare "Pos."
+         insieme all'icona di ordinamento, senza trasformarla in "Pos...". */
+      table.tbl-aligned th[data-col-role=rank],table.tbl-aligned td[data-col-role=rank]{min-width:52px;max-width:64px}
+      table.tbl-aligned th[data-col-role=rank]{padding-left:6px;padding-right:6px}
       .name-cell > span:not(.trophy-badge),
       .name-cell .player-link{
         white-space:normal;
@@ -853,6 +857,9 @@
         min-width:0;
       }
     }
+    /* La dicitura lunga del KPI Fantacalcio può andare su due righe senza uscire dalla card. */
+    .fanta-mini-card{min-width:0}
+    .fanta-mini-card .l{white-space:normal;overflow-wrap:anywhere;word-break:normal;line-height:1.2}
     @media print{.toolbar,.tabs,.search,#errorBanner{display:none}.section{display:block}.wrap{max-width:none}.card,.hero{box-shadow:none}}
     @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
   
@@ -2888,7 +2895,7 @@ function mergeDuplicateDisplayColumns(rows){
     return merged;
   });
 }
-function buildTable(rows, tableId, imgType, priorityNames, highlightName){
+function buildTable(rows, tableId, imgType, priorityNames, highlightName, defaultSortNames, defaultSortDir){
   if(!rows||!rows.length) return buildEl('div','empty','Nessun dato disponibile.');
   rows=mergeDuplicateDisplayColumns(rows);
   let headers=rows[0];
@@ -2899,7 +2906,21 @@ function buildTable(rows, tableId, imgType, priorityNames, highlightName){
   const order=reorderIndices(headers,priorityNames);
   if(order){ headers=order.map(i=>headers[i]); body=body.map(r=>{ const nr=order.map(i=>r[i]); if(r._noLink) nr._noLink=true; if(r._trophy) nr._trophy=r._trophy; return nr; }); }
   if(!tableId){ tableId='tbl_'+(++_tableCounter); }
-  const sort=state.sortState[tableId]||{col:-1,dir:'asc'};
+  let sort=state.sortState[tableId];
+  if(!sort){
+    const defaults=(Array.isArray(defaultSortNames)?defaultSortNames:[defaultSortNames]).filter(Boolean).map(norm);
+    const defaultCol=defaults.length ? headers.findIndex(h=>{
+      const rawNorm=norm(h);
+      const prettyNorm=norm(prettyColumnName(h||''));
+      return defaults.some(d=>d===rawNorm||d===prettyNorm);
+    }) : -1;
+    sort=defaultCol>=0
+      ? {col:defaultCol,dir:String(defaultSortDir||'asc').toLowerCase()==='desc'?'desc':'asc'}
+      : {col:-1,dir:'asc'};
+    // Memorizza il default: da qui in poi i click sulle intestazioni continuano
+    // a usare esattamente lo stesso meccanismo di ordinamento già esistente.
+    if(defaultCol>=0) state.sortState[tableId]=sort;
+  }
   const nameColIdx = imgType ? findNameColIndex(headers, imgType) : -1;
   const columnRoles=headers.map((h,i)=>tableColumnRole(h,i,imgType,nameColIdx));
   const highlightIdx=findHighlightIndex(headers,highlightName);
@@ -7225,7 +7246,20 @@ function renderCalendarioBlock(el, files){
     const h=document.createElement('h3');
     h.textContent=g.label;
 
-    head.appendChild(h);
+    // Il turno di riposo appartiene alla giornata, non alla prima partita:
+    // lo mostriamo quindi accanto al titolo della giornata e una sola volta.
+    const titleWrap=document.createElement('div');
+    titleWrap.style.cssText='display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0';
+    titleWrap.appendChild(h);
+    const riposaNames=[...new Set(g.partite.map(p=>String(p.riposa||'').trim()).filter(Boolean))];
+    riposaNames.forEach(name=>{
+      const badge=document.createElement('span');
+      badge.style.cssText='font-size:12px;background:var(--soft);border:1px solid var(--line);border-radius:999px;padding:4px 9px;color:var(--muted);white-space:nowrap;font-weight:800';
+      badge.textContent='Riposa: '+name;
+      titleWrap.appendChild(badge);
+    });
+
+    head.appendChild(titleWrap);
     head.appendChild(calendarioStatusBadge(roundStatus));
     card.appendChild(head);
 
@@ -7235,14 +7269,9 @@ function renderCalendarioBlock(el, files){
       const m=document.createElement('div'); m.className='match '+calendarioMatchStatusClass(roundStatus);
 
       if(p.riposa&&!p.casa&&!p.trasferta){
-        // Riga solo riposo
-        const info=document.createElement('div');
-        const b=document.createElement('b'); b.textContent='Riposa: '+p.riposa;
-        const s=document.createElement('span'); s.className='small'; s.textContent='Turno di riposo';
-        info.appendChild(b); info.appendChild(document.createElement('br')); info.appendChild(s);
-        m.appendChild(info);
-        m.style.background='var(--soft)';
-        m.style.fontStyle='italic';
+        // La riga solo-riposo non viene più mostrata tra le partite:
+        // la relativa label è già accanto all'intestazione della giornata.
+        return;
       } else {
         // Partita normale con loghi squadra
         // Outer wrapper: column layout so teams row and riposa badge never overlap
@@ -7265,20 +7294,12 @@ function renderCalendarioBlock(el, files){
         left.appendChild(teamsWrap);
         matchRow.appendChild(left);
         m.appendChild(matchRow);
-        // Note and Riposa badge always on their own line, below the teams row
-        if((p.note&&!/riposa/i.test(p.note))||p.riposa){
+        // Le note restano sotto la partita; l'eventuale "Riposa" è già nel titolo giornata.
+        if(p.note&&!/riposa/i.test(p.note)){
           const meta=document.createElement('div');
           meta.style.cssText='display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:5px;padding-left:2px';
-          if(p.note&&!/riposa/i.test(p.note)){
-            const n=document.createElement('span'); n.className='small'; n.textContent=p.note;
-            meta.appendChild(n);
-          }
-          if(p.riposa){
-            const badge=document.createElement('span');
-            badge.style.cssText='font-size:12px;background:var(--soft);border:1px solid var(--line);border-radius:999px;padding:3px 9px;color:var(--muted);white-space:nowrap';
-            badge.textContent='Riposa: '+p.riposa;
-            meta.appendChild(badge);
-          }
+          const n=document.createElement('span'); n.className='small'; n.textContent=p.note;
+          meta.appendChild(n);
           m.appendChild(meta);
         }
       }
@@ -8455,7 +8476,7 @@ function autogoalRowsForDisplay(rows, partite){
   return normalizeAutogoalTableRows(displayRows);
 }
 
-function renderMiniSection(parent,title,rows,imgType,emptyText,tableId,priorityNames,highlightName){
+function renderMiniSection(parent,title,rows,imgType,emptyText,tableId,priorityNames,highlightName,defaultSortNames,defaultSortDir){
   // Se non ci sono righe e non è richiesto un messaggio vuoto, non mostra proprio la sezione.
   if(!rows.length && !emptyText) return;
 
@@ -8464,7 +8485,7 @@ function renderMiniSection(parent,title,rows,imgType,emptyText,tableId,priorityN
   card.appendChild(h);
   if(rows.length){
     const tableRows=objectsToRows(rows);
-    if(tableRows.length) card.appendChild(buildTable(tableRows,tableId||norm(title),imgType,priorityNames,highlightName));
+    if(tableRows.length) card.appendChild(buildTable(tableRows,tableId||norm(title),imgType,priorityNames,highlightName,defaultSortNames,defaultSortDir));
     else if(emptyText) card.appendChild(buildEl('div','empty',emptyText));
   }
   else if(emptyText){ card.appendChild(buildEl('div','empty',emptyText)); }
@@ -9618,7 +9639,7 @@ function renderRiepilogoGiornate(){
     }));
     // ── Render sezioni ────────────────────────────────────────────────────────
     const marcatoriRows=[...marcatori,...externalScorerRows];
-    renderMiniSection(content,'Marcatori della giornata',marcatoriRows,'player',playerSearch?'':'Nessun marcatore indicato.',tablePrefix+'_marcatori',['sezione','giocatore','marcatore','goal','reti'],['goal','reti']);
+    renderMiniSection(content,'Marcatori della giornata',marcatoriRows,'player',playerSearch?'':'Nessun marcatore indicato.',tablePrefix+'_marcatori',['sezione','giocatore','marcatore','goal','reti'],['goal','reti'],['goal','reti'],'desc');
     // Costruisce righe sintetiche per premi assegnati a giocatori esterni,
     // da iniettare direttamente nella tabella come righe normali.
     // MVP esterni: "Giocatore esterno", squadra "/", no link
@@ -9632,7 +9653,7 @@ function renderRiepilogoGiornate(){
     }));
     const mvpRows=[...mvp,...mvpExternalRows];
     const mvpNoInternalText=(!playerSearch&&!mvpRows.length)?'Nessun MVP indicato.':'';
-    renderMiniSection(content,'MVP della giornata',mvpRows,'player',mvpNoInternalText,tablePrefix+'_mvp',['sezione','giocatore','puntimvp','punti mvp','mvp','giornata','squadra'],['puntimvp','punti mvp','punti']);
+    renderMiniSection(content,'MVP della giornata',mvpRows,'player',mvpNoInternalText,tablePrefix+'_mvp',['sezione','giocatore','puntimvp','punti mvp','mvp','giornata','squadra'],['puntimvp','punti mvp','punti'],['puntimvp','punti mvp','punti'],'desc');
     // Portiere esterni: "Giocatore esterno", squadra "/", partita nella colonna Partita, no link
     const portiereExternalRows=externalPortiereMatches.map(({matchLabel})=>({
       'Sezione': 'Miglior portiere',
@@ -9645,7 +9666,7 @@ function renderRiepilogoGiornate(){
     }));
     const portiereRows=[...portiere,...portiereExternalRows];
     const portiereNoInternalText=(!playerSearch&&!norm(state.search)&&!portiereRows.length)?'Nessun miglior portiere indicato.':'';
-    renderMiniSection(content,'Miglior portiere',portiereRows,'player',portiereNoInternalText,tablePrefix+'_portiere',['sezione','giocatore','portiere','puntiportiere','punti pt','giornata','squadra','partita'],['puntiportiere','punti pt','punti']);
+    renderMiniSection(content,'Miglior portiere',portiereRows,'player',portiereNoInternalText,tablePrefix+'_portiere',['sezione','giocatore','portiere','puntiportiere','punti pt','giornata','squadra','partita'],['puntiportiere','punti pt','punti'],['puntiportiere','punti pt','punti'],'desc');
     const autogoalImgType=rowsHavePlayerColumn(autogoal)?'player':null;
     renderMiniSection(content,'Autogoal',autogoal,autogoalImgType,'',tablePrefix+'_autogoal',['sezione','giocatore','marcatore','quantita','goal','valore'],['quantita','goal','valore']);
     rendered++;
@@ -11072,9 +11093,9 @@ function fantaBestDayResult(data){
     if(key && !players.has(key)) players.set(key,r);
   });
   const pointsText=fantaFormatDecimal(maxPoints);
-  if(players.size>1) return {tie:true,points:maxPoints,value:pointsText+' pt',label:'🏅 Miglior pt giornata'};
+  if(players.size>1) return {tie:true,points:maxPoints,value:pointsText+' pt',label:'🏅 Miglior punteggio giornata'};
   const first=[...players.values()][0] || bestRows[0];
-  return {tie:false,points:maxPoints,value:'G'+(first.day||day||'-')+' - '+(first.name||'-')+' '+pointsText+'pt',label:'🏅 Miglior pt giornata'};
+  return {tie:false,points:maxPoints,value:'G'+(first.day||day||'-')+' - '+(first.name||'-')+' '+pointsText+'pt',label:'🏅 Miglior punteggio giornata'};
 }
 function fantaAveragePoints(rows,data){
   const selected=state.selectedFantaGiornata||'totale';
@@ -11094,7 +11115,7 @@ function fantaSummaryCards(parent,rows,data){
   const avg=fantaAveragePoints(rows,data);
   const best=fantaBestDayResult(data);
   const bestValue=best ? (best.value||'-') : '-';
-  const bestLabel=best ? (best.label||'🏅 Miglior pt giornata') : '🏅 Miglior pt giornata';
+  const bestLabel=best ? (best.label||'🏅 Miglior punteggio giornata') : '🏅 Miglior punteggio giornata';
   const cards=[
     {value:rows.length,label:'👥 Partecipanti'},
     {value:leader,label:'👑 Leader'},
