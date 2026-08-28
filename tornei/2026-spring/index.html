@@ -22,12 +22,12 @@
   <title>CRAL Champions</title>
   <!-- Open Graph: anteprima link su WhatsApp, Telegram, Facebook ecc.
        Letti dai crawler senza eseguire JavaScript, quindi i valori restano fissi
-       (non vengono presi dal config.csv, che è dinamico). Nessun riferimento
-       all'anno/edizione per non doverli aggiornare a ogni torneo. -->
+       (non vengono presi dal config.csv, che è dinamico). L'URL punta al repository
+       GitHub Pages corrente e va aggiornato solo se cambia il nome del repository. -->
   <meta property="og:title" content="CRAL Champions" />
   <meta property="og:description" content="Classifiche, calendario, risultati e statistiche giocatori del torneo aziendale CRAL Champions" />
-  <meta property="og:image" content="https://cralauriga.github.io/CralChampions2026/immagini/logo_cral.png" />
-  <meta property="og:url" content="https://cralauriga.github.io/CralChampions2026/" />
+  <meta property="og:image" content="https://cralauriga.github.io/CralChampionsAuriga/immagini/logo_cral.png" />
+  <meta property="og:url" content="https://cralauriga.github.io/CralChampionsAuriga/" />
   <meta property="og:type" content="website" />
   <meta name="twitter:card" content="summary_large_image" />
   <!-- Preconnect: risparmia DNS/TLS quando Chart.js viene richiesto al volo nella Home -->
@@ -261,12 +261,9 @@
     .teamHead{display:flex;gap:12px;align-items:center;margin-bottom:12px}
     .logo,.avatar{width:58px;height:58px;border-radius:16px;object-fit:cover;background:#dbe7f6;display:flex;align-items:center;justify-content:center;font-weight:900;color:var(--blue);flex:0 0 auto}
     .avatar{width:44px;height:44px;border-radius:50%;font-size:13px}
-    .img-placeholder{position:relative;overflow:hidden;color:transparent}
-    .img-placeholder::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.42),transparent);transform:translateX(-100%);animation:imgLoading 1.15s infinite}
 
     .is-empty-fallback{color:transparent}
     .is-empty-fallback::before{content:'';display:block;width:38%;height:38%;border-radius:50%;background:rgba(15,90,168,.18)}
-    @keyframes imgLoading{to{transform:translateX(100%)}}
     .player{display:flex;gap:10px;align-items:center;padding:8px 0;border-top:1px solid var(--line)}
     .player b{display:block}
     .player-name{font-weight:600}
@@ -950,15 +947,12 @@
     /* ── Fantacalcio ── */
     .fanta-actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:12px 0 14px}
     .fanta-actions .search{width:auto;min-width:220px;margin:0;padding:11px 13px}
-    .fanta-file-btn{position:relative;overflow:hidden;border-radius:14px;padding:11px 15px;background:var(--blue);color:#fff;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
-    .fanta-file-btn input{position:absolute;inset:0;opacity:0;cursor:pointer;display:block}
     .fanta-note{font-size:12.5px;color:var(--muted);line-height:1.45;margin:8px 0 0}
     .fanta-note code{background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:1px 5px;color:var(--ink)}
     .fanta-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin:12px 0 14px}
     .fanta-mini-card{border:1px solid var(--line);border-radius:16px;background:var(--soft);padding:11px 12px}
     .fanta-mini-card .n{font-size:22px;font-weight:900;color:var(--blue);line-height:1.05;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     .fanta-mini-card .l{display:block;margin-top:5px;font-size:10.5px;font-weight:900;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
-    .fanta-upload-list{margin-top:8px;color:var(--muted);font-size:12px}
     .fanta-results-wrap{margin-top:12px}
     .fanta-table-desktop{display:block}
     .fanta-mobile-list{display:none}
@@ -1004,8 +998,7 @@
       .hint{font-size:13px}
       .fanta-actions{display:grid;grid-template-columns:1fr;gap:9px;margin:11px 0 12px}
       .fanta-actions .search{width:100%;min-width:0;margin:0;font-size:16px}
-      .fanta-file-btn{width:100%;justify-content:center;min-height:46px;text-align:center}
-      .fanta-note,.fanta-upload-list{font-size:11.8px;line-height:1.45}
+      .fanta-note{font-size:11.8px;line-height:1.45}
       .fanta-summary{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:11px 0 13px}
       .fanta-mini-card{border-radius:14px;padding:10px}
       .fanta-mini-card .n{font-size:19px}
@@ -1132,7 +1125,6 @@
 }
     .fanta-card-shell h2{display:flex;align-items:center;gap:8px}
     .fanta-claim{margin:0 0 12px;max-width:980px}
-    .fanta-file-btn,.fanta-upload-list{display:none!important}
     .fanta-rules-split{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:10px 0 14px}
     .fanta-rule-group{border:1px solid var(--line);border-radius:16px;background:var(--soft);padding:11px 12px;min-width:0}
     .fanta-rule-group h3{margin:0 0 8px;font-family:'Oswald',Arial,sans-serif;font-size:16px;color:var(--blue);text-transform:uppercase;letter-spacing:.04em}
@@ -1420,6 +1412,130 @@
       .pg-card-text{font-size:13px;line-height:1.45}
       .pg-match-wrap .riepilogo-match{padding:13px 12px}
     }
+
+    /* ═══════════════════════════════════════════════════════════════
+       NAVIGATION UPGRADE — Team profile, Match Center & deep links
+       ═══════════════════════════════════════════════════════════════ */
+    body.entity-modal-open{overflow:hidden}
+    .entity-nav-backdrop{position:fixed;inset:0;z-index:9998;display:flex;align-items:center;justify-content:center;padding:22px;background:rgba(4,12,28,.76);backdrop-filter:blur(14px);opacity:0;transition:opacity .22s ease}
+    .entity-nav-backdrop.is-open{opacity:1}
+    .entity-sheet{position:relative;width:min(1080px,100%);max-height:94vh;display:flex;flex-direction:column;overflow:hidden;border-radius:30px;border:1px solid rgba(255,255,255,.22);background:var(--panel);box-shadow:0 34px 100px rgba(0,0,0,.46);color:var(--ink);transform:translateY(12px) scale(.985);transition:transform .24s cubic-bezier(.2,.8,.2,1);touch-action:pan-y}
+    .entity-nav-backdrop.is-open .entity-sheet{transform:none}.entity-sheet.is-edge-swiping{transition:none!important;transform:translateX(var(--entity-swipe-x,0px))!important;will-change:transform}
+    .entity-topbar{position:relative;z-index:20;display:flex;align-items:center;gap:8px;min-height:58px;padding:9px 11px;border-bottom:1px solid var(--line);background:color-mix(in srgb,var(--panel) 88%,transparent);backdrop-filter:blur(18px)}
+    .entity-topbar-title{min-width:0;flex:1;padding:0 4px;font-family:'Oswald',Arial,Helvetica,sans-serif;font-size:15px;font-weight:800;text-transform:uppercase;letter-spacing:.045em;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .entity-nav-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-width:40px;height:40px;padding:0 11px;border:1px solid var(--line);border-radius:13px;background:var(--soft);color:var(--ink);font:inherit;font-size:14px;font-weight:900;cursor:pointer;transition:transform .15s ease,background .15s ease,border-color .15s ease}
+    .entity-nav-btn:hover{transform:translateY(-1px);border-color:rgba(15,90,168,.36);background:color-mix(in srgb,var(--soft) 70%,var(--blue) 8%)}
+    .entity-nav-btn:active{transform:scale(.96)}
+    .entity-nav-btn.icon-only{width:40px;padding:0;font-size:18px}
+    .entity-content{position:relative;flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;scroll-behavior:smooth;background:linear-gradient(180deg,color-mix(in srgb,var(--soft) 55%,transparent),var(--panel) 280px)}
+    .entity-view{min-height:100%;padding-bottom:22px;will-change:transform,opacity}
+    .entity-hero{position:relative;overflow:hidden;padding:28px 26px 24px;background:linear-gradient(135deg,var(--dark),var(--blue));color:#fff}
+    .entity-hero::after{content:'';position:absolute;right:-90px;bottom:-140px;width:360px;height:360px;border-radius:50%;background:radial-gradient(circle,rgba(245,185,66,.28),rgba(255,255,255,.08) 38%,transparent 68%);pointer-events:none}
+    .entity-hero::before{content:'';position:absolute;inset:0;background:linear-gradient(115deg,transparent 0 56%,rgba(255,255,255,.06) 56% 58%,transparent 58%);pointer-events:none}
+    .entity-section{margin:16px 18px 0;padding:17px;border:1px solid var(--line);border-radius:22px;background:var(--panel);box-shadow:0 9px 24px var(--shadow)}
+    .entity-section-title{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 12px;font-family:'Oswald',Arial,Helvetica,sans-serif;font-size:19px;font-weight:800;text-transform:uppercase;letter-spacing:.035em;color:var(--blue)}
+    .entity-section-sub{margin:-6px 0 12px;color:var(--muted);font-size:12px;font-weight:700;line-height:1.45}
+    .entity-empty{padding:15px;border:1px dashed var(--line);border-radius:15px;background:var(--soft);color:var(--muted);font-size:13px;font-weight:700;text-align:center}
+    .entity-chip{display:inline-flex;align-items:center;gap:6px;border-radius:999px;border:1px solid rgba(255,255,255,.28);background:rgba(255,255,255,.13);padding:6px 10px;color:#fff;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.045em}
+    .entity-action-link{border:0;background:none;padding:0;color:inherit;font:inherit;font-weight:inherit;cursor:pointer;text-align:inherit}
+    .entity-action-link:hover{text-decoration:underline;text-underline-offset:3px}
+    .team-link{border:0;background:none;color:inherit;font:inherit;font-weight:inherit;padding:0;cursor:pointer;text-align:left}
+    .team-link:hover{color:var(--blue);text-decoration:underline;text-underline-offset:3px}
+
+    /* Team profile */
+    .team-profile-hero-main{position:relative;z-index:1;display:grid;grid-template-columns:150px minmax(0,1fr);gap:22px;align-items:center}
+    .entity-team-logo{width:140px;height:140px;border-radius:30px;object-fit:contain;background:#fff;border:2px solid rgba(255,255,255,.72);padding:10px;box-shadow:0 18px 38px rgba(0,0,0,.28);color:var(--blue);font-size:36px;font-weight:900;display:flex;align-items:center;justify-content:center}
+    .team-profile-copy{min-width:0}
+    .team-profile-copy h2{margin:9px 0 7px;color:#fff;font-size:clamp(34px,5.5vw,62px);line-height:.94;text-transform:uppercase;overflow-wrap:anywhere;text-shadow:0 10px 24px rgba(0,0,0,.25)}
+    .team-profile-record{display:flex;gap:8px;flex-wrap:wrap;color:#dbeaff;font-weight:850;font-size:14px}
+    .team-profile-record span{display:inline-flex;align-items:center;gap:5px}
+    .team-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:16px 18px 0}
+    .team-kpi{position:relative;overflow:hidden;min-height:104px;padding:15px;border:1px solid var(--line);border-radius:20px;background:linear-gradient(145deg,var(--panel),rgba(15,90,168,.075));box-shadow:0 8px 20px var(--shadow)}
+    .team-kpi.is-primary{background:linear-gradient(145deg,rgba(245,185,66,.24),var(--panel));border-color:rgba(245,185,66,.48)}
+    .team-kpi .n{font-family:'Oswald',Arial,Helvetica,sans-serif;font-size:35px;font-weight:800;line-height:1;color:var(--blue);font-variant-numeric:tabular-nums}
+    .team-kpi.is-primary .n{color:#b77900}
+    .team-kpi .l{margin-top:7px;color:var(--muted);font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.06em}
+    .team-kpi .s{margin-top:4px;color:var(--muted);font-size:12px;font-weight:700}
+    .team-form{display:flex;gap:8px;overflow-x:auto;padding:2px 1px 5px;scrollbar-width:none}
+    .team-form::-webkit-scrollbar{display:none}
+    .form-match{flex:0 0 auto;display:flex;align-items:center;gap:8px;min-width:118px;padding:9px 10px;border:1px solid var(--line);border-radius:15px;background:var(--soft);color:var(--ink);font:inherit;cursor:pointer;text-align:left;transition:transform .15s ease,border-color .15s ease}
+    .form-match:hover{transform:translateY(-2px);border-color:rgba(15,90,168,.4)}
+    .form-result{display:inline-flex;align-items:center;justify-content:center;width:29px;height:29px;border-radius:10px;font-weight:950;color:#fff;flex:0 0 29px}
+    .form-result.is-win{background:#15803d}.form-result.is-draw{background:#64748b}.form-result.is-loss{background:#b42318}
+    .form-match-copy{min-width:0}.form-match-copy b{display:block;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.form-match-copy span{display:block;margin-top:2px;font-size:10px;color:var(--muted);font-weight:800}
+    .team-leaders{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+    .team-leader{display:flex;align-items:center;gap:10px;padding:11px;border:1px solid var(--line);border-radius:17px;background:var(--soft);min-width:0}
+    .team-leader-avatar{width:46px;height:46px;flex:0 0 46px;border-radius:14px;object-fit:cover;background:var(--panel);display:flex;align-items:center;justify-content:center;font-weight:900}
+    .team-leader-copy{min-width:0;flex:1}.team-leader-copy small{display:block;color:var(--muted);font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:.055em}.team-leader-copy button{display:block;max-width:100%;margin-top:2px;border:0;background:none;padding:0;color:var(--ink);font:inherit;font-size:13px;font-weight:900;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.team-leader-copy button:hover{color:var(--blue)}.team-leader-value{color:var(--blue);font-size:18px;font-weight:950;white-space:nowrap}
+    .team-roster-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+    .team-roster-player{display:flex;align-items:center;gap:9px;min-width:0;padding:9px 10px;border:1px solid var(--line);border-radius:15px;background:var(--soft);color:var(--ink);font:inherit;text-align:left;cursor:pointer;transition:transform .15s ease,border-color .15s ease}
+    .team-roster-player:hover{transform:translateY(-1px);border-color:rgba(15,90,168,.4)}
+    .team-roster-avatar{width:38px;height:38px;flex:0 0 38px;border-radius:12px;object-fit:cover;background:var(--panel);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900}
+    .team-roster-copy{min-width:0}.team-roster-copy b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12px}.team-roster-copy span{display:block;margin-top:2px;color:var(--muted);font-size:10px;font-weight:800}
+    .team-match-list{display:flex;flex-direction:column;gap:8px}
+    .profile-match-button{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:17px;background:var(--soft);color:var(--ink);font:inherit;text-align:left;cursor:pointer;transition:transform .16s ease,border-color .16s ease,background .16s ease}
+    .profile-match-button:hover{transform:translateY(-1px);border-color:rgba(15,90,168,.4);background:color-mix(in srgb,var(--soft) 90%,var(--blue) 5%)}
+    .profile-match-teams{display:flex;align-items:center;gap:7px;min-width:0;font-weight:900;font-size:13px}.profile-match-teams .mini-logo{flex:0 0 auto}.profile-match-teams span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.profile-match-meta{margin-top:4px;color:var(--muted);font-size:10px;font-weight:800}.profile-match-score{font-family:'Oswald',Arial,Helvetica,sans-serif;font-size:23px;font-weight:800;color:var(--blue);white-space:nowrap}
+    .team-trend-wrap{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px;align-items:center}.team-trend-svg{width:100%;height:104px;color:var(--blue);overflow:visible}.team-trend-current{text-align:right}.team-trend-current b{display:block;font-family:'Oswald',Arial,Helvetica,sans-serif;font-size:32px;color:var(--blue)}.team-trend-current span{display:block;color:var(--muted);font-size:10px;font-weight:900;text-transform:uppercase}
+
+    /* Match Center */
+    .match-center-hero{padding-top:24px;padding-bottom:28px}
+    .match-center-meta{position:relative;z-index:1;display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+    .match-scoreboard{position:relative;z-index:1;display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:22px;align-items:center}
+    .match-side{text-align:center;min-width:0}.match-side-btn{display:flex;flex-direction:column;align-items:center;width:100%;border:0;background:none;color:#fff;font:inherit;cursor:pointer;padding:0}.match-side-btn:hover .match-center-team{text-decoration:underline;text-underline-offset:4px}
+    .match-center-logo{width:112px;height:112px;border-radius:26px;object-fit:contain;background:#fff;border:2px solid rgba(255,255,255,.72);padding:9px;box-shadow:0 14px 30px rgba(0,0,0,.25);color:var(--blue);display:flex;align-items:center;justify-content:center;font-weight:900}
+    .match-center-team{display:block;width:100%;margin-top:10px;font-family:'Oswald',Arial,Helvetica,sans-serif;font-size:clamp(20px,3.6vw,34px);font-weight:800;text-transform:uppercase;line-height:1.02;overflow-wrap:anywhere}
+    .match-center-score{min-width:148px;text-align:center}.match-center-score .score-big{font-family:'Oswald',Arial,Helvetica,sans-serif;font-size:clamp(52px,9vw,86px);font-weight:800;line-height:.9;letter-spacing:.025em;text-shadow:0 10px 25px rgba(0,0,0,.28);white-space:nowrap}.match-center-score .status{display:inline-flex;margin-top:10px;border:1px solid rgba(255,255,255,.28);border-radius:999px;padding:5px 9px;background:rgba(255,255,255,.12);color:#fff;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.055em}
+    .match-columns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:16px 18px 0}.match-columns .entity-section{margin:0}
+    .match-person-list{display:flex;flex-direction:column;gap:8px}.match-person{display:flex;align-items:center;gap:9px;padding:9px 10px;border:1px solid var(--line);border-radius:15px;background:var(--soft);min-width:0}.match-person-avatar{width:40px;height:40px;flex:0 0 40px;border-radius:12px;object-fit:cover;background:var(--panel);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900}.match-person-copy{min-width:0;flex:1}.match-person-copy button{display:block;max-width:100%;border:0;background:none;padding:0;color:var(--ink);font:inherit;font-size:12px;font-weight:900;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.match-person-copy button:hover{color:var(--blue)}.match-person-copy span{display:block;margin-top:2px;color:var(--muted);font-size:10px;font-weight:750}.match-person-value{font-size:17px;font-weight:950;color:var(--blue);white-space:nowrap}
+    .match-awards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.match-award{position:relative;overflow:hidden;padding:13px;border-radius:17px;border:1px solid var(--line);background:linear-gradient(145deg,var(--soft),var(--panel));min-width:0}.match-award.is-mvp{border-color:rgba(245,185,66,.5);background:linear-gradient(145deg,rgba(245,185,66,.18),var(--panel))}.match-award small{display:block;color:var(--muted);font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:.06em}.match-award button{display:block;max-width:100%;margin-top:5px;border:0;background:none;padding:0;color:var(--ink);font:inherit;font-weight:900;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.match-award button:hover{color:var(--blue)}
+    .match-pagelle-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.match-pagella{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:8px;align-items:center;padding:9px 10px;border:1px solid var(--line);border-radius:15px;background:var(--soft)}.match-pagella button{border:0;background:none;padding:0;color:var(--ink);font:inherit;font-size:12px;font-weight:900;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}.match-pagella button:hover{color:var(--blue)}.match-pagella-team{color:var(--muted);font-size:9px;font-weight:800}.match-pagella-vote{display:inline-flex;align-items:center;justify-content:center;min-width:37px;height:37px;border-radius:50%;border:2px solid currentColor;font-family:'Oswald',Arial,Helvetica,sans-serif;font-weight:800;color:var(--blue);background:var(--panel)}
+    .fanta-impact-list{display:flex;flex-direction:column;gap:8px}.fanta-impact-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;padding:10px 11px;border:1px solid var(--line);border-radius:15px;background:var(--soft)}.fanta-impact-row b{font-size:12px}.fanta-impact-row p{margin:3px 0 0;color:var(--muted);font-size:10px;font-weight:700;line-height:1.4}.fanta-impact-score{font-family:'Oswald',Arial,Helvetica,sans-serif;font-size:21px;font-weight:800;color:var(--blue);white-space:nowrap}
+    .match-sibling-nav{display:grid;grid-template-columns:1fr 1fr;gap:9px}.match-sibling-btn{display:flex;align-items:center;gap:8px;padding:11px;border:1px solid var(--line);border-radius:16px;background:var(--soft);color:var(--ink);font:inherit;font-size:11px;font-weight:850;cursor:pointer;text-align:left;min-width:0}.match-sibling-btn:last-child{text-align:right;justify-content:flex-end}.match-sibling-btn span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.match-sibling-btn:hover{border-color:rgba(15,90,168,.4)}
+
+    /* Existing player profile: integrated navigation/share */
+    .player-profile-team-badge{font:inherit;color:#fff;cursor:pointer;text-align:left}
+    button.player-profile-team-badge{appearance:none}
+    button.player-profile-team-badge:hover{background:rgba(255,255,255,.22)}
+    .profile-share-btn{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);border-radius:14px;background:var(--soft);padding:9px 12px;color:var(--ink);font:inherit;font-size:12px;font-weight:900;cursor:pointer}
+    .profile-share-btn:hover{border-color:rgba(15,90,168,.4)}
+
+    /* Every rendered match becomes an explicit navigation target. */
+    .match[data-rich-nav="1"]{cursor:pointer;transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease}
+    .match[data-rich-nav="1"]:hover{transform:translateY(-1px);border-color:rgba(15,90,168,.35);box-shadow:0 9px 22px var(--shadow)}
+    .match[data-rich-nav="1"]:focus-visible,.teamHead[data-rich-nav="1"]:focus-visible{outline:3px solid rgba(15,90,168,.28);outline-offset:2px}
+    .match-team[data-rich-team="1"],.teamHead[data-rich-nav="1"]{cursor:pointer}
+    .match-team[data-rich-team="1"] .match-name{text-decoration-thickness:1.5px;text-underline-offset:3px}
+    .match-team[data-rich-team="1"]:hover .match-name{text-decoration:underline;color:var(--blue)}
+    .nav-toast{position:fixed;z-index:12000;left:50%;bottom:max(18px,env(safe-area-inset-bottom));transform:translate(-50%,14px);max-width:min(420px,calc(100vw - 24px));padding:10px 14px;border-radius:999px;background:rgba(7,29,58,.94);color:#fff;font-size:12px;font-weight:850;box-shadow:0 14px 40px rgba(0,0,0,.34);opacity:0;pointer-events:none;transition:opacity .2s ease,transform .2s ease}.nav-toast.is-show{opacity:1;transform:translate(-50%,0)}
+
+    @media(max-width:720px){
+      .entity-nav-backdrop{padding:0;align-items:stretch;background:var(--panel);backdrop-filter:none}
+      .entity-sheet{width:100%;height:100svh;max-height:none;border:0;border-radius:0;box-shadow:none;transform:translateX(22px);transition:transform .24s cubic-bezier(.2,.8,.2,1)}
+      .player-profile-backdrop{padding:0;align-items:stretch;background:var(--panel);backdrop-filter:none}
+      .player-profile-card{width:100%;max-width:none;height:100svh;max-height:100svh;border:0;border-radius:0;transform:translateX(24px);transition:transform .24s cubic-bezier(.2,.8,.2,1);overscroll-behavior:contain}
+      .player-profile-backdrop.is-open .player-profile-card{transform:none}
+      .player-profile-hero{padding-top:calc(16px + env(safe-area-inset-top));border-radius:0}
+      .player-profile-close{top:calc(9px + env(safe-area-inset-top))}
+      .player-profile-body{padding-bottom:calc(18px + env(safe-area-inset-bottom))}
+      .entity-topbar{min-height:calc(52px + env(safe-area-inset-top));padding:calc(7px + env(safe-area-inset-top)) 8px 7px;background:color-mix(in srgb,var(--panel) 93%,transparent)}
+      .entity-topbar-title{font-size:13px}.entity-nav-btn{height:38px;min-width:38px;border-radius:12px;padding:0 9px}.entity-nav-btn.icon-only{width:38px}
+      .entity-content{background:linear-gradient(180deg,color-mix(in srgb,var(--soft) 62%,transparent),var(--panel) 230px);scroll-padding-top:10px}
+      .entity-view{padding-bottom:calc(20px + env(safe-area-inset-bottom))}
+      .entity-hero{padding:19px 14px 20px}
+      .team-profile-hero-main{grid-template-columns:84px minmax(0,1fr);gap:13px}.entity-team-logo{width:82px;height:82px;border-radius:21px;padding:7px}.team-profile-copy h2{margin:7px 0 5px;font-size:clamp(28px,9vw,40px)}.team-profile-record{gap:6px;font-size:11px}.entity-chip{font-size:9px;padding:5px 8px}
+      .team-kpis{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:11px 9px 0}.team-kpi{min-height:82px;padding:11px;border-radius:17px}.team-kpi .n{font-size:27px}.team-kpi .l{font-size:9px}.team-kpi .s{font-size:10px}
+      .entity-section{margin:10px 9px 0;padding:12px;border-radius:18px;box-shadow:0 6px 16px var(--shadow)}.entity-section-title{font-size:17px;margin-bottom:10px}.entity-section-sub{font-size:10px;margin-top:-5px}
+      .team-leaders{grid-template-columns:1fr}.team-leader{padding:9px}.team-leader-avatar{width:42px;height:42px;flex-basis:42px}.team-roster-grid{grid-template-columns:1fr}.team-roster-player{padding:8px 9px}
+      .team-trend-wrap{grid-template-columns:1fr}.team-trend-current{text-align:left;display:flex;align-items:baseline;gap:7px}.team-trend-current b{font-size:25px}.team-trend-svg{height:86px}
+      .profile-match-button{padding:10px}.profile-match-score{font-size:21px}
+      .match-center-hero{padding:16px 10px 20px}.match-center-meta{margin-bottom:13px}.match-scoreboard{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:7px}.match-center-logo{width:68px;height:68px;border-radius:18px;padding:6px}.match-center-team{margin-top:7px;font-size:clamp(15px,5vw,21px)}.match-center-score{min-width:84px}.match-center-score .score-big{font-size:clamp(42px,14vw,58px)}.match-center-score .status{font-size:8px;padding:4px 7px;margin-top:7px}
+      .match-columns{grid-template-columns:1fr;gap:10px;margin:10px 9px 0}.match-columns .entity-section{margin:0}.match-awards{grid-template-columns:1fr 1fr}.match-pagelle-grid{grid-template-columns:1fr}.match-sibling-nav{grid-template-columns:1fr}.match-sibling-btn:last-child{text-align:left;justify-content:flex-start}
+      .entity-nav-backdrop .mini-logo{width:24px;height:24px}
+      .match[data-rich-nav="1"]:hover{transform:none;box-shadow:none}
+    }
+    @media(prefers-reduced-motion:reduce){.entity-nav-backdrop,.entity-sheet,.match[data-rich-nav="1"],.form-match,.profile-match-button,.team-roster-player{transition:none!important}.entity-content{scroll-behavior:auto}}
+
 </style>
 </head>
 <body>
@@ -1489,7 +1605,7 @@
    1. XSS fix — nessun template literal con HTML non escaped
    2. Ricerca ottimizzata — ridisegna solo la sezione attiva
    3. Banner errori caricamento visibile
-   4. File System Access API (showDirectoryPicker) con fallback
+   4. Caricamento dati protetto da timeout, abort e generation token
    5. Dark mode con toggle e memoria in localStorage
    6. Ordinamento colonne cliccabile nelle tabelle
    7. Grafici top marcatori e punti squadre (Chart.js inline)
@@ -1524,8 +1640,7 @@ const TABS = [
 /* ── Stato globale ── */
 let state = {
   config: { titolo: DEFAULT_TITLE, sottotitolo: DEFAULT_SUBTITLE },
-  files: {}, rows: {}, imageFiles: {}, imageURLs: {}, imageAliases: {},
-  imagesReady: true, // false durante il caricamento manuale differito delle immagini
+  files: {}, rows: {},
   search: '', activeTab: 'home',
   selectedRiepilogoGiornata: '',
   riepilogoFilterInitialized: false,
@@ -1541,8 +1656,88 @@ let state = {
   sortState: {}   // { tableId: { col, dir } }
 };
 let loadErrors = [];
-let manualLoadActive = false; // true dopo che l'utente ha caricato una cartella manualmente:
-                               // impedisce a un autoload tardivo/in corso di sovrascrivere dati più recenti
+let _dataLoadGeneration = 0;
+let _activeDataLoadController = null;
+const NETWORK_TIMEOUT_MS = 12000;
+
+/* Ogni nuovo caricamento invalida quelli precedenti. In questo modo una fetch lenta,
+   una richiesta lenta o una callback asincrona obsoleta non possono sovrascrivere dati
+   più recenti completando fuori ordine. */
+function beginDataLoad(){
+  _dataLoadGeneration++;
+  if(_activeDataLoadController){
+    try{ _activeDataLoadController.abort(); }catch(e){}
+    _activeDataLoadController=null;
+  }
+  return _dataLoadGeneration;
+}
+function isCurrentDataLoad(generation){ return generation===_dataLoadGeneration; }
+function isAbortError(err){ return !!err && (err.name==='AbortError' || err.name==='TimeoutError'); }
+
+async function fetchWithTimeout(url,options={},timeoutMs=NETWORK_TIMEOUT_MS){
+  const controller=new AbortController();
+  const externalSignal=options.signal;
+  let onExternalAbort=null;
+  if(externalSignal){
+    if(externalSignal.aborted) controller.abort();
+    else {
+      onExternalAbort=()=>controller.abort();
+      externalSignal.addEventListener('abort',onExternalAbort,{once:true});
+    }
+  }
+  const timer=setTimeout(()=>controller.abort(),Math.max(1,timeoutMs||NETWORK_TIMEOUT_MS));
+  try{
+    return await fetch(url,{...options,signal:controller.signal});
+  }finally{
+    clearTimeout(timer);
+    if(externalSignal && onExternalAbort) externalSignal.removeEventListener('abort',onExternalAbort);
+  }
+}
+
+
+function focusableElements(root){
+  if(!root) return [];
+  return [...root.querySelectorAll('button:not([disabled]),[href],input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])')]
+    .filter(el=>!el.hidden && el.getAttribute('aria-hidden')!=='true' && el.getClientRects().length>0);
+}
+function activateModalA11y(backdrop,dialog,initialFocus){
+  if(!backdrop || !dialog) return;
+  backdrop._returnFocus=document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  dialog.tabIndex=-1;
+  const trap=ev=>{
+    if(ev.key!=='Tab') return;
+    const items=focusableElements(dialog);
+    if(!items.length){ ev.preventDefault(); dialog.focus(); return; }
+    const first=items[0], last=items[items.length-1];
+    if(ev.shiftKey && document.activeElement===first){ ev.preventDefault(); last.focus(); }
+    else if(!ev.shiftKey && document.activeElement===last){ ev.preventDefault(); first.focus(); }
+  };
+  backdrop._focusTrapHandler=trap;
+  backdrop.addEventListener('keydown',trap);
+  requestAnimationFrame(()=>{
+    const target=initialFocus || focusableElements(dialog)[0] || dialog;
+    if(target && target.isConnected) target.focus();
+  });
+}
+function releaseModalA11y(backdrop){
+  if(!backdrop) return null;
+  if(backdrop._focusTrapHandler) backdrop.removeEventListener('keydown',backdrop._focusTrapHandler);
+  return backdrop._returnFocus || null;
+}
+function restoreModalFocus(target){
+  requestAnimationFrame(()=>{ if(target && target.isConnected && typeof target.focus==='function') target.focus(); });
+}
+function setUnderlyingPlayerDialogInert(inert){
+  const playerBackdrop=document.getElementById('playerProfileBackdrop');
+  if(!playerBackdrop) return;
+  if(inert){
+    playerBackdrop.setAttribute('inert','');
+    playerBackdrop.setAttribute('aria-hidden','true');
+  }else{
+    playerBackdrop.removeAttribute('inert');
+    playerBackdrop.removeAttribute('aria-hidden');
+  }
+}
 
 /* ══════════════════════════════════
    UTILITY
@@ -1665,8 +1860,9 @@ function prettyColumnName(header){
   return spaced.charAt(0).toUpperCase()+spaced.slice(1);
 }
 
-/* Escape sicuro tramite DOM — previene XSS */
+/* Escape per contenuto HTML testuale. Per gli attributi usare escAttr(). */
 function esc(s){ const t=document.createElement('span'); t.textContent=String(s??''); return t.innerHTML; }
+function escAttr(s){ return String(s??'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 function initials(s){
   // Non mostrare mai "?" come fallback visivo.
   // Usa sempre l'ordine Nome + Cognome; se c'è una sola parola usa le prime 2 lettere.
@@ -1717,29 +1913,59 @@ function dataLoadStatus(csvCount){
   }
   return 'Caricamento dati completato';
 }
-function sepFor(line){ const semi=(line.match(/;/g)||[]).length,comma=(line.match(/,/g)||[]).length; return semi>=comma?';':','; }
+function countUnquotedSeparators(line,separator){
+  let q=false,count=0;
+  const text=String(line||'');
+  for(let i=0;i<text.length;i++){
+    const c=text[i],n=text[i+1];
+    if(c==='"' && q && n==='"'){ i++; continue; }
+    if(c==='"'){ q=!q; continue; }
+    if(c===separator && !q) count++;
+  }
+  return count;
+}
+function sepFor(line){
+  const semi=countUnquotedSeparators(line,';');
+  const comma=countUnquotedSeparators(line,',');
+  return semi>=comma?';':',';
+}
 
-/* ══════════════════════════════════
-   CSV PARSER
-   ══════════════════════════════════ */
-function parseCsv(text){
-  text=String(text||'').replace(/^\uFEFF/,''); if(!text.trim()) return [];
-  const sep=sepFor(text.split(/\r?\n/).find(l=>l.trim())||'');
-  const rows=[]; let row=[],val='',q=false;
-  for(let i=0;i<text.length;i++){ const c=text[i],n=text[i+1];
+/* Parser unico con due viste:
+   - rows: dati normalizzati per la UI, compatibili con il comportamento storico;
+   - rawRows: righe originali (incluse le vuote e la larghezza reale), usate dal validator. */
+function parseCsvDetailed(text){
+  text=String(text||'').replace(/^\uFEFF/,'');
+  if(!text.trim()) return {rows:[],rawRows:[],separator:';',unclosedQuote:false};
+  const firstPhysicalLine=text.split(/\r?\n/).find(l=>l.trim())||'';
+  const sep=sepFor(firstPhysicalLine);
+  const rawRows=[];
+  let row=[],val='',q=false,line=1,rowStartLine=1;
+  const pushRow=()=>{
+    row.push(val.trim());
+    rawRows.push({cells:row,line:rowStartLine,blank:row.every(x=>!String(x).trim())});
+    row=[]; val=''; rowStartLine=line+1;
+  };
+  for(let i=0;i<text.length;i++){
+    const c=text[i],n=text[i+1];
     if(c==='"'&&q&&n==='"'){ val+='"'; i++; }
     else if(c==='"'){ q=!q; }
     else if(c===sep&&!q){ row.push(val.trim()); val=''; }
-    else if((c==='\n'||c==='\r')&&!q){ if(val!==''||row.length){ row.push(val.trim()); rows.push(row); row=[]; val=''; } if(c==='\r'&&n==='\n') i++; }
-    else val+=c;
+    else if((c==='\n'||c==='\r')&&!q){
+      pushRow();
+      if(c==='\r'&&n==='\n') i++;
+      line++;
+    }else{
+      val+=c;
+      if(c==='\n' || (c==='\r'&&n!=='\n')) line++;
+    }
   }
-  if(val!==''||row.length){ row.push(val.trim()); rows.push(row); }
-  const filtered=rows.filter(r=>r.some(x=>String(x).trim()!==''));
-  /* Normalizza tutte le righe alla larghezza massima — evita crash su calendari
-     a blocchi dove "GIORNATA 1;;" ha più colonne delle righe dati */
+  if(val!==''||row.length) pushRow();
+  const filtered=rawRows.filter(r=>!r.blank).map(r=>r.cells.slice());
   const maxCols=Math.max(0,...filtered.map(r=>r.length));
-  return filtered.map(r=>{ while(r.length<maxCols) r.push(''); return r; });
+  const rows=filtered.map(r=>{ while(r.length<maxCols) r.push(''); return r; });
+  return {rows,rawRows,separator:sep,unclosedQuote:q};
 }
+function parseCsv(text){ return parseCsvDetailed(text).rows; }
 const _rowsToObjectsCache = new WeakMap();
 function rowsToObjects(rows){
   if(!rows||!rows.length) return [];
@@ -1749,7 +1975,22 @@ function rowsToObjects(rows){
   _rowsToObjectsCache.set(rows,out);
   return out;
 }
-function col(obj,names){ const keys=Object.keys(obj||{}); for(const n of names){ const nk=norm(n); const k=keys.find(x=>norm(x)===nk||norm(x).includes(nk)); if(k) return obj[k]; } return ''; }
+function col(obj,names){
+  const keys=Object.keys(obj||{});
+  // Prima tutti gli exact match: evita che "Punti originali" vinca su "Punti" solo per ordine delle colonne.
+  for(const n of names){
+    const nk=norm(n);
+    const k=keys.find(x=>norm(x)===nk);
+    if(k!==undefined) return obj[k];
+  }
+  // Fallback tollerante solo dopo aver escluso qualsiasi corrispondenza esatta.
+  for(const n of names){
+    const nk=norm(n);
+    const k=keys.find(x=>norm(x).includes(nk));
+    if(k!==undefined) return obj[k];
+  }
+  return '';
+}
 function num(x){
   const raw=String(x||'0').trim();
   // Voti tipo "6+" / "6-": restano scritti così dove vengono mostrati,
@@ -1766,7 +2007,7 @@ function num(x){
 /* ══════════════════════════════════
    CLASSIFICAZIONE FILE
    ══════════════════════════════════ */
-function fileKind(f){ const n=norm(f); const raw=String(f||'').split('/').pop().toLowerCase().replace(/^__fanta_upload_\d+_\d+_/,'');
+function fileKind(f){ const n=norm(f); const raw=String(f||'').split('/').pop().toLowerCase();
   if(raw.startsWith('rosa_')||raw.startsWith('roster_')) return 'fanta_roster';
   if(norm(raw)==='listonefantacalciocsv') return 'fanta_listone';
   if(norm(raw)==='eventifantacalciocsv') return 'fanta_eventi';
@@ -1792,9 +2033,6 @@ function sectionTextFiles(kind){ return Object.keys(state.files).filter(f=>!stat
 /* ══════════════════════════════════
    IMMAGINI
    ══════════════════════════════════ */
-function imageExts(){ return ['webp','png','jpg','jpeg']; }
-function baseNoExt(path){ return String(path||'').split('/').pop().replace(/\.[^.]+$/,''); }
-function imageFolderToken(type){ return type==='team'?'immaginisquadre':'immaginigiocatori'; }
 
 /* Immagini statiche realmente presenti nel repo.
    Evita centinaia di 404: il browser non puo elencare una cartella su GitHub Pages,
@@ -1823,55 +2061,6 @@ function staticImageCandidatesFor(type,key){
 }
 function staticImageSrcFor(type,key){
   return staticImageCandidatesFor(type,key)[0] || '';
-}
-
-function rememberImage(relPath,file){
-  const rel=String(relPath||file?.name||'');
-  const url=URL.createObjectURL(file);
-  const fullKey=norm(rel);
-  const baseKey=norm(baseNoExt(rel));
-  const folderKey=rel.toLowerCase().includes('/squadre/')||rel.toLowerCase().includes('\\squadre\\')?'team':
-                  rel.toLowerCase().includes('/giocatori/')||rel.toLowerCase().includes('\\giocatori\\')?'player':'';
-
-  state.imageURLs[fullKey]=url;
-  state.imageAliases=state.imageAliases||{};
-  if(baseKey && !state.imageAliases[baseKey]) state.imageAliases[baseKey]=url;
-  if(baseKey && folderKey) state.imageAliases[folderKey+':'+baseKey]=url;
-  return url;
-}
-
-function imageFor(type,name){
-  const key=norm(name); if(!key) return '';
-  const aliases=state.imageAliases||{};
-  const typed=type==='team'?'team:'+key:'player:'+key;
-  if(aliases[typed]) return aliases[typed];
-  if(aliases[key]) return aliases[key];
-
-  const folder=imageFolderToken(type);
-  const candidates=Object.entries(state.imageURLs||{}).map(([k,url])=>{
-    const rawBase=(k.split('/').pop()||k).replace(/\.(webp|png|jpe?g)$/i,'');
-    const base=norm(rawBase);
-    let score=999;
-    if(k.includes(folder) && base===key) score=0;
-    else if(base===key) score=1;
-    else if(k.includes(folder) && (base.includes(key)||key.includes(base))) score=2;
-    else if(k.includes(folder) && k.includes(key)) score=3;
-    else if(base.includes(key)||key.includes(base)) score=4;
-    else if(k.includes(key)) score=5;
-    return {score,url};
-  }).filter(x=>x.score<999).sort((a,b)=>a.score-b.score);
-  if(candidates.length) return candidates[0].url;
-
-  // Fallback statico solo se sappiamo che il file esiste davvero.
-  // Se non esiste una corrispondenza, restano le iniziali: niente richieste 404.
-  return staticImageSrcFor(type,key);
-}
-
-function imagePlaceholderEl(cls,name){
-  const d=document.createElement('div');
-  d.className=cls+' img-placeholder';
-  d.setAttribute('aria-label','Caricamento immagine '+String(name||''));
-  return d;
 }
 
 /* Prova tutte le candidate IN PARALLELO e risolve con la prima che carica con successo
@@ -2042,13 +2231,9 @@ function imageCandidatesFor(type,name){
   const candidates=[];
   const addCandidate=(src)=>{ if(src && !candidates.includes(src)) candidates.push(src); };
 
-  // 1) Alias reali caricati manualmente dal picker/cartella.
-  names.forEach(n=>addCandidate(imageFor(type,n)));
-
-  // 2) File statici noti e realmente presenti nel repo.
-  //    Per i giocatori proviamo sia immagini/giocatori/*.webp sia immagini/giocatori/thumb/*.webp.
+  // File statici noti e realmente presenti nel repo.
+  // Per i giocatori proviamo sia immagini/giocatori/*.webp sia immagini/giocatori/thumb/*.webp.
   names.forEach(n=>staticImageCandidatesFor(type,n).forEach(addCandidate));
-
   return candidates;
 }
 
@@ -2122,21 +2307,6 @@ function avatarObserver(){
   return _avatarIO;
 }
 
-function initialIconEl(cls,name){
-  return createInitialFallback(cls,name);
-}
-function readyImageEl(cls,name,src,onError,opts={}){
-  return createResolvedImageEl('',name,cls,src,opts,onError);
-}
-function imageLoadHints(type,cls){
-  if(type==='player' && String(cls||'').includes('motm-photo')){
-    return {loading:'eager',fetchPriority:'high',priority:'high'};
-  }
-  return type==='player'
-    ? {loading:'lazy',fetchPriority:'low'}
-    : {loading:'lazy',fetchPriority:'low'};
-}
-
 /* Crea elemento img o div iniziali — NESSUN innerHTML con dati utente.
    Accetta anche una lista di nomi alternativi: utile quando nei CSV squadra
    il giocatore è Cognome Nome, ma negli altri CSV o nei file immagine è Nome Cognome.
@@ -2148,12 +2318,6 @@ function imgOrInitialEl(type,name,cls,options={}){
   const mainName=(type==='player' ? canonicalPlayerInitialName(names) : '') || names.find(n=>String(n||'').trim() && String(n||'').trim()!=='?') || '';
   const fallback=createInitialFallback(cls,mainName);
   fallback.setAttribute('aria-label',mainName||'Immagine');
-
-  // Durante il caricamento manuale mostra subito le iniziali:
-  // niente skeleton o icone rotte mentre gli alias delle immagini vengono indicizzati.
-  if(manualLoadActive && state.imagesReady===false){
-    return fallback;
-  }
 
   const cached=cachedResolvedImage(type,names);
   if(cached){
@@ -2198,35 +2362,7 @@ const HERO_LOGO_FALLBACK = document.getElementById('heroLogoFallback')?.outerHTM
 let heroLogoLoaded = !!window.__cralLogoStatic;
 let _heroLogoLoadToken=0;
 
-function resetHeroLogo(){
-  const wrap=document.getElementById('heroLogoWrap');
-  if(wrap && HERO_LOGO_FALLBACK) wrap.innerHTML=HERO_LOGO_FALLBACK;
-}
-function invalidateHeroLogo(){
-  // Da chiamare SOLO quando l'utente carica manualmente una cartella con
-  // immagini proprie (potrebbe contenere un logo diverso da quello di
-  // default): resetta e fa ripartire la ricerca. NON va chiamata sui
-  // refresh automatici dei dati (loadAuto), altrimenti il logo statico già
-  // visibile verrebbe smontato e rimontato ad ogni refresh → flash.
-  heroLogoLoaded=false;
-  _heroLogoLoadToken++;
-  resetHeroLogo();
-}
-
-function logoPriority(key){
-  const file=key.split('/').pop()||key;
-  if(file.includes('logo')&&file.includes('cral')) return 0;
-  if(file.includes('cral')) return 1;
-  if(file.includes('logo')) return 2;
-  return 99;
-}
-
 function logoCandidates(){
-  const uploaded=Object.keys(state.imageURLs)
-    .filter(k=>k.includes('immagini')&&(k.includes('logo')||k.includes('cral')))
-    .sort((a,b)=>logoPriority(a)-logoPriority(b))
-    .map(k=>state.imageURLs[k]);
-
   // Fallback statici: funzionano sia con index.html nella root sia con asset dentro data/,
   // provando più nomi/estensioni comuni nel caso il file non si chiami esattamente logo_cral.png.
   const names=['logo_cral','logo-cral','logocral','cral_logo','cral-logo','cral','logo'];
@@ -2234,7 +2370,7 @@ function logoCandidates(){
   const dirs=['immagini/','data/immagini/','./immagini/','./data/immagini/'];
   const generated=[];
   dirs.forEach(d=>names.forEach(n=>exts.forEach(e=>generated.push(d+n+'.'+e))));
-  return [...uploaded, ...generated];
+  return generated;
 }
 
 function tryLoadLogo(){
@@ -2242,8 +2378,7 @@ function tryLoadLogo(){
   // posto — caso normale dal secondo accesso in poi grazie al Service Worker —
   // qui non c'è nulla da fare: nessun reset, nessun nuovo caricamento, nessun
   // flash. Il probing sotto scatta solo se manca ancora un logo valido
-  // (prima visita in assoluto, file statico non trovato, o dopo
-  // invalidateHeroLogo() a seguito di un caricamento manuale di cartella).
+  // (prima visita in assoluto o file statico non trovato).
   if(heroLogoLoaded) return;
   const wrap=document.getElementById('heroLogoWrap'); if(!wrap) return;
   const candidates=logoCandidates();
@@ -2274,52 +2409,65 @@ function diagnoseCSV(filename, rawText, parsedRows){
     problems.push({icon:'📭',msg:'Il file è completamente vuoto.',fix:'Esportalo di nuovo dal gestionale e verifica che contenga dati.'});
     return problems;
   }
-  // Encoding BOM anomalo
   if(rawText.charCodeAt(0)===0xFFFD)
     problems.push({icon:'🔤',msg:'Encoding non riconosciuto (possibile UTF-16 o Latin-1 corrotto).',fix:'Salva il CSV come UTF-8 dal gestionale prima di esportarlo.'});
-  // Separatore misto
-  const lines=rawText.split(/\r?\n/).filter(l=>l.trim());
-  const semiCounts=lines.map(l=>(l.match(/;/g)||[]).length);
-  const commaCounts=lines.map(l=>(l.match(/,/g)||[]).length);
-  const mainSep=semiCounts[0]>=commaCounts[0]?';':',';
-  const inconsistent=lines.slice(1).filter((l,i)=>{
-    const sc=(l.match(/;/g)||[]).length, cc=(l.match(/,/g)||[]).length;
-    return mainSep===';'?cc>sc:sc>cc;
+
+  const detail=parseCsvDetailed(rawText);
+  const rawRows=detail.rawRows||[];
+  const nonEmptyRows=rawRows.filter(r=>!r.blank);
+  const mainSep=detail.separator||';';
+
+  if(detail.unclosedQuote)
+    problems.push({icon:'❝',msg:'Virgolette CSV non bilanciate: un campo quotato non viene chiuso prima della fine del file.',fix:'Controlla le virgolette doppie nei campi testuali e raddoppia le virgolette interne ("").'});
+
+  // Separatore misto: conta solo separatori fuori dalle virgolette per evitare falsi positivi nei testi.
+  const inconsistent=nonEmptyRows.slice(1).filter(r=>{
+    const rawLine=(r.cells||[]).join(mainSep);
+    const other=mainSep===';'?',':';';
+    return countUnquotedSeparators(rawLine,other)>countUnquotedSeparators(rawLine,mainSep);
   });
   if(inconsistent.length>0)
-    problems.push({icon:'↔️',msg:`Separatore non uniforme: ${inconsistent.length} riga/e usano il separatore sbagliato (atteso "${mainSep}").`,fix:'Apri il CSV in un editor di testo e uniforma il separatore, oppure riesportalo con le impostazioni corrette.'});
-  // Righe con numero di colonne diverso dall'header
-  if(parsedRows&&parsedRows.length>1){
-    /* I calendari a blocchi (GIORNATA N;;) hanno struttura volutamente
-       disomogenea — saltare i controlli di colonne su questi file */
+    problems.push({icon:'↔️',msg:`Separatore non uniforme: ${inconsistent.length} riga/e sembrano usare il separatore sbagliato (atteso "${mainSep}").`,fix:'Apri il CSV in un editor di testo e uniforma il separatore, oppure riesportalo con le impostazioni corrette.'});
+
+  if(nonEmptyRows.length){
     const isBlockFmt=isBlockCalendar(rawText);
+    const headerCells=nonEmptyRows[0].cells||[];
     if(!isBlockFmt){
-      const expectedCols=parsedRows[0].length;
-      const badRows=parsedRows.slice(1).map((r,i)=>({row:i+2,cols:r.length})).filter(x=>x.cols!==expectedCols&&x.cols>1);
+      const expectedCols=headerCells.length;
+      const badRows=nonEmptyRows.slice(1)
+        .map(r=>({row:r.line,cols:(r.cells||[]).length}))
+        .filter(x=>x.cols!==expectedCols&&x.cols>1);
       if(badRows.length){
         const sample=badRows.slice(0,3).map(x=>`riga ${x.row} (${x.cols} colonne invece di ${expectedCols})`).join(', ');
-        problems.push({icon:'📐',msg:`Numero colonne non uniforme: ${badRows.length} riga/e non corrispondono all'header. Es: ${sample}.`,fix:'Controlla se ci sono virgole/punti e virgola nei valori (devono essere racchiusi tra virgolette) o righe extra in fondo al file.'});
+        problems.push({icon:'📐',msg:`Numero colonne non uniforme: ${badRows.length} riga/e non corrispondono all'header. Es: ${sample}.`,fix:'Controlla separatori non quotati, virgolette mancanti o righe extra in fondo al file.'});
       }
-      // Header con colonne vuote
-      const emptyHeaders=parsedRows[0].map((h,i)=>({h,i})).filter(x=>!x.h||!x.h.trim());
+      const emptyHeaders=headerCells.map((h,i)=>({h,i})).filter(x=>!x.h||!String(x.h).trim());
       if(emptyHeaders.length)
         problems.push({icon:'🏷️',msg:`${emptyHeaders.length} colonna/e senza intestazione (posizioni: ${emptyHeaders.map(x=>x.i+1).join(', ')}).`,fix:'Aggiungi un nome a tutte le colonne nella prima riga del CSV.'});
-      // Righe totalmente vuote nel mezzo
-      const midEmpty=parsedRows.slice(1).filter(r=>r.every(c=>!String(c).trim()));
-      if(midEmpty.length)
-        problems.push({icon:'⬜',msg:`${midEmpty.length} riga/e completamente vuota/e nel file.`,fix:'Rimuovi le righe vuote dal CSV prima di caricarlo.'});
-      // Valori numerici attesi (goal, punti) che non sono numeri
-      const numCols=['goal','punti','pts','reti','goal','presenze','partite'];
-      parsedRows[0].forEach((h,hi)=>{
+
+      const normalizedHeaders=headerCells.map(h=>norm(h)).filter(Boolean);
+      const duplicateHeaders=[...new Set(normalizedHeaders.filter((h,i,a)=>a.indexOf(h)!==i))];
+      if(duplicateHeaders.length)
+        problems.push({icon:'🧩',msg:`Intestazioni duplicate: ${duplicateHeaders.join(', ')}. Una colonna potrebbe sovrascriverne un'altra durante la lettura.`,fix:'Rendi univoche le intestazioni del CSV.'});
+
+      const nonEmptyIndexes=rawRows.map((r,i)=>!r.blank?i:-1).filter(i=>i>=0);
+      if(nonEmptyIndexes.length>1){
+        const first=nonEmptyIndexes[0],last=nonEmptyIndexes[nonEmptyIndexes.length-1];
+        const midEmpty=rawRows.slice(first+1,last).filter(r=>r.blank);
+        if(midEmpty.length)
+          problems.push({icon:'⬜',msg:`${midEmpty.length} riga/e completamente vuota/e nel mezzo del file.`,fix:'Rimuovi le righe vuote dal CSV prima di caricarlo.'});
+      }
+
+      const numCols=['goal','punti','pts','reti','presenze','partite'];
+      (parsedRows&&parsedRows[0]||[]).forEach((h,hi)=>{
         if(!numCols.some(nc=>norm(h).includes(norm(nc)))) return;
-        const badVals=parsedRows.slice(1).filter(r=>r[hi]&&r[hi].trim()&&isNaN(parseFloat(String(r[hi]).replace(',','.'))));
+        const badVals=(parsedRows||[]).slice(1).filter(r=>r[hi]&&String(r[hi]).trim()&&isNaN(parseFloat(String(r[hi]).replace(',','.'))));
         if(badVals.length)
-          problems.push({icon:'🔢',msg:`Colonna "${h}": ${badVals.length} valore/i non numerici (es: "${String(badVals[0][hi]).slice(0,20)}").`,fix:'Sostituisci testo o celle vuote con 0 o un numero valido nella colonna '+h+'.'});
+          problems.push({icon:'🔢',msg:`Colonna "${h}": ${badVals.length} valore/i non numerici (es: "${String(badVals[0][hi]).slice(0,20)}").`,fix:'Sostituisci testo non numerico con un valore valido nella colonna '+h+'.'});
       });
     }
-    // Solo header, nessun dato (vale per tutti i tipi)
-    if(parsedRows.length===1)
-      problems.push({icon:'📋',msg:'Il file contiene solo l\'intestazione ma nessun dato.',fix:'Verifica che l\'esportazione dal gestionale includa anche le righe di dati.'});
+    if(nonEmptyRows.length===1)
+      problems.push({icon:'📋',msg:"Il file contiene solo l'intestazione ma nessun dato.",fix:"Verifica che l'esportazione dal gestionale includa anche le righe di dati."});
   }
   return problems;
 }
@@ -2397,21 +2545,48 @@ document.getElementById('btnTheme').addEventListener('click',()=>{
 /* ══════════════════════════════════
    TABS
    ══════════════════════════════════ */
+function handleTabKeydown(ev){
+  const tabs=[...document.querySelectorAll('#tabs [role="tab"]')];
+  const current=tabs.indexOf(ev.currentTarget);
+  if(current<0) return;
+  let next=current;
+  if(ev.key==='ArrowRight') next=(current+1)%tabs.length;
+  else if(ev.key==='ArrowLeft') next=(current-1+tabs.length)%tabs.length;
+  else if(ev.key==='Home') next=0;
+  else if(ev.key==='End') next=tabs.length-1;
+  else return;
+  ev.preventDefault();
+  const target=tabs[next];
+  showTab(target.dataset.tab,true);
+}
 function renderTabs(){
   const el=document.getElementById('tabs'); el.innerHTML='';
   TABS.forEach(([id,label])=>{
+    const active=id===state.activeTab;
     const b=document.createElement('button');
-    b.className='tab'+(id===state.activeTab?' active':'');
+    b.type='button';
+    b.id='tab-'+id;
+    b.className='tab'+(active?' active':'');
     b.dataset.tab=id;
     if(id==='fantacalcio'){
-      const crown=document.createElement('span'); crown.className='gold-crown'; crown.textContent='♛';
+      const crown=document.createElement('span'); crown.className='gold-crown'; crown.textContent='♛'; crown.setAttribute('aria-hidden','true');
       b.appendChild(crown); b.appendChild(document.createTextNode(' '+label));
     }else{
       b.textContent=label;
     }
     b.setAttribute('role','tab');
-    b.onclick=()=>showTab(id);
+    b.setAttribute('aria-controls',id);
+    b.setAttribute('aria-selected',active?'true':'false');
+    b.tabIndex=active?0:-1;
+    b.onclick=()=>showTab(id,false);
+    b.addEventListener('keydown',handleTabKeydown);
     el.appendChild(b);
+
+    const panel=document.getElementById(id);
+    if(panel){
+      panel.setAttribute('aria-labelledby',b.id);
+      panel.setAttribute('aria-hidden',active?'false':'true');
+    }
   });
   syncGlobalSearchVisibility();
 }
@@ -2421,13 +2596,26 @@ function syncGlobalSearchVisibility(){
   const hide=state.activeTab==='home'||state.activeTab==='fantacalcio'||state.activeTab==='pagellone';
   searchEl.hidden=hide;
   searchEl.setAttribute('aria-hidden',hide?'true':'false');
+  searchEl.tabIndex=hide?-1:0;
 }
-function showTab(id){
+function showTab(id,focusTab=false,options={}){
+  if(!TABS.some(([tabId])=>tabId===id)) return;
   state.activeTab=id;
-  document.querySelectorAll('.section').forEach(s=>s.classList.toggle('active',s.id===id));
-  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===id));
+  document.querySelectorAll('.section').forEach(s=>{
+    const active=s.id===id;
+    s.classList.toggle('active',active);
+    s.setAttribute('aria-hidden',active?'false':'true');
+  });
+  document.querySelectorAll('.tab').forEach(t=>{
+    const active=t.dataset.tab===id;
+    t.classList.toggle('active',active);
+    t.setAttribute('aria-selected',active?'true':'false');
+    t.tabIndex=active?0:-1;
+    if(active && focusTab) t.focus();
+  });
   syncGlobalSearchVisibility();
   renderActiveSection();
+  if(!options.skipRoute && typeof cralNavReplaceTab==='function') cralNavReplaceTab(id);
 }
 
 /* ══════════════════════════════════
@@ -2678,10 +2866,6 @@ function tableColumnRole(header,index,imgType,nameColIdx){
   // "Nota penalità" diventa "notapenalita" dopo norm(), quindi serve anche "nota".
   if(n.includes('note') || n.includes('nota') || n.includes('descrizione') || n.includes('commento')) return 'note';
   return 'text';
-}
-function isLongTextColumn(header, role){
-  const n=norm(header);
-  return role==='note' || n.includes('note') || n.includes('nota') || n.includes('descrizione') || n.includes('commento');
 }
 function findHighlightIndex(headers, highlightCandidates){
   if(!highlightCandidates) return -1;
@@ -3053,13 +3237,20 @@ function buildTable(rows, tableId, imgType, priorityNames, highlightName, defaul
         const cls=imgType==='team'?'tbl-logo':'tbl-avatar';
         cell.appendChild(imgOrInitialEl(imgType,name,cls));
         const rowNoLink=!!(row._noLink);
-        const labelEl=document.createElement(imgType==='player'&&!rowNoLink?'button':'span');
+        const canPlayerLink=imgType==='player'&&!rowNoLink;
+        const canTeamLink=imgType==='team'&&!rowNoLink;
+        const labelEl=document.createElement((canPlayerLink||canTeamLink)?'button':'span');
         labelEl.dataset.tooltipText=fixItalianAccents(name);
-        if(imgType==='player'&&!rowNoLink){
+        if(canPlayerLink){
           labelEl.type='button';
           labelEl.className='player-link player-link-inline';
           labelEl.onclick=(ev)=>{ ev.stopPropagation(); openPlayerProfile(name); };
           labelEl.title='Apri scheda giocatore';
+        } else if(canTeamLink){
+          labelEl.type='button';
+          labelEl.className='team-link';
+          labelEl.onclick=(ev)=>{ ev.stopPropagation(); openTeamProfile(name); };
+          labelEl.title='Apri scheda squadra';
         } else if(imgType==='player'&&rowNoLink){
           labelEl.className='player-link-inline';
         }
@@ -4002,6 +4193,9 @@ function loadChartJs(){
   _chartJsPromise=new Promise((resolve,reject)=>{
     const s=document.createElement('script');
     s.src='https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js';
+    s.integrity='sha512-CQBWl4fJHWbryGE+Pc7UAxWMUMNMWzWxF4SQo9CgkJIN1kx6djDQZjh3Y8SZ1d+6I+1zze6Z7kHXO7q3UyZAWw==';
+    s.crossOrigin='anonymous';
+    s.referrerPolicy='no-referrer';
     s.onload=()=>resolve();
     s.onerror=()=>{ _chartJsPromise=null; reject(new Error('Chart.js non caricato')); };
     document.head.appendChild(s);
@@ -4482,9 +4676,6 @@ function statNumberFromRow(row,names,defaultValue){
   if(m) return num(m[1]);
   return defaultValue;
 }
-function profileGoalsFromRow(row){
-  return statNumberFromRow(row,['goal','goal','reti','g','totale','valore','numero','goal giornata','goal giornata','reti giornata'],1);
-}
 function profilePointsFromRow(row){
   return statNumberFromRow(row,['punti mvp','puntimvp','punti miglior portiere','punti portiere','punti pt','puntipt','punti','pts','points','valore','totale'],1);
 }
@@ -4944,6 +5135,7 @@ function wrappedEnsureHtml2Canvas(signal){
       }
       script=document.createElement('script');
       script.src='https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+      script.integrity='sha512-BNaRQnYJYiPSqHHDb58B0yaPfCu+Wgds8Gp/gU33kqBtgNS4tSPHuGibyoeqMV/TJlSKda6FXzoEyYGjTe+vXA==';
       script.async=true;
       script.crossOrigin='anonymous';
       script.referrerPolicy='no-referrer';
@@ -5198,10 +5390,10 @@ async function wrappedDrawSlideOnCanvas(ctx,slide,w,h){
     photoSrc='immagini/logo_cral.png';
   } else if(slide.type==='scorer'||slide.type==='average'||slide.type==='mvp'||slide.type==='keeper'){
     const names=d.imageNames||[d.name];
-    photoSrc=imageFor('player',names[0]);
-    fallbackTeamSrc=d.team?imageFor('team',d.team):null;
+    photoSrc=(slide._wrappedAssets&&slide._wrappedAssets.player)||staticImageSrcFor('player',names[0]);
+    fallbackTeamSrc=d.team?((slide._wrappedAssets&&slide._wrappedAssets.team)||staticImageSrcFor('team',d.team)):null;
   } else if(slide.type==='champion'){
-    photoSrc=(slide._wrappedAssets&&slide._wrappedAssets.team)||imageFor('team',d.team);
+    photoSrc=(slide._wrappedAssets&&slide._wrappedAssets.team)||staticImageSrcFor('team',d.team);
   }
   let img=photoSrc?await wrappedLoadImageSafe(photoSrc):null;
   if(!img && fallbackTeamSrc) img=await wrappedLoadImageSafe(fallbackTeamSrc);
@@ -5230,8 +5422,8 @@ async function wrappedDrawSlideOnCanvas(ctx,slide,w,h){
   ctx.fillText(eyebrowMap[slide.type]||'', cx, y); y+=70;
 
   if(slide.type==='crazy' && d){
-    const homeImg=await wrappedLoadImageSafe((slide._wrappedAssets&&slide._wrappedAssets.home)||imageFor('team',d.home));
-    const awayImg=await wrappedLoadImageSafe((slide._wrappedAssets&&slide._wrappedAssets.away)||imageFor('team',d.away));
+    const homeImg=await wrappedLoadImageSafe((slide._wrappedAssets&&slide._wrappedAssets.home)||staticImageSrcFor('team',d.home));
+    const awayImg=await wrappedLoadImageSafe((slide._wrappedAssets&&slide._wrappedAssets.away)||staticImageSrcFor('team',d.away));
     const logoSize=190, logoY=y+20;
     if(homeImg) wrappedDrawRoundedImage(ctx,homeImg,cx-270,logoY,logoSize,44);
     if(awayImg) wrappedDrawRoundedImage(ctx,awayImg,cx+80,logoY,logoSize,44);
@@ -5295,10 +5487,6 @@ function wrappedVideoClamp(value,min=0,max=1){
 function wrappedVideoEaseOut(value){
   const t=wrappedVideoClamp(value);
   return 1-Math.pow(1-t,3);
-}
-function wrappedVideoEaseInOut(value){
-  const t=wrappedVideoClamp(value);
-  return t<.5 ? 4*t*t*t : 1-Math.pow(-2*t+2,3)/2;
 }
 function wrappedVideoSmootherStep(value){
   const t=wrappedVideoClamp(value);
@@ -5781,12 +5969,14 @@ function closeWrapped(){
   // ormai rimosso dal DOM: gli aggiornamenti verso di esso vengono ignorati
   // (isConnected===false) senza causare errori.
   const old=document.getElementById('wrappedOverlay');
+  const returnFocus=releaseModalA11y(old);
   if(old) old.remove();
   wrappedState.barEls=[];
   wrappedState.index=0;
   wrappedState.paused=false;
   document.removeEventListener('keydown',wrappedKeyHandler);
   document.body.classList.remove('player-modal-open');
+  restoreModalFocus(returnFocus);
 }
 function wrappedKeyHandler(ev){
   if(ev.key==='Escape') closeWrapped();
@@ -5854,8 +6044,8 @@ function openWrapped(){
   if(slides.length<=2) return; // solo cover+closing: niente dati interessanti da mostrare
   wrappedState.slides=slides; wrappedState.index=0; wrappedState.paused=false;
 
-  const overlay=document.createElement('div'); overlay.id='wrappedOverlay'; overlay.className='wrapped-overlay';
-  const close=document.createElement('button'); close.className='wrapped-close'; close.innerHTML='×'; close.setAttribute('aria-label','Chiudi'); close.onclick=closeWrapped;
+  const overlay=document.createElement('div'); overlay.id='wrappedOverlay'; overlay.className='wrapped-overlay'; overlay.setAttribute('role','dialog'); overlay.setAttribute('aria-modal','true'); overlay.setAttribute('aria-label','Wrapped del torneo');
+  const close=document.createElement('button'); close.type='button'; close.className='wrapped-close'; close.textContent='×'; close.setAttribute('aria-label','Chiudi'); close.onclick=closeWrapped;
   overlay.appendChild(close);
 
   const bars=document.createElement('div'); bars.className='wrapped-bars';
@@ -5921,6 +6111,7 @@ function openWrapped(){
   document.body.appendChild(overlay);
   document.body.classList.add('player-modal-open');
   document.addEventListener('keydown',wrappedKeyHandler);
+  activateModalA11y(overlay,overlay,close);
   requestAnimationFrame(()=>overlay.classList.add('is-open'));
 
   // Pausa l'autoplay mentre il dito/mouse resta premuto sulla slide (come le Stories).
@@ -6330,19 +6521,6 @@ function profileShortGiornataLabel(value){
   const n=giornataNumberFromText(value);
   return n ? ('G'+n) : fixItalianAccents(String(value||'Giornata'));
 }
-function profileGiornateText(entries){
-  const seen=new Set();
-  const labels=[];
-  [...(entries||[])].forEach(e=>{
-    const label=profileShortGiornataLabel(e.giornata);
-    const key=norm(label);
-    if(label && !seen.has(key)){
-      seen.add(key);
-      labels.push(label);
-    }
-  });
-  return labels.length ? labels.join(', ') : '—';
-}
 function profileKeeperSubText(keeper){
   const entries=(keeper.entries||[]).filter(e=>e.source!=='classifica');
   const count=entries.length;
@@ -6627,24 +6805,44 @@ function profilePagelleSection(items){
   section.appendChild(note);
   return section;
 }
-function closePlayerProfile(){
+function closePlayerProfile(options={}){
+  if(document.getElementById('compareBackdrop')) closeCompareModal();
   const old=document.getElementById('playerProfileBackdrop');
+  const returnFocus=releaseModalA11y(old);
   if(old) old.remove();
   document.body.classList.remove('player-modal-open');
   document.removeEventListener('keydown',playerProfileEscHandler);
+  if(typeof cralNavSetEntityOverlayInert==='function') cralNavSetEntityOverlayInert(false);
+  if(options.restoreFocus!==false) restoreModalFocus(returnFocus);
+  if(!options.skipRoute && typeof cralNavReadRoute==='function'){
+    const route=cralNavReadRoute();
+    if(route.view==='player'){
+      const depth=history.state?.cralEntityDepth||0;
+      if(depth>0){ if(typeof _cralNavMotionDirection!=='undefined') _cralNavMotionDirection=-1; history.back(); }
+      else {
+        cralNavReplace(cralNavBaseRoute(state.activeTab),0);
+        cralNavScheduleApplyRoute(false);
+      }
+    }
+  }
 }
 function playerProfileEscHandler(ev){ if(ev.key==='Escape' && !document.getElementById('compareBackdrop')) closePlayerProfile(); }
-function openPlayerProfile(name,contextRow){
+function openPlayerProfile(name,contextRow,options={}){
   const data=buildPlayerProfileData(name,contextRow);
   const pagelle=playerPagelleForProfile(data);
-  closePlayerProfile();
+  const profileKey='player|'+(personMatchKey(data.fullName||data.name)||norm(data.name))+'|'+(teamMatchKey(data.team)||norm(data.team));
+  const existing=document.getElementById('playerProfileBackdrop');
+  if(options.fromRoute && !options.force && existing?.dataset.entityKey===profileKey) return;
+  if(!options.fromRoute && typeof cralNavPush==='function') cralNavPush({tab:state.activeTab,view:'player',player:data.name,playerTeam:data.team||''});
+  closePlayerProfile({skipRoute:true,restoreFocus:false});
   const backdrop=document.createElement('div');
   backdrop.id='playerProfileBackdrop';
   backdrop.className='player-profile-backdrop';
+  backdrop.dataset.entityKey=profileKey;
   backdrop.addEventListener('click',ev=>{ if(ev.target===backdrop) closePlayerProfile(); });
 
   const card=document.createElement('div'); card.className='player-profile-card'; card.setAttribute('role','dialog'); card.setAttribute('aria-modal','true'); card.setAttribute('aria-label','Scheda giocatore '+data.name);
-  const close=document.createElement('button'); close.type='button'; close.className='player-profile-close'; close.innerHTML='×'; close.setAttribute('aria-label','Chiudi scheda giocatore'); close.onclick=closePlayerProfile;
+  const close=document.createElement('button'); close.type='button'; close.className='player-profile-close'; close.textContent='×'; close.setAttribute('aria-label','Chiudi scheda giocatore'); close.onclick=closePlayerProfile;
   card.appendChild(close);
 
   const hero=document.createElement('div'); hero.className='player-profile-hero';
@@ -6654,10 +6852,10 @@ function openPlayerProfile(name,contextRow){
   title.appendChild(h);
   const sub=document.createElement('div'); sub.className='player-profile-sub';
   if(data.team){
-    const teamBadge=document.createElement('span'); teamBadge.className='player-profile-team-badge'; teamBadge.title=data.team;
+    const teamBadge=document.createElement('button'); teamBadge.type='button'; teamBadge.className='player-profile-team-badge'; teamBadge.title='Apri scheda '+data.team;
     teamBadge.appendChild(imgOrInitialEl('team',data.team,'mini-logo'));
     const teamSpan=document.createElement('span'); teamSpan.className='player-profile-team-name'; teamSpan.textContent=data.team;
-    teamBadge.appendChild(teamSpan); sub.appendChild(teamBadge);
+    teamBadge.appendChild(teamSpan); teamBadge.onclick=()=>openTeamProfile(data.team); sub.appendChild(teamBadge);
   }
   const roleBadge=roleBadgeElement(data.role,data.isKeeper);
   if(roleBadge) sub.appendChild(roleBadge);
@@ -6691,25 +6889,33 @@ function openPlayerProfile(name,contextRow){
   compareBtn.addEventListener('pointerenter',()=>{ loadChartJs().catch(()=>{}); },{once:true});
   compareBtn.onclick=()=>{ loadChartJs().catch(()=>{}); openCompareModal(data); };
   compareRow.appendChild(compareBtn);
+  const shareBtn=document.createElement('button'); shareBtn.type='button'; shareBtn.className='profile-share-btn'; shareBtn.textContent='↗ Condividi scheda';
+  shareBtn.onclick=()=>cralNavShare({tab:state.activeTab,view:'player',player:data.name,playerTeam:data.team||''},data.name+' — CRAL Champions','Scheda giocatore '+data.name);
+  compareRow.appendChild(shareBtn);
   body.appendChild(compareRow);
 
   card.appendChild(body);
   backdrop.appendChild(card);
   document.body.appendChild(backdrop);
   document.body.classList.add('player-modal-open');
+  if(typeof cralNavSetEntityOverlayInert==='function') cralNavSetEntityOverlayInert(true);
   document.addEventListener('keydown',playerProfileEscHandler);
+  activateModalA11y(backdrop,card,close);
   requestAnimationFrame(()=>backdrop.classList.add('is-open'));
 }
 
 
 function closeCompareModal(){
   const old=document.getElementById('compareBackdrop');
+  const returnFocus=releaseModalA11y(old);
   if(old) old.remove();
   document.removeEventListener('keydown',compareEscHandler);
   if(window._chart && window._chart.compareRadar){
     try{ window._chart.compareRadar.destroy(); }catch(e){}
     window._chart.compareRadar=null;
   }
+  setUnderlyingPlayerDialogInert(false);
+  restoreModalFocus(returnFocus);
 }
 function compareEscHandler(ev){ if(ev.key==='Escape') closeCompareModal(); }
 function playerRoleCache(){
@@ -6767,13 +6973,14 @@ function compareRadarDataset(data){
 function openCompareModal(playerAData){
   closeCompareModal();
   const isKeeper=playerAData.isKeeper;
+  setUnderlyingPlayerDialogInert(true);
   const roster=comparablePlayersForRole(isKeeper,playerAData.fullName||playerAData.name);
 
   const backdrop=document.createElement('div'); backdrop.id='compareBackdrop'; backdrop.className='compare-backdrop';
   backdrop.addEventListener('click',ev=>{ if(ev.target===backdrop) closeCompareModal(); });
 
   const card=document.createElement('div'); card.className='compare-card'; card.setAttribute('role','dialog'); card.setAttribute('aria-modal','true'); card.setAttribute('aria-label','Confronto giocatori');
-  const close=document.createElement('button'); close.type='button'; close.className='compare-close'; close.innerHTML='×'; close.setAttribute('aria-label','Chiudi confronto'); close.onclick=closeCompareModal;
+  const close=document.createElement('button'); close.type='button'; close.className='compare-close'; close.textContent='×'; close.setAttribute('aria-label','Chiudi confronto'); close.onclick=closeCompareModal;
   card.appendChild(close);
 
   const title=document.createElement('h3'); title.className='compare-title'; title.textContent='Confronta giocatori';
@@ -6788,6 +6995,7 @@ function openCompareModal(playerAData){
     card.appendChild(empty);
     backdrop.appendChild(card); document.body.appendChild(backdrop);
     document.addEventListener('keydown',compareEscHandler);
+    activateModalA11y(backdrop,card,close);
     requestAnimationFrame(()=>backdrop.classList.add('is-open'));
     return;
   }
@@ -6814,6 +7022,7 @@ function openCompareModal(playerAData){
   backdrop.appendChild(card);
   document.body.appendChild(backdrop);
   document.addEventListener('keydown',compareEscHandler);
+  activateModalA11y(backdrop,card,select);
   requestAnimationFrame(()=>backdrop.classList.add('is-open'));
 
   function renderChip(container,personData){
@@ -7588,10 +7797,6 @@ function riepilogoGiornateOptions(files, opts={}){
   toParse.forEach(f=>addRiepilogoOptionsFromParsed(map,f));
   return sortRiepilogoOptions(map.entries());
 }
-function latestRiepilogoOption(files){
-  const options=riepilogoGiornateOptions(files,{fast:true});
-  return options.length ? options[options.length-1] : null;
-}
 function ensureDefaultRiepilogoFilter(files){
   const options=riepilogoGiornateOptions(files,{fast:true});
   if(!options.length){ state.selectedRiepilogoGiornata=''; state.riepilogoFilterInitialized=true; return options; }
@@ -7666,23 +7871,6 @@ function renderRiepilogoFilter(parent, files){
   info.textContent=options.length ? (options.length+' giornate trovate') : 'Nessuna giornata riconosciuta';
   bar.appendChild(info);
   parent.appendChild(bar);
-}
-function addPeopleLine(parent,label,people,withImages){
-  if(!people || !people.length) return;
-  const row=document.createElement('div');
-  row.style.cssText='display:flex;gap:8px;align-items:flex-start;margin-top:8px;flex-wrap:wrap';
-  const strong=document.createElement('b'); strong.className='small'; strong.style.minWidth='92px'; strong.textContent=label;
-  row.appendChild(strong);
-  const list=document.createElement('div'); list.style.cssText='display:flex;gap:6px;flex-wrap:wrap;align-items:center';
-  people.forEach(name=>{
-    const pill=document.createElement('span');
-    pill.style.cssText='display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--soft);border-radius:999px;padding:4px 8px;font-size:12px;font-weight:700';
-    if(withImages) pill.appendChild(imgOrInitialEl('player',name,'mini-logo'));
-    const t=document.createElement('button'); t.type='button'; t.className='player-link'; t.textContent=name; t.title='Apri scheda giocatore';
-    t.onclick=(ev)=>{ ev.stopPropagation(); openPlayerProfile(name); };
-    pill.appendChild(t); list.appendChild(pill);
-  });
-  row.appendChild(list); parent.appendChild(row);
 }
 function cleanPersonTokenForImage(name){
   return smartSpace(String(name||'').replace(/\bx\s*\d+\b/ig,'').replace(/\(.*?\)/g,'').trim());
@@ -8437,9 +8625,6 @@ function objectsToRows(objs){
   })];
 }
 
-function teamNameFromMatchRow(r, names){
-  return firstPresent(r,[names]) || '';
-}
 function parseTeamsFromPartitaText(text){
   const raw=String(text||'').trim();
   if(!raw) return [];
@@ -9322,15 +9507,15 @@ function pagelloneMatchSlotHtml(pair){
   const home=(info&&info.home) || pair.teamA?.squadra || '';
   const away=(info&&info.away) || pair.teamB?.squadra || '';
   if(!home || !away) return '';
-  return `<div class="pg-match-slot" data-team-a="${esc(home)}" data-team-b="${esc(away)}" data-giornata="${esc(pair.giornataNum||'')}" data-score="${esc(info?.score||'')}" data-data="${esc(info?.data||'')}"></div>`;
+  return `<div class="pg-match-slot" data-team-a="${escAttr(home)}" data-team-b="${escAttr(away)}" data-giornata="${escAttr(pair.giornataNum||'')}" data-score="${escAttr(info?.score||'')}" data-data="${escAttr(info?.data||'')}"></div>`;
 }
 function pagelloneTeamsToRenderForPair(pair){
   return [pair?.teamA,pair?.teamB].filter(sq=>pagelloneTeamHasPagelle(sq));
 }
 function pagelloneSelectHtml(id,label,options,value,emptyLabel){
-  const rows=(options||[]).map(([key,text])=>`<option value="${esc(key)}" ${String(key)===String(value)?'selected':''}>${esc(text)}</option>`).join('');
+  const rows=(options||[]).map(([key,text])=>`<option value="${escAttr(key)}" ${String(key)===String(value)?'selected':''}>${esc(text)}</option>`).join('');
   const empty=emptyLabel!=null ? `<option value="" ${!value?'selected':''}>${esc(emptyLabel)}</option>` : '';
-  return `<label class="pg-selector" for="${esc(id)}"><span class="pg-selector-label">${esc(label)}</span><select id="${esc(id)}">${empty}${rows}</select></label>`;
+  return `<label class="pg-selector" for="${escAttr(id)}"><span class="pg-selector-label">${esc(label)}</span><select id="${escAttr(id)}">${empty}${rows}</select></label>`;
 }
 function pagelloneTeamHtml(sq){
   return `<div class="pg-team">
@@ -9708,35 +9893,6 @@ function renderRiepilogoGiornate(){
     }
     const externalMvpMatches=buildExternalMvpMatches();
     const externalPortiereMatches=buildExternalPortiereMatches();
-
-    // Aggiunge pill/label testuale dopo una card per i premi esterni per partita
-    function appendExternalAwardPills(card, externalMatches, labelSingolare, labelPlurale){
-      if(!externalMatches.length) return;
-      const allSameNoLabel=externalMatches.every(m=>!m.matchLabel);
-      if(externalMatches.length>1 && allSameNoLabel){
-        // Caso 3: tutti senza label → plurale unico
-        addExternalAwardPill(card, labelPlurale);
-      } else if(externalMatches.length>1 && externalMatches.every(m=>!!m.matchLabel)){
-        // Caso 3 con label: plurale unico generico
-        addExternalAwardPill(card, labelPlurale);
-      } else {
-        // Caso 1 o 2: una pill per partita con label testuale
-        externalMatches.forEach(({matchLabel})=>{
-          const row=document.createElement('div');
-          row.style.cssText='display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap';
-          const icon=document.createElement('b');
-          icon.className='small'; icon.style.minWidth='28px'; icon.style.fontSize='16px';
-          const isKeeper=norm(labelSingolare).includes('portiere')||norm(labelSingolare).includes('keeper');
-          icon.textContent=isKeeper?'🧤':'⭐';
-          row.appendChild(icon);
-          const pill=document.createElement('span');
-          pill.style.cssText='display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--soft);border-radius:999px;padding:4px 10px;font-size:12px;font-weight:700;opacity:.8';
-          const t=document.createElement('span');
-          t.textContent='Premio assegnato a giocatore esterno'+(matchLabel?' ('+matchLabel+')':'');
-          pill.appendChild(t); row.appendChild(pill); card.appendChild(row);
-        });
-      }
-    }
 
     // ── Costruisce righe sintetiche "Marcature esterne" per la tabella marcatori ─
     const externalScorerRows=externalScorerResiduals.map(({team,count})=>({
@@ -10721,15 +10877,16 @@ function fantaDataFromCachePayload(payload){
     generatedAt:src.generatedAt||''
   };
 }
-async function loadFantaPrecomputedCache(fresh){
-  if(manualLoadActive) return false;
+async function loadFantaPrecomputedCache(fresh,generation=_dataLoadGeneration,signal){
+  if(!isCurrentDataLoad(generation)) return false;
   if(state.fantaPrecomputedData && !fresh) return true;
   state.fantaPrecomputedLoading=true;
   try{
     const bust=fresh?('?t='+Date.now()):'';
-    const response=await fetch(FANTA_CACHE_FILE+bust);
+    const response=await fetchWithTimeout(FANTA_CACHE_FILE+bust,{signal});
     if(!response.ok) throw new Error(FANTA_CACHE_FILE);
     const txt=await response.text();
+    if(!isCurrentDataLoad(generation) || signal?.aborted) return false;
     const payload=JSON.parse(txt);
     const data=fantaDataFromCachePayload(payload);
     if(!data || !data.results.length) return false;
@@ -10737,56 +10894,63 @@ async function loadFantaPrecomputedCache(fresh){
     _fantaCurrentDataCache=null;
     return true;
   }catch(e){
-    state.fantaPrecomputedData=null;
+    if(isCurrentDataLoad(generation) && !signal?.aborted) state.fantaPrecomputedData=null;
     return false;
   }finally{
-    state.fantaPrecomputedAttempted=true;
-    state.fantaPrecomputedLoading=false;
+    if(isCurrentDataLoad(generation)){
+      state.fantaPrecomputedAttempted=true;
+      state.fantaPrecomputedLoading=false;
+    }
   }
 }
 let _fantaEnsureDataPromise=null;
+let _fantaEnsureDataGeneration=0;
 // Carica portieri_snapshot.json in state.portieriSnapshot (silenzioso se assente)
-async function loadPortieriSnapshot(fresh){
+async function loadPortieriSnapshot(fresh,generation=_dataLoadGeneration,signal){
+  if(!isCurrentDataLoad(generation)) return;
   if(state.portieriSnapshot && !fresh) return;
   try{
-    const txt=await fetchText(PORTIERI_SNAPSHOT_FILE,!!fresh);
+    const txt=await fetchText(PORTIERI_SNAPSHOT_FILE,!!fresh,signal);
+    if(!isCurrentDataLoad(generation) || signal?.aborted) return;
     state.portieriSnapshot=JSON.parse(txt);
   }catch(e){
-    state.portieriSnapshot=null;
+    if(isCurrentDataLoad(generation) && !signal?.aborted) state.portieriSnapshot=null;
   }
 }
-function ensureFantaDataInBackground(fresh){
-  if(manualLoadActive) return Promise.resolve(false);
+function ensureFantaDataInBackground(fresh,generation=_dataLoadGeneration,signal){
+  if(!isCurrentDataLoad(generation)) return Promise.resolve(false);
 
   if(state.fantaPrecomputedData && !fresh){
     state.fantaLoading=false;
     return Promise.resolve(true);
   }
 
-  // Riusa sempre l'eventuale controllo già in corso, anche quando il secondo
-  // chiamante richiede fresh=true: evita due fetch contemporanee dello stesso JSON.
-  if(_fantaEnsureDataPromise) return _fantaEnsureDataPromise;
+  // Riusa solo il controllo appartenente allo stesso caricamento. Una promise di una
+  // generazione precedente resta libera di terminare, ma non può più mutare lo stato corrente.
+  if(_fantaEnsureDataPromise && _fantaEnsureDataGeneration===generation) return _fantaEnsureDataPromise;
 
-  // Dopo un tentativo fallito non riprovare durante la stessa sessione, salvo
-  // un aggiornamento esplicito con fresh=true.
   if(state.fantaPrecomputedAttempted && !fresh){
     state.fantaLoading=false;
     return Promise.resolve(false);
   }
 
   state.fantaLoading=true;
-  _fantaEnsureDataPromise=(async()=>{
-    const cacheOk=await loadFantaPrecomputedCache(!!fresh);
-
-    // Se la cache Fantacalcio non esiste, la funzionalita viene considerata
-    // non disponibile. Non vengono interrogate le API GitHub e non vengono
-    // effettuati tentativi verso le directory data e data/.
+  const promise=(async()=>{
+    const cacheOk=await loadFantaPrecomputedCache(!!fresh,generation,signal);
+    if(!isCurrentDataLoad(generation) || signal?.aborted) return false;
     state.fantaLoading=false;
     if(state.activeTab==='fantacalcio') renderFantacalcio();
     return cacheOk;
-  })().finally(()=>{ _fantaEnsureDataPromise=null; });
-
-  return _fantaEnsureDataPromise;
+  })();
+  _fantaEnsureDataPromise=promise;
+  _fantaEnsureDataGeneration=generation;
+  promise.finally(()=>{
+    if(_fantaEnsureDataPromise===promise){
+      _fantaEnsureDataPromise=null;
+      _fantaEnsureDataGeneration=0;
+    }
+  });
+  return promise;
 }
 
 function fantaDataCacheKey(){
@@ -11683,7 +11847,7 @@ function fantaBuildH2H(data, allParticipants){
 }
 
 function renderFantacalcio(){
-  if(!manualLoadActive && !state.fantaLoading && !state.fantaPrecomputedData && !fantaRosterFiles().length){ ensureFantaDataInBackground(false); }
+  if(!state.fantaLoading && !state.fantaPrecomputedData && !fantaRosterFiles().length){ ensureFantaDataInBackground(false); }
   const el=document.getElementById('fantacalcio'); el.innerHTML='';
   const card=document.createElement('div'); card.className='card fanta-card-shell';
   const title=document.createElement('h2');
@@ -11771,7 +11935,7 @@ function renderActiveSection(){
     case 'fantacalcio': renderFantacalcio(); break;
   }
 }
-function renderAll(){ updateTitle(); renderTabs(); syncGlobalSearchVisibility(); renderActiveSection(); }
+function renderAll(){ updateTitle(); renderTabs(); syncGlobalSearchVisibility(); renderActiveSection(); if(typeof cralNavScheduleApplyRoute==='function') cralNavScheduleApplyRoute(true); }
 
 /* ══════════════════════════════════
    CARICAMENTO FILE
@@ -11780,10 +11944,15 @@ function renderAll(){ updateTitle(); renderTabs(); syncGlobalSearchVisibility();
    "Aggiorna dati"). Nei caricamenti normali NON aggiungiamo alcun cache-buster:
    così il browser e la CDN di GitHub Pages possono servire i CSV dalla cache,
    invece di riscaricare tutto a ogni visita. */
-async function fetchText(path,fresh){
+async function fetchText(path,fresh,signal){
   const bust=fresh?('?t='+Date.now()):'';
-  try{ const r=await fetch('data/'+path+bust); if(r.ok) return await r.text(); }catch(e){}
-  const r2=await fetch(path+bust);
+  try{
+    const r=await fetchWithTimeout('data/'+path+bust,{signal});
+    if(r.ok) return await r.text();
+  }catch(e){
+    if(signal?.aborted || isAbortError(e)) throw e;
+  }
+  const r2=await fetchWithTimeout(path+bust,{signal});
   if(!r2.ok) throw new Error(path);
   return await r2.text();
 }
@@ -11792,10 +11961,15 @@ async function fetchText(path,fresh){
    (tornei/<nome-torneo>/index.html + .../data/pagelloni/...), senza bisogno di configurare
    nulla per-torneo. Se non risponde, si ricade sul comportamento standard di fetchText
    (utile se in un torneo i pagelloni sono rimasti dentro alla data/ senza sottocartella). */
-async function fetchPagelloneText(filename,fresh){
+async function fetchPagelloneText(filename,fresh,signal){
   const bust=fresh?('?t='+Date.now()):'';
-  try{ const r=await fetch(PAGELLONE_SUBFOLDER+filename+bust); if(r.ok) return await r.text(); }catch(e){}
-  return fetchText(filename,fresh);
+  try{
+    const r=await fetchWithTimeout(PAGELLONE_SUBFOLDER+filename+bust,{signal});
+    if(r.ok) return await r.text();
+  }catch(e){
+    if(signal?.aborted || isAbortError(e)) throw e;
+  }
+  return fetchText(filename,fresh,signal);
 }
 
 
@@ -11818,530 +11992,103 @@ function normalizeFantaCsvPath(path){
   if(/^fantacalcio\//i.test(p)) return p;
   return '';
 }
-function isFantaDayDirPath(path){
-  return /(^|\/)giornata[\s_-]*\d+$/i.test(String(path||'').replace(/\\/g,'/').replace(/\/+$/,''));
-}
-function githubRepoInfoFromLocation(){
-  const candidates=[location.href, document.querySelector('meta[property="og:url"]')?.content||''];
-  const fromUrl=(url)=>{
-    try{
-      const u=new URL(url, location.href);
-      if(!u.hostname.endsWith('.github.io')) return null;
-      const owner=u.hostname.replace(/\.github\.io$/,'');
-      const repo=(u.pathname.split('/').filter(Boolean)[0]||'').trim();
-      return owner && repo ? {owner,repo} : null;
-    }catch(e){ return null; }
-  };
-  for(const url of candidates){
-    const info=fromUrl(url);
-    if(info) return info;
-  }
-  return null;
-}
-let _githubFantaTreeCache=null;
-async function githubListFantaCsvFilesFromTree(fresh=false){
-  const info=githubRepoInfoFromLocation();
-  if(!info) return [];
-  const cacheKey=info.owner+'/'+info.repo;
-  if(!fresh && _githubFantaTreeCache && _githubFantaTreeCache.key===cacheKey) return _githubFantaTreeCache.files;
-  try{
-    const bust=fresh?('?t='+Date.now()):'';
-    const repoRes=await fetch('https://api.github.com/repos/'+encodeURIComponent(info.owner)+'/'+encodeURIComponent(info.repo)+bust);
-    if(!repoRes.ok) return [];
-    const repo=await repoRes.json();
-    const branch=repo.default_branch || 'main';
-    const treeRes=await fetch('https://api.github.com/repos/'+encodeURIComponent(info.owner)+'/'+encodeURIComponent(info.repo)+'/git/trees/'+encodeURIComponent(branch)+'?recursive=1'+(fresh?'&t='+Date.now():''));
-    if(!treeRes.ok) return [];
-    const data=await treeRes.json();
-    const files=(data.tree||[])
-      .filter(item=>item && item.type==='blob' && /\.csv$/i.test(item.path||''))
-      .map(item=>normalizeFantaCsvPath(item.path))
-      .filter(Boolean);
-    const unique=[...new Set(files)];
-    _githubFantaTreeCache={key:cacheKey,files:unique};
-    return unique;
-  }catch(e){ return []; }
-}
-async function githubListFantaCsvFiles(path='data', depth=0, fresh=false, insideDay=false, insideFanta=false){
-  const info=githubRepoInfoFromLocation();
-  if(!info || depth>5) return [];
-  try{
-    const bust=fresh?('?t='+Date.now()):'';
-    const r=await fetch('https://api.github.com/repos/'+encodeURIComponent(info.owner)+'/'+encodeURIComponent(info.repo)+'/contents/'+path+bust);
-    if(!r.ok) return [];
-    const entries=await r.json();
-    if(!Array.isArray(entries)) return [];
-    const out=[];
-    for(const item of entries){
-      if(!item || !item.path) continue;
-      const itemPath=String(item.path||'').replace(/\\/g,'/');
-      const nowInsideDay=insideDay || isFantaDayDirPath(itemPath);
-      const nowInsideFanta=insideFanta || /(^|\/)fantacalcio$/i.test(itemPath.replace(/\/+$/,''));
-      if(item.type==='file' && /\.csv$/i.test(item.name||'')){
-        const p=normalizeFantaCsvPath(item.path||item.name);
-        if(p && (nowInsideDay || nowInsideFanta)) out.push(p);
-      }else if(item.type==='dir'){
-        if(nowInsideDay || nowInsideFanta || (depth===0 && (isFantaDayDirPath(itemPath) || /(^|\/)fantacalcio$/i.test(itemPath.replace(/\/+$/,''))))){
-          out.push(...await githubListFantaCsvFiles(item.path, depth+1, fresh, nowInsideDay, nowInsideFanta));
-        }
-      }
-    }
-    return out;
-  }catch(e){ return []; }
-}
-async function directoryIndexCsvFiles(url, depth, fresh, insideDay, insideFanta){
-  if(depth>5) return [];
-  const bust=fresh?(url.includes('?')?'&t=':'?t=')+Date.now():'';
-  try{
-    const r=await fetch(url+bust);
-    if(!r.ok) return [];
-    const html=await r.text();
-    const doc=new DOMParser().parseFromString(html,'text/html');
-    const out=[];
-    const base=new URL(url, location.href);
-    for(const a of doc.querySelectorAll('a[href]')){
-      const href=a.getAttribute('href')||'';
-      if(!href || href.startsWith('#') || href.startsWith('mailto:')) continue;
-      const abs=new URL(href, base);
-      const clean=abs.pathname.replace(/^\/+/, '');
-      const nowInsideDay=insideDay || isFantaDayDirPath(clean);
-      const nowInsideFanta=insideFanta || /(^|\/)fantacalcio\/?$/i.test(clean);
-      if(/\.csv$/i.test(clean)){
-        const p=normalizeFantaCsvPath(clean);
-        if(p && (nowInsideDay || nowInsideFanta)) out.push(p);
-      }else if(href.endsWith('/') && !href.startsWith('../') && (nowInsideDay || nowInsideFanta || (depth===0 && (isFantaDayDirPath(clean) || /(^|\/)fantacalcio\/?$/i.test(clean))))){
-        out.push(...await directoryIndexCsvFiles(abs.href, depth+1, fresh, nowInsideDay, nowInsideFanta));
-      }
-    }
-    return out;
-  }catch(e){ return []; }
-}
-async function directoryIndexFantaCsvFiles(fresh){
-  return directoryIndexCsvFiles('data/',0,fresh,false,false);
-}
-async function discoverFantaFiles(fresh){
-  const found=new Set();
-  // Nessun manifest Fantacalcio: usa l'albero GitHub del repository pubblico
-  // per elencare velocemente rose in data/giornataX/ e listone/eventi in data/fantacalcio/.
-  (await githubListFantaCsvFilesFromTree(fresh)).forEach(p=>found.add(p));
-  if(!found.size) (await githubListFantaCsvFiles('data',0,fresh,false)).forEach(p=>found.add(p));
-  if(!found.size) (await directoryIndexFantaCsvFiles(fresh)).forEach(p=>found.add(p));
-  return [...found];
-}
-let _fantaBackgroundLoadToken=0;
-async function loadFantaFilesInBackground(fresh){
-  const token=++_fantaBackgroundLoadToken;
-  state.fantaLoading=true;
-  try{
-    const fantaFiles=await discoverFantaFiles(fresh);
-    if(token!==_fantaBackgroundLoadToken) return;
-    const csvList=[...new Set(fantaFiles.filter(f=>/\.csv$/i.test(f) && !state.rows[f]))];
-    if(!csvList.length){ state.fantaLoading=false; if(state.activeTab==='fantacalcio') renderFantacalcio(); return; }
-    const results=await Promise.all(csvList.map(f=>fetchText(f,fresh)
-      .then(txt=>({status:'fulfilled',f,txt}))
-      .catch(reason=>({status:'rejected',f,reason}))));
-    if(token!==_fantaBackgroundLoadToken) return;
-    results.forEach(res=>{
-      if(res.status==='fulfilled'){
-        state.files[res.f]=res.txt;
-        state.rows[res.f]=parseCsv(res.txt);
-      }
-    });
-    clearDerivedDataCaches();
-  }finally{
-    if(token===_fantaBackgroundLoadToken){
-      state.fantaLoading=false;
-      if(state.activeTab==='fantacalcio') renderFantacalcio();
-    }
-  }
-}
 async function loadAuto(fresh){
+  const generation=beginDataLoad();
+  const controller=new AbortController();
+  _activeDataLoadController=controller;
+  const signal=controller.signal;
   setStatus('Caricamento in corso…');
-  state.files={}; state.rows={}; loadErrors=[]; state.imagesReady=true;
-  state.selectedRiepilogoGiornata=''; state.riepilogoFilterInitialized=false; state.selectedFantaGiornata='totale'; state.fantaResultFileKeys=[]; state.fantaLoading=true; state.selectedPagelloneGiornata=''; state.selectedPagellonePartita='';
-  state.fantaPrecomputedData=null; state.fantaPrecomputedAttempted=false; state.fantaPrecomputedLoading=false;
-  clearImageProbeCache();
-  clearDerivedDataCaches();
-  // NB: qui non chiamiamo invalidateHeroLogo(). Il logo CRAL è lo stesso file
-  // per tutte le edizioni del torneo: un refresh dei dati (avvio pagina o
-  // pulsante 🔄) non deve smontare/rimontare il logo già visibile, altrimenti
-  // si vedrebbe un flash ad ogni refresh. tryLoadLogo(), chiamata più sotto e
-  // nei vari punti del flusso, è comunque no-op se il logo è già a posto.
 
-  // Avvia solo i file minimi.
-  // Prima venivano richiesti tutti i possibili CSV storici/alternativi: se mancavano,
-  // la pagina funzionava comunque ma la Network tab si riempiva di 404.
-  // Ora manifest.csv resta la fonte dei file reali del torneo.
-  const BOOT_FILES=['config.csv','manifest.csv'];
-  const defaultCsvList=[...new Set(BOOT_FILES.filter(x=>/\.csv$/i.test(x)))];
-  const defaultFetches=new Map(defaultCsvList.map(f=>[
-    f,
-    fetchText(f,fresh)
-      .then(txt=>({status:'fulfilled',value:{f,txt}}))
-      .catch(reason=>({status:'rejected',reason,f}))
-  ]));
-
-  let list=[...BOOT_FILES];
-  const manifestResult=await defaultFetches.get('manifest.csv');
-  if(manifestResult && manifestResult.status==='fulfilled'){
-    const mt=manifestResult.value.txt;
-    const mr=parseCsv(mt);
-    const objs=rowsToObjects(mr);
-    const files=objs.length?objs.map(o=>col(o,['file','nome','filename'])).filter(Boolean):mr.flat().filter(x=>x&&x.toLowerCase()!=='file');
-    list=[...new Set([...BOOT_FILES,...files])];
-    state.rows['manifest.csv']=mr; state.files['manifest.csv']=mt;
-  }else{
-    // Compatibilita con vecchie installazioni senza manifest.csv.
-    // In quel caso si torna ai nomi storici, accettando eventuali 404.
-    list=[...DEFAULT_FILES];
-  }
-
-  /* Tutti i CSV base vengono richiesti in parallelo. I CSV Fantacalcio
-     sono volutamente esclusi dal percorso critico e caricati dopo, in background,
-     così Home e tab principali partono più rapidamente. */
-  const csvList=[...new Set(list.filter(x=>/\.csv$/i.test(x) && !state.rows[x] && !normalizeFantaCsvPath(x)))];
-  const results=await Promise.all(csvList.map(f=>{
-    const started=defaultFetches.get(f);
-    return started || fetchText(f,fresh)
-      .then(txt=>({status:'fulfilled',value:{f,txt}}))
-      .catch(reason=>({status:'rejected',reason,f}));
-  }));
+  const nextFiles={};
+  const nextRows={};
+  const nextErrors=[];
   let ok=0;
-  results.forEach((res,i)=>{
-    const f=csvList[i];
-    if(res.status==='fulfilled'){
-      state.files[f]=res.value.txt; state.rows[f]=parseCsv(res.value.txt); ok++;
+
+  try{
+    const BOOT_FILES=['config.csv','manifest.csv'];
+    const defaultCsvList=[...new Set(BOOT_FILES.filter(x=>/\.csv$/i.test(x)))];
+    const defaultFetches=new Map(defaultCsvList.map(f=>[
+      f,
+      fetchText(f,fresh,signal)
+        .then(txt=>({status:'fulfilled',value:{f,txt}}))
+        .catch(reason=>({status:'rejected',reason,f}))
+    ]));
+
+    let list=[...BOOT_FILES];
+    const manifestResult=await defaultFetches.get('manifest.csv');
+    if(!isCurrentDataLoad(generation) || signal.aborted) return;
+    if(manifestResult && manifestResult.status==='fulfilled'){
+      const mt=manifestResult.value.txt;
+      const mr=parseCsv(mt);
+      const objs=rowsToObjects(mr);
+      const files=objs.length?objs.map(o=>col(o,['file','nome','filename'])).filter(Boolean):mr.flat().filter(x=>x&&x.toLowerCase()!=='file');
+      list=[...new Set([...BOOT_FILES,...files])];
+      nextRows['manifest.csv']=mr; nextFiles['manifest.csv']=mt;
     }else{
-      // I file di riepilogo possono essere già presenti nel manifest anche se
-      // non esistono ancora perché il torneo è in corso: non mostrarli come alert.
-      if(!DEFAULT_FILES.includes(f) && fileKind(f)!=='riepilogo') loadErrors.push(f+' — non trovato');
+      list=[...DEFAULT_FILES];
     }
-  });
-  /* Pagelloni: file di testo semplice (uno per giornata), elencati in manifest.csv
-     come i CSV ma non parsati da parseCsv — restano testo puro in state.files.
-     Nessun errore mostrato se mancano: la giornata può non avere ancora il pagellone. */
-  const txtList=[...new Set(list.filter(x=>/\.txt$/i.test(x) && fileKind(x)==='pagellone' && !state.files[x]))];
-  if(txtList.length){
-    const txtResults=await Promise.all(txtList.map(f=>fetchPagelloneText(f,fresh)
-      .then(txt=>({status:'fulfilled',f,txt}))
-      .catch(reason=>({status:'rejected',f,reason}))));
-    txtResults.forEach(res=>{ if(res.status==='fulfilled') state.files[res.f]=res.txt; });
-  }
 
-  /* Se nel frattempo l'utente ha già caricato manualmente una cartella (es. ha cliccato
-     "Seleziona cartella" prima che l'autoload finisse), questo risultato è superato:
-     non sovrascrivere i dati più recenti già mostrati. */
-  if(manualLoadActive) return;
-  applyConfig(); showErrors(); renderAll(); tryLoadLogo(); warmPlayerProfileCaches();
-  const fantaAvailable=await ensureFantaDataInBackground(fresh);
-  if(fantaAvailable) loadPortieriSnapshot(fresh);
-  if(ok || state.rows['manifest.csv']) setStatus(dataLoadStatus(ok+(state.rows['manifest.csv']?1:0)),true);
-  else setStatus('Autocaricamento bloccato — usa Seleziona cartella');
-}
+    const csvList=[...new Set(list.filter(x=>/\.csv$/i.test(x) && !nextRows[x] && !normalizeFantaCsvPath(x)))];
+    const results=await Promise.all(csvList.map(f=>{
+      const started=defaultFetches.get(f);
+      return started || fetchText(f,fresh,signal)
+        .then(txt=>({status:'fulfilled',value:{f,txt}}))
+        .catch(reason=>({status:'rejected',reason,f}));
+    }));
+    if(!isCurrentDataLoad(generation) || signal.aborted) return;
 
-/* File System Access API (Chrome 86+) con fallback al picker classico */
-async function tryDirectoryPicker(){
-  if('showDirectoryPicker' in window){
-    try{
-      const dir=await window.showDirectoryPicker({mode:'read'});
-      await loadFromDirectoryHandle(dir);
-      return true;
-    }catch(e){ if(e.name==='AbortError') return true; /* utente ha annullato */ }
-  }
-  return false;
-}
-/* Scansiona una cartella ricorsivamente, raccogliendo CSV e immagini a qualsiasi profondità.
-   pathPrefix accumula il percorso relativo (es. "immagini/squadre") usato come chiave per imageURLs. */
-async function scanDirRecursive(dirHandle, pathPrefix=''){
-  for await(const [name,handle] of dirHandle.entries()){
-    const relPath = pathPrefix ? pathPrefix+'/'+name : name;
-    if(handle.kind==='file'){
-      try{
-        const file=await handle.getFile();
-        await ingestPickedFile(file, relPath, name);
-      }catch(e){
-        loadErrors.push(relPath+' — errore di lettura sul dispositivo');
-      }
-    } else if(handle.kind==='directory'){
-      try{ await scanDirRecursive(handle, relPath); }catch(e){}
-    }
-  }
-}
-
-/* Timeout generico: su Chrome/file:// alcuni file dentro cartelle selezionate possono
-   restare in pending. Non devono bloccare tutto il torneo. */
-function withTimeout(promise, ms, label){
-  let t;
-  const timeout=new Promise((_,reject)=>{
-    t=setTimeout(()=>reject(new Error((label||'Operazione')+' scaduta dopo '+ms+' ms')),ms);
-  });
-  return Promise.race([promise,timeout]).finally(()=>clearTimeout(t));
-}
-
-async function safeFileText(file, relPath){
-  // Prima via moderna, più veloce; timeout breve per non restare appesi.
-  try{ return await withTimeout(file.text(), 2500, relPath||file.name); }
-  catch(e1){
-    // Fallback FileReader con timeout: utile su alcune combinazioni Chrome + disco di rete/lettera Z:.
-    return await withTimeout(new Promise((resolve,reject)=>{
-      const rd=new FileReader();
-      rd.onload=()=>resolve(String(rd.result||''));
-      rd.onerror=()=>reject(rd.error||new Error('FileReader error'));
-      rd.readAsText(file,'UTF-8');
-    }), 2500, relPath||file.name);
-  }
-}
-
-/* Lettura robusta per Chrome: immagini senza await, CSV con timeout e fallback. */
-async function ingestPickedFile(file, relPath, basename){
-  const name=basename||file.name;
-  if(/\.(jpg|jpeg|png|webp)$/i.test(name)){
-    rememberImage(relPath||name,file);
-    state._imgCount=(state._imgCount||0)+1;
-    return true;
-  }
-  if(/\.txt$/i.test(name) && fileKind(relPath||name)==='pagellone'){
-    const txt=await safeFileText(file, relPath||name);
-    state.files[name]=txt;
-    clearDerivedDataCaches();
-    state._csvCount=(state._csvCount||0)+1;
-    return true;
-  }
-  if(!/\.csv$/i.test(name)) return false;
-  const txt=await safeFileText(file, relPath||name);
-  // La chiave resta il nome file puro (senza percorso) per compatibilità con fileKind/sectionFiles.
-  // Se esistono duplicati con stesso nome in sottocartelle diverse, l'ultimo letto vince.
-  state.files[name]=txt;
-  state.rows[name]=parseCsv(txt);
-  clearDerivedDataCaches();
-  state._csvCount=(state._csvCount||0)+1;
-  return true;
-}
-
-function refreshAfterManualLoad(csv,img){
-  clearDerivedDataCaches();
-  applyConfig();
-  showErrors();
-
-  // Ricostruzione esplicita della UI. Non ci affidiamo solo a renderAll(): in Chrome,
-  // dopo il file/directory picker, il primo repaint può essere saltato finché non cambi tab.
-  updateTitle();
-  renderTabs();
-  document.querySelectorAll('.section').forEach(s=>s.classList.toggle('active',s.id===state.activeTab));
-  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===state.activeTab));
-  renderActiveSection();
-
-  tryLoadLogo();
-  warmPlayerProfileCaches();
-  if(csv>0) setStatus(dataLoadStatus(csv),true);
-  else setStatus(`Nessun CSV trovato nella cartella selezionata (${img} immagini). Seleziona la cartella principale del torneo o la cartella che contiene i CSV.`);
-
-  const forcePass=()=>{
-    // Forza reflow + ridisegno + resize, equivalente al cambio scheda ma automatico.
-    document.body.offsetHeight;
-    renderActiveSection();
-    tryLoadLogo();
-    if(document.getElementById('chartMarcatori') || document.getElementById('chartPunti')){
-      scheduleHomeChartsRender();
-    }
-    window.dispatchEvent(new Event('resize'));
-  };
-
-  requestAnimationFrame(()=>requestAnimationFrame(forcePass));
-  setTimeout(forcePass,50);
-  setTimeout(forcePass,200);
-}
-
-async function loadFromDirectoryHandle(dir){
-  manualLoadActive = true;
-  state.files={}; state.rows={}; state.imageURLs={}; state.imageAliases={}; loadErrors=[]; state.imagesReady=false;
-  state.selectedRiepilogoGiornata=''; state.riepilogoFilterInitialized=false; state.selectedFantaGiornata='totale'; state.fantaResultFileKeys=[]; state.selectedPagelloneGiornata=''; state.selectedPagellonePartita='';
-  state.fantaPrecomputedData=null; state.fantaPrecomputedAttempted=true; state.fantaPrecomputedLoading=false;
-  clearImageProbeCache();
-  clearDerivedDataCaches();
-  invalidateHeroLogo();
-  state._csvCount=0; state._imgCount=0;
-  setStatus('Caricamento cartella…');
-  await scanDirRecursive(dir);
-  state.imagesReady=true;
-  refreshAfterManualLoad(state._csvCount,state._imgCount);
-}
-
-
-function possibleMvpImageKeys(){
-  const motm=currentMvpOfTournament();
-  if(!motm) return [];
-  const names=[motm.name,...(motm.imageNames||[]),canonicalPlayerInitialName(motm.imageNames||[])].filter(Boolean);
-  const keys=[];
-  names.forEach(name=>{
-    const clean=smartSpace(cleanPersonTokenForTeamLookup(name));
-    [name,clean].filter(Boolean).forEach(value=>{
-      const key=norm(value);
-      if(key) keys.push(key);
-      const parts=String(value).trim().split(/\s+/).filter(Boolean);
-      if(parts.length>1){
-        const reversed=norm([...parts].reverse().join(' '));
-        if(reversed) keys.push(reversed);
+    results.forEach((res,i)=>{
+      const f=csvList[i];
+      if(res.status==='fulfilled'){
+        nextFiles[f]=res.value.txt;
+        nextRows[f]=parseCsv(res.value.txt);
+        ok++;
+      }else if(!isAbortError(res.reason)){
+        if(!DEFAULT_FILES.includes(f) && fileKind(f)!=='riepilogo') nextErrors.push(f+' — non trovato');
       }
     });
-  });
-  return [...new Set(keys)];
-}
 
-function isHomeMvpImageFile(file){
-  const base=norm(baseNoExt(file.webkitRelativePath||file.name||''));
-  if(!base) return false;
-  return possibleMvpImageKeys().some(key=>
-    key && (base===key || (key.length>=4 && base.includes(key)) || (base.length>=4 && key.includes(base)))
-  );
-}
+    const txtList=[...new Set(list.filter(x=>/\.txt$/i.test(x) && fileKind(x)==='pagellone' && !nextFiles[x]))];
+    if(txtList.length){
+      const txtResults=await Promise.all(txtList.map(f=>fetchPagelloneText(f,fresh,signal)
+        .then(txt=>({status:'fulfilled',f,txt}))
+        .catch(reason=>({status:'rejected',f,reason}))));
+      if(!isCurrentDataLoad(generation) || signal.aborted) return;
+      txtResults.forEach(res=>{ if(res.status==='fulfilled') nextFiles[res.f]=res.txt; });
+    }
 
-function imageLoadPriority(file){
-  const rel=String(file.webkitRelativePath||file.name||'').toLowerCase().replace(/\\/g,'/');
-  if(rel.includes('logo')||rel.includes('cral')) return 0;
-  if(rel.includes('/squadre/')||rel.includes('immagini/squadre/')) return 1;
-  if(isHomeMvpImageFile(file)) return 2;
-  if(rel.includes('/giocatori/')||rel.includes('immagini/giocatori/')) return 3;
-  return 4;
-}
+    if(!isCurrentDataLoad(generation) || signal.aborted) return;
 
-function rememberImageFile(file){
-  const rel=file.webkitRelativePath||file.name;
-  try{
-    rememberImage(rel,file);
-    state._imgCount=(state._imgCount||0)+1;
+    // Commit atomico: fino a qui la UI continua a mostrare l'ultimo dataset valido.
+    state.files=nextFiles;
+    state.rows=nextRows;
+    loadErrors=nextErrors;
+    state.selectedRiepilogoGiornata='';
+    state.riepilogoFilterInitialized=false;
+    state.selectedFantaGiornata='totale';
+    state.fantaResultFileKeys=[];
+    state.fantaLoading=true;
+    state.selectedPagelloneGiornata='';
+    state.selectedPagellonePartita='';
+    state.fantaPrecomputedData=null;
+    state.fantaPrecomputedAttempted=false;
+    state.fantaPrecomputedLoading=false;
+    clearImageProbeCache();
+    clearDerivedDataCaches();
+
+    applyConfig(); showErrors(); renderAll(); tryLoadLogo(); warmPlayerProfileCaches();
+    if(ok || state.rows['manifest.csv']) setStatus(dataLoadStatus(ok+(state.rows['manifest.csv']?1:0)),true);
+    else setStatus('Autocaricamento bloccato — verifica manifest.csv o la connessione.');
+
+    const fantaAvailable=await ensureFantaDataInBackground(fresh,generation,signal);
+    if(!isCurrentDataLoad(generation) || signal.aborted) return;
+    if(fantaAvailable) await loadPortieriSnapshot(fresh,generation,signal);
   }catch(e){
-    loadErrors.push(rel+' — immagine saltata: '+String((e&&e.message)||e||'errore'));
+    if(!isCurrentDataLoad(generation) || signal.aborted || isAbortError(e)) return;
+    setStatus('Errore durante il caricamento dati: '+String(e&&e.message||e));
+  }finally{
+    if(isCurrentDataLoad(generation) && _activeDataLoadController===controller) _activeDataLoadController=null;
   }
-}
-
-function processImageFilesLater(imageFiles){
-  if(!imageFiles.length){
-    state.imagesReady=true;
-    forceHomeRefreshPasses();
-    return;
-  }
-
-  const ordered=[...imageFiles].sort((a,b)=>{
-    const pa=imageLoadPriority(a), pb=imageLoadPriority(b);
-    if(pa!==pb) return pa-pb;
-    return String(a.webkitRelativePath||a.name).localeCompare(String(b.webkitRelativePath||b.name),'it');
-  });
-  const criticalImages=ordered.filter(f=>imageLoadPriority(f)<=2); // logo + squadre + MVP Home
-  const deferredImages=ordered.filter(f=>imageLoadPriority(f)>2);  // altri giocatori + altro
-
-  // Prima rendi disponibili logo CRAL, loghi squadra e foto MVP in Home: non devono competere
-  // con il caricamento delle altre foto giocatori/inziali.
-  criticalImages.forEach(rememberImageFile);
-  tryLoadLogo();
-  renderActiveSection();
-
-  if(!deferredImages.length){
-    state.imagesReady=true;
-    showErrors();
-    setStatus(dataLoadStatus(state._csvCount||0),true);
-    forceHomeRefreshPasses();
-    return;
-  }
-
-  let i=0;
-  function step(){
-    const start=i;
-    while(i<deferredImages.length && i<start+8){
-      rememberImageFile(deferredImages[i++]);
-    }
-
-    if(i<deferredImages.length){
-      setStatus(`Caricati ${state._csvCount||0} CSV. Immagini giocatori ${i}/${deferredImages.length}…`,true);
-      if('requestIdleCallback' in window) requestIdleCallback(step,{timeout:500});
-      else setTimeout(step,40);
-    }else{
-      state.imagesReady=true;
-      showErrors();
-      setStatus(dataLoadStatus(state._csvCount||0),true);
-      forceHomeRefreshPasses();
-    }
-  }
-
-  if('requestIdleCallback' in window) requestIdleCallback(step,{timeout:500});
-  else setTimeout(step,40);
-}
-
-function forceHomeRefreshPasses(){
-  const forcePass=()=>{
-    document.body.offsetHeight;
-    renderActiveSection();
-    tryLoadLogo();
-    if(document.getElementById('chartMarcatori') || document.getElementById('chartPunti')){
-      scheduleHomeChartsRender();
-    }
-    window.dispatchEvent(new Event('resize'));
-  };
-  forcePass();
-  requestAnimationFrame(()=>requestAnimationFrame(forcePass));
-  setTimeout(forcePass,50);
-  setTimeout(forcePass,200);
-}
-
-async function loadFolder(fileList){
-  manualLoadActive = true;
-  const files=[...fileList]; // snapshot: l'input viene svuotato subito dopo la selezione
-  state.files={}; state.rows={}; state.imageURLs={}; state.imageAliases={}; loadErrors=[]; state.imagesReady=false;
-  state.selectedRiepilogoGiornata=''; state.riepilogoFilterInitialized=false; state.selectedFantaGiornata='totale'; state.fantaResultFileKeys=[]; state.selectedPagelloneGiornata=''; state.selectedPagellonePartita='';
-  state.fantaPrecomputedData=null; state.fantaPrecomputedAttempted=true; state.fantaPrecomputedLoading=false;
-  clearImageProbeCache();
-  clearDerivedDataCaches();
-  invalidateHeroLogo();
-  state._csvCount=0; state._imgCount=0;
-
-  if(!files.length){
-    setStatus('Nessun file selezionato.');
-    return;
-  }
-
-  // Separazione netta: i CSV aggiornano subito la pagina; le immagini vengono elaborate dopo.
-  // Questo evita il blocco visto in Chrome su file come "outofofficefc.png".
-  const csvFiles=files
-    .filter(file=>/\.csv$/i.test(file.name))
-    .sort((a,b)=>String(a.webkitRelativePath||a.name).localeCompare(String(b.webkitRelativePath||b.name),'it'));
-  const imageFiles=files
-    .filter(file=>/\.(jpg|jpeg|png|webp)$/i.test(file.name))
-    .sort((a,b)=>String(a.webkitRelativePath||a.name).localeCompare(String(b.webkitRelativePath||b.name),'it'));
-
-  if(!csvFiles.length){
-    setStatus(`Nessun CSV trovato. Trovate ${imageFiles.length} immagini: seleziona la cartella principale che contiene i CSV, non solo la cartella immagini.`);
-    // Carica comunque le immagini, ma non bloccare la UI.
-    processImageFilesLater(imageFiles);
-    refreshAfterManualLoad(0,0);
-    return;
-  }
-
-  for(let i=0;i<csvFiles.length;i++){
-    const file=csvFiles[i];
-    const rel=file.webkitRelativePath||file.name;
-    setStatus(`Caricamento CSV… ${i+1}/${csvFiles.length} — ${rel.split('/').pop()}`);
-    try{
-      const txt=await safeFileText(file, rel);
-      state.files[file.name]=txt;
-      state.rows[file.name]=parseCsv(txt);
-      clearDerivedDataCaches();
-      state._csvCount++;
-    }catch(e){
-      loadErrors.push(rel+' — CSV saltato: '+String((e&&e.message)||e||'errore di lettura'));
-    }
-    // Aggiorna già durante il caricamento: anche se un file successivo dà problemi, la pagina non resta a zero.
-    applyConfig();
-    updateTitle();
-    renderTabs();
-    renderActiveSection();
-    if(i%2===0) await new Promise(resolve=>setTimeout(resolve,0));
-  }
-
-  // Prima aggiorna definitivamente Home/classifiche con i CSV.
-  refreshAfterManualLoad(state._csvCount,0);
-
-  // Poi immagini in background, senza bloccare il refresh dati.
-  processImageFilesLater(imageFiles);
 }
 
 /* ══════════════════════════════════
@@ -12377,28 +12124,636 @@ function fantaBuildCachePayloadForExport(){
 window.__cralIngestCsvBatchForCache = fantaIngestCsvBatchForCacheBuild;
 window.__cralBuildFantacalcioCache = fantaBuildCachePayloadForExport;
 
+
+/* ═════════════════════════════════════════════════════════════════════
+   NAVIGATION UPGRADE — Team profile, Match Center, deep links & share
+   Tutto resta nello stesso index.html: nessun router/server richiesto.
+   ═════════════════════════════════════════════════════════════════════ */
+let _cralNavApplyingRoute=false;
+let _cralNavApplyTimer=null;
+let _cralNavActiveKey='';
+let _cralNavObserver=null;
+let _cralNavToastTimer=null;
+let _cralNavMotionDirection=1;
+
+function cralNavReadRoute(){
+  const p=new URLSearchParams(String(location.hash||'').replace(/^#/,''));
+  const tab=p.get('tab')||state.activeTab||'home';
+  return {
+    tab:TABS.some(([id])=>id===tab)?tab:'home',
+    view:p.get('view')||'',
+    team:p.get('team')||'',
+    player:p.get('player')||'',
+    playerTeam:p.get('playerTeam')||'',
+    giornata:parseInt(p.get('g')||'0',10)||0,
+    home:p.get('home')||'',
+    away:p.get('away')||''
+  };
+}
+function cralNavHash(route){
+  const p=new URLSearchParams();
+  const tab=TABS.some(([id])=>id===route?.tab)?route.tab:(state.activeTab||'home');
+  p.set('tab',tab);
+  if(route?.view) p.set('view',route.view);
+  if(route?.view==='team' && route.team) p.set('team',route.team);
+  if(route?.view==='player' && route.player){
+    p.set('player',route.player);
+    if(route.playerTeam) p.set('playerTeam',route.playerTeam);
+  }
+  if(route?.view==='match'){
+    if(route.giornata) p.set('g',String(route.giornata));
+    if(route.home) p.set('home',route.home);
+    if(route.away) p.set('away',route.away);
+  }
+  return '#'+p.toString();
+}
+function cralNavUrl(route){
+  const url=new URL(location.href);
+  url.hash=cralNavHash(route);
+  return url.href;
+}
+function cralNavReplace(route,depth){
+  const nextDepth=Number.isFinite(depth)?depth:(history.state?.cralEntityDepth||0);
+  history.replaceState({...history.state,cralRoute:true,cralEntityDepth:nextDepth},'',cralNavHash(route));
+}
+function cralNavPush(route){
+  _cralNavMotionDirection=1;
+  const depth=(history.state?.cralEntityDepth||0)+1;
+  history.pushState({cralRoute:true,cralEntityDepth:depth},'',cralNavHash(route));
+}
+function cralNavBaseRoute(tab=state.activeTab){ return {tab,view:''}; }
+function cralNavReplaceTab(tab){
+  if(_cralNavApplyingRoute) return;
+  cralNavReplace(cralNavBaseRoute(tab),0);
+}
+function cralNavInit(){
+  const route=cralNavReadRoute();
+  state.activeTab=route.tab;
+  // Un deep link aperto direttamente parte a profondità zero; i passaggi successivi
+  // aumentano il contatore e permettono al pulsante X di tornare al tab di partenza.
+  history.replaceState({...history.state,cralRoute:true,cralEntityDepth:0},'',location.href);
+  const schedule=()=>cralNavScheduleApplyRoute(false);
+  window.addEventListener('popstate',()=>{ _cralNavMotionDirection=-1; schedule(); });
+  window.addEventListener('hashchange',schedule);
+  cralNavInstallDelegation();
+  cralNavInstallEnhancer();
+}
+function cralNavScheduleApplyRoute(force=false){
+  clearTimeout(_cralNavApplyTimer);
+  _cralNavApplyTimer=setTimeout(()=>cralNavApplyRoute(force),0);
+}
+function cralNavApplyRoute(force=false){
+  const route=cralNavReadRoute();
+  _cralNavApplyingRoute=true;
+  try{
+    if(route.tab!==state.activeTab) showTab(route.tab,false,{skipRoute:true});
+    if(route.view==='team' && route.team){
+      closePlayerProfile({skipRoute:true,restoreFocus:false});
+      openTeamProfile(route.team,{fromRoute:true,force});
+      return;
+    }
+    if(route.view==='match' && route.home && route.away){
+      closePlayerProfile({skipRoute:true,restoreFocus:false});
+      const match=cralNavResolveMatch(route);
+      if(match) openMatchCenter(match,{fromRoute:true,force});
+      else cralNavCloseEntityOverlay({skipRoute:true,restoreFocus:false});
+      return;
+    }
+    if(route.view==='player' && route.player){
+      openPlayerProfile(route.player,cralNavContextRowForPlayer(route.player,route.playerTeam),{fromRoute:true,force});
+      return;
+    }
+    closePlayerProfile({skipRoute:true,restoreFocus:false});
+    cralNavCloseEntityOverlay({skipRoute:true,restoreFocus:false});
+  }finally{
+    _cralNavApplyingRoute=false;
+  }
+}
+function cralNavGoBack(){
+  _cralNavMotionDirection=-1;
+  const depth=history.state?.cralEntityDepth||0;
+  if(depth>0) history.back();
+  else cralNavCloseToTab();
+}
+function cralNavCloseToTab(){
+  _cralNavMotionDirection=-1;
+  const depth=history.state?.cralEntityDepth||0;
+  if(depth>0){ history.go(-depth); return; }
+  const route=cralNavBaseRoute(state.activeTab);
+  cralNavReplace(route,0);
+  cralNavApplyRoute(false);
+}
+function cralNavShowToast(text){
+  let toast=document.getElementById('cralNavToast');
+  if(!toast){
+    toast=document.createElement('div'); toast.id='cralNavToast'; toast.className='nav-toast'; toast.setAttribute('role','status'); toast.setAttribute('aria-live','polite'); document.body.appendChild(toast);
+  }
+  toast.textContent=text;
+  clearTimeout(_cralNavToastTimer);
+  requestAnimationFrame(()=>toast.classList.add('is-show'));
+  _cralNavToastTimer=setTimeout(()=>toast.classList.remove('is-show'),1800);
+}
+async function cralNavShare(route,title,text){
+  const url=cralNavUrl(route);
+  try{
+    if(navigator.share){ await navigator.share({title:title||document.title,text:text||'',url}); return; }
+  }catch(e){ if(e&&e.name==='AbortError') return; }
+  try{
+    await navigator.clipboard.writeText(url);
+    cralNavShowToast('Link copiato negli appunti');
+  }catch(e){
+    const ta=document.createElement('textarea'); ta.value=url; ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta); ta.select();
+    try{ document.execCommand('copy'); cralNavShowToast('Link copiato negli appunti'); }catch(err){ cralNavShowToast(url); }
+    ta.remove();
+  }
+}
+
+function cralNavTeamSame(a,b){
+  const ka=teamMatchKey(a)||norm(a), kb=teamMatchKey(b)||norm(b);
+  return !!ka && !!kb && ka===kb;
+}
+function cralNavMatchIdentity(match){
+  return ['match',parseInt(match?.giornataNum||0,10)||0,teamMatchKey(match?.home)||norm(match?.home),teamMatchKey(match?.away)||norm(match?.away)].join('|');
+}
+function cralNavResolveMatch(query){
+  const home=String(query?.home||''), away=String(query?.away||'');
+  const day=parseInt(query?.giornataNum||query?.giornata||0,10)||0;
+  const candidates=pagelloneKnownMatches().filter(m=>{
+    if(day && m.giornataNum && m.giornataNum!==day) return false;
+    return cralNavTeamSame(m.home,home)&&cralNavTeamSame(m.away,away);
+  });
+  if(candidates.length) return candidates[0];
+  return pagelloneKnownMatches().find(m=>{
+    if(day && m.giornataNum && m.giornataNum!==day) return false;
+    return (cralNavTeamSame(m.home,home)&&cralNavTeamSame(m.away,away)) || (cralNavTeamSame(m.home,away)&&cralNavTeamSame(m.away,home));
+  })||null;
+}
+function cralNavResolveMatchFromElement(el){
+  if(!el) return null;
+  const names=[...el.querySelectorAll('.match-name')].map(x=>String(x.textContent||'').trim()).filter(Boolean);
+  if(names.length<2) return null;
+  const score=String(el.querySelector('.score')?.textContent||'').trim();
+  let day=0;
+  const card=el.closest('.card');
+  const nearby=[card?.querySelector('h3')?.textContent,card?.querySelector('h2')?.textContent,...[...el.querySelectorAll('.small')].map(x=>x.textContent)].filter(Boolean).join(' ');
+  day=parseInt(giornataNumberFromText(nearby)||'0',10)||0;
+  const known=pagelloneKnownMatches();
+  const exact=known.filter(m=>cralNavTeamSame(m.home,names[0])&&cralNavTeamSame(m.away,names[1])&&(!day||!m.giornataNum||m.giornataNum===day));
+  if(exact.length===1) return exact[0];
+  if(score && score!=='-'){
+    const sameScore=exact.find(m=>String(m.score||'').replace(/\s+/g,'')===score.replace(/\s+/g,''));
+    if(sameScore) return sameScore;
+  }
+  return exact[0] || cralNavResolveMatch({home:names[0],away:names[1],giornataNum:day});
+}
+function cralNavContextRowForPlayer(name,team){
+  const rec=findSquadPlayerRecord(name,team?{Squadra:team}:null);
+  return rec?.row||null;
+}
+
+function cralNavInstallDelegation(){
+  if(document.documentElement.dataset.cralNavDelegated==='1') return;
+  document.documentElement.dataset.cralNavDelegated='1';
+  document.addEventListener('click',ev=>{
+    const explicitTeam=ev.target.closest('[data-open-team]');
+    if(explicitTeam){ ev.preventDefault(); ev.stopPropagation(); openTeamProfile(explicitTeam.dataset.openTeam); return; }
+    const matchTeam=ev.target.closest('.match-team[data-rich-team="1"]');
+    if(matchTeam){
+      ev.preventDefault(); ev.stopPropagation();
+      const name=String(matchTeam.querySelector('.match-name')?.textContent||'').trim();
+      if(name) openTeamProfile(name);
+      return;
+    }
+    const teamHead=ev.target.closest('.teamHead[data-rich-nav="1"]');
+    if(teamHead && !ev.target.closest('.player')){
+      const name=String(teamHead.querySelector('h2')?.textContent||'').trim();
+      if(name){ ev.preventDefault(); openTeamProfile(name); }
+      return;
+    }
+    const matchEl=ev.target.closest('.match[data-rich-nav="1"]');
+    if(matchEl && !ev.target.closest('button,a,input,select,textarea')){
+      const match=cralNavResolveMatchFromElement(matchEl);
+      if(match){ ev.preventDefault(); openMatchCenter(match); }
+    }
+  });
+  document.addEventListener('keydown',ev=>{
+    if(ev.key!=='Enter'&&ev.key!==' ') return;
+    const teamHead=ev.target.closest?.('.teamHead[data-rich-nav="1"]');
+    if(teamHead){ ev.preventDefault(); const name=String(teamHead.querySelector('h2')?.textContent||'').trim(); if(name) openTeamProfile(name); return; }
+    const matchEl=ev.target.closest?.('.match[data-rich-nav="1"]');
+    if(matchEl){ ev.preventDefault(); const match=cralNavResolveMatchFromElement(matchEl); if(match) openMatchCenter(match); }
+  });
+}
+function cralNavEnhanceTargets(root){
+  if(!root || root.nodeType!==1) return;
+  const matches=[];
+  if(root.matches?.('.match')) matches.push(root);
+  root.querySelectorAll?.('.match').forEach(x=>matches.push(x));
+  matches.forEach(m=>{
+    if(m.dataset.richNav==='1') return;
+    const names=m.querySelectorAll('.match-name');
+    if(names.length<2) return;
+    m.dataset.richNav='1'; m.tabIndex=0; m.setAttribute('role','button'); m.setAttribute('aria-label','Apri Match Center: '+[...names].slice(0,2).map(x=>x.textContent).join(' contro '));
+    m.querySelectorAll('.match-team').forEach(t=>{ t.dataset.richTeam='1'; t.title='Apri scheda squadra'; });
+  });
+  const heads=[];
+  if(root.matches?.('.teamHead')) heads.push(root);
+  root.querySelectorAll?.('.teamHead').forEach(x=>heads.push(x));
+  heads.forEach(h=>{ if(h.dataset.richNav==='1') return; h.dataset.richNav='1'; h.tabIndex=0; h.setAttribute('role','button'); h.title='Apri scheda squadra'; });
+}
+function cralNavInstallEnhancer(){
+  cralNavEnhanceTargets(document.querySelector('.wrap'));
+  if(_cralNavObserver) return;
+  _cralNavObserver=new MutationObserver(muts=>muts.forEach(m=>m.addedNodes.forEach(n=>{ if(n.nodeType===1) cralNavEnhanceTargets(n); })));
+  const root=document.querySelector('.wrap');
+  if(root) _cralNavObserver.observe(root,{childList:true,subtree:true});
+}
+
+function cralNavSetEntityOverlayInert(inert){
+  const overlay=document.getElementById('entityNavBackdrop');
+  if(!overlay) return;
+  if(inert){ overlay.setAttribute('inert',''); overlay.setAttribute('aria-hidden','true'); }
+  else { overlay.removeAttribute('inert'); overlay.removeAttribute('aria-hidden'); }
+}
+function cralNavEnsureEntityOverlay(){
+  let backdrop=document.getElementById('entityNavBackdrop');
+  if(backdrop) return backdrop;
+  backdrop=document.createElement('div'); backdrop.id='entityNavBackdrop'; backdrop.className='entity-nav-backdrop';
+  backdrop.addEventListener('click',ev=>{ if(ev.target===backdrop) cralNavCloseToTab(); });
+  const sheet=document.createElement('div'); sheet.className='entity-sheet'; sheet.setAttribute('role','dialog'); sheet.setAttribute('aria-modal','true');
+  const top=document.createElement('div'); top.className='entity-topbar';
+  const back=document.createElement('button'); back.type='button'; back.className='entity-nav-btn icon-only'; back.dataset.action='back'; back.textContent='←'; back.setAttribute('aria-label','Indietro'); back.onclick=cralNavGoBack;
+  const title=document.createElement('div'); title.className='entity-topbar-title'; title.textContent='CRAL Champions';
+  const share=document.createElement('button'); share.type='button'; share.className='entity-nav-btn'; share.dataset.action='share'; share.textContent='↗ Condividi';
+  const close=document.createElement('button'); close.type='button'; close.className='entity-nav-btn icon-only'; close.dataset.action='close'; close.textContent='×'; close.setAttribute('aria-label','Chiudi'); close.onclick=cralNavCloseToTab;
+  top.appendChild(back); top.appendChild(title); top.appendChild(share); top.appendChild(close);
+  const content=document.createElement('div'); content.className='entity-content';
+  sheet.appendChild(top); sheet.appendChild(content); backdrop.appendChild(sheet); document.body.appendChild(backdrop);
+  // Mobile: swipe dal bordo sinistro per tornare indietro, lasciando libero lo scroll verticale.
+  let edgeSwipe=null;
+  sheet.addEventListener('pointerdown',ev=>{
+    if(!window.matchMedia('(max-width:720px)').matches || ev.pointerType==='mouse' || ev.clientX>34 || ev.button>0) return;
+    edgeSwipe={id:ev.pointerId,x:ev.clientX,y:ev.clientY,dx:0,active:false};
+    try{ sheet.setPointerCapture(ev.pointerId); }catch(e){}
+  });
+  sheet.addEventListener('pointermove',ev=>{
+    if(!edgeSwipe || edgeSwipe.id!==ev.pointerId) return;
+    const dx=Math.max(0,ev.clientX-edgeSwipe.x), dy=ev.clientY-edgeSwipe.y;
+    if(!edgeSwipe.active && dx>9 && dx>Math.abs(dy)*1.25){ edgeSwipe.active=true; sheet.classList.add('is-edge-swiping'); }
+    if(!edgeSwipe.active) return;
+    edgeSwipe.dx=dx; ev.preventDefault();
+    sheet.style.setProperty('--entity-swipe-x',Math.min(dx,Math.max(120,window.innerWidth*.48))+'px');
+  },{passive:false});
+  const finishEdgeSwipe=ev=>{
+    if(!edgeSwipe || (ev?.pointerId!=null && edgeSwipe.id!==ev.pointerId)) return;
+    const swipe=edgeSwipe; edgeSwipe=null;
+    try{ sheet.releasePointerCapture(swipe.id); }catch(e){}
+    if(!swipe.active) return;
+    sheet.classList.remove('is-edge-swiping'); sheet.style.removeProperty('--entity-swipe-x');
+    if(swipe.dx>=Math.min(92,window.innerWidth*.22)){
+      _cralNavMotionDirection=-1;
+      if(!window.matchMedia('(prefers-reduced-motion: reduce)').matches && sheet.animate){
+        const anim=sheet.animate([{transform:'translateX('+Math.min(swipe.dx,180)+'px)'},{transform:'translateX(100%)'}],{duration:150,easing:'cubic-bezier(.4,0,1,1)'});
+        anim.finished.catch(()=>{}).finally(()=>cralNavGoBack());
+      }else cralNavGoBack();
+    }
+  };
+  sheet.addEventListener('pointerup',finishEdgeSwipe); sheet.addEventListener('pointercancel',finishEdgeSwipe);
+  document.body.classList.add('entity-modal-open');
+  document.addEventListener('keydown',cralNavEntityEscHandler);
+  activateModalA11y(backdrop,sheet,back);
+  requestAnimationFrame(()=>backdrop.classList.add('is-open'));
+  return backdrop;
+}
+function cralNavEntityEscHandler(ev){ if(ev.key==='Escape' && !document.getElementById('playerProfileBackdrop') && !document.getElementById('compareBackdrop')) cralNavCloseToTab(); }
+function cralNavCloseEntityOverlay(options={}){
+  const old=document.getElementById('entityNavBackdrop');
+  const returnFocus=releaseModalA11y(old);
+  if(old) old.remove();
+  _cralNavActiveKey='';
+  document.body.classList.remove('entity-modal-open');
+  document.removeEventListener('keydown',cralNavEntityEscHandler);
+  if(options.restoreFocus!==false) restoreModalFocus(returnFocus);
+  if(!options.skipRoute) cralNavCloseToTab();
+}
+function cralNavRenderEntity(key,title,view,shareHandler,options={}){
+  if(!options.force && _cralNavActiveKey===key && document.getElementById('entityNavBackdrop')) return;
+  const backdrop=cralNavEnsureEntityOverlay();
+  const content=backdrop.querySelector('.entity-content');
+  const titleEl=backdrop.querySelector('.entity-topbar-title');
+  const shareBtn=backdrop.querySelector('[data-action="share"]');
+  const backBtn=backdrop.querySelector('[data-action="back"]');
+  titleEl.textContent=title;
+  shareBtn.onclick=shareHandler;
+  const depth=history.state?.cralEntityDepth||0;
+  backBtn.style.visibility=depth>0?'visible':'visible';
+  backBtn.title=depth>0?'Torna alla vista precedente':'Chiudi';
+  const old=content.firstElementChild;
+  content.replaceChildren(view);
+  content.scrollTop=0;
+  _cralNavActiveKey=key;
+  if(!window.matchMedia('(prefers-reduced-motion: reduce)').matches && view.animate){
+    const mobile=window.matchMedia('(max-width:720px)').matches;
+    const from=mobile?'translateX('+(_cralNavMotionDirection<0?'-34px':'34px')+')':'translateY(10px) scale(.99)';
+    view.animate([
+      {opacity:0,transform:from},
+      {opacity:1,transform:'none'}
+    ],{duration:mobile?280:220,easing:'cubic-bezier(.2,.8,.2,1)'});
+  }
+  if(old && old!==view) old.remove();
+}
+
+function cralNavTeamPosition(team){
+  const f=sectionFiles('classifica_squadre')[0];
+  if(!f) return 0;
+  const rows=rowsToObjects(state.rows[f]||[]);
+  const idx=rows.findIndex(r=>cralNavTeamSame(firstPresent(r,[['squadra','team','nome','club']])||Object.values(r)[0]||'',team));
+  return idx>=0?idx+1:0;
+}
+function cralNavTeamRoster(team){
+  const key=teamMatchKey(team)||norm(team);
+  for(const f of sectionFiles('squadra')){
+    if((teamMatchKey(teamNameFromFile(f))||norm(teamNameFromFile(f)))===key) return rowsToObjects(state.rows[f]||[]);
+  }
+  return [];
+}
+function cralNavTeamMatches(team){
+  return pagelloneKnownMatches().filter(m=>cralNavTeamSame(m.home,team)||cralNavTeamSame(m.away,team)).sort((a,b)=>(a.giornataNum-b.giornataNum)||(a.rowIndex-b.rowIndex));
+}
+function cralNavTeamOutcome(match,team){
+  const score=parseScorePair(match?.score);
+  if(!score) return '';
+  const isHome=cralNavTeamSame(match.home,team);
+  const gf=isHome?score[0]:score[1], ga=isHome?score[1]:score[0];
+  return gf>ga?'win':(gf===ga?'draw':'loss');
+}
+function cralNavTeamGoalsFromMatches(team){
+  let gf=0,ga=0,played=0;
+  cralNavTeamMatches(team).forEach(m=>{
+    const score=parseScorePair(m.score); if(!score) return;
+    const home=cralNavTeamSame(m.home,team); played++;
+    gf+=home?score[0]:score[1]; ga+=home?score[1]:score[0];
+  });
+  return {gf,ga,played};
+}
+function cralNavTeamLeader(kind,team){
+  const files=sectionFiles(kind); if(!files.length) return null;
+  let rows=files.flatMap(f=>rowsToObjects(state.rows[f]||[])).filter(r=>cralNavTeamSame(firstPresent(r,[['squadra','team','club']]),team));
+  if(!rows.length) return null;
+  let valueNames=['punti','pts','points'];
+  if(kind==='marcatori') valueNames=['goal','reti','g'];
+  else if(kind==='mvp') valueNames=['punti mvp','puntimvp','punti','pts','points'];
+  else if(kind==='portieri') valueNames=['punti portiere','punti pt','puntipt','punti','pts','points'];
+  rows=rows.map((r,i)=>({r,i,value:num(firstPresent(r,[valueNames]))})).sort((a,b)=>b.value-a.value||a.i-b.i);
+  const top=rows[0]; if(!top) return null;
+  const name=firstPresent(top.r,[['giocatore','nome','calciatore','player','portiere']])||Object.values(top.r)[0]||'';
+  return name?{name,value:top.value,row:top.r}:null;
+}
+function cralNavTeamProfileData(team){
+  const standings=teamStandingsRow(team)||{};
+  const matchGoals=cralNavTeamGoalsFromMatches(team);
+  const record=wrappedTeamRecordFromResults(team)||{v:0,n:0,p:0,played:matchGoals.played};
+  const readNum=(names)=>{ const raw=firstPresent(standings,[names]); return String(raw||'').trim()===''?null:num(raw); };
+  const points=readNum(['punti finali','puntifinali','punti totali','punti','pts','points']);
+  const gf=readNum(['gf','goal fatti','gol fatti','reti fatte','goals for']);
+  const gs=readNum(['gs','goal subiti','gol subiti','reti subite','goals against']);
+  const matches=cralNavTeamMatches(team);
+  const played=matches.filter(m=>!!parseScorePair(m.score));
+  const upcoming=matches.filter(m=>!parseScorePair(m.score));
+  const trend=teamTrendProjectionData();
+  const trendItem=trend.teams.find(x=>cralNavTeamSame(x.team,team));
+  return {
+    team,position:cralNavTeamPosition(team),points:points===null?0:points,
+    gf:gf===null?matchGoals.gf:gf,gs:gs===null?matchGoals.ga:gs,
+    record,roster:cralNavTeamRoster(team),matches,played,recent:[...played].slice(-5).reverse(),next:upcoming[0]||null,
+    scorer:cralNavTeamLeader('marcatori',team),mvp:cralNavTeamLeader('mvp',team),keeper:cralNavTeamLeader('portieri',team),
+    trend:trendItem?{labels:trend.labels.slice(0,Math.max(trend.currentRound,1)),values:trendItem.data.slice(0,Math.max(trend.currentRound,1)),currentRound:trend.currentRound}:null
+  };
+}
+function cralNavKpi(label,value,sub,primary=false){
+  const box=document.createElement('div'); box.className='team-kpi'+(primary?' is-primary':'');
+  const n=document.createElement('div'); n.className='n'; n.textContent=String(value??'—');
+  const l=document.createElement('div'); l.className='l'; l.textContent=label;
+  box.appendChild(n); box.appendChild(l);
+  if(sub){ const s=document.createElement('div'); s.className='s'; s.textContent=sub; box.appendChild(s); }
+  return box;
+}
+function cralNavSection(title,emoji){
+  const sec=document.createElement('section'); sec.className='entity-section';
+  const h=document.createElement('h3'); h.className='entity-section-title'; h.textContent=(emoji?emoji+' ':'')+title; sec.appendChild(h); return sec;
+}
+function cralNavOpenPlayerButton(name,row,team){
+  const b=document.createElement('button'); b.type='button'; b.textContent=name||'Giocatore'; b.onclick=()=>openPlayerProfile(name,row||cralNavContextRowForPlayer(name,team)); return b;
+}
+function cralNavTeamLeaderCard(label,icon,leader,team){
+  const box=document.createElement('div'); box.className='team-leader';
+  if(!leader){ box.appendChild(buildEl('div','team-leader-copy','Nessun dato')); return box; }
+  box.appendChild(imgOrInitialEl('player',playerImageNames(leader.row||{})?.length?playerImageNames(leader.row):leader.name,'team-leader-avatar'));
+  const copy=document.createElement('div'); copy.className='team-leader-copy'; const s=document.createElement('small'); s.textContent=icon+' '+label; copy.appendChild(s); copy.appendChild(cralNavOpenPlayerButton(leader.name,leader.row,team)); box.appendChild(copy);
+  const v=document.createElement('div'); v.className='team-leader-value'; v.textContent=String(leader.value); box.appendChild(v); return box;
+}
+function cralNavBuildTrend(data){
+  const wrap=document.createElement('div'); wrap.className='team-trend-wrap';
+  const values=(data?.values||[]).map(v=>Number(v)).filter(Number.isFinite);
+  if(!values.length){ wrap.appendChild(buildEl('div','entity-empty','Andamento non ancora disponibile.')); return wrap; }
+  const svg=document.createElementNS('http://www.w3.org/2000/svg','svg'); svg.setAttribute('viewBox','0 0 320 96'); svg.classList.add('team-trend-svg'); svg.setAttribute('role','img'); svg.setAttribute('aria-label','Andamento punti per giornata');
+  const min=0,max=Math.max(...values,1),left=9,right=311,top=10,bottom=82;
+  const pts=values.map((v,i)=>{ const x=values.length===1?160:left+(right-left)*(i/(values.length-1)); const y=bottom-(bottom-top)*(v/max); return [x,y]; });
+  const grid=document.createElementNS(svg.namespaceURI,'line'); grid.setAttribute('x1',String(left)); grid.setAttribute('x2',String(right)); grid.setAttribute('y1',String(bottom)); grid.setAttribute('y2',String(bottom)); grid.setAttribute('stroke','currentColor'); grid.setAttribute('opacity','.16'); grid.setAttribute('stroke-width','1'); svg.appendChild(grid);
+  const poly=document.createElementNS(svg.namespaceURI,'polyline'); poly.setAttribute('points',pts.map(p=>p.join(',')).join(' ')); poly.setAttribute('fill','none'); poly.setAttribute('stroke','currentColor'); poly.setAttribute('stroke-width','5'); poly.setAttribute('stroke-linecap','round'); poly.setAttribute('stroke-linejoin','round'); svg.appendChild(poly);
+  pts.forEach((p,i)=>{ const c=document.createElementNS(svg.namespaceURI,'circle'); c.setAttribute('cx',String(p[0])); c.setAttribute('cy',String(p[1])); c.setAttribute('r',i===pts.length-1?'5':'3'); c.setAttribute('fill','var(--panel)'); c.setAttribute('stroke','currentColor'); c.setAttribute('stroke-width','3'); svg.appendChild(c); });
+  wrap.appendChild(svg);
+  const current=document.createElement('div'); current.className='team-trend-current'; const b=document.createElement('b'); b.textContent=String(values[values.length-1]); const s=document.createElement('span'); s.textContent='punti attuali'; current.appendChild(b); current.appendChild(s); wrap.appendChild(current); return wrap;
+}
+function cralNavProfileMatchButton(match,team){
+  const b=document.createElement('button'); b.type='button'; b.className='profile-match-button'; b.onclick=()=>openMatchCenter(match);
+  const left=document.createElement('div');
+  const teams=document.createElement('div'); teams.className='profile-match-teams'; teams.appendChild(imgOrInitialEl('team',match.home,'mini-logo')); const t=document.createElement('span'); t.textContent=match.home+' · '+match.away; teams.appendChild(t); left.appendChild(teams);
+  const meta=document.createElement('div'); meta.className='profile-match-meta'; meta.textContent=[match.giornataNum?('Giornata '+match.giornataNum):'',match.data||''].filter(Boolean).join(' · '); left.appendChild(meta);
+  const score=document.createElement('div'); score.className='profile-match-score'; score.textContent=match.score||'vs';
+  b.appendChild(left); b.appendChild(score); return b;
+}
+function cralNavFormButton(match,team){
+  const outcome=cralNavTeamOutcome(match,team); const label=outcome==='win'?'V':outcome==='draw'?'N':'P';
+  const b=document.createElement('button'); b.type='button'; b.className='form-match'; b.onclick=()=>openMatchCenter(match);
+  const res=document.createElement('span'); res.className='form-result is-'+outcome; res.textContent=label; b.appendChild(res);
+  const copy=document.createElement('span'); copy.className='form-match-copy'; const opp=cralNavTeamSame(match.home,team)?match.away:match.home; const name=document.createElement('b'); name.textContent=opp; const small=document.createElement('span'); small.textContent=(match.giornataNum?'G'+match.giornataNum+' · ':'')+(match.score||''); copy.appendChild(name); copy.appendChild(small); b.appendChild(copy); return b;
+}
+function openTeamProfile(team,options={}){
+  team=teamDisplayNameForChart(team); if(!team) return;
+  const key='team|'+(teamMatchKey(team)||norm(team));
+  if(!options.fromRoute) cralNavPush({tab:state.activeTab,view:'team',team});
+  closePlayerProfile({skipRoute:true,restoreFocus:false});
+  const data=cralNavTeamProfileData(team);
+  const view=document.createElement('div'); view.className='entity-view team-profile-view';
+  const hero=document.createElement('div'); hero.className='entity-hero'; const main=document.createElement('div'); main.className='team-profile-hero-main';
+  main.appendChild(imgOrInitialEl('team',team,'entity-team-logo'));
+  const copy=document.createElement('div'); copy.className='team-profile-copy'; const chip=document.createElement('span'); chip.className='entity-chip'; chip.textContent=data.position?('#'+data.position+' in classifica'):'Scheda squadra'; copy.appendChild(chip); const h=document.createElement('h2'); h.textContent=team; copy.appendChild(h);
+  const rec=document.createElement('div'); rec.className='team-profile-record'; ['✅ '+data.record.v+' V','➖ '+data.record.n+' N','❌ '+data.record.p+' P'].forEach(x=>{ const s=document.createElement('span'); s.textContent=x; rec.appendChild(s); }); copy.appendChild(rec); main.appendChild(copy); hero.appendChild(main); view.appendChild(hero);
+  const kpis=document.createElement('div'); kpis.className='team-kpis'; kpis.appendChild(cralNavKpi('Punti',data.points,data.position?('Posizione '+data.position):'',true)); kpis.appendChild(cralNavKpi('Partite',data.record.played||data.played.length,'V '+data.record.v+' · N '+data.record.n+' · P '+data.record.p)); kpis.appendChild(cralNavKpi('Gol fatti',data.gf,'Media '+((data.record.played?data.gf/data.record.played:0).toFixed(2).replace('.',',')))); kpis.appendChild(cralNavKpi('Gol subiti',data.gs,'Diff. '+String(data.gf-data.gs))); view.appendChild(kpis);
+  if(data.recent.length){ const sec=cralNavSection('Forma recente','🔥'); const form=document.createElement('div'); form.className='team-form'; data.recent.forEach(m=>form.appendChild(cralNavFormButton(m,team))); sec.appendChild(form); view.appendChild(sec); }
+  const leaders=cralNavSection('Leader della squadra','⭐'); const leaderGrid=document.createElement('div'); leaderGrid.className='team-leaders'; leaderGrid.appendChild(cralNavTeamLeaderCard('Top scorer','⚽',data.scorer,team)); leaderGrid.appendChild(cralNavTeamLeaderCard('MVP','⭐',data.mvp,team)); leaderGrid.appendChild(cralNavTeamLeaderCard('Portiere','🧤',data.keeper,team)); leaders.appendChild(leaderGrid); view.appendChild(leaders);
+  const trendSec=cralNavSection('Andamento punti','📈'); const trendSub=document.createElement('p'); trendSub.className='entity-section-sub'; trendSub.textContent='Progressione sui risultati disputati, allineata ai punti ufficiali dell’ultima giornata disponibile.'; trendSec.appendChild(trendSub); trendSec.appendChild(cralNavBuildTrend(data.trend)); view.appendChild(trendSec);
+  const matchSec=cralNavSection('Partite','⚽'); const matchList=document.createElement('div'); matchList.className='team-match-list'; if(data.next){ const nextLabel=document.createElement('div'); nextLabel.className='entity-section-sub'; nextLabel.textContent='Prossima partita'; matchSec.appendChild(nextLabel); matchList.appendChild(cralNavProfileMatchButton(data.next,team)); }
+  const recentLabel=document.createElement('div'); recentLabel.className='entity-section-sub'; recentLabel.textContent=data.played.length?'Ultimi risultati':'Nessun risultato ancora disponibile'; matchSec.appendChild(recentLabel); [...data.played].slice(-4).reverse().forEach(m=>matchList.appendChild(cralNavProfileMatchButton(m,team))); if(!matchList.children.length) matchList.appendChild(buildEl('div','entity-empty','Nessuna partita disponibile.')); matchSec.appendChild(matchList); view.appendChild(matchSec);
+  const rosterSec=cralNavSection('Rosa','👕'); const roster=document.createElement('div'); roster.className='team-roster-grid'; data.roster.forEach(r=>{ const name=playerDisplayName(r)||playerFullName(r); if(!name) return; const b=document.createElement('button'); b.type='button'; b.className='team-roster-player'; b.onclick=()=>openPlayerProfile(playerFullName(r)||name,r); b.appendChild(imgOrInitialEl('player',playerImageNames(r),'team-roster-avatar')); const c=document.createElement('span'); c.className='team-roster-copy'; const strong=document.createElement('b'); strong.textContent=name; const meta=document.createElement('span'); meta.textContent=(isCaptainPlayer(r)?'Capitano · ':'')+(roleDisplayLabel(fieldLoose(r,['ruolo','role','posizione','position']))||'Giocatore'); c.appendChild(strong); c.appendChild(meta); b.appendChild(c); roster.appendChild(b); }); if(!roster.children.length) roster.appendChild(buildEl('div','entity-empty','Rosa non disponibile.')); rosterSec.appendChild(roster); view.appendChild(rosterSec);
+  const route={tab:state.activeTab,view:'team',team};
+  cralNavRenderEntity(key,team,view,()=>cralNavShare(route,team+' — CRAL Champions','Scheda squadra '+team),options);
+}
+
+function cralNavRiepilogoMatchContext(match){
+  const contexts=[];
+  sectionFiles('riepilogo').forEach(f=>{
+    const parsed=parseRiepilogoFile(f); const day=match.giornataNum;
+    const partite=(parsed.partite||[]).filter(r=>{
+      if(day && parseInt(rowGiornataKey(r,f)||'0',10) && parseInt(rowGiornataKey(r,f),10)!==day) return false;
+      const [h,a]=pagelloneTeamsFromRiepilogoRow(r); return cralNavTeamSame(h,match.home)&&cralNavTeamSame(a,match.away);
+    });
+    if(partite.length || (!day && (parsed.partite||[]).length)) contexts.push({file:f,parsed,partita:partite[0]||null});
+  });
+  return contexts;
+}
+function cralNavRowBelongsToMatch(row,file,match){
+  if(match.giornataNum){ const rk=parseInt(rowGiornataKey(row,file)||'0',10)||0; if(rk && rk!==match.giornataNum) return false; }
+  const team=teamHintFromRow(row)||firstPresent(row,[['squadra','team','club']]);
+  if(team && (cralNavTeamSame(team,match.home)||cralNavTeamSame(team,match.away))) return true;
+  const person=playerNameFromRow(row);
+  if(person){ const derived=teamForPersonToken(person,'', [row]); if(derived && (cralNavTeamSame(derived,match.home)||cralNavTeamSame(derived,match.away))) return true; }
+  const txt=firstPresent(row,[['partita','match','gara','incontro','note','descrizione']]);
+  return txt ? (norm(txt).includes(norm(match.home))&&norm(txt).includes(norm(match.away))) : false;
+}
+function cralNavAddPerson(map,name,team,value,row,detail){
+  const clean=smartSpace(cleanRiepilogoScorerName(name)||name); if(!clean) return;
+  const key=(personMatchKey(clean)||norm(clean))+'|'+(teamMatchKey(team)||norm(team));
+  const cur=map.get(key)||{name:clean,team,value:0,row:row||null,detail:detail||''};
+  cur.value+=Number(value||0); if(!cur.row&&row) cur.row=row; if(detail) cur.detail=detail; map.set(key,cur);
+}
+function cralNavMatchDetails(match){
+  const scorersHome=new Map(),scorersAway=new Map(),mvp=new Map(),keeper=new Map(),autogoals=[];
+  const contexts=cralNavRiepilogoMatchContext(match);
+  const useTeamMap=(team)=>cralNavTeamSame(team,match.home)?scorersHome:(cralNavTeamSame(team,match.away)?scorersAway:null);
+  contexts.forEach(ctx=>{
+    const {file,parsed,partita}=ctx;
+    (parsed.marcatori||[]).filter(r=>cralNavRowBelongsToMatch(r,file,match)).forEach(r=>{
+      const name=playerNameFromRow(r); const team=teamHintFromRow(r)||teamForPersonToken(name,'',[r]); const target=useTeamMap(team); if(!target) return; const g=riepilogoGoalNumberFromText(firstPresent(r,[['goal','gol','reti','quantita','valore']]))||num(firstPresent(r,[['goal','gol','reti','quantita','valore']]))||1; cralNavAddPerson(target,name,team,g,r,'');
+    });
+    (parsed.mvp||[]).filter(r=>cralNavRowBelongsToMatch(r,file,match)).forEach(r=>{ const name=playerNameFromRow(r); const team=teamHintFromRow(r)||teamForPersonToken(name,'',[r]); cralNavAddPerson(mvp,name,team,profilePointsFromRow(r)||1,r,'MVP'); });
+    (parsed.portiere||[]).filter(r=>cralNavRowBelongsToMatch(r,file,match)).forEach(r=>{ const name=playerNameFromRow(r); const team=teamHintFromRow(r)||teamForPersonToken(name,'',[r]); cralNavAddPerson(keeper,name,team,profilePointsFromRow(r)||1,r,'Miglior portiere'); });
+    (parsed.autogoal||[]).filter(r=>cralNavRowBelongsToMatch(r,file,match)).forEach(r=>{
+      const name=playerNameFromRow(r); const team=teamHintFromRow(r)||teamForPersonToken(name,'',[r]);
+      const value=riepilogoGoalNumberFromText(firstPresent(r,[['goal','gol','reti','quantita','valore']]))||1;
+      autogoals.push({name:smartSpace(name)||'Autogol',team,value,row:r,detail:'Autogol'});
+    });
+    if(partita){
+      const note=firstPresent(partita,[['note','commento','descrizione']]);
+      const homeList=splitPeopleList(firstPresent(partita,[['marcatori casa','marcatori squadra casa','goal casa marcatori','scorer casa','marcatori home']]));
+      const awayList=splitPeopleList(firstPresent(partita,[['marcatori trasferta','marcatori ospite','marcatori squadra trasferta','goal trasferta marcatori','scorer trasferta','marcatori away']]));
+      const generic=splitInlinePeople(firstPresent(partita,[['marcatori','scorers','reti']])||extractInlineField(note,'Marcatori'));
+      // I campi inline sono un fallback: se il riepilogo contiene gia righe strutturate,
+      // non sommiamo gli stessi eventi una seconda volta.
+      if(!scorersHome.size) homeList.forEach(x=>cralNavAddPerson(scorersHome,x,match.home,riepilogoGoalNumberFromText(x)||1,null,''));
+      if(!scorersAway.size) awayList.forEach(x=>cralNavAddPerson(scorersAway,x,match.away,riepilogoGoalNumberFromText(x)||1,null,''));
+      if(!scorersHome.size&&!scorersAway.size&&!homeList.length&&!awayList.length) generic.forEach(x=>{ const name=cleanRiepilogoScorerName(x); const team=teamForPersonToken(name,'',[partita]); const target=useTeamMap(team); if(target) cralNavAddPerson(target,name,team,riepilogoGoalNumberFromText(x)||1,null,''); });
+      if(!mvp.size){ const mvpInline=splitInlinePeople(firstPresent(partita,[['mvp','migliore in campo','man of the match','motm']])||extractInlineField(note,'MVP')); mvpInline.forEach(x=>{ const team=teamForPersonToken(x,'',[partita]); cralNavAddPerson(mvp,x,team,1,null,'MVP'); }); }
+      if(!keeper.size){ const keepInline=splitInlinePeople(firstPresent(partita,[['portiere','miglior portiere','best keeper','goalkeeper']])||extractInlineField(note,'Portiere')); keepInline.forEach(x=>{ const team=teamForPersonToken(x,'',[partita]); cralNavAddPerson(keeper,x,team,1,null,'Miglior portiere'); }); }
+    }
+  });
+  const pagelle=[];
+  const day=match.giornataNum;
+  if(day){
+    [match.home,match.away].forEach(team=>cralNavTeamRoster(team).forEach(r=>{
+      const name=playerFullName(r)||playerDisplayName(r); if(!name) return;
+      const pdata=buildPlayerProfileData(name,r); const item=playerPagelleForProfile(pdata).find(x=>x.giornataNum===day && (!x.home||!x.away||((cralNavTeamSame(x.home,match.home)&&cralNavTeamSame(x.away,match.away))||(cralNavTeamSame(x.home,match.away)&&cralNavTeamSame(x.away,match.home)))));
+      if(item) pagelle.push({...item,row:r,displayName:playerDisplayName(r)||pdata.name});
+    }));
+  }
+  pagelle.sort((a,b)=>{ const av=Number(a.voto),bv=Number(b.voto); return (Number.isFinite(bv)?bv:-99)-(Number.isFinite(av)?av:-99)||String(a.displayName).localeCompare(String(b.displayName),'it'); });
+  return {home:[...scorersHome.values()],away:[...scorersAway.values()],mvp:[...mvp.values()],keeper:[...keeper.values()],autogoals,pagelle};
+}
+function cralNavMatchFantaImpact(match){
+  const day=parseInt(match.giornataNum||0,10)||0; if(!day) return [];
+  let data=null; try{ data=fantaCurrentData(); }catch(e){ return []; }
+  const dayResults=(data?.results||[]).filter(r=>r.day===day && r.playerPoints instanceof Map && r.playerPoints.size);
+  if(!dayResults.length) return [];
+  const players=fantaAllPlayersSorted().filter(p=>cralNavTeamSame(p.teamCode,match.home)||cralNavTeamSame(p.teamCode,match.away));
+  const out=[];
+  players.forEach(p=>{
+    let detail=null;
+    for(const result of dayResults){ detail=fantaPlayerPointsDetail(result,p); if(detail) break; }
+    if(detail) out.push({name:fantaPlayerDisplay(p),fullName:fantaPlayerFull(p),team:p.teamCode,points:detail.pts,detail:detail.detail});
+  });
+  return out.sort((a,b)=>b.points-a.points||String(a.name).localeCompare(String(b.name),'it'));
+}
+function cralNavMatchPersonRow(person,icon){
+  const row=document.createElement('div'); row.className='match-person'; row.appendChild(imgOrInitialEl('player',person.row?playerImageNames(person.row):person.name,'match-person-avatar'));
+  const copy=document.createElement('div'); copy.className='match-person-copy'; const b=cralNavOpenPlayerButton(person.name,person.row,person.team); copy.appendChild(b); const s=document.createElement('span'); s.textContent=person.team||''; copy.appendChild(s); row.appendChild(copy); const v=document.createElement('div'); v.className='match-person-value'; v.textContent=icon+(person.value>1?' ×'+person.value:''); row.appendChild(v); return row;
+}
+function cralNavMatchListSection(title,emoji,items,icon){
+  const sec=cralNavSection(title,emoji); const list=document.createElement('div'); list.className='match-person-list'; if(items.length) items.forEach(x=>list.appendChild(cralNavMatchPersonRow(x,icon))); else list.appendChild(buildEl('div','entity-empty','Nessun dato registrato per questa partita.')); sec.appendChild(list); return sec;
+}
+function cralNavMatchSiblings(match){
+  const all=pagelloneKnownMatches().filter(m=>m.giornataNum===match.giornataNum);
+  const idx=all.findIndex(m=>cralNavMatchIdentity(m)===cralNavMatchIdentity(match));
+  return {prev:idx>0?all[idx-1]:null,next:idx>=0&&idx<all.length-1?all[idx+1]:null};
+}
+function openMatchCenter(match,options={}){
+  match=cralNavResolveMatch(match)||match; if(!match?.home||!match?.away) return;
+  const key=cralNavMatchIdentity(match);
+  if(!options.fromRoute) cralNavPush({tab:state.activeTab,view:'match',giornata:match.giornataNum,home:match.home,away:match.away});
+  closePlayerProfile({skipRoute:true,restoreFocus:false});
+  const details=cralNavMatchDetails(match); const fanta=cralNavMatchFantaImpact(match); const siblings=cralNavMatchSiblings(match); const score=parseScorePair(match.score);
+  const view=document.createElement('div'); view.className='entity-view match-center-view';
+  const hero=document.createElement('div'); hero.className='entity-hero match-center-hero'; const meta=document.createElement('div'); meta.className='match-center-meta'; const day=document.createElement('span'); day.className='entity-chip'; day.textContent=match.giornataNum?'Giornata '+match.giornataNum:'Partita'; meta.appendChild(day); if(match.data){ const d=document.createElement('span'); d.className='entity-chip'; d.textContent=match.data; meta.appendChild(d); } hero.appendChild(meta);
+  const board=document.createElement('div'); board.className='match-scoreboard';
+  const side=(team)=>{ const s=document.createElement('div'); s.className='match-side'; const b=document.createElement('button'); b.type='button'; b.className='match-side-btn'; b.onclick=()=>openTeamProfile(team); b.appendChild(imgOrInitialEl('team',team,'match-center-logo')); const n=document.createElement('span'); n.className='match-center-team'; n.textContent=team; b.appendChild(n); s.appendChild(b); return s; };
+  board.appendChild(side(match.home)); const center=document.createElement('div'); center.className='match-center-score'; const big=document.createElement('div'); big.className='score-big'; big.textContent=match.score||'VS'; const st=document.createElement('span'); st.className='status'; st.textContent=score?'Finale':'Da disputare'; center.appendChild(big); center.appendChild(st); board.appendChild(center); board.appendChild(side(match.away)); hero.appendChild(board); view.appendChild(hero);
+  const columns=document.createElement('div'); columns.className='match-columns'; columns.appendChild(cralNavMatchListSection('Marcatori '+match.home,'⚽',details.home,'⚽')); columns.appendChild(cralNavMatchListSection('Marcatori '+match.away,'⚽',details.away,'⚽')); view.appendChild(columns);
+  if(details.autogoals.length) view.appendChild(cralNavMatchListSection('Autogol','↩',details.autogoals,'↩'));
+  if(details.mvp.length||details.keeper.length){ const awardSec=cralNavSection('Premi partita','🏅'); const awards=document.createElement('div'); awards.className='match-awards'; [...details.mvp.map(x=>({x,label:'MVP',icon:'⭐',cls:' is-mvp'})),...details.keeper.map(x=>({x,label:'Miglior portiere',icon:'🧤',cls:''}))].forEach(({x,label,icon,cls})=>{ const card=document.createElement('div'); card.className='match-award'+cls; const sm=document.createElement('small'); sm.textContent=icon+' '+label; card.appendChild(sm); card.appendChild(cralNavOpenPlayerButton(x.name,x.row,x.team)); awards.appendChild(card); }); awardSec.appendChild(awards); view.appendChild(awardSec); }
+  if(details.pagelle.length){ const sec=cralNavSection('Pagelle della partita','📝'); const sub=document.createElement('p'); sub.className='entity-section-sub'; sub.textContent='Voti collegati alla stessa giornata e alla stessa gara del Pagellone.'; sec.appendChild(sub); const grid=document.createElement('div'); grid.className='match-pagelle-grid'; details.pagelle.forEach(x=>{ const card=document.createElement('div'); card.className='match-pagella'; card.appendChild(imgOrInitialEl('player',playerImageNames(x.row||{}),'team-roster-avatar')); const c=document.createElement('div'); const b=cralNavOpenPlayerButton(x.displayName,x.row,x.team); c.appendChild(b); const t=document.createElement('div'); t.className='match-pagella-team'; t.textContent=x.team; c.appendChild(t); card.appendChild(c); const v=document.createElement('span'); v.className='match-pagella-vote'; v.textContent=votoDisplay(x.voto,x.votoLabel); card.appendChild(v); grid.appendChild(card); }); sec.appendChild(grid); view.appendChild(sec); }
+  if(fanta.length){ const sec=cralNavSection('Impatto Fantacalcio','♛'); const sub=document.createElement('p'); sub.className='entity-section-sub'; sub.textContent='Punteggio reale della giornata per i giocatori di questa gara che risultano schierati in almeno una rosa Fantacalcio.'; sec.appendChild(sub); const list=document.createElement('div'); list.className='fanta-impact-list'; fanta.forEach(x=>{ const row=document.createElement('div'); row.className='fanta-impact-row'; const c=document.createElement('div'); const b=cralNavOpenPlayerButton(x.name,null,x.team); c.appendChild(b); const p=document.createElement('p'); p.textContent=x.detail; c.appendChild(p); row.appendChild(c); const pts=document.createElement('div'); pts.className='fanta-impact-score'; pts.textContent=x.points+' pt'; row.appendChild(pts); list.appendChild(row); }); sec.appendChild(list); view.appendChild(sec); }
+  if(siblings.prev||siblings.next){ const sec=cralNavSection('Altre partite della giornata','↔'); const nav=document.createElement('div'); nav.className='match-sibling-nav'; if(siblings.prev){ const b=document.createElement('button'); b.type='button'; b.className='match-sibling-btn'; b.innerHTML='← <span></span>'; b.querySelector('span').textContent=siblings.prev.home+' · '+siblings.prev.away; b.onclick=()=>openMatchCenter(siblings.prev); nav.appendChild(b); } if(siblings.next){ const b=document.createElement('button'); b.type='button'; b.className='match-sibling-btn'; const span=document.createElement('span'); span.textContent=siblings.next.home+' · '+siblings.next.away; b.appendChild(span); b.appendChild(document.createTextNode(' →')); b.onclick=()=>openMatchCenter(siblings.next); nav.appendChild(b); } sec.appendChild(nav); view.appendChild(sec); }
+  const route={tab:state.activeTab,view:'match',giornata:match.giornataNum,home:match.home,away:match.away};
+  cralNavRenderEntity(key,(match.giornataNum?'G'+match.giornataNum+' · ':'')+match.home+' — '+match.away,view,()=>cralNavShare(route,match.home+' '+(match.score||'vs')+' '+match.away+' — CRAL Champions','Match Center'),options);
+}
+
+
 /* ══════════════════════════════════
    EVENTI
    ══════════════════════════════════ */
+let _searchRenderTimer=null;
 document.getElementById('search').addEventListener('input',e=>{
   state.search=e.target.value;
-  renderActiveSection(); // solo sezione attiva, non tutto
+  clearTimeout(_searchRenderTimer);
+  _searchRenderTimer=setTimeout(()=>renderActiveSection(),100);
 });
 
 /* ── Avvio ── */
-initTheme(); renderTabs(); updateTitle(); tryLoadLogo(); loadAuto();
+initTheme(); cralNavInit(); renderTabs(); updateTitle(); tryLoadLogo(); loadAuto();
 
-/* Service Worker: cache del logo CRAL (vedi sw.js), condiviso con tutte le
-   pagine del sito. sw.js vive nella ROOT del sito (due livelli sopra questa
-   pagina, che sta in tornei/<edizione>/), non in questa cartella: lo scope
-   risultante copre così anche la landing page e le altre edizioni.
-   Registrato dopo il load per non competere col caricamento della pagina;
-   se il browser non lo supporta o il file manca, il sito funziona lo
-   stesso esattamente come prima (fallback silenzioso). */
+/* Service Worker: cerca sw.js dalla directory corrente fino alla root del repository.
+   Evita assunzioni rigide sul fatto che index.html viva sempre a due livelli di profondità. */
+function serviceWorkerCandidates(){
+  const out=[];
+  const add=url=>{ const href=new URL(url,location.href).href; if(!out.includes(href)) out.push(href); };
+  if(location.hostname.endsWith('.github.io')){
+    const first=(location.pathname.split('/').filter(Boolean)[0]||'').trim();
+    if(first) add(location.origin+'/'+first+'/sw.js');
+  }
+  add('sw.js'); add('../sw.js'); add('../../sw.js'); add('../../../sw.js');
+  return out.filter(href=>new URL(href).origin===location.origin);
+}
+async function registerServiceWorkerSafely(){
+  for(const href of serviceWorkerCandidates()){
+    try{
+      const registration=await navigator.serviceWorker.register(href,{updateViaCache:'none'});
+      return registration;
+    }catch(e){}
+  }
+  return null;
+}
 if('serviceWorker' in navigator){
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('../../sw.js').catch(() => {});
-  });
+  window.addEventListener('load',()=>{ registerServiceWorkerSafely(); });
 }
 </script>
 </body>
