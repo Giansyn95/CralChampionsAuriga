@@ -12939,7 +12939,15 @@ function cralNavMatchPersonRow(person,icon){
   const copy=document.createElement('div'); copy.className='match-person-copy'; const b=cralNavOpenPlayerButton(person.name,person.row,person.team); copy.appendChild(b); const s=document.createElement('span'); s.textContent=person.team||''; copy.appendChild(s); row.appendChild(copy); const v=document.createElement('div'); v.className='match-person-value'; v.textContent=icon+(person.value>1?' ×'+person.value:''); row.appendChild(v); return row;
 }
 function cralNavMatchListSection(title,emoji,items,icon){
-  const sec=cralNavSection(title,emoji); const list=document.createElement('div'); list.className='match-person-list'; if(items.length) items.forEach(x=>list.appendChild(cralNavMatchPersonRow(x,icon))); else list.appendChild(buildEl('div','entity-empty','Nessun dato registrato per questa partita.')); sec.appendChild(list); return sec;
+  const sec=cralNavSection(title,emoji); const list=document.createElement('div'); list.className='match-person-list';
+  if(items.length) items.forEach(x=>list.appendChild(cralNavMatchPersonRow(x,icon)));
+  else {
+    const emptyLabel=/^Marcatori\b/i.test(String(title||''))
+      ? 'Nessun marcatore registrato per questa partita.'
+      : 'Nessun dato registrato per questa partita.';
+    list.appendChild(buildEl('div','entity-empty',emptyLabel));
+  }
+  sec.appendChild(list); return sec;
 }
 function cralNavResultOrderForDay(day){
   const d=parseInt(day||0,10)||0;
