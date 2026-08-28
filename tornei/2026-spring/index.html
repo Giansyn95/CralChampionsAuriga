@@ -1504,7 +1504,7 @@
     .match-awards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.match-award{position:relative;overflow:hidden;padding:13px;border-radius:17px;border:1px solid var(--line);background:linear-gradient(145deg,var(--soft),var(--panel));min-width:0}.match-award.is-mvp{border-color:rgba(245,185,66,.5);background:linear-gradient(145deg,rgba(245,185,66,.18),var(--panel))}.match-award small{display:block;color:var(--muted);font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:.06em}.match-award button{display:block;max-width:100%;margin-top:5px;border:0;background:none;padding:0;color:var(--ink);font:inherit;font-weight:900;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.match-award button:hover{color:var(--blue)}
     .match-pagelle-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.match-pagelle-team-col{min-width:0;display:flex;flex-direction:column;gap:7px}.match-pagelle-team-title{margin:0 0 2px;padding:0 2px;color:var(--muted);font-family:'Oswald',Arial,Helvetica,sans-serif;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.045em}.match-pagella{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:8px;align-items:center;padding:9px 10px;border:1px solid var(--line);border-radius:15px;background:var(--soft)}.match-pagella button{border:0;background:none;padding:0;color:var(--ink);font:inherit;font-size:12px;font-weight:900;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}.match-pagella button:hover{color:var(--blue)}.match-pagella-team{color:var(--muted);font-size:9px;font-weight:800}.match-pagella-vote{display:inline-flex;align-items:center;justify-content:center;min-width:37px;height:37px;border-radius:50%;border:2px solid currentColor;font-family:'Oswald',Arial,Helvetica,sans-serif;font-weight:800;color:var(--blue);background:var(--panel)}
     .fanta-impact-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.fanta-impact-row{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:10px;min-width:0;padding:10px 12px;border:1px solid var(--line);border-radius:16px;background:var(--soft);transition:transform .16s ease,border-color .16s ease,background .16s ease}.fanta-impact-row:hover{transform:translateY(-1px);border-color:color-mix(in srgb,var(--blue) 38%,var(--line));background:color-mix(in srgb,var(--soft) 92%,var(--blue) 8%)}.fanta-impact-avatar{width:42px;height:42px;flex:0 0 42px;border-radius:50%;object-fit:cover;background:var(--panel);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;box-shadow:0 0 0 1px var(--line)}.fanta-impact-copy{min-width:0}.fanta-impact-name{display:block;max-width:100%;border:0;background:none;padding:0;color:var(--ink);font:inherit;font-size:12px;font-weight:900;line-height:1.2;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}.fanta-impact-name:hover{color:var(--blue)}.fanta-impact-row p{margin:4px 0 0;color:var(--muted);font-size:10px;font-weight:700;line-height:1.35;white-space:normal}.fanta-impact-score{align-self:center;font-family:'Oswald',Arial,Helvetica,sans-serif;font-size:22px;font-weight:800;color:var(--blue);white-space:nowrap}
-    .match-sibling-nav{display:grid;grid-template-columns:1fr 1fr;gap:9px}.match-sibling-btn{display:flex;align-items:center;justify-content:flex-start;gap:8px;padding:11px;border:1px solid var(--line);border-radius:16px;background:var(--soft);color:var(--ink);font:inherit;font-size:11px;font-weight:850;cursor:pointer;text-align:left;min-width:0}.match-sibling-btn:only-child{grid-column:1/-1}.match-sibling-btn span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.match-sibling-btn:hover{border-color:rgba(15,90,168,.4)}
+    .match-sibling-nav{display:grid;grid-template-columns:1fr 1fr;gap:9px}.match-sibling-btn{display:flex;align-items:center;gap:8px;padding:11px;border:1px solid var(--line);border-radius:16px;background:var(--soft);color:var(--ink);font:inherit;font-size:11px;font-weight:850;cursor:pointer;min-width:0}.match-sibling-btn:only-child{grid-column:1/-1}.match-sibling-btn.is-prev{justify-content:flex-start;text-align:left}.match-sibling-btn.is-next{justify-content:flex-end;text-align:right}.match-sibling-label{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.match-sibling-arrow{flex:0 0 auto;color:var(--blue);font-size:16px;line-height:1}.match-sibling-btn:hover{border-color:rgba(15,90,168,.4)}
 
     /* Existing player profile: integrated navigation */
     .player-profile-team-badge{font:inherit;color:#fff;cursor:pointer;text-align:left}
@@ -1538,7 +1538,7 @@
       .team-trend-wrap{grid-template-columns:1fr}.team-trend-current{text-align:left;display:flex;align-items:baseline;gap:7px}.team-trend-current b{font-size:25px}.team-trend-svg{height:86px}
       .profile-match-button{padding:10px}.profile-match-score{font-size:21px}
       .match-center-hero{padding:16px 10px 20px}.match-center-meta{margin-bottom:13px}.match-scoreboard{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:7px}.match-center-logo{width:68px;height:68px;border-radius:18px;padding:6px}.match-center-team{margin-top:7px;font-size:clamp(15px,5vw,21px)}.match-center-score{min-width:84px}.match-center-score .score-big{font-size:clamp(42px,14vw,58px)}.match-center-score .status{width:max-content;justify-content:center;font-size:8px;padding:4px 7px;margin:7px auto 0;text-align:center}
-      .match-columns{grid-template-columns:1fr;gap:10px;margin:10px 9px 0}.match-columns .entity-section{margin:0}.match-awards{grid-template-columns:1fr 1fr}.match-pagelle-grid{grid-template-columns:1fr}.fanta-impact-list{grid-template-columns:1fr;gap:7px}.fanta-impact-row{padding:9px 10px;gap:9px;border-radius:14px}.fanta-impact-avatar{width:38px;height:38px;flex-basis:38px;font-size:11px}.fanta-impact-name{font-size:12px}.fanta-impact-row p{font-size:9px;margin-top:3px}.fanta-impact-score{font-size:20px}.match-sibling-nav{grid-template-columns:1fr}.match-sibling-btn:last-child{text-align:left;justify-content:flex-start}
+      .match-columns{grid-template-columns:1fr;gap:10px;margin:10px 9px 0}.match-columns .entity-section{margin:0}.match-awards{grid-template-columns:1fr 1fr}.match-pagelle-grid{grid-template-columns:1fr}.fanta-impact-list{grid-template-columns:1fr;gap:7px}.fanta-impact-row{padding:9px 10px;gap:9px;border-radius:14px}.fanta-impact-avatar{width:38px;height:38px;flex-basis:38px;font-size:11px}.fanta-impact-name{font-size:12px}.fanta-impact-row p{font-size:9px;margin-top:3px}.fanta-impact-score{font-size:20px}.match-sibling-nav{grid-template-columns:1fr}.match-sibling-btn.is-prev{text-align:left;justify-content:flex-start}.match-sibling-btn.is-next{text-align:right;justify-content:flex-end}
       .entity-nav-backdrop .mini-logo{width:24px;height:24px}
       .match[data-rich-nav="1"]:hover{transform:none;box-shadow:none}
     }
@@ -2622,7 +2622,9 @@ function showTab(id,focusTab=false,options={}){
     if(active && focusTab) t.focus();
   });
   syncGlobalSearchVisibility();
-  renderActiveSection();
+  // Classifiche e Risultati possono essere gia stati preparati in idle su desktop.
+  // In quel caso il primo click cambia solo la visibilita del pannello, senza un render sincrono.
+  if(!quickTabIsReady(id)) renderActiveSection();
   if(!options.skipRoute && typeof cralNavReplaceTab==='function') cralNavReplaceTab(id);
 }
 
@@ -4410,6 +4412,7 @@ let _pagellonePlayerIndexCache = null;
 let _pagelloneRiepilogoMatchesCache = null;
 let _pagelloneKnownMatchesCache = null;
 const _cralNavMatchesByDayCache = new Map();
+const _cralNavResultOrderByDayCache = new Map();
 const _cralNavPagellaOrderCache = new Map();
 const _cralNavMatchDetailsCache = new Map();
 const _cralNavFantaImpactCache = new Map();
@@ -4429,6 +4432,7 @@ function clearDerivedDataCaches(){
   _pagelloneRiepilogoMatchesCache = null;
   _pagelloneKnownMatchesCache = null;
   _cralNavMatchesByDayCache.clear();
+  _cralNavResultOrderByDayCache.clear();
   _cralNavPagellaOrderCache.clear();
   _cralNavMatchDetailsCache.clear();
   _cralNavFantaImpactCache.clear();
@@ -4449,19 +4453,38 @@ function profileCacheKey(name,contextRow){
 }
 
 function warmPlayerProfileCaches(){
-  const run=()=>{
-    try{
-      rosterIdentityRecords();
-      playerTeamMap();
-      playerRoleMap();
-      sectionFiles('riepilogo').forEach(f=>parseRiepilogoFile(f));
-      pagelloneKnownMatches();
-      if(sectionTextFiles('pagellone').length) pagellonePlayerIndex();
-      warmMatchCenterCaches();
-    }catch(e){ /* cache warm-up non critica */ }
+  const tasks=[
+    ()=>rosterIdentityRecords(),
+    ()=>playerTeamMap(),
+    ()=>playerRoleMap(),
+    ...sectionFiles('riepilogo').map(f=>()=>parseRiepilogoFile(f)),
+    ()=>pagelloneKnownMatches(),
+    ()=>{ if(sectionTextFiles('pagellone').length) pagellonePlayerIndex(); },
+    ()=>warmMatchCenterCaches()
+  ];
+  let i=0;
+  const step=(deadline)=>{
+    if(i>=tasks.length) return;
+    const started=performance.now();
+    // Un solo blocco pesante per callback: su desktop evita che il warm-up in background
+    // sottragga il main thread proprio al primo click su Classifiche/Risultati.
+    try{ tasks[i++](); }catch(e){ /* cache warm-up non critica */ }
+    const elapsed=performance.now()-started;
+    if(i>=tasks.length) return;
+    if('requestIdleCallback' in window){
+      const delay=elapsed>18?90:0;
+      if(delay) setTimeout(()=>requestIdleCallback(step,{timeout:1800}),delay);
+      else requestIdleCallback(step,{timeout:1800});
+    }else setTimeout(()=>step(null),48);
   };
-  if('requestIdleCallback' in window) requestIdleCallback(run,{timeout:1400});
-  else setTimeout(run,80);
+  const start=()=>{
+    if('requestIdleCallback' in window) requestIdleCallback(step,{timeout:2200});
+    else setTimeout(()=>step(null),0);
+  };
+  // Desktop: priorita alla reattivita dei primi tab; il Match Center viene scaldato
+  // subito dopo, quando il browser ha gia avuto il tempo di gestire l'interazione iniziale.
+  if(window.matchMedia('(min-width:721px)').matches) setTimeout(start,650);
+  else start();
 }
 
 /* Precalcolo progressivo dei dati del Match Center. Viene eseguito solo nei tempi
@@ -11983,8 +12006,13 @@ function renderFantacalcio(){
 /* Il tab usa la cache precalcolata per il primo paint e verifica poi le rose reali in data/giornataX/: i file live diventano la sorgente autorevole per partecipanti e punteggi. */
 
 /* Renderizza SOLO la sezione attiva per efficienza */
-function renderActiveSection(){
-  switch(state.activeTab){
+const QUICK_TAB_IDS = new Set(['classifiche','risultati']);
+const _quickTabRenderSignatures = new Map();
+function quickTabRenderSignature(id){ return id+'|'+_dataLoadGeneration+'|'+norm(state.search); }
+function markQuickTabRendered(id){ if(QUICK_TAB_IDS.has(id)) _quickTabRenderSignatures.set(id,quickTabRenderSignature(id)); }
+function quickTabIsReady(id){ return QUICK_TAB_IDS.has(id) && _quickTabRenderSignatures.get(id)===quickTabRenderSignature(id); }
+function renderSectionById(id){
+  switch(id){
     case 'home':        renderHome(); break;
     case 'classifiche': renderClassifiche(); break;
     case 'statistiche': renderStatistiche(); break;
@@ -11995,6 +12023,24 @@ function renderActiveSection(){
     case 'pagellone':   renderPagellone(); break;
     case 'fantacalcio': renderFantacalcio(); break;
   }
+  markQuickTabRendered(id);
+}
+function renderActiveSection(){ renderSectionById(state.activeTab); }
+function warmDesktopPrimaryTabs(){
+  if(!window.matchMedia('(min-width:721px)').matches || !('requestIdleCallback' in window)) return;
+  const generation=_dataLoadGeneration;
+  const targets=['classifiche','risultati'];
+  let i=0;
+  const step=(deadline)=>{
+    if(generation!==_dataLoadGeneration || i>=targets.length) return;
+    if(!deadline.didTimeout && deadline.timeRemaining()<12){ requestIdleCallback(step,{timeout:1100}); return; }
+    const id=targets[i++];
+    if(id!==state.activeTab && !quickTabIsReady(id)) renderSectionById(id);
+    if(i<targets.length) requestIdleCallback(step,{timeout:1100});
+  };
+  // Prepara i due tab nascosti nei tempi morti: il primo click deve limitarsi a mostrarli,
+  // senza costruire tabelle e righe proprio durante l'interazione dell'utente.
+  requestIdleCallback(step,{timeout:700});
 }
 function renderAll(){ updateTitle(); renderTabs(); syncGlobalSearchVisibility(); renderActiveSection(); if(typeof cralNavScheduleApplyRoute==='function') cralNavScheduleApplyRoute(true); }
 
@@ -12224,7 +12270,7 @@ async function loadAuto(fresh){
     clearImageProbeCache();
     clearDerivedDataCaches();
 
-    applyConfig(); showErrors(); renderAll(); tryLoadLogo(); warmPlayerProfileCaches();
+    applyConfig(); showErrors(); renderAll(); tryLoadLogo(); warmDesktopPrimaryTabs(); warmPlayerProfileCaches();
     if(ok || state.rows['manifest.csv']) setStatus(dataLoadStatus(ok+(state.rows['manifest.csv']?1:0)),true);
     else setStatus('Autocaricamento bloccato — verifica manifest.csv o la connessione.');
 
@@ -12895,8 +12941,34 @@ function cralNavMatchPersonRow(person,icon){
 function cralNavMatchListSection(title,emoji,items,icon){
   const sec=cralNavSection(title,emoji); const list=document.createElement('div'); list.className='match-person-list'; if(items.length) items.forEach(x=>list.appendChild(cralNavMatchPersonRow(x,icon))); else list.appendChild(buildEl('div','entity-empty','Nessun dato registrato per questa partita.')); sec.appendChild(list); return sec;
 }
+function cralNavResultOrderForDay(day){
+  const d=parseInt(day||0,10)||0;
+  if(_cralNavResultOrderByDayCache.has(d)) return _cralNavResultOrderByDayCache.get(d);
+  const ordered=[];
+  const seen=new Set();
+  sectionFiles('risultati').forEach(f=>rowsToObjects(state.rows[f]||[]).forEach(r=>{
+    const rowDay=parseInt(giornataNumberFromText(firstPresent(r,[['giornata','turno','round']])) || giornataNumberFromText(f) || d || 0,10)||0;
+    if((d && rowDay && rowDay!==d) || (!d && rowDay)) return;
+    const [home,away]=matchTeamsFromRow(r);
+    if(!pagelloneValidMatchTeam(home) || !pagelloneValidMatchTeam(away)) return;
+    const resolved=cralNavResolveMatch({home,away,giornataNum:rowDay||d});
+    if(!resolved) return;
+    const key=cralNavMatchIdentity(resolved);
+    if(seen.has(key)) return;
+    seen.add(key); ordered.push(resolved);
+  }));
+  // Se una gara esiste solo nel riepilogo/calendario, la aggiungiamo in coda senza
+  // alterare l'ordine delle righe mostrato nel tab Risultati.
+  cralNavMatchesForDay(d).forEach(m=>{
+    if((d && m.giornataNum && m.giornataNum!==d) || (!d && m.giornataNum)) return;
+    const key=cralNavMatchIdentity(m);
+    if(!seen.has(key)){ seen.add(key); ordered.push(m); }
+  });
+  _cralNavResultOrderByDayCache.set(d,ordered);
+  return ordered;
+}
 function cralNavMatchSiblings(match){
-  const all=cralNavMatchesForDay(match.giornataNum).filter(m=>m.giornataNum===match.giornataNum);
+  const all=cralNavResultOrderForDay(match.giornataNum);
   const identity=cralNavMatchIdentity(match);
   const idx=all.findIndex(m=>cralNavMatchIdentity(m)===identity);
   return {prev:idx>0?all[idx-1]:null,next:idx>=0&&idx<all.length-1?all[idx+1]:null};
@@ -12921,12 +12993,33 @@ function openMatchCenter(match,options={}){
   const board=document.createElement('div'); board.className='match-scoreboard';
   const side=(team)=>{ const s=document.createElement('div'); s.className='match-side'; const b=document.createElement('button'); b.type='button'; b.className='match-side-btn'; b.onclick=()=>openTeamProfile(team); b.appendChild(imgOrInitialEl('team',team,'match-center-logo')); const n=document.createElement('span'); n.className='match-center-team'; n.textContent=team; b.appendChild(n); s.appendChild(b); return s; };
   board.appendChild(side(match.home)); const center=document.createElement('div'); center.className='match-center-score'; const big=document.createElement('div'); big.className='score-big'; big.textContent=match.score||'VS'; const st=document.createElement('span'); st.className='status'; st.textContent=score?'Finale':'Da disputare'; center.appendChild(big); center.appendChild(st); board.appendChild(center); board.appendChild(side(match.away)); hero.appendChild(board); view.appendChild(hero);
-  const columns=document.createElement('div'); columns.className='match-columns'; columns.appendChild(cralNavMatchListSection('Marcatori '+match.home,'⚽',details.home,'⚽')); columns.appendChild(cralNavMatchListSection('Marcatori '+match.away,'⚽',details.away,'⚽')); view.appendChild(columns);
+  if(details.home.length||details.away.length){
+    const columns=document.createElement('div'); columns.className='match-columns';
+    columns.appendChild(cralNavMatchListSection('Marcatori '+match.home,'⚽',details.home,'⚽'));
+    columns.appendChild(cralNavMatchListSection('Marcatori '+match.away,'⚽',details.away,'⚽'));
+    view.appendChild(columns);
+  }
   if(details.autogoals.length) view.appendChild(cralNavMatchListSection('Autogol','↩',details.autogoals,'↩'));
   if(details.mvp.length||details.keeper.length){ const awardSec=cralNavSection('Premi partita','🏅'); const awards=document.createElement('div'); awards.className='match-awards'; [...details.mvp.map(x=>({x,label:'MVP',icon:'⭐',cls:' is-mvp'})),...details.keeper.map(x=>({x,label:'Miglior portiere',icon:'🧤',cls:''}))].forEach(({x,label,icon,cls})=>{ const card=document.createElement('div'); card.className='match-award'+cls; const sm=document.createElement('small'); sm.textContent=icon+' '+label; card.appendChild(sm); card.appendChild(cralNavOpenPlayerButton(x.name,x.row,x.team)); awards.appendChild(card); }); awardSec.appendChild(awards); view.appendChild(awardSec); }
   if(details.pagelle.length){ const sec=cralNavSection('Pagelle della partita','📝'); const grid=document.createElement('div'); grid.className='match-pagelle-grid'; const addTeamColumn=(team,items)=>{ const col=document.createElement('div'); col.className='match-pagelle-team-col'; const h=document.createElement('h4'); h.className='match-pagelle-team-title'; h.textContent=team; col.appendChild(h); const sorted=cralNavSortPagelleForTeam(items,team); if(!sorted.length) col.appendChild(buildEl('div','entity-empty','Nessuna pagella.')); sorted.forEach(x=>{ const card=document.createElement('div'); card.className='match-pagella'; card.appendChild(imgOrInitialEl('player',x.row?playerImageNames(x.row):[x.displayName],'team-roster-avatar')); const c=document.createElement('div'); const b=cralNavOpenPlayerButton(x.displayName,x.row,x.team); c.appendChild(b); const t=document.createElement('div'); t.className='match-pagella-team'; t.textContent=roleDisplayLabel(x.role||fieldLoose(x.row||{},['ruolo','role','posizione','position']))||x.team; c.appendChild(t); card.appendChild(c); const v=document.createElement('span'); v.className='match-pagella-vote'; v.textContent=votoDisplay(x.voto,x.votoLabel); card.appendChild(v); col.appendChild(card); }); grid.appendChild(col); }; addTeamColumn(match.home,details.pagelle.filter(x=>cralNavTeamSame(x.team,match.home))); addTeamColumn(match.away,details.pagelle.filter(x=>cralNavTeamSame(x.team,match.away))); sec.appendChild(grid); view.appendChild(sec); }
   if(fanta.length){ const sec=cralNavSection('Impatto Fantacalcio','♛'); const sub=document.createElement('p'); sub.className='entity-section-sub'; sub.textContent='Punteggio reale della giornata per i giocatori di questa gara che risultano schierati in almeno una rosa Fantacalcio.'; sec.appendChild(sub); const list=document.createElement('div'); list.className='fanta-impact-list'; fanta.forEach(x=>{ const row=document.createElement('div'); row.className='fanta-impact-row'; const imageNames=x.row?playerImageNames(x.row):[x.fullName,x.name].filter(Boolean); row.appendChild(imgOrInitialEl('player',imageNames,'fanta-impact-avatar')); const c=document.createElement('div'); c.className='fanta-impact-copy'; const b=cralNavOpenPlayerButton(x.name,x.row,x.team); b.classList.add('fanta-impact-name'); c.appendChild(b); const p=document.createElement('p'); p.textContent=x.detail; c.appendChild(p); row.appendChild(c); const pts=document.createElement('div'); pts.className='fanta-impact-score'; pts.textContent=x.points+' pt'; row.appendChild(pts); list.appendChild(row); }); sec.appendChild(list); view.appendChild(sec); }
-  if(siblings.prev||siblings.next){ const sec=cralNavSection('Altre partite della giornata','↔'); const nav=document.createElement('div'); nav.className='match-sibling-nav'; if(siblings.prev){ const b=document.createElement('button'); b.type='button'; b.className='match-sibling-btn'; b.innerHTML='← <span></span>'; b.querySelector('span').textContent=siblings.prev.home+' · '+siblings.prev.away; b.onclick=()=>openMatchCenter(siblings.prev); nav.appendChild(b); } if(siblings.next){ const b=document.createElement('button'); b.type='button'; b.className='match-sibling-btn'; const span=document.createElement('span'); span.textContent=siblings.next.home+' · '+siblings.next.away; b.appendChild(span); b.appendChild(document.createTextNode(' →')); b.onclick=()=>openMatchCenter(siblings.next); nav.appendChild(b); } sec.appendChild(nav); view.appendChild(sec); }
+  if(siblings.prev||siblings.next){
+    const sec=cralNavSection('Altre partite della giornata','↔');
+    const nav=document.createElement('div'); nav.className='match-sibling-nav';
+    const siblingButton=(target,direction)=>{
+      const b=document.createElement('button'); b.type='button'; b.className='match-sibling-btn is-'+direction;
+      const arrow=document.createElement('span'); arrow.className='match-sibling-arrow'; arrow.setAttribute('aria-hidden','true'); arrow.textContent=direction==='prev'?'←':'→';
+      const label=document.createElement('span'); label.className='match-sibling-label'; label.textContent=target.home+' · '+target.away;
+      if(direction==='prev'){ b.appendChild(arrow); b.appendChild(label); }
+      else { b.appendChild(label); b.appendChild(arrow); }
+      b.setAttribute('aria-label',(direction==='prev'?'Partita precedente: ':'Partita successiva: ')+target.home+' contro '+target.away);
+      b.onclick=()=>openMatchCenter(target);
+      return b;
+    };
+    if(siblings.prev) nav.appendChild(siblingButton(siblings.prev,'prev'));
+    if(siblings.next) nav.appendChild(siblingButton(siblings.next,'next'));
+    sec.appendChild(nav); view.appendChild(sec);
+  }
   cralNavRenderEntity(key,(match.giornataNum?'G'+match.giornataNum+' · ':'')+match.home+' — '+match.away,view,options);
   cralNavWarmMatchNeighbors(siblings);
 }
