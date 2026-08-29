@@ -12778,7 +12778,8 @@ function cralNavBuildTrend(data){
 function cralNavProfileMatchButton(match,team){
   const b=document.createElement('button'); b.type='button'; b.className='profile-match-button'; b.onclick=()=>openMatchCenter(match);
   const left=document.createElement('div');
-  const teams=document.createElement('div'); teams.className='profile-match-teams'; teams.appendChild(imgOrInitialEl('team',match.home,'mini-logo')); const t=document.createElement('span'); t.textContent=match.home+' · '+match.away; teams.appendChild(t); left.appendChild(teams);
+  const opp=cralNavTeamSame(match.home,team)?match.away:match.home;
+  const teams=document.createElement('div'); teams.className='profile-match-teams'; teams.appendChild(imgOrInitialEl('team',opp,'mini-logo')); const t=document.createElement('span'); t.textContent=match.home+' · '+match.away; teams.appendChild(t); left.appendChild(teams);
   const meta=document.createElement('div'); meta.className='profile-match-meta'; meta.textContent=[match.giornataNum?('Giornata '+match.giornataNum):'',match.data||''].filter(Boolean).join(' · '); left.appendChild(meta);
   const score=document.createElement('div'); score.className='profile-match-score'; score.textContent=match.score||'vs';
   b.appendChild(left); b.appendChild(score); return b;
