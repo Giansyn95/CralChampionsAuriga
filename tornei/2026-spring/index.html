@@ -321,6 +321,8 @@
     .motm-info{min-width:0;padding-top:8px}
     .motm-name{font-family:'Oswald',Arial,sans-serif;font-size:clamp(20px,5vw,28px);font-weight:800;line-height:1.05;margin:0 0 4px;text-transform:uppercase;letter-spacing:.01em}
     .motm-team{display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(255,255,255,.85);font-weight:600;margin-bottom:10px}
+    .motm-card .motm-name.player-link:hover,.motm-card .motm-name.player-link:focus{color:#fff}
+    .motm-card .motm-team.player-link:hover,.motm-card .motm-team.player-link:focus{color:rgba(255,255,255,.85)}
     .motm-stats{display:flex;gap:18px;flex-wrap:wrap}
     .motm-stat{display:flex;flex-direction:column}
     .motm-stat .n{font-size:20px;font-weight:900;color:var(--gold);line-height:1}
@@ -805,7 +807,7 @@
     .chart-container.is-tall{height:350px}
     .chart-note{position:relative;z-index:1;color:var(--muted);font-size:12px;line-height:1.4;margin:4px 0 0}
     .chart-label-strip{position:relative;height:58px;margin-top:2px;padding:0;overflow:visible}
-    .chart-label-item{position:absolute;top:0;transform:translateX(-50%);width:54px;display:flex;justify-content:center;align-items:flex-start}
+    .chart-label-item{position:absolute;top:0;transform:translateX(-50%);width:54px;display:flex;justify-content:center;align-items:flex-start;border:0;background:transparent;padding:0;color:inherit;font:inherit;cursor:pointer}
     .chart-label-img{width:44px;height:44px;background:#fff;border:2px solid rgba(255,255,255,.95);box-shadow:0 7px 16px var(--shadow);display:block}
     .chart-label-img.fallback{display:flex;align-items:center;justify-content:center;font-weight:900;font-size:11px;line-height:1;color:var(--blue)}
     .chart-label-img.player{border-radius:14px;object-fit:cover;object-position:center center;padding:0}
@@ -1315,6 +1317,8 @@
     .pg-team-logo{width:38px;height:38px;flex:0 0 auto;border-radius:10px;overflow:hidden;background:var(--soft);
       display:flex;align-items:center;justify-content:center}
     .pg-team-logo-img,.pg-team-logo>*{width:100%;height:100%;object-fit:contain}
+    .pg-team-head[data-open-team]{cursor:pointer}
+    .pg-team-head[data-open-team]:focus-visible{outline:3px solid rgba(245,185,66,.55);outline-offset:4px;border-radius:12px}
     .pg-team-name{margin:0;font-family:'Oswald',Arial,Helvetica,sans-serif;font-size:18px;letter-spacing:.03em;
       color:var(--ink);text-transform:uppercase}
     .pg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:22px 18px}
@@ -1649,8 +1653,8 @@ const PAGELLONE_SUBFOLDER = 'data/pagelloni/';
 const PORTIERI_SNAPSHOT_FILE = 'portieri_snapshot.json';
 const FANTA_CACHE_SCHEMA = 1;
 const TABS = [
-  ['home','🏠 Home'],['classifiche','🏆 Classifiche'],['statistiche','📊 Statistiche'],
-  ['squadre','👕 Squadre'],['calendario','📅 Calendario'],['risultati','⚽ Risultati'],
+  ['home','🏠 Home'],['risultati','⚽ Risultati'],['classifiche','🏆 Classifiche'],
+  ['calendario','📅 Calendario'],['squadre','👕 Squadre'],['statistiche','📊 Statistiche'],
   ['riepilogo','📝 Riepilogo giornate'],['pagellone','📣 Pagellone ignorante'],['fantacalcio','Fantacalcio']
 ];
 
@@ -1672,6 +1676,27 @@ let state = {
   fantaPrecomputedLoading: false,
   sortState: {}   // { tableId: { col, dir } }
 };
+
+/* Tab opzionali: non occupano spazio nella navigazione se l'edizione non ha dati. */
+function hasPagelloneContent(){
+  try{
+    return sectionTextFiles('pagellone').some(f=>String(state.files[f]||'').trim().length>0);
+  }catch(e){ return false; }
+}
+function hasFantacalcioContent(){
+  try{
+    if(state.fantaPrecomputedData && Array.isArray(state.fantaPrecomputedData.results) && state.fantaPrecomputedData.results.length) return true;
+    if(sectionFiles('fanta_output').length) return true;
+    return fantaRosterFiles().length>0 && fantaListoneFiles().length>0;
+  }catch(e){ return false; }
+}
+function isTabAvailable(id){
+  if(id==='pagellone') return hasPagelloneContent();
+  if(id==='fantacalcio') return hasFantacalcioContent();
+  return TABS.some(([tabId])=>tabId===id);
+}
+function availableTabs(){ return TABS.filter(([id])=>isTabAvailable(id)); }
+
 let loadErrors = [];
 let _dataLoadGeneration = 0;
 let _activeDataLoadController = null;
@@ -2578,7 +2603,16 @@ function handleTabKeydown(ev){
 }
 function renderTabs(){
   const el=document.getElementById('tabs'); el.innerHTML='';
-  TABS.forEach(([id,label])=>{
+  if(!isTabAvailable(state.activeTab)) state.activeTab='home';
+
+  document.querySelectorAll('.section').forEach(panel=>{
+    const active=panel.id===state.activeTab;
+    panel.classList.toggle('active',active);
+    panel.setAttribute('aria-hidden',active?'false':'true');
+    if(!isTabAvailable(panel.id)) panel.removeAttribute('aria-labelledby');
+  });
+
+  availableTabs().forEach(([id,label])=>{
     const active=id===state.activeTab;
     const b=document.createElement('button');
     b.type='button';
@@ -2616,7 +2650,7 @@ function syncGlobalSearchVisibility(){
   searchEl.tabIndex=hide?-1:0;
 }
 function showTab(id,focusTab=false,options={}){
-  if(!TABS.some(([tabId])=>tabId===id)) return;
+  if(!TABS.some(([tabId])=>tabId===id) || !isTabAvailable(id)) return;
   state.activeTab=id;
   document.querySelectorAll('.section').forEach(s=>{
     const active=s.id===id;
@@ -3838,8 +3872,12 @@ function renderChartImageLabels(canvasId,labels,type,chart){
   const canvasWidth=canvas ? canvas.clientWidth : 0;
 
   labels.forEach((label,index)=>{
-    const item=document.createElement('div');
+    const item=document.createElement('button');
+    item.type='button';
     item.className='chart-label-item';
+    item.title=type==='team'?'Apri scheda squadra':'Apri scheda giocatore';
+    item.setAttribute('aria-label',(type==='team'?'Apri scheda squadra ':'Apri scheda giocatore ')+label);
+    item.onclick=()=>{ if(type==='team') openTeamProfile(label); else openPlayerProfile(label); };
     const x=xScale ? xScale.getPixelForValue(index) : ((index+.5)*(canvasWidth/Math.max(labels.length,1)));
     item.style.left=Math.round(x)+'px';
 
@@ -6282,11 +6320,15 @@ function renderMotmCard(){
   card.appendChild(imgOrInitialEl('player',motm.imageNames,'motm-photo',{priority:'high',loading:'eager'}));
 
   const info=document.createElement('div'); info.className='motm-info';
-  const name=document.createElement('div'); name.className='motm-name'; name.textContent=motm.name;
+  const name=document.createElement('button'); name.type='button'; name.className='motm-name player-link'; name.textContent=motm.name;
+  name.title='Apri scheda giocatore';
+  name.onclick=(ev)=>{ ev.stopPropagation(); openPlayerProfile(motm.name); };
   info.appendChild(name);
 
   if(motm.team){
-    const teamRow=document.createElement('div'); teamRow.className='motm-team';
+    const teamRow=document.createElement('button'); teamRow.type='button'; teamRow.className='motm-team player-link';
+    teamRow.title='Apri scheda squadra';
+    teamRow.onclick=(ev)=>{ ev.stopPropagation(); openTeamProfile(motm.team); };
     teamRow.appendChild(imgOrInitialEl('team',motm.team,'mini-logo',{priority:'high',loading:'eager'}));
     const teamName=document.createElement('span'); teamName.textContent=motm.team;
     teamRow.appendChild(teamName);
@@ -8211,46 +8253,36 @@ function addPeopleLineSmart(parent,label,people,withImages,teamHint,contextRows,
   strong.setAttribute('aria-label',label);
   row.appendChild(strong);
   const list=document.createElement('div'); list.style.cssText='display:flex;gap:6px;flex-wrap:wrap;align-items:center';
-  const lineKey=norm(label);
-  const isScorerLine=lineKey.startsWith('marcatori') || lineKey.includes('marcatore');
-  // Nel riepilogo partita i chip Marcatori e MVP sono solo informativi:
-  // non devono aprire la scheda giocatore. Le tabelle e le altre sezioni
-  // restano gestite da buildTable/player-link e mantengono il comportamento attuale.
-  const isMvpLine=lineKey==='mvp' || lineKey.includes('miglioreincampo') || lineKey.includes('manofthematch') || lineKey.includes('motm');
-  // Set condiviso tra tutti i marcatori di QUESTA lista: se due token uguali (stesso
-  // cognome) compaiono entrambi (es. due "Menolascina" che segnano nella stessa
-  // partita), ogni token consuma la propria riga di contesto invece di riusare sempre
-  // la prima trovata, altrimenti finirebbero entrambi assegnati alla stessa squadra.
+  // Set condiviso tra tutti i giocatori di QUESTA lista: se due token uguali (stesso
+  // cognome) compaiono entrambi, ogni token consuma la propria riga di contesto.
   const usedRows=new Set();
   people.forEach(name=>{
     const pill=document.createElement('span');
     pill.style.cssText='display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--soft);border-radius:999px;padding:4px 8px;font-size:12px;font-weight:700';
+    let resolvedTeam='';
     if(withImages){
       // Quando non c'è una squadra unica certa (teamHint vuoto) ma conosciamo le due
       // squadre della partita (candidateTeams), restringiamo il match a quelle per
       // evitare di prendere il logo di un omonimo di un'altra partita/giornata.
-      const team=teamHint
+      resolvedTeam=teamHint
         ? teamForPersonToken(name,teamHint,contextRows,usedRows)
         : teamForPersonTokenAmongTeams(name,candidateTeams,contextRows,usedRows);
-      if(team){
-        const logo=imgOrInitialEl('team',team,'mini-logo');
-        logo.title=team;
-        logo.alt=team;
+      if(resolvedTeam){
+        const logo=imgOrInitialEl('team',resolvedTeam,'mini-logo');
+        logo.title=resolvedTeam;
+        logo.alt=resolvedTeam;
         pill.appendChild(logo);
       } else {
         pill.appendChild(roleFallbackElForPerson(name,contextRows));
       }
     }
-    if(isScorerLine || isMvpLine){
-      const t=document.createElement('span');
-      t.textContent=name;
-      t.setAttribute('aria-label',name);
-      pill.appendChild(t);
-    }else{
-      const t=document.createElement('button'); t.type='button'; t.className='player-link'; t.textContent=name; t.title='Apri scheda giocatore';
-      t.onclick=(ev)=>{ ev.stopPropagation(); openPlayerProfile(name); };
-      pill.appendChild(t);
-    }
+    const t=document.createElement('button'); t.type='button'; t.className='player-link'; t.textContent=name; t.title='Apri scheda giocatore';
+    t.onclick=(ev)=>{
+      ev.stopPropagation();
+      const context=typeof cralNavContextRowForPlayer==='function' ? cralNavContextRowForPlayer(name,resolvedTeam) : null;
+      openPlayerProfile(name,context);
+    };
+    pill.appendChild(t);
     list.appendChild(pill);
   });
   row.appendChild(list); parent.appendChild(row);
@@ -8664,7 +8696,12 @@ function renderKpiGrid(parent, items){
     c.className='card stat riepilogo-kpi'+(isWide?' is-wide':'')+(isMatchMax?' is-match-max':'')+((isScorer&&!isTieScorer)?' is-scorer':'');
     const textWrap=document.createElement('div');
     textWrap.className='riepilogo-kpi-text';
-    const n=document.createElement('div'); n.className='n'; n.textContent=fixItalianAccents(value);
+    const scorerName=(isScorer&&!isTieScorer)?cleanPersonTokenForImage(value):'';
+    const n=document.createElement(scorerName?'button':'div'); n.className='n'+(scorerName?' player-link':''); n.textContent=fixItalianAccents(value);
+    if(scorerName){
+      n.type='button'; n.title='Apri scheda giocatore';
+      n.onclick=()=>openPlayerProfile(scorerName,typeof cralNavContextRowForPlayer==='function'?cralNavContextRowForPlayer(scorerName,''):null);
+    }
     const l=document.createElement('div'); l.className='l'; l.textContent=fixItalianAccents(label);
     textWrap.appendChild(n); textWrap.appendChild(l);
     c.appendChild(textWrap);
@@ -9620,14 +9657,14 @@ function pagelloneSelectHtml(id,label,options,value,emptyLabel){
 }
 function pagelloneTeamHtml(sq){
   return `<div class="pg-team">
-    <div class="pg-team-head"><div class="pg-team-logo"></div><h3 class="pg-team-name">${esc(sq.squadra)}</h3></div>
+    <div class="pg-team-head" data-open-team="${escAttr(sq.squadra)}" role="button" tabindex="0" aria-label="Apri scheda squadra ${escAttr(sq.squadra)}"><div class="pg-team-logo"></div><h3 class="pg-team-name">${esc(sq.squadra)}</h3></div>
     <div class="pg-grid">
       ${(sq.giocatori||[]).map((g,i)=>{
         const rot=(i%2===0?-1.3:1.1);
         return `<div class="pg-card" style="--pg-rot:${rot}deg">
           <div class="pg-card-top">
             <div class="pg-card-photo"></div>
-            <div class="pg-card-name"><span class="pg-role-icon" title="Ruolo">${pagelloneRoleIcon(g.nome,sq.squadra)}</span>${esc(g.nome)}</div>
+            <button type="button" class="pg-card-name player-link" data-open-player="${escAttr(g.nome)}" data-player-team="${escAttr(sq.squadra)}" title="Apri scheda giocatore"><span class="pg-role-icon" title="Ruolo">${pagelloneRoleIcon(g.nome,sq.squadra)}</span>${esc(g.nome)}</button>
           </div>
           <p class="pg-card-text">${g.testo?esc(g.testo):'<span class="pg-muted">Nessun commento.</span>'}</p>
           <div class="pg-card-bottom">
@@ -11020,10 +11057,18 @@ function ensureFantaDataInBackground(fresh,generation=_dataLoadGeneration,signal
     // dal repository: sono queste la fonte autorevole per partecipanti e calcoli.
     const cacheOk=await loadFantaPrecomputedCache(!!fresh,generation,signal);
     if(!isCurrentDataLoad(generation)||signal?.aborted) return false;
-    if(cacheOk&&state.activeTab==='fantacalcio') renderFantacalcio();
+    if(cacheOk){
+      renderTabs();
+      if(typeof cralNavScheduleApplyRoute==='function') cralNavScheduleApplyRoute(true);
+      if(state.activeTab==='fantacalcio') renderFantacalcio();
+    }
     const liveOk=await loadFantaSourceFilesInBackground(!!fresh,generation,signal);
     if(!isCurrentDataLoad(generation)||signal?.aborted) return false;
     state.fantaLoading=false;
+    if(liveOk){
+      renderTabs();
+      if(typeof cralNavScheduleApplyRoute==='function') cralNavScheduleApplyRoute(true);
+    }
     if(state.activeTab==='fantacalcio') renderFantacalcio();
     return liveOk||cacheOk;
   })();
@@ -12437,7 +12482,7 @@ function cralNavReadRoute(){
   const p=new URLSearchParams(String(location.hash||'').replace(/^#/,''));
   const tab=p.get('tab')||state.activeTab||'home';
   return {
-    tab:TABS.some(([id])=>id===tab)?tab:'home',
+    tab:isTabAvailable(tab)?tab:'home',
     view:p.get('view')||'',
     team:p.get('team')||'',
     player:p.get('player')||'',
@@ -12449,7 +12494,7 @@ function cralNavReadRoute(){
 }
 function cralNavHash(route){
   const p=new URLSearchParams();
-  const tab=TABS.some(([id])=>id===route?.tab)?route.tab:(state.activeTab||'home');
+  const tab=isTabAvailable(route?.tab)?route.tab:(isTabAvailable(state.activeTab)?state.activeTab:'home');
   p.set('tab',tab);
   if(route?.view) p.set('view',route.view);
   if(route?.view==='team' && route.team) p.set('team',route.team);
@@ -12587,8 +12632,14 @@ function cralNavInstallDelegation(){
   if(document.documentElement.dataset.cralNavDelegated==='1') return;
   document.documentElement.dataset.cralNavDelegated='1';
   document.addEventListener('click',ev=>{
-    // Riepilogo Giornata e Calendario conservano la UX storica: le card partita sono solo informative.
-    if(ev.target.closest('#riepilogo, #calendario')) return;
+    const explicitPlayer=ev.target.closest('[data-open-player]');
+    if(explicitPlayer){
+      ev.preventDefault(); ev.stopPropagation();
+      const name=String(explicitPlayer.dataset.openPlayer||'').trim();
+      const team=String(explicitPlayer.dataset.playerTeam||'').trim();
+      if(name) openPlayerProfile(name,cralNavContextRowForPlayer(name,team));
+      return;
+    }
     const explicitTeam=ev.target.closest('[data-open-team]');
     if(explicitTeam){ ev.preventDefault(); ev.stopPropagation(); openTeamProfile(explicitTeam.dataset.openTeam); return; }
     const matchTeam=ev.target.closest('.match-team[data-rich-team="1"]');
@@ -12612,7 +12663,21 @@ function cralNavInstallDelegation(){
   });
   document.addEventListener('keydown',ev=>{
     if(ev.key!=='Enter'&&ev.key!==' ') return;
-    if(ev.target.closest?.('#riepilogo, #calendario')) return;
+    const explicitTeam=ev.target.closest?.('[data-open-team]');
+    if(explicitTeam && explicitTeam.tagName!=='BUTTON'){
+      ev.preventDefault();
+      const name=String(explicitTeam.dataset.openTeam||'').trim();
+      if(name) openTeamProfile(name);
+      return;
+    }
+    const explicitPlayer=ev.target.closest?.('[data-open-player]');
+    if(explicitPlayer && explicitPlayer.tagName!=='BUTTON'){
+      ev.preventDefault();
+      const name=String(explicitPlayer.dataset.openPlayer||'').trim();
+      const team=String(explicitPlayer.dataset.playerTeam||'').trim();
+      if(name) openPlayerProfile(name,cralNavContextRowForPlayer(name,team));
+      return;
+    }
     const teamHead=ev.target.closest?.('.teamHead[data-rich-nav="1"]');
     if(teamHead){ ev.preventDefault(); const name=String(teamHead.querySelector('h2')?.textContent||'').trim(); if(name) openTeamProfile(name); return; }
     const matchEl=ev.target.closest?.('.match[data-rich-nav="1"]');
@@ -12625,14 +12690,6 @@ function cralNavEnhanceTargets(root){
   if(root.matches?.('.match')) matches.push(root);
   root.querySelectorAll?.('.match').forEach(x=>matches.push(x));
   matches.forEach(m=>{
-    if(m.closest('#riepilogo, #calendario')){
-      delete m.dataset.richNav;
-      m.removeAttribute('tabindex');
-      m.removeAttribute('role');
-      m.removeAttribute('aria-label');
-      m.querySelectorAll('.match-team').forEach(t=>{ delete t.dataset.richTeam; t.removeAttribute('title'); });
-      return;
-    }
     if(m.dataset.richNav==='1') return;
     const names=m.querySelectorAll('.match-name');
     if(names.length<2) return;
