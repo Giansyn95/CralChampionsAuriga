@@ -12119,30 +12119,131 @@ let _githubFantaTreeCache=null;
 async function githubListFantaCsvFilesFromTree(fresh=false,signal){
   const info=githubRepoInfoFromLocation();
   if(!info) return [];
+
   const key=info.owner+'/'+info.repo;
-  if(!fresh && _githubFantaTreeCache?.key===key) return _githubFantaTreeCache.files;
+
+  if(!fresh && _githubFantaTreeCache?.key===key){
+    return _githubFantaTreeCache.files;
+  }
+
   if(!fresh){
     try{
-      const saved=JSON.parse(sessionStorage.getItem('cral-fanta-tree:'+key)||'null');
-      if(saved&&Date.now()-Number(saved.time||0)<15*60*1000&&Array.isArray(saved.files)){
-        _githubFantaTreeCache={key,files:saved.files}; return saved.files;
+      const saved=JSON.parse(
+        sessionStorage.getItem('cral-fanta-tree:'+key)||'null'
+      );
+
+      if(
+        saved &&
+        Date.now()-Number(saved.time||0)<15*60*1000 &&
+        Array.isArray(saved.files)
+      ){
+        _githubFantaTreeCache={
+          key,
+          files:saved.files
+        };
+        return saved.files;
       }
     }catch(e){}
   }
+
+  // "master" è solo un fallback nel caso in cui "main" NON esista.
   for(const branch of ['main','master']){
     try{
-      const bust=fresh?'&t='+Date.now():'';
-      const url='https://api.github.com/repos/'+encodeURIComponent(info.owner)+'/'+encodeURIComponent(info.repo)+'/git/trees/'+encodeURIComponent(branch)+'?recursive=1'+bust;
+      const bust=fresh ? '&t='+Date.now() : '';
+
+      const url=
+        'https://api.github.com/repos/'
+        +encodeURIComponent(info.owner)+'/'
+        +encodeURIComponent(info.repo)
+        +'/git/trees/'
+        +encodeURIComponent(branch)
+        +'?recursive=1'
+        +bust;
+
       const r=await fetchWithTimeout(url,{signal});
-      if(!r.ok) continue;
+
+      // Il branch non esiste: prova il fallback successivo.
+      if(r.status===404){
+        continue;
+      }
+
+      // Il branch esiste, ma GitHub ha restituito un altro errore.
+      // Non ha senso provare "master", perché non è un problema
+      // di nome del branch.
+      if(!r.ok){
+        return [];
+      }
+
       const data=await r.json();
-      const files=[...new Set((data.tree||[]).filter(x=>x&&x.type==='blob'&&/\.csv$/i.test(x.path||'')).map(x=>normalizeFantaCsvPath(x.path)).filter(Boolean))];
-      if(!files.length) continue;
-      _githubFantaTreeCache={key,files};
-      try{ sessionStorage.setItem('cral-fanta-tree:'+key,JSON.stringify({time:Date.now(),files})); }catch(e){}
+
+      const files=[
+        ...new Set(
+          (data.tree||[])
+            .filter(
+              x =>
+                x &&
+                x.type==='blob' &&
+                /\.csv$/i.test(x.path||'')
+            )
+            .map(x=>normalizeFantaCsvPath(x.path))
+            .filter(Boolean)
+        )
+      ];
+
+      /*
+       * IMPORTANTE:
+       * il branch esiste correttamente.
+       *
+       * Se non ci sono CSV Fantacalcio significa semplicemente
+       * che questo torneo non ha dati Fanta.
+       *
+       * NON bisogna quindi passare a "master".
+       */
+      if(!files.length){
+        _githubFantaTreeCache={
+          key,
+          files:[]
+        };
+
+        try{
+          sessionStorage.setItem(
+            'cral-fanta-tree:'+key,
+            JSON.stringify({
+              time:Date.now(),
+              files:[]
+            })
+          );
+        }catch(e){}
+
+        return [];
+      }
+
+      _githubFantaTreeCache={
+        key,
+        files
+      };
+
+      try{
+        sessionStorage.setItem(
+          'cral-fanta-tree:'+key,
+          JSON.stringify({
+            time:Date.now(),
+            files
+          })
+        );
+      }catch(e){}
+
       return files;
-    }catch(e){ if(signal?.aborted||isAbortError(e)) throw e; }
+
+    }catch(e){
+      if(signal?.aborted || isAbortError(e)){
+        throw e;
+      }
+
+      return [];
+    }
   }
+
   return [];
 }
 function fantaManifestCsvPaths(){
