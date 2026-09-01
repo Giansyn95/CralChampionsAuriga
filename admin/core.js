@@ -105,6 +105,19 @@ export function sectionFiles(model, kind) {
   return model.fileList.filter(f => f.active !== false && fileKind(f.rel) === kind);
 }
 
+const FORFEIT_TRUE_TOKENS = ['si', 's', 'x', '1', 'true', 'vero', 'yes', 'y'];
+const FORFEIT_FALSE_TOKENS = ['no', 'n', '0', 'false', 'falso'];
+function forfeitFlag(obj) {
+  // La sorgente dati può marcare il forfeit in due modi equivalenti che l'app
+  // pubblica capisce già: una colonna dedicata "Tavolino" (SI/NO, X, 1/0...)
+  // oppure una nota testuale libera ("Vittoria a tavolino", "Rinuncia", ecc.).
+  // Se la colonna dedicata è presente e valorizzata ha sempre la priorità,
+  // altrimenti si ricade sulla scansione testuale su tutti i campi.
+  const explicit = norm(field(obj, ['tavolino', 'a tavolino', 'forfeit']));
+  if (FORFEIT_TRUE_TOKENS.includes(explicit)) return true;
+  if (FORFEIT_FALSE_TOKENS.includes(explicit)) return false;
+  return /tavolino|forfeit|rinuncia/i.test(Object.values(obj || {}).join(' '));
+}
 function scorePair(obj) {
   const direct = field(obj, ['risultato', 'score']);
   const nums = String(direct || '').match(/-?\d+/g);
@@ -127,7 +140,7 @@ function matchFromObject(obj, file, index = 0) {
     homeGoals: score ? score[0] : null,
     awayGoals: score ? score[1] : null,
     notes: String(field(obj, ['note', 'nota', 'commento', 'descrizione']) || '').trim(),
-    forfeit: /tavolino|forfeit|rinuncia/i.test(Object.values(obj || {}).join(' ')),
+    forfeit: forfeitFlag(obj),
     penalizedTeam: String(field(obj, ['squadra penalizzata', 'penalizzata', 'team penalizzato', 'perdente']) || '').trim(),
     sourceFile: file,
     sourceRow: obj

@@ -8,6 +8,7 @@ import {
   publishChanges as ghPublishChanges, createTournament as ghCreateTournament,
   saveSession, loadSession, clearSession
 } from './gh.js';
+import { parseTournamentRegistry } from './tournament.js';
 
 const app = document.getElementById('app');
 const state = {
@@ -57,6 +58,37 @@ function requireTarget(key){
   return t;
 }
 
+// ---------------- logo pubblico (schermata di login) ----------------
+function rawGithubUrl(owner, repo, branch, path) {
+  return `https://raw.githubusercontent.com/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/${encodeURIComponent(branch)}/${String(path || '').replace(/^\/+/, '')}`;
+}
+async function resolveLogoUrl(owner, repo, branch) {
+  if (!owner || !repo || !branch) return '';
+  try {
+    const res = await fetch(rawGithubUrl(owner, repo, branch, 'tornei.json'), { cache: 'no-store' });
+    if (!res.ok) return '';
+    const registry = parseTournamentRegistry(await res.text());
+    let logoPath = String(registry.logo || '').trim();
+    if (!logoPath) {
+      const current = (registry.tornei || []).find(t => t.corrente) || (registry.tornei || [])[0];
+      const folder = current?.cartella ? String(current.cartella).replace(/^\/+|\/+$/g, '') : '';
+      if (folder) logoPath = `${folder}/immagini/logo_cral.png`;
+    }
+    return logoPath ? rawGithubUrl(owner, repo, branch, logoPath) : '';
+  } catch { return ''; }
+}
+function loadBrandLogo(markEl, owner, repo, branch) {
+  const requestId = (markEl._logoRequest = (markEl._logoRequest || 0) + 1);
+  resolveLogoUrl(owner, repo, branch).then(url => {
+    if (!url || markEl._logoRequest !== requestId) return;
+    const img = new Image();
+    img.alt = 'Logo CRAL Champions Auriga';
+    img.onload = () => { if (markEl._logoRequest !== requestId) return; markEl.textContent = ''; markEl.classList.add('brand-mark-logo'); markEl.appendChild(img); };
+    img.onerror = () => {};
+    img.src = url;
+  }).catch(() => {});
+}
+
 // ---------------- sessione / login ----------------
 function sessionCheck(){
   const restored = loadSession();
@@ -89,7 +121,7 @@ async function initializeAdmin(){
 
 function renderLogin(targetKey='collaudo', error=''){
   app.innerHTML=''; const screen=el('div','center-screen'); const card=el('div','login-card');
-  const brand=el('div','brand');brand.appendChild(el('div','brand-mark','CR'));const copy=el('div');copy.appendChild(el('h1','','CRAL Admin'));copy.appendChild(el('p','','Gestione dati e pubblicazione sicura del torneo — versione statica GitHub Pages'));brand.appendChild(copy);card.appendChild(brand);
+  const brand=el('div','brand');const mark=el('div','brand-mark','CR');brand.appendChild(mark);const copy=el('div');copy.appendChild(el('h1','','CRAL Admin'));copy.appendChild(el('p','','Gestione dati e pubblicazione sicura del torneo — versione statica GitHub Pages'));brand.appendChild(copy);card.appendChild(brand);
   card.appendChild(messageBox('info',[
     'Nessun server: questa pagina scrive su GitHub usando direttamente il tuo Personal Access Token.',
     'Il token resta solo in questa scheda del browser (sessionStorage) finché non premi "Esci" o la chiudi. Usa un token fine-grained, limitato al solo repository, con scadenza breve.'
@@ -117,6 +149,10 @@ function renderLogin(targetKey='collaudo', error=''){
   card.appendChild(fieldWrap('Branch', branch));
   card.appendChild(fieldWrap('URL pubblico GitHub Pages (opzionale)', publicBaseUrl));
   card.appendChild(fieldWrap('Personal Access Token GitHub (Contents: Read and write)', token));
+
+  loadBrandLogo(mark, owner.value.trim(), repo.value.trim(), branch.value.trim() || 'main');
+  const refreshLogo = () => loadBrandLogo(mark, owner.value.trim(), repo.value.trim(), branch.value.trim() || 'main');
+  [owner, repo, branch].forEach(f => f.addEventListener('blur', refreshLogo));
 
   const go = button('Verifica e accedi', 'gold', async () => {
     go.disabled = true; go.textContent = 'Verifica in corso…';
