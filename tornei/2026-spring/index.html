@@ -8242,7 +8242,178 @@ function labelEmoji(label){
   if(k==='mvp' || k.includes('miglioreincampo')) return '⭐';
   return label;
 }
-function addPeopleLineSmart(parent,label,people,withImages,teamHint,contextRows,candidateTeams){
+/* Risolve le pill dei marcatori contro la tabella "Marcatori della giornata".
+   Il testo compatto della partita puo' contenere solo il cognome (es. "Menolascina x2"),
+   mentre le righe marcatori hanno nome completo, goal, giornata e squadra. Usiamo quindi
+   quelle righe come fonte autorevole per il click sulla scheda giocatore. */
+function riepilogoScorerRowTeam(row){
+  return teamDisplayNameForChart(
+    teamHintFromRow(row) || firstPresent(row,[['squadra','team','club','squadra giocatore','squadra marcatore']])
+  );
+}
+function riepilogoScorerRowGoals(row){
+  const parsed=riepilogoGoalNumberFromText(riepilogoGoalValueFromRow(row));
+  if(parsed!==null && Number.isFinite(Number(parsed)) && Number(parsed)>0) return Number(parsed);
+  const fallback=num(firstPresent(row,[['goal','gol','reti','quantita','valore','totale']]));
+  return fallback>0 ? fallback : 1;
+}
+function riepilogoScorerTokenMatchesName(token,rowName){
+  const clean=cleanRiepilogoScorerName(token);
+  const left=personMatchWords(clean), right=personMatchWords(rowName);
+  if(!left.length || !right.length) return false;
+  if(personMatchKey(clean)===personMatchKey(rowName)) return true;
+  // Match morbido SOLO dentro le righe marcatori della stessa giornata/squadra:
+  // serve per collegare "Menolascina" a "Menolascina Gerardo" senza rendere
+  // permissivo il matching globale delle schede giocatore.
+  return personWordsSubset(left,right) || personWordsSubset(right,left);
+}
+function riepilogoScorerCandidateIdentity(row,rowName,rowTeam){
+  const rec=uniqueRosterRecordForPersonToken(rowName,rowTeam);
+  if(rec){
+    return {
+      identityKey:rec.identityKey,
+      profileRow:rec.row,
+      profileName:playerFullName(rec.row)||playerDisplayName(rec.row)||rowName,
+      displayName:playerDisplayName(rec.row)||playerFullName(rec.row)||rowName
+    };
+  }
+  return {
+    identityKey:(teamMatchKey(rowTeam)||norm(rowTeam))+'|'+personMatchKey(rowName),
+    profileRow:row,
+    profileName:rowName,
+    displayName:rowName
+  };
+}
+function riepilogoCompactDisambiguator(baseName,profileName,peerProfileNames){
+  const baseParts=smartSpace(cleanRiepilogoScorerName(baseName)).split(/\s+/).map(norm).filter(Boolean);
+  const extraParts=(name)=>smartSpace(name).split(/\s+/).filter(Boolean).filter(part=>!baseParts.includes(norm(part)));
+  const own=extraParts(profileName);
+  if(!own.length) return '';
+  const first=own[0];
+  const initial=first.charAt(0).toUpperCase();
+  const peerInitials=(peerProfileNames||[]).map(n=>{
+    const p=extraParts(n)[0]||'';
+    return p.charAt(0).toUpperCase();
+  }).filter(Boolean);
+  const uniqueInitial=peerInitials.filter(x=>x===initial).length===1;
+  return uniqueInitial ? initial+'.' : first;
+}
+function resolveRiepilogoScorerPills(people,teamHint,scorerRows,candidateTeams,sourceFile,giornataKey){
+  const descriptors=(people||[]).map((raw,index)=>{
+    const clean=cleanRiepilogoScorerName(raw);
+    const explicit=riepilogoGoalNumberFromText(raw);
+    return {
+      index,raw,clean,key:personMatchKey(clean),
+      explicitGoals:(explicit!==null && Number(explicit)>0)?Number(explicit):null,
+      units:(explicit!==null && Number(explicit)>0)?Number(explicit):1,
+      resolved:null,displayText:raw
+    };
+  });
+  if(!descriptors.length || !(scorerRows||[]).length) return descriptors;
+
+  const wantedDay=String(giornataKey||'');
+  const fixedTeamKey=teamMatchKey(teamHint||'');
+  const allowedTeamKeys=new Set((candidateTeams||[]).map(teamMatchKey).filter(Boolean));
+  if(fixedTeamKey) allowedTeamKeys.add(fixedTeamKey);
+
+  const groups=new Map();
+  descriptors.forEach(d=>{
+    if(!d.key) return;
+    if(!groups.has(d.key)) groups.set(d.key,[]);
+    groups.get(d.key).push(d);
+  });
+
+  groups.forEach(group=>{
+    const sample=group[0];
+    const byIdentity=new Map();
+    (scorerRows||[]).forEach(sourceRow=>{
+      const rowDay=String(rowGiornataKey(sourceRow,sourceFile||'')||'');
+      if(wantedDay && rowDay && rowDay!==wantedDay) return;
+      const rowName=playerNameFromRow(sourceRow);
+      if(!rowName || !riepilogoScorerTokenMatchesName(sample.clean,rowName)) return;
+      const rowTeam=riepilogoScorerRowTeam(sourceRow);
+      const rowTeamKey=teamMatchKey(rowTeam||'');
+      if(fixedTeamKey && rowTeamKey && rowTeamKey!==fixedTeamKey) return;
+      if(!fixedTeamKey && allowedTeamKeys.size && rowTeamKey && !allowedTeamKeys.has(rowTeamKey)) return;
+
+      const ident=riepilogoScorerCandidateIdentity(sourceRow,rowName,rowTeam);
+      if(!ident.identityKey) return;
+      const goals=riepilogoScorerRowGoals(sourceRow);
+      const existing=byIdentity.get(ident.identityKey);
+      if(existing){
+        // Se il CSV usa una riga per goal, somma; se ripete invece la stessa riga
+        // aggregata, evita di raddoppiare accidentalmente lo stesso oggetto.
+        if(!existing.sourceRows.has(sourceRow)){
+          existing.goals+=goals;
+          existing.remaining+=goals;
+          existing.sourceRows.add(sourceRow);
+        }
+      } else {
+        byIdentity.set(ident.identityKey,{
+          ...ident,rowTeam,goals,remaining:goals,sourceRows:new Set([sourceRow])
+        });
+      }
+    });
+    const candidates=[...byIdentity.values()];
+    if(!candidates.length) return;
+
+    // Prima assegna i token con quantita' esplicita (x2/x3...), poi quelli da 1 goal.
+    // Cosi' "Menolascina" + "Menolascina x2" si agganciano correttamente a
+    // due omonimi con, rispettivamente, 1 e 2 goal anche se la pill da 1 viene prima.
+    const order=[...group].sort((a,b)=>{
+      const ae=a.explicitGoals!==null?1:0, be=b.explicitGoals!==null?1:0;
+      if(be!==ae) return be-ae;
+      if(b.units!==a.units) return b.units-a.units;
+      return a.index-b.index;
+    });
+
+    order.forEach(d=>{
+      const exact=candidates.filter(c=>personMatchKey(d.clean)===personMatchKey(c.profileName));
+      let pool=(exact.length?exact:candidates).filter(c=>c.remaining>=d.units);
+      if(!pool.length) pool=exact.length?exact:candidates;
+      if(!pool.length) return;
+
+      let preferred=[];
+      if(d.explicitGoals!==null){
+        preferred=pool.filter(c=>Math.abs(c.goals-d.units)<0.0001);
+      } else {
+        // Un token senza moltiplicatore vale normalmente 1 goal: se esiste un omonimo
+        // con esattamente 1 goal lo preferiamo, senza pero' impedire il caso in cui lo
+        // stesso marcatore sia ripetuto piu' volte nel testo invece di essere scritto xN.
+        preferred=pool.filter(c=>Math.abs(c.goals-1)<0.0001);
+      }
+      if(preferred.length) pool=preferred;
+
+      pool.sort((a,b)=>{
+        // Squadra esplicita della riga > riga senza squadra; poi maggiore capacita'
+        // residua, infine ordine alfabetico per rendere il risultato deterministico.
+        const at=a.rowTeam?1:0, bt=b.rowTeam?1:0;
+        if(bt!==at) return bt-at;
+        if(b.remaining!==a.remaining) return b.remaining-a.remaining;
+        return String(a.profileName).localeCompare(String(b.profileName),'it');
+      });
+      const chosen=pool[0];
+      d.resolved=chosen;
+      if(chosen.remaining>=d.units) chosen.remaining=Math.max(0,chosen.remaining-d.units);
+    });
+
+    const resolvedIdentities=[...new Set(group.map(d=>d.resolved?.identityKey).filter(Boolean))];
+    if(resolvedIdentities.length>1){
+      const peerNames=group.map(d=>d.resolved?.profileName).filter(Boolean);
+      group.forEach(d=>{
+        if(!d.resolved) return;
+        const suffix=riepilogoCompactDisambiguator(d.clean,d.resolved.profileName,peerNames);
+        if(!suffix) return;
+        const goalSuffix=d.explicitGoals!==null && d.explicitGoals>1
+          ? ' x'+String(Number.isInteger(d.explicitGoals)?d.explicitGoals:String(d.explicitGoals).replace('.',','))
+          : '';
+        d.displayText=smartSpace(d.clean+' '+suffix)+goalSuffix;
+      });
+    }
+  });
+  return descriptors;
+}
+function addPeopleLineSmart(parent,label,people,withImages,teamHint,contextRows,candidateTeams,options={}){
   if(!people || !people.length) return;
   const row=document.createElement('div');
   row.style.cssText='display:flex;gap:8px;align-items:flex-start;margin-top:8px;flex-wrap:wrap';
@@ -8255,34 +8426,42 @@ function addPeopleLineSmart(parent,label,people,withImages,teamHint,contextRows,
   strong.setAttribute('aria-label',label);
   row.appendChild(strong);
   const list=document.createElement('div'); list.style.cssText='display:flex;gap:6px;flex-wrap:wrap;align-items:center';
-  // Set condiviso tra tutti i giocatori di QUESTA lista: se due token uguali (stesso
-  // cognome) compaiono entrambi, ogni token consuma la propria riga di contesto.
+  const isScorerLine=norm(label).startsWith('marcatori');
+  const scorerResolutions=isScorerLine
+    ? resolveRiepilogoScorerPills(people,teamHint,options.scorerRows||[],candidateTeams,options.file||'',options.giornataKey||'')
+    : [];
+  // Fallback storico per righe non risolte dalla tabella marcatori e per MVP.
   const usedRows=new Set();
-  people.forEach(name=>{
+  people.forEach((name,index)=>{
+    const resolved=scorerResolutions[index]?.resolved||null;
     const pill=document.createElement('span');
     pill.style.cssText='display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--soft);border-radius:999px;padding:4px 8px;font-size:12px;font-weight:700';
-    let resolvedTeam='';
+    let resolvedTeam=resolved?.rowTeam||'';
     if(withImages){
-      // Quando non c'è una squadra unica certa (teamHint vuoto) ma conosciamo le due
-      // squadre della partita (candidateTeams), restringiamo il match a quelle per
-      // evitare di prendere il logo di un omonimo di un'altra partita/giornata.
-      resolvedTeam=teamHint
-        ? teamForPersonToken(name,teamHint,contextRows,usedRows)
-        : teamForPersonTokenAmongTeams(name,candidateTeams,contextRows,usedRows);
+      if(!resolvedTeam){
+        // Quando non c'e' una squadra unica certa (teamHint vuoto) ma conosciamo le due
+        // squadre della partita (candidateTeams), restringiamo il match a quelle per
+        // evitare di prendere il logo di un omonimo di un'altra partita/giornata.
+        resolvedTeam=teamHint
+          ? teamForPersonToken(name,teamHint,contextRows,usedRows)
+          : teamForPersonTokenAmongTeams(name,candidateTeams,contextRows,usedRows);
+      }
       if(resolvedTeam){
         const logo=imgOrInitialEl('team',resolvedTeam,'mini-logo');
         logo.title=resolvedTeam;
         logo.alt=resolvedTeam;
         pill.appendChild(logo);
       } else {
-        pill.appendChild(roleFallbackElForPerson(name,contextRows));
+        pill.appendChild(roleFallbackElForPerson(resolved?.profileName||name,contextRows));
       }
     }
-    const t=document.createElement('button'); t.type='button'; t.className='player-link'; t.textContent=name; t.title='Apri scheda giocatore';
+    const profileName=resolved?.profileName || cleanRiepilogoScorerName(name) || name;
+    const displayText=scorerResolutions[index]?.displayText || name;
+    const t=document.createElement('button'); t.type='button'; t.className='player-link'; t.textContent=displayText; t.title='Apri scheda giocatore: '+profileName;
     t.onclick=(ev)=>{
       ev.stopPropagation();
-      const context=typeof cralNavContextRowForPlayer==='function' ? cralNavContextRowForPlayer(name,resolvedTeam) : null;
-      openPlayerProfile(name,context);
+      const context=resolved?.profileRow || (typeof cralNavContextRowForPlayer==='function' ? cralNavContextRowForPlayer(profileName,resolvedTeam) : null);
+      openPlayerProfile(profileName,context);
     };
     pill.appendChild(t);
     list.appendChild(pill);
@@ -8932,7 +9111,7 @@ function addExternalAwardPill(parent,label){
   const t=document.createElement('span'); t.textContent='Premiato giocatore esterno';
   pill.appendChild(t); list.appendChild(pill); row.appendChild(list); parent.appendChild(row);
 }
-function renderPartiteRiepilogo(parent,rows,file,contextRows){
+function renderPartiteRiepilogo(parent,rows,file,contextRows,scorerRows){
   if(!rows.length) return;
   const wrap=document.createElement('div'); wrap.className='tableWrap riepilogo-matches'; wrap.style.marginTop='10px';
   rows.forEach(r=>{
@@ -8953,6 +9132,7 @@ function renderPartiteRiepilogo(parent,rows,file,contextRows){
     const res=resultText(r);
     const scorePair=parseScorePair(res);
     const tavolinoInfo=riepilogoForfeitInfo(r,file);
+    const matchGiornataKey=rowGiornataKey(r,file);
 
     // ── Goal esterni = Goal totali − Goal torneo − Autogoal ─────────────────────────
     // Gli autogoal possono essere in colonna inline OPPURE su righe separate (Sezione=Autogoal).
@@ -9029,12 +9209,12 @@ function renderPartiteRiepilogo(parent,rows,file,contextRows){
     // e' gia' mostrata sotto con l'icona di avviso dedicata.
     if(metaParts.length){ const meta=document.createElement('div'); meta.className='small'; meta.textContent=metaParts.join(' · '); left.appendChild(meta); }
     if(!tavolinoInfo.isForfeit){
-      addPeopleLineSmart(left,'Marcatori casa',marcatoriCasaKnown,true,casa,contextRows);
+      addPeopleLineSmart(left,'Marcatori casa',marcatoriCasaKnown,true,casa,contextRows,undefined,{scorerRows,file,giornataKey:matchGiornataKey});
       addExternalScorerPill(left,'Marcatori casa',externalCasa,casa);
-      addPeopleLineSmart(left,'Marcatori trasf.',marcatoriTrasfertaKnown,true,trasferta,contextRows);
+      addPeopleLineSmart(left,'Marcatori trasf.',marcatoriTrasfertaKnown,true,trasferta,contextRows,undefined,{scorerRows,file,giornataKey:matchGiornataKey});
       addExternalScorerPill(left,'Marcatori trasf.',externalTrasferta,trasferta);
       if(!marcatoriCasa.length && !marcatoriTrasferta.length){
-        addPeopleLineSmart(left,'Marcatori',marcatoriGenericiKnown,true,'',contextRows,[casa,trasferta]);
+        addPeopleLineSmart(left,'Marcatori',marcatoriGenericiKnown,true,'',contextRows,[casa,trasferta],{scorerRows,file,giornataKey:matchGiornataKey});
         addExternalScorerPill(left,'Marcatori',externalGeneric,'');
       }
     }
@@ -9912,7 +10092,7 @@ function renderRiepilogoGiornate(){
       renderKpiGrid(card,deriveStats(partite,marcatori,statisticheRiepilogo,totaliMarcatori));
       const ph=document.createElement('h3'); ph.style.cssText='margin:14px 0 0;color:var(--blue);font-size:18px;text-transform:uppercase'; ph.textContent='Partite della giornata';
       card.appendChild(ph);
-      renderPartiteRiepilogo(card,partite,f,[...marcatori,...totaliMarcatori,...mvp,...portiere,...autogoal]);
+      renderPartiteRiepilogo(card,partite,f,[...marcatori,...totaliMarcatori,...mvp,...portiere,...autogoal],marcatori);
       content.appendChild(card);
     }
     const tablePrefix='riepilogo_'+norm(f)+'_'+rowGiornataKey(allRows[0]||{},f);
