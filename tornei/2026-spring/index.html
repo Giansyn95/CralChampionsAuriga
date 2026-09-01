@@ -1125,7 +1125,8 @@
 
     /* Fantacalcio: sorgente automatica da data/fantacalcio e tabella leggibile anche su mobile */
     .gold-crown{color:#f5b942!important;font-weight:900;text-shadow:0 0 12px rgba(245,185,66,.48)}
-    .tab[data-tab="fantacalcio"] .gold-crown{
+    .tab[data-tab="fantacalcio"] .gold-crown,
+    .entity-section-title.has-styled-icon .gold-crown{
   display:inline-flex;
   align-items:center;
   justify-content:center;
@@ -1139,6 +1140,7 @@
   top:-1px;
   flex:0 0 18px;
 }
+    .entity-section-title.has-styled-icon{justify-content:flex-start;gap:0}
     .fanta-card-shell h2{display:flex;align-items:center;gap:8px}
     .fanta-claim{margin:0 0 12px;max-width:980px}
     .fanta-rules-split{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:10px 0 14px}
@@ -12950,9 +12952,17 @@ function cralNavKpi(label,value,sub,primary=false){
   if(sub){ const s=document.createElement('div'); s.className='s'; s.textContent=sub; box.appendChild(s); }
   return box;
 }
-function cralNavSection(title,emoji){
+function cralNavSection(title,emoji,iconClass){
   const sec=document.createElement('section'); sec.className='entity-section';
-  const h=document.createElement('h3'); h.className='entity-section-title'; h.textContent=(emoji?emoji+' ':'')+title; sec.appendChild(h); return sec;
+  const h=document.createElement('h3'); h.className='entity-section-title';
+  if(emoji && iconClass){
+    h.classList.add('has-styled-icon');
+    const icon=document.createElement('span'); icon.className=iconClass; icon.textContent=emoji; icon.setAttribute('aria-hidden','true');
+    h.appendChild(icon); h.appendChild(document.createTextNode(' '+title));
+  }else{
+    h.textContent=(emoji?emoji+' ':'')+title;
+  }
+  sec.appendChild(h); return sec;
 }
 function cralNavOpenPlayerButton(name,row,team){
   const b=document.createElement('button'); b.type='button'; b.textContent=name||'Giocatore'; b.onclick=()=>openPlayerProfile(name,row||cralNavContextRowForPlayer(name,team)); return b;
@@ -13330,7 +13340,7 @@ function openMatchCenter(match,options={}){
   if(details.autogoals.length) view.appendChild(cralNavMatchListSection('Autogol','↩',details.autogoals,'↩'));
   if(details.mvp.length||details.keeper.length){ const awardSec=cralNavSection('Premi partita','🏅'); const awards=document.createElement('div'); awards.className='match-awards'; [...details.mvp.map(x=>({x,label:'MVP',icon:'⭐',cls:' is-mvp'})),...details.keeper.map(x=>({x,label:'Miglior portiere',icon:'🧤',cls:''}))].forEach(({x,label,icon,cls})=>{ const card=document.createElement('div'); card.className='match-award'+cls; const sm=document.createElement('small'); sm.textContent=icon+' '+label; card.appendChild(sm); card.appendChild(cralNavOpenPlayerButton(x.name,x.row,x.team)); awards.appendChild(card); }); awardSec.appendChild(awards); view.appendChild(awardSec); }
   if(details.pagelle.length){ const sec=cralNavSection('Pagelle della partita','📝'); const grid=document.createElement('div'); grid.className='match-pagelle-grid'; const addTeamColumn=(team,items)=>{ const col=document.createElement('div'); col.className='match-pagelle-team-col'; const h=document.createElement('h4'); h.className='match-pagelle-team-title'; h.textContent=team; col.appendChild(h); const sorted=cralNavSortPagelleForTeam(items,team); if(!sorted.length) col.appendChild(buildEl('div','entity-empty','Nessuna pagella.')); sorted.forEach(x=>{ const card=document.createElement('div'); card.className='match-pagella'; card.appendChild(imgOrInitialEl('player',x.row?playerImageNames(x.row):[x.displayName],'team-roster-avatar')); const c=document.createElement('div'); const b=cralNavOpenPlayerButton(x.displayName,x.row,x.team); c.appendChild(b); const t=document.createElement('div'); t.className='match-pagella-team'; t.textContent=roleDisplayLabel(x.role||fieldLoose(x.row||{},['ruolo','role','posizione','position']))||x.team; c.appendChild(t); card.appendChild(c); const v=document.createElement('span'); v.className='match-pagella-vote'; v.textContent=votoDisplay(x.voto,x.votoLabel); card.appendChild(v); col.appendChild(card); }); grid.appendChild(col); }; addTeamColumn(match.home,details.pagelle.filter(x=>cralNavTeamSame(x.team,match.home))); addTeamColumn(match.away,details.pagelle.filter(x=>cralNavTeamSame(x.team,match.away))); sec.appendChild(grid); view.appendChild(sec); }
-  if(fanta.length){ const sec=cralNavSection('Impatto Fantacalcio','♛'); const sub=document.createElement('p'); sub.className='entity-section-sub'; sub.textContent='Punteggio reale della giornata per i giocatori di questa gara che risultano schierati in almeno una rosa Fantacalcio.'; sec.appendChild(sub); const list=document.createElement('div'); list.className='fanta-impact-list'; fanta.forEach(x=>{ const row=document.createElement('div'); row.className='fanta-impact-row'; const imageNames=x.row?playerImageNames(x.row):[x.fullName,x.name].filter(Boolean); row.appendChild(imgOrInitialEl('player',imageNames,'fanta-impact-avatar')); const c=document.createElement('div'); c.className='fanta-impact-copy'; const b=cralNavOpenPlayerButton(x.name,x.row,x.team); b.classList.add('fanta-impact-name'); c.appendChild(b); const p=document.createElement('p'); p.textContent=x.detail; c.appendChild(p); row.appendChild(c); const pts=document.createElement('div'); pts.className='fanta-impact-score'; pts.textContent=x.points+' pt'; row.appendChild(pts); list.appendChild(row); }); sec.appendChild(list); view.appendChild(sec); }
+  if(fanta.length){ const sec=cralNavSection('Impatto Fantacalcio','♛','gold-crown'); const sub=document.createElement('p'); sub.className='entity-section-sub'; sub.textContent='Punteggio reale della giornata per i giocatori di questa gara che risultano schierati in almeno una rosa Fantacalcio.'; sec.appendChild(sub); const list=document.createElement('div'); list.className='fanta-impact-list'; fanta.forEach(x=>{ const row=document.createElement('div'); row.className='fanta-impact-row'; const imageNames=x.row?playerImageNames(x.row):[x.fullName,x.name].filter(Boolean); row.appendChild(imgOrInitialEl('player',imageNames,'fanta-impact-avatar')); const c=document.createElement('div'); c.className='fanta-impact-copy'; const b=cralNavOpenPlayerButton(x.name,x.row,x.team); b.classList.add('fanta-impact-name'); c.appendChild(b); const p=document.createElement('p'); p.textContent=x.detail; c.appendChild(p); row.appendChild(c); const pts=document.createElement('div'); pts.className='fanta-impact-score'; pts.textContent=x.points+' pt'; row.appendChild(pts); list.appendChild(row); }); sec.appendChild(list); view.appendChild(sec); }
   if(siblings.prev||siblings.next){
     const sec=cralNavSection('Altre partite della giornata','↔');
     const nav=document.createElement('div'); nav.className='match-sibling-nav';
