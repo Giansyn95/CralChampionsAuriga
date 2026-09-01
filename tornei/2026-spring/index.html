@@ -12016,25 +12016,34 @@ function fantaBuildH2H(data, allParticipants){
 
   const selRow=document.createElement('div'); selRow.className='fanta-h2h-selectors';
 
-  function buildSelect(currentVal){
-    const sel=document.createElement('select');
+  // Ogni select esclude sempre il partecipante scelto nell'altra.
+  // In questo modo il confronto con se stessi non e' proprio selezionabile
+  // e non serve piu' sostituire automaticamente uno dei due nomi.
+  function refillSelect(sel,currentVal,excludedVal){
     const currentKey=fantaParticipantSearchKey(currentVal);
+    const excludedKey=fantaParticipantSearchKey(excludedVal);
     let selected=false;
+    sel.innerHTML='';
     allParticipants.forEach(name=>{
+      const nameKey=fantaParticipantSearchKey(name);
+      if(excludedKey && nameKey===excludedKey) return;
       const o=document.createElement('option'); o.value=name; o.textContent=name;
-      if(!selected && fantaParticipantSearchKey(name)===currentKey){ o.selected=true; selected=true; }
+      if(!selected && nameKey===currentKey){ o.selected=true; selected=true; }
       sel.appendChild(o);
     });
+    if(!selected && sel.options.length) sel.selectedIndex=0;
+    return sel.value;
+  }
+
+  function buildSelect(currentVal,excludedVal){
+    const sel=document.createElement('select');
+    refillSelect(sel,currentVal,excludedVal);
     return sel;
   }
 
-  const selLeft=buildSelect(leftName);
+  const selLeft=buildSelect(leftName,rightName);
   const vsEl=document.createElement('span'); vsEl.className='fanta-h2h-vs'; vsEl.textContent='vs';
-  const selRight=buildSelect(rightName);
-  if(selLeft.value && selRight.value && fantaParticipantSearchKey(selLeft.value)===fantaParticipantSearchKey(selRight.value)){
-    const fallback=(allParticipants||[]).find(n=>fantaParticipantSearchKey(n)!==fantaParticipantSearchKey(selLeft.value));
-    if(fallback) selRight.value=fallback;
-  }
+  const selRight=buildSelect(rightName,leftName);
   leftName=selLeft.value;
   rightName=selRight.value;
 
@@ -12146,22 +12155,21 @@ function fantaBuildH2H(data, allParticipants){
   renderH2H(leftName,rightName);
 
   selLeft.onchange=()=>{
-    data._h2hLeft=selLeft.value;
-    if(fantaParticipantSearchKey(selLeft.value)===fantaParticipantSearchKey(selRight.value)){
-      const fallback=(allParticipants||[]).find(n=>fantaParticipantSearchKey(n)!==fantaParticipantSearchKey(selLeft.value));
-      if(fallback) selRight.value=fallback;
-    }
+    const selectedLeft=selLeft.value;
+    // Aggiorna solo la lista opposta: il nome appena scelto scompare subito,
+    // mentre la selezione destra corrente resta invariata.
+    refillSelect(selRight,selRight.value,selectedLeft);
+    data._h2hLeft=selectedLeft;
     data._h2hRight=selRight.value;
-    renderH2H(selLeft.value,selRight.value);
+    renderH2H(selectedLeft,selRight.value);
   };
   selRight.onchange=()=>{
-    data._h2hRight=selRight.value;
-    if(fantaParticipantSearchKey(selLeft.value)===fantaParticipantSearchKey(selRight.value)){
-      const fallback=(allParticipants||[]).find(n=>fantaParticipantSearchKey(n)!==fantaParticipantSearchKey(selRight.value));
-      if(fallback) selLeft.value=fallback;
-    }
+    const selectedRight=selRight.value;
+    // Stessa regola in senso inverso.
+    refillSelect(selLeft,selLeft.value,selectedRight);
+    data._h2hRight=selectedRight;
     data._h2hLeft=selLeft.value;
-    renderH2H(selLeft.value,selRight.value);
+    renderH2H(selLeft.value,selectedRight);
   };
 
   return wrap;
