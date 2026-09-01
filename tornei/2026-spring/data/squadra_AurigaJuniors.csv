@@ -1,8 +1,8 @@
-﻿Squadra;Cognome;Nome;Ruolo;Capitano
-Auriga Juniors;Iacobellis;PT;P;No
-Auriga Juniors;Albrizio;Gianfranco;D;No
-Auriga Juniors;Tauro;Giovanni;D;No
-Auriga Juniors;Castellano;Graziano;D;No
-Auriga Juniors;Rubino;Gianluca;C;No
-Auriga Juniors;De Toma;Nicola;C;No
-Auriga Juniors;Spinola;Salvatore;A;Yes
+Squadra;Cognome;Nome;Ruolo;Capitano;Numero
+;Iacobellis;Filippo;P;;Iacobellis
+;Albrizio;Gianfranco;D;;Albrizio
+;Tauro;Giovanni;D;;Tauro
+;Castellano;Graziano;D;;Castellano
+;Rubino;Gianluca;C;;Rubino
+;De Toma;Nicola;C;;De Toma
+;Spinola;Salvatore;A;SI;Spinola

@@ -1,8 +1,8 @@
-﻿Squadra;Cognome;Nome;Ruolo;Capitano
-Out Of Office FC;Colangiuli;PT;P;No
-Out Of Office FC;Mondelli;Francesco;D;No
-Out Of Office FC;Lorusso;Salvatore;D;No
-Out Of Office FC;Capurso;Filippo;D;No
-Out Of Office FC;Di Giovine;Domenico;C;No
-Out Of Office FC;Arena;Michele;C;No
-Out Of Office FC;Saracino;Gianvito;A;Yes
+Squadra;Cognome;Nome;Ruolo;Capitano;Numero
+;Colangiuli;Luca;P;;Colangiuli
+;Mondelli;Francesco;D;;Mondelli
+;Lorusso;Salvatore;D;;Lorusso
+;Capurso;Filippo;D;;Capurso
+;Di Giovine;Domenico;C;;Di Giovine
+;Arena;Michele;C;;Arena
+;Saracino;Gianvito;A;SI;Saracino
