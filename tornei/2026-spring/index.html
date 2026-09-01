@@ -13094,6 +13094,54 @@ function cralNavSortPagelleForTeam(items,team){
     return String(a.displayName||a.playerName||'').localeCompare(String(b.displayName||b.playerName||''),'it',{sensitivity:'base'});
   });
 }
+/* Match Center: usa la stessa risoluzione dei marcatori delle pill del Riepilogo.
+   In particolare, i token compatti (anche solo cognome, con eventuale xN) vengono
+   risolti contro le righe "Marcatori della giornata", limitando i candidati alla
+   giornata e alle squadre della partita. In questo modo gli omonimi puntano alla
+   stessa identita' canonica in entrambe le viste. */
+function cralNavAddResolvedScorerTokens(people,teamHint,candidateTeams,scorerRows,file,giornataKey,contextRows,onResolved){
+  const descriptors=resolveRiepilogoScorerPills(
+    people||[],teamHint||'',scorerRows||[],candidateTeams||[],file||'',giornataKey||''
+  );
+  const usedRows=new Set();
+  descriptors.forEach(d=>{
+    const raw=d?.raw||'';
+    const resolved=d?.resolved||null;
+    const clean=cleanRiepilogoScorerName(raw)||raw;
+    const canonicalName=resolved?.profileName||clean;
+    let team=teamDisplayNameForChart(resolved?.rowTeam||'');
+    if(!team && canonicalName){
+      team=teamHint
+        ? teamForPersonToken(canonicalName,teamHint,contextRows,usedRows)
+        : teamForPersonTokenAmongTeams(canonicalName,candidateTeams,contextRows,usedRows);
+    }
+    if(!team && clean && clean!==canonicalName){
+      team=teamHint
+        ? teamForPersonToken(clean,teamHint,contextRows,usedRows)
+        : teamForPersonTokenAmongTeams(clean,candidateTeams,contextRows,usedRows);
+    }
+    if(teamHint && team && !cralNavTeamSame(team,teamHint)) return;
+    const row=resolved?.profileRow || (canonicalName ? cralNavContextRowForPlayer(canonicalName,team||teamHint||'') : null) || null;
+    const value=Number(d?.units||0) || riepilogoGoalNumberFromText(raw) || 1;
+    onResolved({name:canonicalName,team:team||teamDisplayNameForChart(teamHint||''),value,row,descriptor:d});
+  });
+}
+function cralNavAddScorerRowsFallback(rows,file,match,useTeamMap){
+  const usedRows=new Set();
+  (rows||[]).filter(r=>cralNavRowBelongsToMatch(r,file,match)).forEach(r=>{
+    const rawName=playerNameFromRow(r);
+    if(!rawName) return;
+    let team=riepilogoScorerRowTeam(r);
+    if(!team) team=teamForPersonTokenAmongTeams(rawName,[match.home,match.away],[r],usedRows);
+    const target=useTeamMap(team);
+    if(!target) return; // Ambiguo: meglio non attribuire il goal alla squadra sbagliata.
+    const ident=riepilogoScorerCandidateIdentity(r,rawName,team);
+    const name=ident.profileName||cleanRiepilogoScorerName(rawName)||rawName;
+    const row=ident.profileRow||r;
+    const value=riepilogoScorerRowGoals(r);
+    cralNavAddPerson(target,name,team,value,row,'');
+  });
+}
 function cralNavMatchDetails(match){
   const cacheKey=cralNavMatchIdentity(match);
   if(_cralNavMatchDetailsCache.has(cacheKey)) return _cralNavMatchDetailsCache.get(cacheKey);
@@ -13102,9 +13150,47 @@ function cralNavMatchDetails(match){
   const useTeamMap=(team)=>cralNavTeamSame(team,match.home)?scorersHome:(cralNavTeamSame(team,match.away)?scorersAway:null);
   contexts.forEach(ctx=>{
     const {file,parsed,partita}=ctx;
-    (parsed.marcatori||[]).filter(r=>cralNavRowBelongsToMatch(r,file,match)).forEach(r=>{
-      const name=playerNameFromRow(r); const team=teamHintFromRow(r)||teamForPersonToken(name,'',[r]); const target=useTeamMap(team); if(!target) return; const g=riepilogoGoalNumberFromText(firstPresent(r,[['goal','gol','reti','quantita','valore']]))||num(firstPresent(r,[['goal','gol','reti','quantita','valore']]))||1; cralNavAddPerson(target,name,team,g,r,'');
-    });
+    const scorerRows=parsed.marcatori||[];
+    const contextRows=[
+      ...(parsed.marcatori||[]),...(parsed.totaliMarcatori||[]),...(parsed.mvp||[]),
+      ...(parsed.portiere||[]),...(parsed.autogoal||[])
+    ];
+    const giornataKey=String((partita&&rowGiornataKey(partita,file)) || match.giornataNum || '');
+    let scorersResolvedFromMatchRow=false;
+
+    // Fonte primaria identica alle pill del Riepilogo: i marcatori scritti sulla riga partita
+    // vengono risolti contro scorerRows tramite resolveRiepilogoScorerPills().
+    if(partita){
+      const note=firstPresent(partita,[['note','commento','descrizione']]);
+      const homeList=splitPeopleList(firstPresent(partita,[['marcatori casa','marcatori squadra casa','goal casa marcatori','scorer casa','marcatori home']]));
+      const awayList=splitPeopleList(firstPresent(partita,[['marcatori trasferta','marcatori ospite','marcatori squadra trasferta','goal trasferta marcatori','scorer trasferta','marcatori away']]));
+      const generic=splitInlinePeople(firstPresent(partita,[['marcatori','scorers','reti']])||extractInlineField(note,'Marcatori'));
+
+      if(homeList.length || awayList.length){
+        scorersResolvedFromMatchRow=true;
+        cralNavAddResolvedScorerTokens(homeList,match.home,[match.home],scorerRows,file,giornataKey,contextRows,p=>{
+          cralNavAddPerson(scorersHome,p.name,p.team||match.home,p.value,p.row,'');
+        });
+        cralNavAddResolvedScorerTokens(awayList,match.away,[match.away],scorerRows,file,giornataKey,contextRows,p=>{
+          cralNavAddPerson(scorersAway,p.name,p.team||match.away,p.value,p.row,'');
+        });
+      } else if(generic.length){
+        scorersResolvedFromMatchRow=true;
+        cralNavAddResolvedScorerTokens(generic,'',[match.home,match.away],scorerRows,file,giornataKey,contextRows,p=>{
+          const target=useTeamMap(p.team);
+          if(target) cralNavAddPerson(target,p.name,p.team,p.value,p.row,'');
+        });
+      }
+
+    }
+
+    // Se la riga partita non contiene marcatori, usa direttamente le righe strutturate.
+    // Anche qui canonicalizziamo nome+squadra tramite la stessa identita' di rosa usata
+    // dal resolver, così un cognome condiviso non viene fuso con l'omonimo sbagliato.
+    if(!scorersResolvedFromMatchRow){
+      cralNavAddScorerRowsFallback(scorerRows,file,match,useTeamMap);
+    }
+
     (parsed.mvp||[]).filter(r=>cralNavRowBelongsToMatch(r,file,match)).forEach(r=>{ const person=cralNavAwardPersonFromRow(r,'mvp'); if(person.name) cralNavAddPerson(mvp,person.name,person.team,profilePointsFromRow(r)||1,person.row||r,'MVP'); });
     (parsed.portiere||[]).filter(r=>cralNavRowBelongsToMatch(r,file,match)).forEach(r=>{ const person=cralNavAwardPersonFromRow(r,'keeper'); if(person.name) cralNavAddPerson(keeper,person.name,person.team,profilePointsFromRow(r)||1,person.row||r,'Miglior portiere'); });
     (parsed.autogoal||[]).filter(r=>cralNavRowBelongsToMatch(r,file,match)).forEach(r=>{
@@ -13112,16 +13198,15 @@ function cralNavMatchDetails(match){
       const value=riepilogoGoalNumberFromText(firstPresent(r,[['goal','gol','reti','quantita','valore']]))||1;
       autogoals.push({name:smartSpace(name)||'Autogol',team,value,row:r,detail:'Autogol'});
     });
-    if(partita){
+    if(partita && !mvp.size){
       const note=firstPresent(partita,[['note','commento','descrizione']]);
-      const homeList=splitPeopleList(firstPresent(partita,[['marcatori casa','marcatori squadra casa','goal casa marcatori','scorer casa','marcatori home']]));
-      const awayList=splitPeopleList(firstPresent(partita,[['marcatori trasferta','marcatori ospite','marcatori squadra trasferta','goal trasferta marcatori','scorer trasferta','marcatori away']]));
-      const generic=splitInlinePeople(firstPresent(partita,[['marcatori','scorers','reti']])||extractInlineField(note,'Marcatori'));
-      if(!scorersHome.size) homeList.forEach(x=>cralNavAddPerson(scorersHome,x,match.home,riepilogoGoalNumberFromText(x)||1,null,''));
-      if(!scorersAway.size) awayList.forEach(x=>cralNavAddPerson(scorersAway,x,match.away,riepilogoGoalNumberFromText(x)||1,null,''));
-      if(!scorersHome.size&&!scorersAway.size&&!homeList.length&&!awayList.length) generic.forEach(x=>{ const name=cleanRiepilogoScorerName(x); const team=teamForPersonToken(name,'',[partita]); const target=useTeamMap(team); if(target) cralNavAddPerson(target,name,team,riepilogoGoalNumberFromText(x)||1,null,''); });
-      if(!mvp.size){ const mvpInline=splitInlinePeople(firstPresent(partita,[['mvp','migliore in campo','man of the match','motm']])||extractInlineField(note,'MVP')); mvpInline.forEach(x=>{ const row=cralNavContextRowForPlayer(x,''); const team=teamHintFromRow(row)||teamForPersonToken(x,'',[partita]); cralNavAddPerson(mvp,playerDisplayName(row)||x,team,1,row,'MVP'); }); }
-      if(!keeper.size){ const keepInline=splitInlinePeople(firstPresent(partita,[['portiere','miglior portiere','best keeper','goalkeeper']])||extractInlineField(note,'Portiere')); keepInline.forEach(x=>{ const row=cralNavContextRowForPlayer(x,''); const team=teamHintFromRow(row)||teamForPersonToken(x,'',[partita]); cralNavAddPerson(keeper,playerDisplayName(row)||x,team,1,row,'Miglior portiere'); }); }
+      const mvpInline=splitInlinePeople(firstPresent(partita,[['mvp','migliore in campo','man of the match','motm']])||extractInlineField(note,'MVP'));
+      mvpInline.forEach(x=>{ const row=cralNavContextRowForPlayer(x,''); const team=teamHintFromRow(row)||teamForPersonToken(x,'',[partita]); cralNavAddPerson(mvp,playerDisplayName(row)||x,team,1,row,'MVP'); });
+    }
+    if(partita && !keeper.size){
+      const note=firstPresent(partita,[['note','commento','descrizione']]);
+      const keepInline=splitInlinePeople(firstPresent(partita,[['portiere','miglior portiere','best keeper','goalkeeper']])||extractInlineField(note,'Portiere'));
+      keepInline.forEach(x=>{ const row=cralNavContextRowForPlayer(x,''); const team=teamHintFromRow(row)||teamForPersonToken(x,'',[partita]); cralNavAddPerson(keeper,playerDisplayName(row)||x,team,1,row,'Miglior portiere'); });
     }
   });
 
