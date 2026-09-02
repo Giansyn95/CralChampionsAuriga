@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <!-- CRAL_V21_FRONTEND: Fantacalcio cache/live robusto + validazione per partecipante -->
+  <!-- CRAL_V22_FRONTEND: discovery Fantacalcio indipendente dal manifest generale + manifest headerless -->
   <!-- Favicon: icona nella scheda del browser e nei preferiti/segnalibri.
        Usa lo stesso logo del CRAL già presente in immagini/. Se il file
        ha un nome diverso da logo_cral.png, basta cambiare questo percorso.
@@ -1655,6 +1655,7 @@ const DEFAULT_FILES    = [
   'riepilogo_giornate.csv'
 ];
 const FANTA_CACHE_FILE   = 'data/fantacalcio/fantacalcio_cache.json';
+const FANTA_SOURCE_INDEX_FILE = 'fantacalcio/manifest_fantacalcio.csv';
 /* Cartella dedicata ai pagelloni, dentro alla data/ di QUESTO torneo (relativa alla pagina,
    non un percorso assoluto): tornei/NOME-TORNEO/data/pagelloni/pagellone_giornata_N.txt.
    Essendo relativa, funziona automaticamente per qualsiasi torneo con questa stessa
@@ -11725,7 +11726,8 @@ window.__cralFantaDebug=()=>{
     }:null,
     cache:state.fantaPrecomputedData?summarize(state.fantaPrecomputedData.results||[]):{days:{},names:[]},
     imported:summarize(fantaReadImportedResults()),
-    hint:'Se G1/G10 mancano anche in cache.days e imported.days, i dati non sono disponibili nelle sorgenti caricate. Se sono presenti li ma non in final.days, copia questo oggetto per la diagnosi.'
+    discovery:_fantaDiscoveryDebugV22,
+    hint:'V22: rosterDays deve contenere le giornate caricate live. discovery.dedicatedManifest mostra i seed letti da data/fantacalcio/manifest_fantacalcio.csv.'
   };
 };
 
@@ -12752,20 +12754,45 @@ function normalizeFantaCsvPath(path){
 // La discovery dei file Fantacalcio usa esclusivamente manifest.csv.
 // Evitiamo volutamente la REST API GitHub (/git/trees?recursive=1): in un sito
 // pubblico client-side il suo rate limit anonimo puo' produrre 403 dopo vari accessi.
+function fantaPathRowsV22(rows){
+  if(!Array.isArray(rows) || !rows.length) return [];
+  const header=(rows[0]||[]).map(x=>norm(x));
+  const hasHeader=header.some(h=>['file','nome','filename','path','percorso'].includes(h));
+  if(hasHeader){
+    return rowsToObjects(rows).map(o=>firstPresent(o,[['file','nome','filename','path','percorso']])).filter(Boolean);
+  }
+  // Il manifest dell'Admin puo' essere volutamente a una sola colonna SENZA header.
+  // In quel caso ogni cella non vuota e' un path reale, inclusa la prima riga.
+  return rows.flat().map(x=>String(x||'').trim()).filter(Boolean);
+}
 function fantaManifestCsvPaths(){
   const rows=state.rows['manifest.csv']||[];
-  const objs=rowsToObjects(rows);
-  const raw=objs.length?objs.map(o=>col(o,['file','nome','filename'])):rows.flat();
-  return [...new Set(raw.map(normalizeFantaCsvPath).filter(Boolean))];
+  return [...new Set(fantaPathRowsV22(rows).map(normalizeFantaCsvPath).filter(Boolean))];
 }
-function fantaRosterTemplateV20(path){
+async function fantaDedicatedCsvPathsV22(fresh=false,signal){
+  try{
+    const txt=await fetchText(FANTA_SOURCE_INDEX_FILE,!!fresh,signal);
+    const rows=parseCsv(txt);
+    return [...new Set(fantaPathRowsV22(rows).map(normalizeFantaCsvPath).filter(Boolean))];
+  }catch(e){
+    if(signal?.aborted || isAbortError(e)) throw e;
+    return [];
+  }
+}
+function fantaRosterTemplateV22(path){
   const p=String(path||'').replace(/\\/g,'/');
-  const m=p.match(/(^|\/)giornata([\s_-]*)(\d+)(?=\/)/i);
-  if(!m) return '';
-  return p.slice(0,m.index)+m[1]+'giornata'+m[2]+'{DAY}'+p.slice(m.index+m[0].length);
+  const day=fantaDayFromFile(p);
+  if(!day) return '';
+  // Sostituisce la giornata sia nella CARTELLA sia nel NOME FILE.
+  // Esempio:
+  // fantacalcio/giornata1/rosa_mario_rossi_giornata1.csv
+  // -> fantacalcio/giornata{DAY}/rosa_mario_rossi_giornata{DAY}.csv
+  const re=new RegExp('giornata([\\s_-]*)'+String(day)+'(?=\\/|_|-|\\.|$)','ig');
+  const templ=p.replace(re,(m,sep)=>'giornata'+(sep||'')+'{DAY}');
+  return templ.includes('{DAY}')?templ:'';
 }
-function fantaExpandedRosterPathsV20(manifestFiles){
-  const declared=[...new Set((manifestFiles||[]).filter(f=>fantaIsDayRosterPath(f)))];
+function fantaExpandedRosterPathsV22(seedFiles){
+  const declared=[...new Set((seedFiles||[]).filter(f=>fantaIsDayRosterPath(f)))];
   const targetDays=new Set();
   const calendar=fantaCalendarDays();
   if(calendar.size) calendar.forEach(n=>{ if(Number.isFinite(n)&&n>0) targetDays.add(n); });
@@ -12773,31 +12800,36 @@ function fantaExpandedRosterPathsV20(manifestFiles){
     const n=parseInt(giornataNumberFromText(key)||giornataNumberFromText(label)||key,10);
     if(Number.isFinite(n)&&n>0) targetDays.add(n);
   });
-  const templates=[...new Set(declared.map(fantaRosterTemplateV20).filter(Boolean))];
+  const templates=[...new Set(declared.map(fantaRosterTemplateV22).filter(Boolean))];
   const declaredSet=new Set(declared);
   const derived=[];
-  // Genera la matrice giornata x nome-roster conosciuto. In questo modo recuperiamo
-  // non solo giornate del tutto assenti dal manifest, ma anche singoli partecipanti
-  // omessi per errore in una giornata specifica. I path gia' dichiarati non vengono
-  // duplicati e i candidati inesistenti possono semplicemente rispondere 404.
   [...targetDays].sort((a,b)=>a-b).forEach(day=>{
     templates.forEach(t=>{
-      const candidate=t.replace('{DAY}',String(day));
+      const candidate=t.replaceAll('{DAY}',String(day));
       if(!declaredSet.has(candidate)) derived.push(candidate);
     });
   });
-  return {declared,derived:[...new Set(derived)]};
+  return {declared,derived:[...new Set(derived)],templates,targetDays:[...targetDays].sort((a,b)=>a-b)};
 }
-async function discoverFantaFiles(){
-  // V20: il manifest resta la sorgente principale, ma se una giornata manca dal
-  // manifest ricaviamo i path delle rose usando gli stessi nomi file delle altre
-  // giornate. Questo recupera, per esempio, data/giornata1 e data/giornata10 senza
-  // dover elencare la directory via API GitHub. I path derivati sono solo candidati:
-  // un 404 e' ammesso e non blocca il resto del Fantacalcio.
-  const manifest=fantaManifestCsvPaths();
-  const expanded=fantaExpandedRosterPathsV20(manifest);
-  const nonRoster=manifest.filter(f=>!fantaIsDayRosterPath(f));
-  return {files:[...new Set([...nonRoster,...expanded.declared,...expanded.derived])],declaredRoster:new Set(expanded.declared),derivedRoster:new Set(expanded.derived)};
+let _fantaDiscoveryDebugV22={};
+async function discoverFantaFiles(fresh=false,signal){
+  // V22: il Fantacalcio non dipende piu' dal manifest generale dell'Admin.
+  // Un piccolo indice dedicato sotto data/fantacalcio fornisce almeno un seed per
+  // partecipante; da quel seed vengono generate tutte le giornate del calendario.
+  const general=fantaManifestCsvPaths();
+  const dedicated=await fantaDedicatedCsvPathsV22(fresh,signal);
+  const seeds=[...new Set([...general,...dedicated])];
+  const expanded=fantaExpandedRosterPathsV22(seeds);
+  const nonRoster=[...new Set(seeds.filter(f=>!fantaIsDayRosterPath(f) && f!==FANTA_SOURCE_INDEX_FILE))];
+  const files=[...new Set([...nonRoster,...expanded.declared,...expanded.derived])];
+  _fantaDiscoveryDebugV22={
+    generalManifest:general,
+    dedicatedManifest:dedicated,
+    templates:expanded.templates,
+    targetDays:expanded.targetDays,
+    candidates:files
+  };
+  return {files,declaredRoster:new Set(expanded.declared),derivedRoster:new Set(expanded.derived)};
 }
 async function loadFantaSourceFilesInBackground(fresh=false,generation=_dataLoadGeneration,signal){
   if(!isCurrentDataLoad(generation)||signal?.aborted) return false;
@@ -12871,8 +12903,7 @@ async function loadAuto(fresh){
     if(manifestResult && manifestResult.status==='fulfilled'){
       const mt=manifestResult.value.txt;
       const mr=parseCsv(mt);
-      const objs=rowsToObjects(mr);
-      const files=objs.length?objs.map(o=>col(o,['file','nome','filename'])).filter(Boolean):mr.flat().filter(x=>x&&x.toLowerCase()!=='file');
+      const files=fantaPathRowsV22(mr).filter(x=>x&&norm(x)!=='file');
       list=[...new Set([...BOOT_FILES,...files])];
       nextRows['manifest.csv']=mr; nextFiles['manifest.csv']=mt;
     }else{
