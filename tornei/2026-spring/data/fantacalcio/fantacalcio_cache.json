@@ -1,11 +1,177 @@
 {
   "schema": 1,
-  "generatedAt": "2026-09-02T12:58:00.631Z",
+  "generatedAt": "2026-09-02T13:06:10.505Z",
   "source": "calcolata",
   "rosterCount": 12,
   "playerCount": 35,
   "issues": [],
   "results": [
+    {
+      "day": 9,
+      "name": "Gianvito Saracino",
+      "points": 45,
+      "credits": 68,
+      "pres": 5,
+      "presPoints": null,
+      "goals": 6,
+      "mvps": 1,
+      "gsPt": 8,
+      "porteInviolate": 0,
+      "rigPar": 0,
+      "rigSbag": 0,
+      "autogoal": 0,
+      "players": [
+        {
+          "teamCode": "Auriga Juniors",
+          "surname": "Albrizio",
+          "name": "Gianfranco",
+          "role": "D",
+          "displayName": "Albrizio Gianfranco",
+          "fullName": "Gianfranco Albrizio",
+          "numericId": "006",
+          "stableKey": "AURIGA_JUNIORS_ALBRIZIO_GIANFRANCO"
+        },
+        {
+          "teamCode": "Auriga Juniors",
+          "surname": "Iacobellis",
+          "name": "PT",
+          "role": "PT",
+          "displayName": "Iacobellis PT",
+          "fullName": "PT Iacobellis",
+          "numericId": "003",
+          "stableKey": "AURIGA_JUNIORS_IACOBELLIS_PT"
+        },
+        {
+          "teamCode": "Out Of Office FC",
+          "surname": "Arena",
+          "name": "Michele",
+          "role": "C",
+          "displayName": "Arena Michele",
+          "fullName": "Michele Arena",
+          "numericId": "008",
+          "stableKey": "OUT_OF_OFFICE_FC_ARENA_MICHELE"
+        },
+        {
+          "teamCode": "BOT & BALL",
+          "surname": "Camposeo",
+          "name": "Giovanni",
+          "role": "A",
+          "displayName": "Camposeo Giovanni",
+          "fullName": "Giovanni Camposeo",
+          "numericId": "009",
+          "stableKey": "BOT_BALL_CAMPOSEO_GIOVANNI"
+        },
+        {
+          "teamCode": "Out Of Office FC",
+          "surname": "Saracino",
+          "name": "Gianvito",
+          "role": "A",
+          "displayName": "Saracino Gianvito",
+          "fullName": "Gianvito Saracino",
+          "numericId": "030",
+          "stableKey": "OUT_OF_OFFICE_FC_SARACINO_GIANVITO"
+        }
+      ],
+      "playerIds": [
+        "006",
+        "003",
+        "008",
+        "009",
+        "030"
+      ],
+      "playerPoints": [
+        [
+          "AURIGA JUNIORS|ALBRIZIO|GIANFRANCO",
+          6
+        ],
+        [
+          "AURIGA JUNIORS|IACOBELLIS|PT",
+          4
+        ],
+        [
+          "OUT OF OFFICE FC|ARENA|MICHELE",
+          9
+        ],
+        [
+          "BOT & BALL|CAMPOSEO|GIOVANNI",
+          6
+        ],
+        [
+          "OUT OF OFFICE FC|SARACINO|GIANVITO",
+          20
+        ]
+      ],
+      "playerExtras": [
+        [
+          "AURIGA JUNIORS|ALBRIZIO|GIANFRANCO",
+          {
+            "pres": 1,
+            "goals": 0,
+            "mvps": 0,
+            "gsPt": 0,
+            "pi": 0,
+            "rigPar": 0,
+            "rigSbag": 0,
+            "autogoal": 0
+          }
+        ],
+        [
+          "AURIGA JUNIORS|IACOBELLIS|PT",
+          {
+            "pres": 1,
+            "goals": 2,
+            "mvps": 0,
+            "gsPt": 8,
+            "pi": 0,
+            "rigPar": 0,
+            "rigSbag": 0,
+            "autogoal": 0
+          }
+        ],
+        [
+          "OUT OF OFFICE FC|ARENA|MICHELE",
+          {
+            "pres": 1,
+            "goals": 1,
+            "mvps": 0,
+            "gsPt": 0,
+            "pi": 0,
+            "rigPar": 0,
+            "rigSbag": 0,
+            "autogoal": 0
+          }
+        ],
+        [
+          "BOT & BALL|CAMPOSEO|GIOVANNI",
+          {
+            "pres": 1,
+            "goals": 0,
+            "mvps": 0,
+            "gsPt": 0,
+            "pi": 0,
+            "rigPar": 0,
+            "rigSbag": 0,
+            "autogoal": 0
+          }
+        ],
+        [
+          "OUT OF OFFICE FC|SARACINO|GIANVITO",
+          {
+            "pres": 1,
+            "goals": 3,
+            "mvps": 1,
+            "gsPt": 0,
+            "pi": 0,
+            "rigPar": 0,
+            "rigSbag": 0,
+            "autogoal": 0
+          }
+        ]
+      ],
+      "notes": [],
+      "importedTotal": false,
+      "squadOverride": ""
+    },
     {
       "day": 9,
       "name": "Salvatore Spinola",
@@ -143,6 +309,172 @@
         ],
         [
           "AURIGA JUNIORS|RUBINO|GIANLUCA",
+          {
+            "pres": 1,
+            "goals": 0,
+            "mvps": 0,
+            "gsPt": 0,
+            "pi": 0,
+            "rigPar": 0,
+            "rigSbag": 0,
+            "autogoal": 0
+          }
+        ],
+        [
+          "OUT OF OFFICE FC|SARACINO|GIANVITO",
+          {
+            "pres": 1,
+            "goals": 3,
+            "mvps": 1,
+            "gsPt": 0,
+            "pi": 0,
+            "rigPar": 0,
+            "rigSbag": 0,
+            "autogoal": 0
+          }
+        ]
+      ],
+      "notes": [],
+      "importedTotal": false,
+      "squadOverride": ""
+    },
+    {
+      "day": 9,
+      "name": "Filippo Capurso",
+      "points": 41,
+      "credits": 48,
+      "pres": 5,
+      "presPoints": null,
+      "goals": 3,
+      "mvps": 1,
+      "gsPt": 3,
+      "porteInviolate": 0,
+      "rigPar": 0,
+      "rigSbag": 0,
+      "autogoal": 0,
+      "players": [
+        {
+          "teamCode": "FC Stealthy Dribblers",
+          "surname": "Bruno",
+          "name": "PT",
+          "role": "PT",
+          "displayName": "Bruno PT",
+          "fullName": "PT Bruno",
+          "numericId": "001",
+          "stableKey": "FC_STEALTHY_DRIBBLERS_BRUNO_PT"
+        },
+        {
+          "teamCode": "Out Of Office FC",
+          "surname": "Capurso",
+          "name": "Filippo",
+          "role": "D",
+          "displayName": "Capurso Filippo",
+          "fullName": "Filippo Capurso",
+          "numericId": "010",
+          "stableKey": "OUT_OF_OFFICE_FC_CAPURSO_FILIPPO"
+        },
+        {
+          "teamCode": "BOT & BALL",
+          "surname": "Guri",
+          "name": "Sabah",
+          "role": "C",
+          "displayName": "Guri Sabah",
+          "fullName": "Sabah Guri",
+          "numericId": "021",
+          "stableKey": "BOT_BALL_GURI_SABAH"
+        },
+        {
+          "teamCode": "BlackJack",
+          "surname": "Palmitessa",
+          "name": "Giovanni",
+          "role": "D",
+          "displayName": "Palmitessa Giovanni",
+          "fullName": "Giovanni Palmitessa",
+          "numericId": "028",
+          "stableKey": "BLACKJACK_PALMITESSA_GIOVANNI"
+        },
+        {
+          "teamCode": "Out Of Office FC",
+          "surname": "Saracino",
+          "name": "Gianvito",
+          "role": "A",
+          "displayName": "Saracino Gianvito",
+          "fullName": "Gianvito Saracino",
+          "numericId": "030",
+          "stableKey": "OUT_OF_OFFICE_FC_SARACINO_GIANVITO"
+        }
+      ],
+      "playerIds": [
+        "001",
+        "010",
+        "021",
+        "028",
+        "030"
+      ],
+      "playerPoints": [
+        [
+          "FC STEALTHY DRIBBLERS|BRUNO|PT",
+          3
+        ],
+        [
+          "OUT OF OFFICE FC|CAPURSO|FILIPPO",
+          6
+        ],
+        [
+          "BOT & BALL|GURI|SABAH",
+          6
+        ],
+        [
+          "BLACKJACK|PALMITESSA|GIOVANNI",
+          6
+        ],
+        [
+          "OUT OF OFFICE FC|SARACINO|GIANVITO",
+          20
+        ]
+      ],
+      "playerExtras": [
+        [
+          "FC STEALTHY DRIBBLERS|BRUNO|PT",
+          {
+            "pres": 1,
+            "goals": 0,
+            "mvps": 0,
+            "gsPt": 3,
+            "pi": 0,
+            "rigPar": 0,
+            "rigSbag": 0,
+            "autogoal": 0
+          }
+        ],
+        [
+          "OUT OF OFFICE FC|CAPURSO|FILIPPO",
+          {
+            "pres": 1,
+            "goals": 0,
+            "mvps": 0,
+            "gsPt": 0,
+            "pi": 0,
+            "rigPar": 0,
+            "rigSbag": 0,
+            "autogoal": 0
+          }
+        ],
+        [
+          "BOT & BALL|GURI|SABAH",
+          {
+            "pres": 1,
+            "goals": 0,
+            "mvps": 0,
+            "gsPt": 0,
+            "pi": 0,
+            "rigPar": 0,
+            "rigSbag": 0,
+            "autogoal": 0
+          }
+        ],
+        [
+          "BLACKJACK|PALMITESSA|GIOVANNI",
           {
             "pres": 1,
             "goals": 0,
@@ -820,6 +1152,172 @@
         ],
         [
           "BOT & BALL|ERAMO|GIANLUCA",
+          {
+            "pres": 1,
+            "goals": 0,
+            "mvps": 0,
+            "gsPt": 0,
+            "pi": 0,
+            "rigPar": 0,
+            "rigSbag": 0,
+            "autogoal": 0
+          }
+        ]
+      ],
+      "notes": [],
+      "importedTotal": false,
+      "squadOverride": ""
+    },
+    {
+      "day": 9,
+      "name": "Giovanni Todisco",
+      "points": 28,
+      "credits": 48,
+      "pres": 5,
+      "presPoints": null,
+      "goals": 0,
+      "mvps": 0,
+      "gsPt": 2,
+      "porteInviolate": 0,
+      "rigPar": 0,
+      "rigSbag": 0,
+      "autogoal": 0,
+      "players": [
+        {
+          "teamCode": "Out Of Office FC",
+          "surname": "Colangiuli",
+          "name": "PT",
+          "role": "PT",
+          "displayName": "Colangiuli PT",
+          "fullName": "PT Colangiuli",
+          "numericId": "002",
+          "stableKey": "OUT_OF_OFFICE_FC_COLANGIULI_PT"
+        },
+        {
+          "teamCode": "BOT & BALL",
+          "surname": "Eramo",
+          "name": "Gianluca",
+          "role": "C",
+          "displayName": "Eramo Gianluca",
+          "fullName": "Gianluca Eramo",
+          "numericId": "017",
+          "stableKey": "BOT_BALL_ERAMO_GIANLUCA"
+        },
+        {
+          "teamCode": "BOT & BALL",
+          "surname": "Guri",
+          "name": "Sabah",
+          "role": "C",
+          "displayName": "Guri Sabah",
+          "fullName": "Sabah Guri",
+          "numericId": "021",
+          "stableKey": "BOT_BALL_GURI_SABAH"
+        },
+        {
+          "teamCode": "Auriga Juniors",
+          "surname": "Tauro",
+          "name": "Giovanni",
+          "role": "D",
+          "displayName": "Tauro Giovanni",
+          "fullName": "Giovanni Tauro",
+          "numericId": "032",
+          "stableKey": "AURIGA_JUNIORS_TAURO_GIOVANNI"
+        },
+        {
+          "teamCode": "FC Stealthy Dribblers",
+          "surname": "Turi",
+          "name": "Paolo",
+          "role": "A",
+          "displayName": "Turi Paolo",
+          "fullName": "Paolo Turi",
+          "numericId": "034",
+          "stableKey": "FC_STEALTHY_DRIBBLERS_TURI_PAOLO"
+        }
+      ],
+      "playerIds": [
+        "002",
+        "017",
+        "021",
+        "032",
+        "034"
+      ],
+      "playerPoints": [
+        [
+          "OUT OF OFFICE FC|COLANGIULI|PT",
+          4
+        ],
+        [
+          "BOT & BALL|ERAMO|GIANLUCA",
+          6
+        ],
+        [
+          "BOT & BALL|GURI|SABAH",
+          6
+        ],
+        [
+          "AURIGA JUNIORS|TAURO|GIOVANNI",
+          6
+        ],
+        [
+          "FC STEALTHY DRIBBLERS|TURI|PAOLO",
+          6
+        ]
+      ],
+      "playerExtras": [
+        [
+          "OUT OF OFFICE FC|COLANGIULI|PT",
+          {
+            "pres": 1,
+            "goals": 0,
+            "mvps": 0,
+            "gsPt": 2,
+            "pi": 0,
+            "rigPar": 0,
+            "rigSbag": 0,
+            "autogoal": 0
+          }
+        ],
+        [
+          "BOT & BALL|ERAMO|GIANLUCA",
+          {
+            "pres": 1,
+            "goals": 0,
+            "mvps": 0,
+            "gsPt": 0,
+            "pi": 0,
+            "rigPar": 0,
+            "rigSbag": 0,
+            "autogoal": 0
+          }
+        ],
+        [
+          "BOT & BALL|GURI|SABAH",
+          {
+            "pres": 1,
+            "goals": 0,
+            "mvps": 0,
+            "gsPt": 0,
+            "pi": 0,
+            "rigPar": 0,
+            "rigSbag": 0,
+            "autogoal": 0
+          }
+        ],
+        [
+          "AURIGA JUNIORS|TAURO|GIOVANNI",
+          {
+            "pres": 1,
+            "goals": 0,
+            "mvps": 0,
+            "gsPt": 0,
+            "pi": 0,
+            "rigPar": 0,
+            "rigSbag": 0,
+            "autogoal": 0
+          }
+        ],
+        [
+          "FC STEALTHY DRIBBLERS|TURI|PAOLO",
           {
             "pres": 1,
             "goals": 0,
