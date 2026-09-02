@@ -9,6 +9,11 @@ import {
   saveSession, loadSession, clearSession
 } from './gh.js';
 import { parseTournamentRegistry } from './tournament.js';
+import {
+  EVENT_TYPES, eventiCsvContent, idKey, listoneCsvContent, listoneIndex, manifestFantaContent,
+  parseEventiCsv, parseListoneCsv, parseRosterUpload, rosterCsvContent, rosterRelPath,
+  validateListoneRows, validateNewEvent, validateRosterAgainstListone
+} from './fantacalcio.js';
 
 const app = document.getElementById('app');
 const state = {
@@ -28,6 +33,10 @@ const state = {
   selectedPagelloneDay: null,
   pagelloneDraft: null,
   pagelloneDirty: false,
+  fantaListoneUpload: null,
+  fantaRosterUpload: null,
+  fantaEventForm: null,
+  fantaNewEvents: [],
   status: null,
   busy: false,
   targets: { collaudo: null, produzione: null }
@@ -270,7 +279,7 @@ function render(){
   refreshSidebar();
   const main=shell.main; main.innerHTML='';
   if(state.status)main.appendChild(messageBox(state.status.type,state.status.text));
-  if(state.active==='dashboard')renderDashboard(main);else if(state.active==='newTournament')renderNewTournament(main);else if(state.active==='giornata')renderGiornata(main);else if(state.active==='squadre')renderSquadre(main);else if(state.active==='calendario')renderCalendario(main);else if(state.active==='pagellone')renderPagellone(main);else if(state.active==='classifiche')renderClassifiche(main);else if(state.active==='files')renderFiles(main);else if(state.active==='publish')renderPublish(main)
+  if(state.active==='dashboard')renderDashboard(main);else if(state.active==='newTournament')renderNewTournament(main);else if(state.active==='giornata')renderGiornata(main);else if(state.active==='squadre')renderSquadre(main);else if(state.active==='calendario')renderCalendario(main);else if(state.active==='pagellone')renderPagellone(main);else if(state.active==='classifiche')renderClassifiche(main);else if(state.active==='fantacalcio')renderFantacalcio(main);else if(state.active==='files')renderFiles(main);else if(state.active==='publish')renderPublish(main)
 }
 function refreshTopbar(){
   const controls=shell.controls; controls.innerHTML='';
@@ -289,7 +298,7 @@ function refreshTopbar(){
 }
 function refreshSidebar(){
   const side=shell.sidebar; side.innerHTML='';
-  const items=[['dashboard','🏠','Dashboard'],['newTournament','➕','Nuovo torneo'],['giornata','⚽','Giornata'],['squadre','👕','Squadre'],['calendario','📅','Calendario'],['pagellone','📣','Pagellone'],['classifiche','🏆','Classifiche'],['files','🗂️','File'],['publish','🚀','Pubblica']];
+  const items=[['dashboard','🏠','Dashboard'],['newTournament','➕','Nuovo torneo'],['giornata','⚽','Giornata'],['squadre','👕','Squadre'],['calendario','📅','Calendario'],['pagellone','📣','Pagellone'],['classifiche','🏆','Classifiche'],['fantacalcio','🎮','Fantacalcio'],['files','🗂️','File'],['publish','🚀','Pubblica']];
   items.forEach(([id,icon,label])=>{const b=el('button',`nav-btn ${state.active===id?'active':''}`);b.type='button';b.appendChild(document.createTextNode(`${icon} ${label}`));if(id==='publish'&&state.pending.size)b.appendChild(el('span','pending-pill',state.pending.size));b.addEventListener('click',()=>{state.active=id;render()});side.appendChild(b)})
 }
 function pageHead(title,sub,actions=[]){const wrap=el('div','page-head');const copy=el('div');copy.appendChild(el('h2','',title));copy.appendChild(el('p','',sub));wrap.appendChild(copy);if(actions.length){const row=el('div','btn-row');actions.forEach(a=>row.appendChild(a));wrap.appendChild(row)}return wrap}
@@ -438,6 +447,214 @@ function renderClassifiche(main){
   const card=el('div','card');card.appendChild(messageBox('info','Ordinamento automatico squadre: Punti finali → differenza reti → gol fatti → ordine precedente. L’ordine precedente rimane quindi lo spareggio stabile quando i valori numerici sono identici.'));
   const rows=state.model.standings||[];if(!rows.length){card.appendChild(el('p','muted','Classifica squadre non presente. Verrà generata alla prima pubblicazione di una giornata.'));main.appendChild(card);return}
   const parsed=sectionFiles(state.model,'classifica_squadre')[0]?.parsed;const headers=parsed?.headers||[];const wrap=el('div','table-wrap');const table=el('table','data-table');const th=el('tr');headers.forEach(h=>th.appendChild(el('th','',h)));const thead=el('thead');thead.appendChild(th);table.appendChild(thead);const tb=el('tbody');rows.forEach(r=>{const tr=el('tr');headers.forEach(h=>tr.appendChild(el('td','',r[h]??'')));tb.appendChild(tr)});table.appendChild(tb);wrap.appendChild(table);card.appendChild(wrap);main.appendChild(card)
+}
+
+// ==================== FANTACALCIO ====================
+// Pubblica su GitHub un set di modifiche "guidate" e in più mantiene allineato
+// il manifest dedicato fantacalcio/manifest_fantacalcio.csv (usato dal
+// frontend pubblico come indice leggero, evitando l'API GitHub /git/trees).
+function stageFantaChanges(changes, source, fantaManifestRelPaths){
+  let count=stageGuidedChanges(changes, source);
+  if(fantaManifestRelPaths && fantaManifestRelPaths.length){
+    const model=effectiveModel();
+    const path=`${model.dataRoot}/fantacalcio/manifest_fantacalcio.csv`;
+    const existingText=model.fileList.find(f=>f.path===path)?.text||'file\n';
+    const content=manifestFantaContent(existingText, fantaManifestRelPaths);
+    if(String(content).replace(/\r\n/g,'\n')!==String(existingText).replace(/\r\n/g,'\n')){
+      state.pending.set(path,{path,content,source});
+      refreshModelFromPending();
+      count++;
+    }
+  }
+  return count;
+}
+function fantaListoneFile(model){return sectionFiles(model,'fanta_listone')[0]||null}
+function fantaCurrentListone(model){const f=fantaListoneFile(model);return f?parseListoneCsv(f.text||''):{players:[],separator:';'}}
+function fantaCurrentEventiFile(model){return sectionFiles(model,'fanta_eventi')[0]||null}
+function fantaCurrentEventi(model){const f=fantaCurrentEventiFile(model);return f?parseEventiCsv(f.text||''):{separator:';',events:[]}}
+
+async function handleListoneFile(fileList){
+  const file=fileList?.[0];if(!file)return;
+  if(!/\.csv$/i.test(file.name)){state.status={type:'error',text:'Seleziona un file .csv per il listone.'};render();return}
+  const text=await file.text();
+  const {separator,players}=parseListoneCsv(text);
+  const errors=validateListoneRows(players);
+  state.fantaListoneUpload={fileName:file.name,players,separator,errors};
+  render();
+}
+function confirmListoneUpload(){
+  const up=state.fantaListoneUpload;if(!up||up.errors.length)return;
+  const model=effectiveModel();
+  const path=`${model.dataRoot}/fantacalcio/listone_fantacalcio.csv`;
+  const content=listoneCsvContent(up.players,up.separator||';');
+  const count=stageFantaChanges([{path,content}],`Listone Fantacalcio (${up.fileName})`,['listone_fantacalcio.csv']);
+  state.fantaListoneUpload=null;
+  state.status={type:'success',text:`Listone caricato: ${up.players.length} giocatori pronti per la pubblicazione (${count} file inclusi manifest).`};
+  render();
+}
+function renderListoneSection(main, model){
+  const card=el('div','card');card.appendChild(el('h3','','1. Listone Fantacalcio'));
+  const existing=fantaCurrentListone(model);
+  card.appendChild(el('p','small muted',existing.players.length?`Listone attualmente pubblicato: ${existing.players.length} giocatori.`:'Nessun listone caricato ancora: caricalo per primo, serve a validare le rose e gli eventi.'));
+  const picker=input('file');picker.accept='.csv,text/csv';picker.addEventListener('change',()=>handleListoneFile(picker.files));
+  card.appendChild(fieldWrap('Carica listone (CSV: id;ruolo;giocatore;squadra;crediti;baseCreditiSuggeriti)',picker));
+  const up=state.fantaListoneUpload;
+  if(up){
+    if(up.errors.length)card.appendChild(messageBox('error',up.errors));
+    else{
+      card.appendChild(messageBox('success',`${up.fileName}: ${up.players.length} giocatori validi, pronti per la conferma.`));
+      const row=el('div','btn-row');
+      row.appendChild(button('Conferma caricamento listone','gold',confirmListoneUpload));
+      row.appendChild(button('Annulla','ghost',()=>{state.fantaListoneUpload=null;render()}));
+      card.appendChild(row);
+    }
+  }
+  main.appendChild(card);
+}
+
+async function handleRosterFiles(fileList){
+  const files=[...(fileList||[])].filter(f=>/\.csv$/i.test(f.name));
+  if(!files.length)return;
+  const model=effectiveModel();
+  const listone=fantaCurrentListone(model);
+  if(!listone.players.length){state.status={type:'error',text:'Carica prima il listone Fantacalcio: serve per validare gli id giocatore delle rose.'};render();return}
+  const idx=listoneIndex(listone.players);
+  const defaultGiornata=state.selectedDay||1;
+  const allRosters=[],globalErrors=[];
+  for(const file of files){
+    const text=await file.text();
+    const {rosters,errors}=parseRosterUpload(text,defaultGiornata);
+    errors.forEach(e=>globalErrors.push(`${file.name}: ${e}`));
+    rosters.forEach(r=>allRosters.push({...r,fileName:file.name}));
+  }
+  const seenKey=new Map();
+  allRosters.forEach(r=>{
+    const {errors,warnings}=validateRosterAgainstListone(r,idx);
+    r.errors=errors;r.warnings=warnings;
+    const key=`${r.giornata}|${norm(r.partecipante)}`;
+    if(seenKey.has(key))r.errors.push(`Rosa duplicata per ${r.partecipante} (giornata ${r.giornata}) tra i file caricati insieme: ${seenKey.get(key)} e ${r.fileName}.`);
+    else seenKey.set(key,r.fileName);
+  });
+  state.fantaRosterUpload={rosters:allRosters,globalErrors};
+  render();
+}
+function confirmRosterUpload(){
+  const up=state.fantaRosterUpload;if(!up)return;
+  const hasErrors=up.globalErrors.length||up.rosters.some(r=>r.errors.length);
+  if(hasErrors||!up.rosters.length)return;
+  const model=effectiveModel();
+  const changes=[],fantaManifestPaths=[];
+  up.rosters.forEach(r=>{
+    const rel=rosterRelPath(r.partecipante,r.giornata);
+    const path=`${model.dataRoot}/${rel}`;
+    changes.push({path,content:rosterCsvContent(r,';')});
+    fantaManifestPaths.push(rel.replace(/^fantacalcio\//i,''));
+  });
+  const count=stageFantaChanges(changes,`Rose Fantacalcio (${up.rosters.length})`,fantaManifestPaths);
+  state.fantaRosterUpload=null;
+  state.status={type:'success',text:`${changes.length} rose pronte per la pubblicazione (${count} file inclusi manifest).`};
+  render();
+}
+function renderRosterSection(main, model){
+  const card=el('div','card');card.appendChild(el('h3','','2. Rose partecipanti'));
+  const existingRosters=sectionFiles(model,'fanta_roster');
+  const days=[...new Set(existingRosters.map(f=>{const m=f.rel.match(/giornata(\d+)/i);return m?Number(m[1]):null}).filter(Boolean))].sort((a,b)=>a-b);
+  card.appendChild(el('p','small muted',days.length?`Rose già pubblicate per le giornate: ${days.join(', ')}.`:'Nessuna rosa caricata ancora.'));
+  card.appendChild(messageBox('info',`Colonne attese: giornata;partecipante;idGiocatore. Se una riga non specifica la giornata viene usata quella corrente della scheda Giornata (${state.selectedDay||'—'}). Puoi caricare più file insieme: un file per partecipante oppure un unico CSV con più partecipanti. Se una rosa per lo stesso partecipante/giornata esiste già, verrà sovrascritta.`));
+  const picker=input('file');picker.accept='.csv,text/csv';picker.multiple=true;picker.addEventListener('change',()=>handleRosterFiles(picker.files));
+  card.appendChild(fieldWrap('Carica rose (CSV, anche più file insieme)',picker));
+  const up=state.fantaRosterUpload;
+  if(up){
+    const allErrors=[...up.globalErrors];up.rosters.forEach(r=>allErrors.push(...r.errors));
+    const allWarnings=[];up.rosters.forEach(r=>allWarnings.push(...r.warnings));
+    if(up.rosters.length){
+      const wrap=el('div','table-wrap');const table=el('table','data-table');const thead=el('thead');const hr=el('tr');['Giornata','Partecipante','Giocatori','Esito'].forEach(h=>hr.appendChild(el('th','',h)));thead.appendChild(hr);table.appendChild(thead);
+      const tbody=el('tbody');
+      up.rosters.forEach(r=>{
+        const tr=el('tr');[r.giornata,r.partecipante,r.ids.length].forEach(v=>tr.appendChild(el('td','',String(v))));
+        const label=r.errors.length?`${r.errors.length} errori`:(r.warnings.length?`${r.warnings.length} avvisi`:'OK');
+        const status=el('td','',label);
+        status.style.color=r.errors.length?'#b42318':(r.warnings.length?'#b98900':'#067647');
+        tr.appendChild(status);tbody.appendChild(tr);
+      });
+      table.appendChild(tbody);wrap.appendChild(table);card.appendChild(wrap);
+    }
+    if(allErrors.length)card.appendChild(messageBox('error',allErrors));
+    else if(allWarnings.length)card.appendChild(messageBox('warning',allWarnings));
+    const row=el('div','btn-row');
+    const confirmBtn=button('Conferma caricamento rose','gold',confirmRosterUpload);confirmBtn.disabled=!!allErrors.length||!up.rosters.length;
+    row.appendChild(confirmBtn);
+    row.appendChild(button('Annulla','ghost',()=>{state.fantaRosterUpload=null;render()}));
+    card.appendChild(row);
+  }
+  main.appendChild(card);
+}
+
+function addFantaEvent(){
+  const model=effectiveModel();
+  const listone=fantaCurrentListone(model);
+  if(!listone.players.length){state.status={type:'error',text:'Carica prima il listone Fantacalcio.'};render();return}
+  const form=state.fantaEventForm||(state.fantaEventForm={idGiocatore:'',tipoEvento:EVENT_TYPES[0].value,quantita:'1'});
+  const event={giornata:String(state.selectedDay||''),idGiocatore:form.idGiocatore,tipoEvento:form.tipoEvento,quantita:form.quantita||'1'};
+  const idx=listoneIndex(listone.players);
+  const errors=validateNewEvent(event,idx);
+  if(errors.length){state.status={type:'error',text:errors.join(' ')};render();return}
+  state.fantaNewEvents.push(event);
+  form.idGiocatore='';form.quantita='1';
+  state.status={type:'success',text:'Evento aggiunto alla lista qui sotto. Ricorda di premere "Salva eventi" per metterlo in pubblicazione.'};
+  render();
+}
+function saveFantaEvents(){
+  if(!state.fantaNewEvents.length)return;
+  const model=effectiveModel();
+  const existing=fantaCurrentEventi(model);
+  const merged=[...existing.events.map(e=>({giornata:e.giornata,idGiocatore:e.idGiocatore,tipoEvento:e.tipoEvento,quantita:e.quantita})),...state.fantaNewEvents];
+  const path=`${model.dataRoot}/fantacalcio/eventi_fantacalcio.csv`;
+  const content=eventiCsvContent(merged,existing.separator||';');
+  const count=stageFantaChanges([{path,content}],`Eventi speciali Fantacalcio (${state.fantaNewEvents.length})`,['eventi_fantacalcio.csv']);
+  const saved=state.fantaNewEvents.length;
+  state.fantaNewEvents=[];
+  state.status={type:'success',text:`${saved} eventi pronti per la pubblicazione (${count} file inclusi manifest).`};
+  render();
+}
+function renderEventiSection(main, model){
+  const card=el('div','card');card.appendChild(el('h3','','3. Eventi speciali (rigori parati/sbagliati, autogol)'));
+  const listone=fantaCurrentListone(model);
+  if(!listone.players.length){card.appendChild(messageBox('info','Carica prima il listone per poter selezionare i giocatori.'));main.appendChild(card);return}
+  const existing=fantaCurrentEventi(model);
+  card.appendChild(el('p','small muted',`Eventi già presenti nel file pubblicato: ${existing.events.length}.`));
+  card.appendChild(messageBox('info',`Giornata usata per i nuovi eventi: ${state.selectedDay||'—'} — sincronizzata automaticamente dalla scheda "Giornata". Per registrare eventi su un'altra giornata, selezionala prima lì.`));
+  const form=state.fantaEventForm||(state.fantaEventForm={idGiocatore:'',tipoEvento:EVENT_TYPES[0].value,quantita:'1'});
+  const playerOptions=[{value:'',label:'— seleziona giocatore —'},...listone.players.map(p=>({value:p.id,label:`${p.id} · ${p.giocatore}${p.squadra?' ('+p.squadra+')':''}`}))];
+  const ps=select(playerOptions,form.idGiocatore);ps.addEventListener('change',()=>form.idGiocatore=ps.value);
+  const ts=select(EVENT_TYPES.map(t=>({value:t.value,label:t.label})),form.tipoEvento);ts.addEventListener('change',()=>form.tipoEvento=ts.value);
+  const qi=input('number',form.quantita||'1');qi.min='1';qi.addEventListener('input',()=>form.quantita=qi.value);
+  const grid=el('div','award-grid');
+  grid.appendChild(fieldWrap('Giocatore',ps));grid.appendChild(fieldWrap('Tipo evento',ts));grid.appendChild(fieldWrap('Quantità',qi));
+  card.appendChild(grid);
+  const row=el('div','btn-row');row.appendChild(button('+ Aggiungi evento','secondary',addFantaEvent));card.appendChild(row);
+  if(state.fantaNewEvents.length){
+    const wrap=el('div','table-wrap');const table=el('table','data-table');const thead=el('thead');const hr=el('tr');['Giornata','Giocatore','Tipo','Quantità',''].forEach(h=>hr.appendChild(el('th','',h)));thead.appendChild(hr);table.appendChild(thead);
+    const tbody=el('tbody');
+    state.fantaNewEvents.forEach((e,i)=>{
+      const tr=el('tr');
+      const player=listone.players.find(p=>idKey(p.id)===idKey(e.idGiocatore));
+      [e.giornata,player?`${e.idGiocatore} · ${player.giocatore}`:e.idGiocatore,EVENT_TYPES.find(t=>t.value===e.tipoEvento)?.label||e.tipoEvento,e.quantita].forEach(v=>tr.appendChild(el('td','',String(v))));
+      const rm=el('td');rm.appendChild(button('×','danger small',()=>{state.fantaNewEvents.splice(i,1);render()}));tr.appendChild(rm);
+      tbody.appendChild(tr);
+    });
+    table.appendChild(tbody);wrap.appendChild(table);card.appendChild(wrap);
+    const saveRow=el('div','btn-row');saveRow.style.marginTop='10px';saveRow.appendChild(button('Salva eventi','gold',saveFantaEvents));card.appendChild(saveRow);
+  }
+  main.appendChild(card);
+}
+
+function renderFantacalcio(main){
+  main.appendChild(pageHead('Fantacalcio','Carica listone, rose dei partecipanti ed eventi speciali. Tutto viene validato prima di essere messo in pubblicazione e genera la stessa struttura di file già usata sotto data/fantacalcio.'));
+  const model=effectiveModel();
+  renderListoneSection(main, model);
+  renderRosterSection(main, model);
+  renderEventiSection(main, model);
 }
 
 function renderFiles(main){
