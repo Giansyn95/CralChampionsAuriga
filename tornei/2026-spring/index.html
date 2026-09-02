@@ -11661,6 +11661,21 @@ function fantaAvailableDayOptions(results){
   const days=[...map.entries()].sort((a,b)=>parseInt(a[0],10)-parseInt(b[0],10));
   return [['totale','Tutte le giornate'],...days];
 }
+window.__cralFantaDebug=()=>{
+  const data=fantaCurrentData();
+  const rosterFiles=fantaRosterFiles();
+  const byDay={};
+  rosterFiles.forEach(f=>{ const d=fantaDayFromFile(f)||0; (byDay[d]||(byDay[d]=[])).push(f); });
+  return {
+    source:data?.source||'',
+    resultDays:[...new Set((data?.results||[]).map(r=>Number(r.day)||0).filter(Boolean))].sort((a,b)=>a-b),
+    rosterDays:Object.keys(byDay).map(Number).sort((a,b)=>a-b),
+    rosterFilesByDay:byDay,
+    validation:data?.validation?{firstDay:data.validation.firstDay,requiredMovement:data.validation.requiredMovement,valid:[...data.validation.validNames],invalid:[...data.validation.invalidNames]}:null,
+    cacheDays:state.fantaPrecomputedData?[...new Set((state.fantaPrecomputedData.results||[]).map(r=>Number(r.day)||0).filter(Boolean))].sort((a,b)=>a-b):[]
+  };
+};
+
 function fantaRowsForSelected(data){
   const selected=state.selectedFantaGiornata||'totale';
   if(selected==='totale'){
@@ -12690,36 +12705,85 @@ function fantaManifestCsvPaths(){
   const raw=objs.length?objs.map(o=>col(o,['file','nome','filename'])):rows.flat();
   return [...new Set(raw.map(normalizeFantaCsvPath).filter(Boolean))];
 }
+function fantaRosterTemplateV20(path){
+  const p=String(path||'').replace(/\\/g,'/');
+  const m=p.match(/(^|\/)giornata([\s_-]*)(\d+)(?=\/)/i);
+  if(!m) return '';
+  return p.slice(0,m.index)+m[1]+'giornata'+m[2]+'{DAY}'+p.slice(m.index+m[0].length);
+}
+function fantaExpandedRosterPathsV20(manifestFiles){
+  const declared=[...new Set((manifestFiles||[]).filter(f=>fantaIsDayRosterPath(f)))];
+  const targetDays=new Set();
+  const calendar=fantaCalendarDays();
+  if(calendar.size) calendar.forEach(n=>{ if(Number.isFinite(n)&&n>0) targetDays.add(n); });
+  else fantaRiepilogoDayOptions().forEach(([key,label])=>{
+    const n=parseInt(giornataNumberFromText(key)||giornataNumberFromText(label)||key,10);
+    if(Number.isFinite(n)&&n>0) targetDays.add(n);
+  });
+  const templates=[...new Set(declared.map(fantaRosterTemplateV20).filter(Boolean))];
+  const declaredSet=new Set(declared);
+  const derived=[];
+  // Genera la matrice giornata x nome-roster conosciuto. In questo modo recuperiamo
+  // non solo giornate del tutto assenti dal manifest, ma anche singoli partecipanti
+  // omessi per errore in una giornata specifica. I path gia' dichiarati non vengono
+  // duplicati e i candidati inesistenti possono semplicemente rispondere 404.
+  [...targetDays].sort((a,b)=>a-b).forEach(day=>{
+    templates.forEach(t=>{
+      const candidate=t.replace('{DAY}',String(day));
+      if(!declaredSet.has(candidate)) derived.push(candidate);
+    });
+  });
+  return {declared,derived:[...new Set(derived)]};
+}
 async function discoverFantaFiles(){
-  return fantaManifestCsvPaths();
+  // V20: il manifest resta la sorgente principale, ma se una giornata manca dal
+  // manifest ricaviamo i path delle rose usando gli stessi nomi file delle altre
+  // giornate. Questo recupera, per esempio, data/giornata1 e data/giornata10 senza
+  // dover elencare la directory via API GitHub. I path derivati sono solo candidati:
+  // un 404 e' ammesso e non blocca il resto del Fantacalcio.
+  const manifest=fantaManifestCsvPaths();
+  const expanded=fantaExpandedRosterPathsV20(manifest);
+  const nonRoster=manifest.filter(f=>!fantaIsDayRosterPath(f));
+  return {files:[...new Set([...nonRoster,...expanded.declared,...expanded.derived])],declaredRoster:new Set(expanded.declared),derivedRoster:new Set(expanded.derived)};
 }
 async function loadFantaSourceFilesInBackground(fresh=false,generation=_dataLoadGeneration,signal){
   if(!isCurrentDataLoad(generation)||signal?.aborted) return false;
-  let files=[];
-  try{ files=await discoverFantaFiles(fresh,signal); }
+  let discovery=null;
+  try{ discovery=await discoverFantaFiles(fresh,signal); }
   catch(e){ if(signal?.aborted||isAbortError(e)) return false; }
-  if(!isCurrentDataLoad(generation)||signal?.aborted||!files.length) return false;
-  const rosterPaths=files.filter(f=>fantaIsDayRosterPath(f));
+  if(!isCurrentDataLoad(generation)||signal?.aborted||!discovery) return false;
+  const files=Array.isArray(discovery.files)?discovery.files:[];
+  if(!files.length) return false;
+  const rosterCandidates=files.filter(f=>fantaIsDayRosterPath(f));
   const listonePaths=files.filter(f=>fileKind(f)==='fanta_listone');
-  if(!rosterPaths.length||!listonePaths.length) return false;
-  const results=await Promise.all(files.map(f=>fetchText(f,!!fresh,signal).then(txt=>({ok:true,f,txt})).catch(error=>({ok:false,f,error}))));
+  if(!rosterCandidates.length||!listonePaths.length) return false;
+
+  const results=await Promise.all(files.map(f=>fetchText(f,!!fresh,signal)
+    .then(txt=>({ok:true,f,txt}))
+    .catch(error=>({ok:false,f,error}))));
   if(!isCurrentDataLoad(generation)||signal?.aborted) return false;
-  const failedRoster=new Set(results.filter(x=>!x.ok&&rosterPaths.includes(x.f)).map(x=>x.f));
-  const failedListone=new Set(results.filter(x=>!x.ok&&listonePaths.includes(x.f)).map(x=>x.f));
-  // Mai sostituire una cache completa con un caricamento live parziale.
-  if(failedRoster.size||failedListone.size) return false;
+
+  // Il listone e' obbligatorio; le rose derivate sono probe opzionali. Anche una
+  // singola rosa mancante non deve annullare le altre giornate gia' disponibili.
+  const loadedListone=listonePaths.some(f=>results.some(x=>x.ok&&x.f===f));
+  if(!loadedListone) return false;
   const nextFiles={},nextRows={};
   results.forEach(x=>{ if(x.ok){ nextFiles[x.f]=x.txt; nextRows[x.f]=parseCsv(x.txt); } });
-  rosterPaths.forEach(f=>{ if(!nextRows[f]) return false; });
-  Object.assign(state.files,nextFiles); Object.assign(state.rows,nextRows);
-  // I file appena caricati riguardano solo il Fantacalcio: non invalidare cache di
-  // Pagellone/Match Center/rose squadre, altrimenti ogni refresh rende di nuovo lento
-  // il primo click su una partita. Calcola invece una volta sola il dataset live.
+  const loadedRoster=rosterCandidates.filter(f=>nextRows[f]);
+  if(!loadedRoster.length) return false;
+
+  Object.assign(state.files,nextFiles);
+  Object.assign(state.rows,nextRows);
   _fantaCurrentDataCache=null;
   _cralNavFantaImpactCache.clear();
   try{
     const liveData=fantaCalculateFromRosters();
-    _fantaCurrentDataCache={key:fantaDataCacheKey(),data:liveData};
+    // La cache viene costruita con la stessa chiave usata da fantaCurrentData().
+    const cacheKey=fantaDataCacheKey()+'|cache:'+(state.fantaPrecomputedData?.results?.length||0);
+    _fantaCurrentDataCache={key:cacheKey,data:fantaMergeMissingResultsV19(liveData,[
+      (state.fantaPrecomputedData&&Array.isArray(state.fantaPrecomputedData.results))?state.fantaPrecomputedData.results:[],
+      fantaReadImportedResults()
+    ])};
     warmMatchCenterFantaCaches();
   }catch(e){ _fantaCurrentDataCache=null; }
   if(state.activeTab==='fantacalcio') renderFantacalcio();
