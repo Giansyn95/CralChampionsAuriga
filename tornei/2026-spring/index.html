@@ -1663,6 +1663,7 @@ const FANTA_CACHE_FILE   = 'data/fantacalcio/fantacalcio_cache.json';
 const PAGELLONE_SUBFOLDER = 'data/pagelloni/';
 const PORTIERI_SNAPSHOT_FILE = 'portieri_snapshot.json';
 const FANTA_CACHE_SCHEMA = 1;
+const CRAL_FANTA_V19_ROSTER4_FALLBACK = true;
 const TABS = [
   ['home','🏠 Home'],['risultati','⚽ Risultati'],['classifiche','🏆 Classifiche'],
   ['calendario','📅 Calendario'],['squadre','👕 Squadre'],['statistiche','📊 Statistiche'],
@@ -10781,7 +10782,32 @@ function fantaRiepilogoDayOptions(){
   return out.sort((a,b)=>parseInt(a[0],10)-parseInt(b[0],10));
 }
 function fantaPlayedDays(){
-  return new Set(fantaRiepilogoDayOptions().map(([key])=>parseInt(key,10)).filter(n=>Number.isFinite(n)&&n>0));
+  // V19: una giornata e' giocabile nel Fantacalcio se compare in almeno una
+  // sorgente attendibile: riepilogo torneo, rose live, cache precalcolata o output
+  // importato. Il calendario resta il limite ufficiale per evitare giornate future.
+  const out=new Set();
+  const calendar=fantaCalendarDays();
+  const add=(value)=>{
+    const n=parseInt(value,10);
+    if(!Number.isFinite(n) || n<=0) return;
+    if(calendar.size && !calendar.has(n)) return;
+    out.add(n);
+  };
+  fantaRiepilogoDayOptions().forEach(([key,label])=>add(giornataNumberFromText(key)||giornataNumberFromText(label)||key));
+  fantaRosterFiles().forEach(file=>{
+    let found=false;
+    rowsToObjects(state.rows[file]||[]).forEach(r=>{
+      let day=parseInt(firstPresent(r,[['giornata','day','turno','round']]),10);
+      if(!Number.isFinite(day) || day<=0) day=fantaDayFromFile(file);
+      if(Number.isFinite(day) && day>0){ found=true; add(day); }
+    });
+    if(!found) add(fantaDayFromFile(file));
+  });
+  if(state.fantaPrecomputedData && Array.isArray(state.fantaPrecomputedData.results)){
+    state.fantaPrecomputedData.results.forEach(r=>add(r&&r.day));
+  }
+  fantaReadImportedResults().forEach(r=>add(r&&r.day));
+  return out;
 }
 function fantaRole(raw){
   const v=fantaNormText(raw);
@@ -11214,7 +11240,7 @@ function fantaFirstRosterDay(rosters, playedDays){
 function fantaValidationFromFirstRosters(ctx, rosters, playedDays){
   const firstDay=fantaFirstRosterDay(rosters, playedDays);
   const groups=new Map();
-  if(!firstDay) return {enabled:false,validNames:new Set(),invalidNames:new Set(),firstDay:0,requiredMovement:0};
+  if(!firstDay) return {enabled:false,validNames:new Set(),invalidNames:new Set(),firstDay:0,requiredMovement:4};
   rosters.forEach(file=>{
     rowsToObjects(state.rows[file]||[]).forEach(r=>{
       let day=parseInt(firstPresent(r,[['giornata','day','turno','round']]),10);
@@ -11235,15 +11261,13 @@ function fantaValidationFromFirstRosters(ctx, rosters, playedDays){
       else g.mov++;
     });
   });
-  const movementCounts=[...groups.values()].filter(g=>g.pt===1 && !g.unknown).map(g=>g.mov);
-  // La regola nuova è 1 PT + 5 movimento; per compatibilità con le rose già
-  // caricate in formato da 5 giocatori, se nessuna rosa ha 5 movimento ma la
-  // maggioranza ha 4, viene accettato automaticamente 1 PT + 4 movimento.
-  let requiredMovement=5;
-  if(!movementCounts.includes(5) && movementCounts.includes(4)) requiredMovement=4;
+  // V19: regola esplicita del torneo: una rosa valida e' esattamente
+  // 1 portiere + 4 giocatori di movimento. Chi non rispetta la regola non entra
+  // nella classifica, nemmeno tramite cache/output di fallback.
+  const requiredMovement=4;
   const validNames=new Set(), invalidNames=new Set();
   groups.forEach((g,key)=>{
-    if(g.pt===1 && g.mov===requiredMovement && !g.unknown) validNames.add(key);
+    if(g.pt===1 && g.mov===requiredMovement && g.total===5 && !g.unknown) validNames.add(key);
     else invalidNames.add(key);
   });
   return {enabled:true,validNames,invalidNames,firstDay,requiredMovement};
@@ -11538,16 +11562,67 @@ function ensureFantaDataInBackground(fresh,generation=_dataLoadGeneration,signal
 function fantaDataCacheKey(){
   return Object.keys(state.rows).sort().map(f=>f+':'+((state.rows[f]||[]).length)).join('|');
 }
+function fantaLoadedRosterKeysV19(){
+  const keys=new Set();
+  fantaRosterFiles().forEach(file=>{
+    rowsToObjects(state.rows[file]||[]).forEach(r=>{
+      let day=parseInt(firstPresent(r,[['giornata','day','turno','round']]),10);
+      if(!Number.isFinite(day) || day<=0) day=fantaDayFromFile(file);
+      const name=String(firstPresent(r,[['partecipante','nome','participant','fantallenatore']])||fantaParticipantFromFile(file)||'').trim();
+      if(Number.isFinite(day) && day>0 && name) keys.add(day+'|'+fantaNormText(name));
+    });
+  });
+  return keys;
+}
+function fantaMergeMissingResultsV19(live, fallbackSets){
+  const validation=live&&live.validation;
+  const validNames=validation&&validation.enabled ? validation.validNames : null;
+  const loadedRosterKeys=fantaLoadedRosterKeysV19();
+  const map=new Map();
+  const add=(r,isFallback)=>{
+    if(!r || !Number.isFinite(Number(r.day)) || Number(r.day)<=0 || !String(r.name||'').trim()) return;
+    const participantKey=fantaNormText(r.name);
+    if(validNames && !validNames.has(participantKey)) return;
+    const key=Number(r.day)+'|'+participantKey;
+    if(map.has(key)) return;
+    // Se la rosa live per quella coppia giornata/partecipante e' stata realmente
+    // caricata ma non ha prodotto un risultato, non mascheriamo l'errore con dati
+    // vecchi di cache. Il fallback serve solo per sorgenti live mancanti.
+    if(isFallback && loadedRosterKeys.has(key)) return;
+    map.set(key,r);
+  };
+  (live?.results||[]).forEach(r=>add(r,false));
+  (fallbackSets||[]).forEach(set=>(set||[]).forEach(r=>add(r,true)));
+  const results=[...map.values()].sort(fantaCompareResults);
+  return {
+    source:(fallbackSets||[]).some(set=>(set||[]).some(r=>r&&r.day>0&&!loadedRosterKeys.has(Number(r.day)+'|'+fantaNormText(r.name)))) ? 'ibrida' : (live?.source||'calcolata'),
+    results,
+    issues:Array.isArray(live?.issues)?live.issues:[],
+    rosterCount:Number(live?.rosterCount||0),
+    playerCount:Number(live?.playerCount||0),
+    validation:live?.validation
+  };
+}
 function fantaCurrentData(){
   const hasLiveRosters=fantaRosterFiles().length>0 && fantaListoneFiles().length>0;
-  const key=fantaDataCacheKey();
+  const key=fantaDataCacheKey()+'|cache:'+(state.fantaPrecomputedData?.results?.length||0);
   if(hasLiveRosters){
     if(_fantaCurrentDataCache&&_fantaCurrentDataCache.key===key) return _fantaCurrentDataCache.data;
-    const data=fantaCalculateFromRosters();
+    const live=fantaCalculateFromRosters();
+    const cacheRows=(state.fantaPrecomputedData&&Array.isArray(state.fantaPrecomputedData.results)) ? state.fantaPrecomputedData.results : [];
+    const imported=fantaReadImportedResults();
+    // V19: live resta autorevole. Cache/output vengono usati solo per le coppie
+    // giornata+partecipante la cui rosa live non e' stata caricata (es. G1/G10
+    // mancanti dal manifest o da un caricamento parziale). Nessun doppio conteggio.
+    const data=fantaMergeMissingResultsV19(live,[cacheRows,imported]);
     _fantaCurrentDataCache={key,data};
     return data;
   }
-  if(state.fantaPrecomputedData) return state.fantaPrecomputedData;
+  if(state.fantaPrecomputedData){
+    const data=state.fantaPrecomputedData;
+    _fantaCurrentDataCache={key,data};
+    return data;
+  }
   if(_fantaCurrentDataCache&&_fantaCurrentDataCache.key===key) return _fantaCurrentDataCache.data;
   const imported=fantaReadImportedResults();
   const data=imported.length
