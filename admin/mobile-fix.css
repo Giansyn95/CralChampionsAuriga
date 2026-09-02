@@ -156,3 +156,62 @@ button,
     font-size: 16px !important;
   }
 }
+
+/* Admin v5 - caricamento immagini WebP */
+.image-upload-section {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line, #d9e1ec);
+}
+.image-upload-section h4 {
+  margin: 0 0 6px;
+}
+.image-upload-help {
+  margin: 0 0 12px;
+  font-size: 13px;
+  color: var(--muted, #667085);
+}
+.image-upload-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  padding: 9px 0;
+  border-top: 1px solid rgba(148, 163, 184, .22);
+}
+.image-upload-copy {
+  min-width: 0;
+}
+.image-upload-copy strong,
+.image-upload-copy code {
+  display: block;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.image-upload-copy code {
+  margin-top: 3px;
+  font-size: 12px;
+  color: var(--muted, #667085);
+}
+.image-upload-pending {
+  margin-top: 3px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--blue, #0b67b2);
+}
+.image-player-details {
+  margin-top: 8px;
+}
+.image-player-details > summary {
+  cursor: pointer;
+  font-weight: 700;
+  padding: 8px 0;
+}
+@media (max-width: 620px) {
+  .image-upload-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .image-upload-row .btn {
+    width: 100%;
+  }
+}
