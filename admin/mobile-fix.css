@@ -1,0 +1,104 @@
+/*
+ * CRAL Champions Admin - mobile layout hardening
+ *
+ * Scopo:
+ * - evitare che tabelle larghe (es. rose Squadre) allarghino il documento;
+ * - mantenere topbar e navigazione sempre larghe quanto il viewport;
+ * - lasciare lo scroll orizzontale confinato dentro .table-wrap;
+ * - impedire il text auto-sizing di Safari che puo far apparire la pagina zoomata.
+ */
+
+html {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body,
+#app,
+.app-shell {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: hidden;
+}
+
+.topbar {
+  width: 100%;
+  max-width: 100%;
+}
+
+.topbar-inner,
+.env-controls,
+.layout,
+.main,
+.sidebar,
+.card,
+.team-editor,
+.team-editor > *,
+.file-list,
+.file-list > *,
+.table-wrap {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.topbar-inner,
+.layout {
+  width: 100%;
+}
+
+/* La tabella puo restare larga, ma deve scorrere SOLO nel suo contenitore. */
+.table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 1000px) {
+  /* minmax(0,1fr) impedisce al contenuto min-width:720px della tabella
+     di forzare la larghezza dell'intera pagina. */
+  .layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sidebar {
+    width: 100%;
+  }
+
+  .team-editor,
+  .file-list {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 620px) {
+  .topbar,
+  .topbar-inner,
+  .env-controls,
+  .layout,
+  .sidebar,
+  .main,
+  .center-screen,
+  .login-card {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  /* iOS Safari tende a zoomare automaticamente i campi sotto i 16px. */
+  input,
+  select,
+  textarea,
+  .input,
+  .select,
+  .textarea,
+  .data-table input,
+  .data-table select,
+  .entry-row .select,
+  .entry-row .input {
+    font-size: 16px;
+  }
+}
