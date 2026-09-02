@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <!-- CRAL_V14_FRONTEND: punti premi robusti, esterni espliciti, dedup snapshot e autogoal -->
+  <!-- CRAL_V15_FRONTEND: autogoal Match Center + Fantacalcio robusto + premi/esterni V14 -->
   <!-- Favicon: icona nella scheda del browser e nei preferiti/segnalibri.
        Usa lo stesso logo del CRAL già presente in immagini/. Se il file
        ha un nome diverso da logo_cral.png, basta cambiare questo percorso.
@@ -946,6 +946,16 @@
       #risultati .match-vs{display:none}
       #risultati .score{margin:0;min-width:54px;padding:5px 6px;border:1px solid var(--line);border-radius:11px;background:var(--soft);text-align:center;font-size:21px;line-height:1.05}
     }
+    /* V15: icona Autogoal dedicata, pallone bianco con macchie rosse. */
+    .autogoal-ball-icon{display:inline-block;width:18px;height:18px;flex:0 0 18px;border-radius:50%;border:1.5px solid #ef4444;background:
+      radial-gradient(circle at 50% 50%,#dc2626 0 17%,transparent 18%),
+      radial-gradient(circle at 23% 28%,#dc2626 0 10%,transparent 11%),
+      radial-gradient(circle at 77% 28%,#dc2626 0 10%,transparent 11%),
+      radial-gradient(circle at 28% 76%,#dc2626 0 10%,transparent 11%),
+      radial-gradient(circle at 73% 74%,#dc2626 0 10%,transparent 11%),
+      #fff;box-shadow:inset 0 0 0 1px rgba(127,29,29,.14),0 2px 7px rgba(220,38,38,.18);vertical-align:-3px}
+    .autogoal-ball-icon.is-small{width:17px;height:17px;flex-basis:17px;vertical-align:middle}
+    .entity-section-title .autogoal-ball-icon{margin-right:7px}
     @media print{.toolbar,.tabs,.search,#errorBanner{display:none}.section{display:block}.wrap{max-width:none}.card,.hero{box-shadow:none}}
     @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
   
@@ -10699,7 +10709,26 @@ function fantaRiepilogoDayOptions(){
   return out.sort((a,b)=>parseInt(a[0],10)-parseInt(b[0],10));
 }
 function fantaPlayedDays(){
-  return new Set(fantaRiepilogoDayOptions().map(([key])=>parseInt(key,10)).filter(n=>Number.isFinite(n)&&n>0));
+  // V15: non dipendere esclusivamente dal filtro Riepilogo. Se una giornata e' presente
+  // nelle rose Fantacalcio o nella cache precalcolata, deve restare disponibile anche
+  // durante caricamenti parziali / cache intermedie del riepilogo.
+  const calendar=fantaCalendarDays();
+  const max=fantaCalendarMaxDay();
+  const out=new Set();
+  const add=value=>{
+    const n=parseInt(value,10);
+    if(!Number.isFinite(n)||n<=0)return;
+    if(calendar.size&&!calendar.has(n))return;
+    if(max&&n>max)return;
+    out.add(n);
+  };
+  fantaRiepilogoDayOptions().forEach(([key,label])=>add(giornataNumberFromText(key)||giornataNumberFromText(label)||key));
+  fantaRosterFiles().forEach(file=>{
+    const fileDay=fantaDayFromFile(file);if(fileDay)add(fileDay);
+    rowsToObjects(state.rows[file]||[]).forEach(r=>add(firstPresent(r,[['giornata','day','turno','round']])||fileDay));
+  });
+  (state.fantaPrecomputedData?.results||[]).forEach(r=>add(r.day));
+  return out;
 }
 function fantaRole(raw){
   const v=fantaNormText(raw);
@@ -11194,9 +11223,11 @@ function fantaCalculateFromRosters(){
       if(!name){ issues.push(file+' riga '+(rowIndex+2)+': partecipante mancante'); return; }
       if(!rawId){ issues.push(file+' riga '+(rowIndex+2)+': idGiocatore mancante'); return; }
       const participantKey=fantaNormText(name);
-      if(validation.enabled){
-        if(validation.invalidNames.has(participantKey)) return;
-        if(validation.validNames.size && !validation.validNames.has(participantKey)) return;
+      if(validation.enabled && validation.invalidNames.has(participantKey)){
+        // V15: la validazione della prima rosa non deve eliminare il partecipante da
+        // tutte le giornate. Manteniamo il calcolo e segnaliamo l'anomalia una sola volta.
+        const warning='Rosa iniziale non conforme per '+name+': il partecipante resta incluso nei calcoli.';
+        if(!issues.includes(warning))issues.push(warning);
       }
       const rosterKey=day+'|'+participantKey;
       const source=firstSource.get(rosterKey);
@@ -11456,12 +11487,34 @@ function ensureFantaDataInBackground(fresh,generation=_dataLoadGeneration,signal
 function fantaDataCacheKey(){
   return Object.keys(state.rows).sort().map(f=>f+':'+((state.rows[f]||[]).length)).join('|');
 }
+function fantaDataCoverage(data){
+  const results=Array.isArray(data?.results)?data.results:[];
+  const days=new Set(),participants=new Set();
+  results.forEach(r=>{
+    const d=parseInt(r?.day,10);if(Number.isFinite(d)&&d>0)days.add(d);
+    const p=fantaNormText(r?.name||'');if(p)participants.add(p);
+  });
+  return {days,participants,rows:results.length};
+}
+function fantaLiveCoversBaseline(live,baseline){
+  if(!baseline?.results?.length)return true;
+  if(!live?.results?.length)return false;
+  const l=fantaDataCoverage(live),b=fantaDataCoverage(baseline);
+  for(const d of b.days)if(!l.days.has(d))return false;
+  for(const p of b.participants)if(!l.participants.has(p))return false;
+  // A parita' di giorni/partecipanti, una perdita netta di righe indica comunque
+  // un caricamento live incompleto (tipicamente uno o piu' file rosa non arrivati).
+  if(l.rows<b.rows)return false;
+  return true;
+}
 function fantaCurrentData(){
   const hasLiveRosters=fantaRosterFiles().length>0 && fantaListoneFiles().length>0;
   const key=fantaDataCacheKey();
   if(hasLiveRosters){
     if(_fantaCurrentDataCache&&_fantaCurrentDataCache.key===key) return _fantaCurrentDataCache.data;
-    const data=fantaCalculateFromRosters();
+    const live=fantaCalculateFromRosters();
+    const cached=state.fantaPrecomputedData;
+    const data=(cached && !fantaLiveCoversBaseline(live,cached)) ? cached : live;
     _fantaCurrentDataCache={key,data};
     return data;
   }
@@ -13140,10 +13193,19 @@ function cralNavKpi(label,value,sub,primary=false){
   if(sub){ const s=document.createElement('div'); s.className='s'; s.textContent=sub; box.appendChild(s); }
   return box;
 }
+function cralNavAutogoalBallIcon(small=false){
+  const icon=document.createElement('span');
+  icon.className='autogoal-ball-icon'+(small?' is-small':'');
+  icon.setAttribute('aria-hidden','true');
+  return icon;
+}
 function cralNavSection(title,emoji,iconClass){
   const sec=document.createElement('section'); sec.className='entity-section';
   const h=document.createElement('h3'); h.className='entity-section-title';
-  if(emoji && iconClass){
+  if(emoji==='__AUTOGOAL__'){
+    h.appendChild(cralNavAutogoalBallIcon(false));
+    h.appendChild(document.createTextNode(title));
+  }else if(emoji && iconClass){
     h.classList.add('has-styled-icon');
     const icon=document.createElement('span'); icon.className=iconClass; icon.textContent=emoji; icon.setAttribute('aria-hidden','true');
     h.appendChild(icon); h.appendChild(document.createTextNode(' '+title));
@@ -13392,9 +13454,21 @@ function cralNavMatchDetails(match){
     (parsed.mvp||[]).filter(r=>cralNavRowBelongsToMatch(r,file,match)).forEach(r=>{ const person=cralNavAwardPersonFromRow(r,'mvp'); if(person.name) cralNavAddPerson(mvp,person.name,person.team,profilePointsFromRow(r)||1,person.row||r,'MVP'); });
     (parsed.portiere||[]).filter(r=>cralNavRowBelongsToMatch(r,file,match)).forEach(r=>{ const person=cralNavAwardPersonFromRow(r,'keeper'); if(person.name) cralNavAddPerson(keeper,person.name,person.team,profilePointsFromRow(r)||1,person.row||r,'Miglior portiere'); });
     (parsed.autogoal||[]).filter(r=>cralNavRowBelongsToMatch(r,file,match)).forEach(r=>{
-      const name=playerNameFromRow(r); const team=teamHintFromRow(r)||teamForPersonToken(name,'',[r]);
+      // Nel formato storico la colonna Squadra e' la BENEFICIARIA. Nel Match Center
+      // mostriamo invece chi ha commesso l'autorete, coerentemente con la tabella Autogoal.
+      const beneficiary=teamHintFromRow(r)||'';
+      const offenderTeam=opponentForFavoredTeam(beneficiary,r,partita?[partita]:[]) ||
+        (cralNavTeamSame(beneficiary,match.home)?match.away:(cralNavTeamSame(beneficiary,match.away)?match.home:''));
+      let rawName=smartSpace(playerNameFromRow(r)||'');
+      if(['autogoal','autogol','autorete','autogol'].includes(norm(rawName)))rawName='';
+      let playerRow=rawName?cralNavContextRowForPlayer(rawName,offenderTeam):null;
+      const playerName=rawName?(playerDisplayName(playerRow)||rawName):'';
       const value=riepilogoGoalNumberFromText(firstPresent(r,[['goal','gol','reti','quantita','valore']]))||1;
-      autogoals.push({name:smartSpace(name)||'Autogol',team,value,row:r,detail:'Autogol'});
+      autogoals.push({
+        name:playerName||offenderTeam||'Autogoal',
+        team:playerName?offenderTeam:'Squadra che ha commesso l’autorete',
+        value,row:playerRow||r,detail:'Autogoal',teamOnly:!playerName,teamName:offenderTeam||''
+      });
     });
     if(partita && !mvp.size){
       const note=firstPresent(partita,[['note','commento','descrizione']]);
@@ -13453,8 +13527,17 @@ function cralNavMatchFantaImpact(match){
   return sorted;
 }
 function cralNavMatchPersonRow(person,icon){
-  const row=document.createElement('div'); row.className='match-person'; row.appendChild(imgOrInitialEl('player',person.row?playerImageNames(person.row):person.name,'match-person-avatar'));
-  const copy=document.createElement('div'); copy.className='match-person-copy'; const b=cralNavOpenPlayerButton(person.name,person.row,person.team); copy.appendChild(b); const s=document.createElement('span'); s.textContent=person.team||''; copy.appendChild(s); row.appendChild(copy); const v=document.createElement('div'); v.className='match-person-value'; v.textContent=icon+(person.value>1?' ×'+person.value:''); row.appendChild(v); return row;
+  const row=document.createElement('div'); row.className='match-person';
+  if(person.teamOnly && person.teamName) row.appendChild(imgOrInitialEl('team',person.teamName,'match-person-avatar'));
+  else row.appendChild(imgOrInitialEl('player',person.row?playerImageNames(person.row):person.name,'match-person-avatar'));
+  const copy=document.createElement('div'); copy.className='match-person-copy';
+  if(person.teamOnly){const b=document.createElement('b');b.textContent=person.name;copy.appendChild(b)}
+  else copy.appendChild(cralNavOpenPlayerButton(person.name,person.row,person.team));
+  const s=document.createElement('span'); s.textContent=person.team||''; copy.appendChild(s); row.appendChild(copy);
+  const v=document.createElement('div'); v.className='match-person-value';
+  if(icon==='__AUTOGOAL__'){v.appendChild(cralNavAutogoalBallIcon(true));if(person.value>1)v.appendChild(document.createTextNode(' ×'+person.value))}
+  else v.textContent=icon+(person.value>1?' ×'+person.value:'');
+  row.appendChild(v); return row;
 }
 function cralNavMatchListSection(title,emoji,items,icon){
   const sec=cralNavSection(title,emoji); const list=document.createElement('div'); list.className='match-person-list';
@@ -13525,7 +13608,7 @@ function openMatchCenter(match,options={}){
     columns.appendChild(cralNavMatchListSection('Marcatori '+match.away,'⚽',details.away,'⚽'));
     view.appendChild(columns);
   }
-  if(details.autogoals.length) view.appendChild(cralNavMatchListSection('Autogol','↩',details.autogoals,'↩'));
+  if(details.autogoals.length) view.appendChild(cralNavMatchListSection('Autogoal','__AUTOGOAL__',details.autogoals,'__AUTOGOAL__'));
   if(details.mvp.length||details.keeper.length){ const awardSec=cralNavSection('Premi partita','🏅'); const awards=document.createElement('div'); awards.className='match-awards'; [...details.mvp.map(x=>({x,label:'MVP',icon:'⭐',cls:' is-mvp'})),...details.keeper.map(x=>({x,label:'Miglior portiere',icon:'🧤',cls:''}))].forEach(({x,label,icon,cls})=>{ const card=document.createElement('div'); card.className='match-award'+cls; const sm=document.createElement('small'); sm.textContent=icon+' '+label; card.appendChild(sm); card.appendChild(cralNavOpenPlayerButton(x.name,x.row,x.team)); awards.appendChild(card); }); awardSec.appendChild(awards); view.appendChild(awardSec); }
   if(details.pagelle.length){ const sec=cralNavSection('Pagelle della partita','📝'); const grid=document.createElement('div'); grid.className='match-pagelle-grid'; const addTeamColumn=(team,items)=>{ const col=document.createElement('div'); col.className='match-pagelle-team-col'; const h=document.createElement('h4'); h.className='match-pagelle-team-title'; h.textContent=team; col.appendChild(h); const sorted=cralNavSortPagelleForTeam(items,team); if(!sorted.length) col.appendChild(buildEl('div','entity-empty','Nessuna pagella.')); sorted.forEach(x=>{ const card=document.createElement('div'); card.className='match-pagella'; card.appendChild(imgOrInitialEl('player',x.row?playerImageNames(x.row):[x.displayName],'team-roster-avatar')); const c=document.createElement('div'); const b=cralNavOpenPlayerButton(x.displayName,x.row,x.team); c.appendChild(b); const t=document.createElement('div'); t.className='match-pagella-team'; t.textContent=roleDisplayLabel(x.role||fieldLoose(x.row||{},['ruolo','role','posizione','position']))||x.team; c.appendChild(t); card.appendChild(c); const v=document.createElement('span'); v.className='match-pagella-vote'; v.textContent=votoDisplay(x.voto,x.votoLabel); card.appendChild(v); col.appendChild(card); }); grid.appendChild(col); }; addTeamColumn(match.home,details.pagelle.filter(x=>cralNavTeamSame(x.team,match.home))); addTeamColumn(match.away,details.pagelle.filter(x=>cralNavTeamSame(x.team,match.away))); sec.appendChild(grid); view.appendChild(sec); }
   if(fanta.length){ const sec=cralNavSection('Impatto Fantacalcio','♛','gold-crown'); const sub=document.createElement('p'); sub.className='entity-section-sub'; sub.textContent='Punteggio reale della giornata per i giocatori di questa gara che risultano schierati in almeno una rosa Fantacalcio.'; sec.appendChild(sub); const list=document.createElement('div'); list.className='fanta-impact-list'; fanta.forEach(x=>{ const row=document.createElement('div'); row.className='fanta-impact-row'; const imageNames=x.row?playerImageNames(x.row):[x.fullName,x.name].filter(Boolean); row.appendChild(imgOrInitialEl('player',imageNames,'fanta-impact-avatar')); const c=document.createElement('div'); c.className='fanta-impact-copy'; const b=cralNavOpenPlayerButton(x.name,x.row,x.team); b.classList.add('fanta-impact-name'); c.appendChild(b); const p=document.createElement('p'); p.textContent=x.detail; c.appendChild(p); row.appendChild(c); const pts=document.createElement('div'); pts.className='fanta-impact-score'; pts.textContent=x.points+' pt'; row.appendChild(pts); list.appendChild(row); }); sec.appendChild(list); view.appendChild(sec); }
