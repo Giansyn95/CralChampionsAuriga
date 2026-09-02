@@ -13,9 +13,9 @@
 </head>
 <body>
 <div id="app" class="app-shell" aria-live="polite"></div>
-<!-- Mobile/iOS fix: deve precedere il bootstrap dell'Admin. -->
-<script src="./mobile-fix.js?v=13"></script>
-<!-- Bootstrap v29: hotfix regex manifest + protezione Fantacalcio e correzioni logiche correnti. -->
+<!-- Mobile/iOS fix v31: preserva scroll/focus durante i render interni. -->
+<script src="./mobile-fix-v31.js?v=31"></script>
+<!-- Bootstrap v30: logica Admin stabile; V31 modifica solo la stabilita mobile. -->
 <script type="module" src="./admin-boot-v30.js?v=30"></script>
 </body>
 </html>
