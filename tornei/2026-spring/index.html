@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <!-- CRAL_V13_FRONTEND: normalizzazione premi esterni, dedup snapshot e compatibilita autogoal -->
+  <!-- CRAL_V14_FRONTEND: punti premi robusti, esterni espliciti, dedup snapshot e autogoal -->
   <!-- Favicon: icona nella scheda del browser e nei preferiti/segnalibri.
        Usa lo stesso logo del CRAL già presente in immagini/. Se il file
        ha un nome diverso da logo_cral.png, basta cambiare questo percorso.
@@ -2508,10 +2508,23 @@ function diagnoseCSV(filename, rawText, parsedRows){
       const numCols=['goal','punti','pts','reti','presenze','partite'];
       const parsedHeader=(parsedRows&&parsedRows[0]||[]);
       const headerIndex=(names)=>parsedHeader.findIndex(x=>names.some(n=>norm(x)===norm(n)));
-      const personIdx=headerIndex(['giocatore','portiere','mvp','marcatore','player','nome completo']);
+      const sectionIdx=headerIndex(['sezione','section','tipo','categoria']);
+      const playerIdx=headerIndex(['giocatore','player','nome completo']);
+      const keeperIdx=headerIndex(['portiere','miglior portiere','best keeper','goalkeeper']);
       const noteIdx=headerIndex(['note','nota','commento','descrizione']);
-      const rowIsExternalAward=(row)=>{
-        const person=personIdx>=0?String(row[personIdx]||'').trim():'';
+      const rowAwardKind=(row)=>{
+        const sec=sectionIdx>=0?norm(row[sectionIdx]):'';
+        if(sec.includes('portiere')||sec.includes('keeper'))return 'portiere';
+        if(sec==='mvp'||sec.includes('miglioreincampo')||sec.includes('manofthematch'))return 'mvp';
+        return '';
+      };
+      const rowAwardPerson=(row,kind)=>{
+        if(kind==='portiere'&&keeperIdx>=0&&String(row[keeperIdx]||'').trim())return String(row[keeperIdx]||'').trim();
+        if(playerIdx>=0)return String(row[playerIdx]||'').trim();
+        return '';
+      };
+      const rowIsExternalAward=(row,kind)=>{
+        const person=rowAwardPerson(row,kind);
         const note=noteIdx>=0?String(row[noteIdx]||'').trim():'';
         const p=norm(person),n=norm(note);
         return p==='esterno'||p==='external'||n.includes('giocatoreesterno')||n.includes('premioesterno');
@@ -2524,11 +2537,25 @@ function diagnoseCSV(filename, rawText, parsedRows){
           const raw=String(r[hi]??'').trim();
           if(!raw)return false;
           if(!isNaN(parseFloat(raw.replace(',','.'))))return false;
-          if(isAwardPoints && rowIsExternalAward(r) && /^(?:n\/?a|n\.?d\.?|—|-|non\s*applicabile)$/i.test(raw))return false;
+          const kind=rowAwardKind(r);
+          if(isAwardPoints && kind && rowIsExternalAward(r,kind) && /^(?:n\/?a|n\.?d\.?|—|-|non\s*applicabile)$/i.test(raw))return false;
           return true;
         });
         if(badVals.length)
           problems.push({icon:'🔢',msg:`Colonna "${h}": ${badVals.length} valore/i non numerici (es: "${String(badVals[0][hi]).slice(0,20)}").`,fix:'Sostituisci testo non numerico con un valore valido nella colonna '+h+'.'});
+        if(isAwardPoints){
+          const missingInternal=(parsedRows||[]).slice(1).filter(r=>{
+            const kind=rowAwardKind(r);if(!kind)return false;
+            const isKeeperColumn=hn.includes('puntiportiere')||hn.includes('puntipt');
+            if((kind==='portiere')!==isKeeperColumn)return false;
+            if(rowIsExternalAward(r,kind))return false;
+            const person=rowAwardPerson(r,kind);if(!person)return false;
+            const raw=String(r[hi]??'').trim().replace(',','.');
+            return raw===''||!Number.isFinite(Number(raw));
+          });
+          if(missingInternal.length)
+            problems.push({icon:'🏅',msg:`${missingInternal.length} premio/i ${hn.includes('portiere')||hn.includes('puntipt')?'Miglior portiere':'MVP'} interno/i senza punteggio numerico valido.`,fix:'Apri la giornata nell’Admin e inserisci il punteggio reale del premio. Il valore non viene stimato automaticamente.'});
+        }
       });
     }
     if(nonEmptyRows.length===1)
@@ -9112,15 +9139,27 @@ function riepilogoLiteralExternal(value){
   const n=norm(value);
   return n==='esterno'||n==='external'||n==='giocatoreesterno'||n==='playeresterno';
 }
+function riepilogoAwardRawPoints(row,kind){
+  const aliases=kind==='portiere'?['punti portiere','puntiportiere','punti pt','puntipt','punti']:['punti mvp','puntimvp','punti'];
+  return firstPresent(row,[aliases]);
+}
+function riepilogoAwardHasNumericPoints(row,kind){
+  const raw=String(riepilogoAwardRawPoints(row,kind)||'').trim().replace(',','.');
+  return raw!=='' && Number.isFinite(Number(raw));
+}
 function riepilogoIsExplicitExternalRow(row,kind=''){
   const person=riepilogoAwardPerson(row,kind);
   if(riepilogoLiteralExternal(person)) return true;
-  // Un nominativo che risolve davvero nella rosa vince su eventuali residui storici
-  // presenti in altre colonne della stessa riga (es. Giocatore=Esterno + Portiere=Iacobellis).
+  // Se il nominativo risolve nella rosa e' interno, anche se una vecchia colonna
+  // parallela contiene ancora la parola Esterno.
   if(person && rosterIdentityRecords().length && !isPersonExternal(person)) return false;
   const note=firstPresent(row,[['note','nota','commento','descrizione']]);
   const noteKey=norm(note);
   if(noteKey.includes('giocatoreesterno')||noteKey.includes('premioesterno')) return true;
+  // Compatibilita storica: un premio con nominativo e punteggio numerico e' considerato
+  // interno anche se il resolver della rosa non riesce a riconoscere il nome (es. PT/Cognome,
+  // nomi abbreviati o vecchi formati). Questo evita N/A falsi sui portieri storici.
+  if((kind==='mvp'||kind==='portiere') && person && riepilogoAwardHasNumericPoints(row,kind)) return false;
   return !!(person && rosterIdentityRecords().length && isPersonExternal(person));
 }
 function riepilogoMatchTeams(matchRow){
@@ -9191,9 +9230,14 @@ function riepilogoAwardDisplayRow(row,kind){
   const personKey=kind==='portiere'?'Portiere':'Giocatore';
   out[personKey]=external?'Esterno':person;
   const pointAliases=kind==='portiere'?['puntiportiere','puntipt','punti']:['puntimvp','punti'];
-  const rawPoints=firstPresent(row,[pointAliases]);
+  const rawPoints=riepilogoAwardRawPoints(row,kind);
+  const numericPoints=String(rawPoints||'').trim().replace(',','.');
+  const validNumeric=numericPoints!==''&&Number.isFinite(Number(numericPoints));
   Object.keys(out).forEach(k=>{if(pointAliases.includes(norm(k)))delete out[k]});
-  out[kind==='portiere'?'PuntiPortiere':'PuntiMVP']=external?'N/A':rawPoints;
+  // N/A e' solo una rappresentazione visiva dei premi esterni. Per un premio interno
+  // il valore numerico viene mostrato esattamente com'e'; se il dato storico e' davvero
+  // mancante/non valido mostriamo un trattino e lasciamo alla diagnostica il compito di segnalarlo.
+  out[kind==='portiere'?'PuntiPortiere':'PuntiMVP']=external?'N/A':(validNumeric?rawPoints:'—');
   if(external)out._noLink=true;
   return out;
 }
