@@ -1,4 +1,3 @@
-file
 classifica_squadre.csv
 classifica_marcatori.csv
 classifica_mvp.csv
@@ -21,3 +20,13 @@ riepilogo_giornata7.csv
 riepilogo_giornata8.csv
 riepilogo_giornata9.csv
 riepilogo_giornata10.csv
+fantacalcio/manifest_fantacalcio.csv
+fantacalcio/listone_fantacalcio.csv
+fantacalcio/giornata1/rosa_filippo_capurso_giornata1.csv
+fantacalcio/giornata1/rosa_gianvito_saracino_giornata1.csv
+fantacalcio/giornata1/rosa_giovanni_todisco_giornata1.csv
+fantacalcio/giornata1/rosa_mario_rossi_giornata1.csv
+fantacalcio/giornata1/rosa_michele_cirilli_giornata1.csv
+fantacalcio/giornata1/rosa_paolo_turi_giornata1.csv
+fantacalcio/giornata1/rosa_sabah_guri_giornata1.csv
+fantacalcio/giornata1/rosa_salvatore_spinola_giornata1.csv
