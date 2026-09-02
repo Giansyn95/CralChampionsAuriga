@@ -1,24 +1,26 @@
-Sezione;Giornata;Casa;Trasferta;GolCasa;GolTrasferta;Esito;Squadra;Giocatore;Gol;PuntiMVP;Portiere;PuntiPortiere;Partita;Voce;Valore;Note
-Partita;8;Auriga Juniors;BlackJack;4;2;V/S;;;;;;;Auriga Juniors vs BlackJack;;;Marcatori: De Toma x2, Cirilli, Fiorella | MVP: De Toma | Riposa: Out Of Office FC
-Partita;8;BOT & BALL;FC Stealthy Dribblers;1;3;S/V;;;;;;;BOT & BALL vs FC Stealthy Dribblers;;;Marcatori: Camposeo, Menolascina x2, Grippa | MVP: Menolascina
-Marcatore;8;;;;;;BOT & BALL;Camposeo Giovanni;1;;;;;;;
-Marcatore;8;;;;;;FC Stealthy Dribblers;Menolascina Nicolandrea;2;;;;;;;
-Marcatore;8;;;;;;FC Stealthy Dribblers;Grippa Michele;1;;;;;;;
-Marcatore;8;;;;;;Auriga Juniors;De Toma Nicola;2;;;;;;;
-Marcatore;8;;;;;;BlackJack;Cirilli Michele;1;;;;;;;
-Marcatore;8;;;;;;BlackJack;Fiorella Giacomo;1;;;;;;;
-Totale marcatore giornata;8;;;;;;Auriga Juniors;De Toma Nicola;2;;;;;;;
-Totale marcatore giornata;8;;;;;;FC Stealthy Dribblers;Menolascina Nicolandrea;2;;;;;;;
-Totale marcatore giornata;8;;;;;;BlackJack;Cirilli Michele;1;;;;;;;
-Totale marcatore giornata;8;;;;;;BlackJack;Fiorella Giacomo;1;;;;;;;
-Totale marcatore giornata;8;;;;;;BOT & BALL;Camposeo Giovanni;1;;;;;;;
-Totale marcatore giornata;8;;;;;;FC Stealthy Dribblers;Grippa Michele;1;;;;;;;
-MVP;8;;;;;;Auriga Juniors;De Toma Nicola;;5;;;;;;
-MVP;8;;;;;;FC Stealthy Dribblers;Menolascina Nicolandrea;;5;;;;;;
-Miglior portiere;8;;;;;;Auriga Juniors;;;;Iacobellis PT;1;Auriga Juniors vs BlackJack;;;
-Statistica;8;;;;;;;;;;;;;Gol totali;10;
-Statistica;8;;;;;;;;;;;;;Media gol/partita;5.0;
-Statistica;8;;;;;;;;;;;;;Clean sheet;0;
-Statistica;8;;;;;;;;;;;;;Partita con piu gol;Auriga Juniors 4-2 BlackJack;
-Statistica;8;;;;;;;;;;;;;Miglior marcatore;Menolascina Nicolandrea (2 gol);
-Statistica;8;;;;;;;;;;;;;Partite giocate;2;
+Sezione;Giornata;Casa;Trasferta;GolCasa;GolTrasferta;Esito;Squadra;Giocatore;Gol;PuntiMVP;Portiere;PuntiPortiere;Partita;Voce;Valore;Note;Data;Risultato;Tavolino;Squadra penalizzata
+Partita;8;Auriga Juniors;BlackJack;4;2;;;;;;;;Auriga Juniors - BlackJack;;;Marcatori: De Toma x2, Cirilli, Fiorella | MVP: De Toma | Riposa: Out Of Office FC;;4 - 2;;
+Marcatore;8;;;;;;Auriga Juniors;Nicola De Toma;2;;;;Auriga Juniors - BlackJack;;;;;;;
+Marcatore;8;;;;;;BlackJack;Michele Cirilli;1;;;;Auriga Juniors - BlackJack;;;;;;;
+Marcatore;8;;;;;;BlackJack;Giacomo Fiorella;1;;;;Auriga Juniors - BlackJack;;;;;;;
+Marcatore;8;;;;;;Auriga Juniors;Esterno;2;;;;Auriga Juniors - BlackJack;;;Giocatore esterno;;;;
+MVP;8;;;;;;Auriga Juniors;Nicola De Toma;;5;;;Auriga Juniors - BlackJack;;;;;;;
+Miglior portiere;8;;;;;;Auriga Juniors;;;;PT Iacobellis;1;Auriga Juniors - BlackJack;;;;;;;
+Partita;8;BOT & BALL;FC Stealthy Dribblers;1;3;;;;;;;;BOT & BALL - FC Stealthy Dribblers;;;Marcatori: Camposeo, Menolascina x2, Grippa | MVP: Menolascina;;1 - 3;;
+Marcatore;8;;;;;;BOT & BALL;Giovanni Camposeo;1;;;;BOT & BALL - FC Stealthy Dribblers;;;;;;;
+Marcatore;8;;;;;;FC Stealthy Dribblers;Nicolandrea Menolascina;2;;;;BOT & BALL - FC Stealthy Dribblers;;;;;;;
+Marcatore;8;;;;;;FC Stealthy Dribblers;Michele Grippa;1;;;;BOT & BALL - FC Stealthy Dribblers;;;;;;;
+MVP;8;;;;;;FC Stealthy Dribblers;Nicolandrea Menolascina;;5;;;BOT & BALL - FC Stealthy Dribblers;;;;;;;
+Miglior portiere;8;;;;;;FC Stealthy Dribblers;;;;Esterno;N/A;BOT & BALL - FC Stealthy Dribblers;;;Giocatore esterno;;;;
+Totale marcatore giornata;8;;;;;;Auriga Juniors;Nicola De Toma;2;;;;;;;;;;;
+Totale marcatore giornata;8;;;;;;FC Stealthy Dribblers;Nicolandrea Menolascina;2;;;;;;;;;;;
+Totale marcatore giornata;8;;;;;;BlackJack;Giacomo Fiorella;1;;;;;;;;;;;
+Totale marcatore giornata;8;;;;;;BOT & BALL;Giovanni Camposeo;1;;;;;;;;;;;
+Totale marcatore giornata;8;;;;;;BlackJack;Michele Cirilli;1;;;;;;;;;;;
+Totale marcatore giornata;8;;;;;;FC Stealthy Dribblers;Michele Grippa;1;;;;;;;;;;;
+Statistica;8;;;;;;;;;;;;;Goal totali;10;;;;;
+Statistica;8;;;;;;;;;;;;;Media goal/partita;5.0;;;;;
+Statistica;8;;;;;;;;;;;;;Clean sheet;0;;;;;
+Statistica;8;;;;;;;;;;;;;Partita con piu goal;Auriga Juniors 4-2 BlackJack;;;;;
+Statistica;8;;;;;;;;;;;;;Miglior marcatore;Pari merito tra 2 giocatori;;;;;
+Statistica;8;;;;;;;;;;;;;Partite giocate;2;;;;;

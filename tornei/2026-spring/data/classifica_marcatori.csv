@@ -1,27 +1,33 @@
-Posizione;Squadra;Giocatore;Gol;Presenze
-1;Out Of Office FC;Arena Michele;12;8
-2;FC Stealthy Dribblers;Turi Paolo;10;6
-3;Out Of Office FC;Saracino Gianvito;17;8
-4;Auriga Juniors;Spinola Salvatore;10;7
-5;BlackJack;Fiorella Giacomo;8;6
-6;BlackJack;Lo Riso Alessandro;8;7
-7;BOT & BALL;Camposeo Giovanni;7;8
-8;BOT & BALL;Guri Sabah;6;8
-9;FC Stealthy Dribblers;Menolascina Nicolandrea;8;7
-10;Auriga Juniors;De Toma Nicola;11;8
-11;BOT & BALL;Anselmi Biagio;4;8
-12;BOT & BALL;Eramo Gianluca;4;4
-13;Auriga Juniors;Rubino Gianluca;3;5
-14;BlackJack;Cirilli Michele;4;7
-15;BOT & BALL;Ziri Gaetano;3;7
-16;Auriga Juniors;Albrizio Gianfranco;2;8
-17;BlackJack;Menolascina Gerardo;4;7
-18;FC Stealthy Dribblers;Masellis Roberto;2;4
-19;Out Of Office FC;Di Giovine Domenico;3;3
-20;Auriga Juniors;Castellano Graziano;1;5
-21;Auriga Juniors;Iacobellis PT;4;8
-22;BlackJack;Todisco Giovanni;1;6
-23;FC Stealthy Dribblers;Grippa Michele;2;7
-24;Out Of Office FC;Mondelli Francesco;4;8
-25;Auriga Juniors;Tauro Giovanni;2;7
-26;Out Of Office;Lorusso Salvatore;2;8
+Posizione;Squadra;Giocatore;Gol;Presenze;Note
+1;Out Of Office FC;Saracino Gianvito;17;8;
+2;Out Of Office FC;Arena Michele;12;8;
+3;FC Stealthy Dribblers;Turi Paolo;10;6;
+4;Auriga Juniors;Spinola Salvatore;10;7;
+5;Auriga Juniors;De Toma Nicola;9;8;
+6;BlackJack;Lo Riso Alessandro;8;7;
+7;BlackJack;Fiorella Giacomo;7;6;
+8;FC Stealthy Dribblers;Menolascina Nicolandrea;6;7;
+9;BOT & BALL;Camposeo Giovanni;6;8;
+10;BOT & BALL;Guri Sabah;6;8;
+11;BOT & BALL;Eramo Gianluca;4;4;
+12;BlackJack;Menolascina Gerardo;4;7;
+13;Auriga Juniors;Iacobellis PT;4;8;
+14;Out Of Office FC;Mondelli Francesco;4;8;
+15;BOT & BALL;Anselmi Biagio;4;8;
+16;Out Of Office FC;Di Giovine Domenico;3;3;
+17;Auriga Juniors;Rubino Gianluca;3;5;
+18;BlackJack;Cirilli Michele;3;7;
+19;BOT & BALL;Ziri Gaetano;3;7;
+20;FC Stealthy Dribblers;Masellis Roberto;2;4;
+21;Auriga Juniors;Tauro Giovanni;2;7;
+22;FC Stealthy Dribblers;Nicolandrea Menolascina;2;7;
+23;Auriga Juniors;Albrizio Gianfranco;2;8;
+24;Auriga Juniors;Nicola De Toma;2;8;
+25;Out Of Office FC;Lorusso Salvatore;2;8;
+26;Auriga Juniors;Castellano Graziano;1;5;
+27;BlackJack;Giacomo Fiorella;1;6;
+28;BlackJack;Todisco Giovanni;1;6;
+29;BlackJack;Michele Cirilli;1;7;
+30;FC Stealthy Dribblers;Grippa Michele;1;7;
+31;FC Stealthy Dribblers;Michele Grippa;1;7;
+32;BOT & BALL;Giovanni Camposeo;1;8;

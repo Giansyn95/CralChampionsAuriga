@@ -1,6 +1,7 @@
-posizione;teamCode;playerName;punti;nota
-1;Auriga Juniors;Iacobellis PT;7;
-2;Out Of Office FC;Colangiuli PT;5;
-3;BOT & BALL;Mincuzzi PT;3;
-4;FC Stealthy Dribblers;Bruno PT;2;
-5;BlackJack;Schiavone PT;1;
+posizione;teamCode;playerName;punti;nota;Portiere;Squadra;Note
+1;;;6;;Iacobellis PT;Auriga Juniors;
+2;;;5;;Colangiuli PT;Out Of Office FC;
+3;;;3;;Mincuzzi PT;BOT & BALL;
+4;;;2;;Bruno PT;FC Stealthy Dribblers;
+5;;;1;;PT Iacobellis;Auriga Juniors;
+6;;;1;;Schiavone PT;BlackJack;

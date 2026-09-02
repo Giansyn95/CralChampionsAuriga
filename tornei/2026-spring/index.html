@@ -9075,6 +9075,57 @@ function countGoalsInTokenList(people){
     return sum + (n!==null && n>0 ? n : 1);
   },0);
 }
+// CRAL_V6_EXPLICIT_EXTERNALS: il dato esplicito dell'Admin ha priorita sull'inferenza storica.
+function riepilogoIsExplicitExternalRow(row){
+  const name=firstPresent(row,[['giocatore','marcatore','portiere','mvp','player','nome completo']]);
+  const note=firstPresent(row,[['note','nota','commento','descrizione']]);
+  return isPersonExternal(name) || norm(note).includes('giocatoreesterno');
+}
+function riepilogoRowMatchesMatch(row,matchRow,file){
+  const rd=String(rowGiornataKey(row,file)||''),md=String(rowGiornataKey(matchRow,file)||'');
+  if(rd&&md&&rd!==md)return false;
+  const home=firstPresent(matchRow,[['squadra casa','casa','home','squadra 1','team casa']])||Object.values(matchRow||{})[0]||'';
+  const away=firstPresent(matchRow,[['squadra trasferta','trasferta','ospite','away','squadra 2','team trasferta']])||Object.values(matchRow||{})[1]||'';
+  const matchText=norm(firstPresent(row,[['partita','match','gara','incontro']]));
+  if(matchText)return matchText.includes(norm(home))&&matchText.includes(norm(away));
+  const team=norm(firstPresent(row,[['squadra','team']]));
+  return !team||team===norm(home)||team===norm(away);
+}
+function riepilogoExplicitExternalRows(rows,matchRow,file,section){
+  return (rows||[]).filter(row=>{
+    if(!riepilogoIsExplicitExternalRow(row)||!riepilogoRowMatchesMatch(row,matchRow,file))return false;
+    if(!section)return true;
+    const sec=norm(firstPresent(row,[['sezione','section','tipo','categoria']]));
+    if(section==='mvp')return sec==='mvp'||sec.includes('miglioreincampo')||sec.includes('manofthematch');
+    if(section==='portiere')return sec.includes('portiere')||sec.includes('keeper');
+    return true;
+  });
+}
+function riepilogoExplicitExternalGoals(rows,matchRow,file){
+  const home=firstPresent(matchRow,[['squadra casa','casa','home','squadra 1','team casa']])||Object.values(matchRow||{})[0]||'';
+  const away=firstPresent(matchRow,[['squadra trasferta','trasferta','ospite','away','squadra 2','team trasferta']])||Object.values(matchRow||{})[1]||'';
+  const found=riepilogoExplicitExternalRows(rows,matchRow,file).filter(row=>{
+    const sec=norm(firstPresent(row,[['sezione','section','tipo','categoria']]));
+    return !sec||sec.includes('marcatore');
+  });
+  let homeCount=0,awayCount=0,genericCount=0;
+  found.forEach(row=>{
+    const qty=Math.max(0,num(firstPresent(row,[['goal','gol','reti','quantita','quantità','qta','valore']]))||1);
+    const team=norm(firstPresent(row,[['squadra','team']]));
+    if(team===norm(home))homeCount+=qty;else if(team===norm(away))awayCount+=qty;else genericCount+=qty;
+  });
+  return {found:found.length>0,homeCount,awayCount,genericCount};
+}
+function riepilogoExternalDisplayRow(row,kind){
+  if(!riepilogoIsExplicitExternalRow(row))return row;
+  const out={...row,_noLink:true};
+  const teamKey=Object.keys(out).find(k=>['squadra','team'].includes(norm(k)))||'Squadra';out[teamKey]='—';
+  const nameCandidates=kind==='portiere'?['portiere','giocatore','player']:['giocatore','marcatore','mvp','player'];
+  const nameKey=Object.keys(out).find(k=>nameCandidates.includes(norm(k)))||(kind==='portiere'?'Portiere':'Giocatore');out[nameKey]='Esterno';
+  if(kind==='mvp'){const k=Object.keys(out).find(x=>['puntimvp','punti'].includes(norm(x)))||'PuntiMVP';out[k]='N/A'}
+  if(kind==='portiere'){const k=Object.keys(out).find(x=>['puntiportiere','puntipt','punti'].includes(norm(x)))||'PuntiPortiere';out[k]='N/A'}
+  return out;
+}
 // Aggiunge una pill "Marcature esterne xN" con logo squadra (se fornito).
 function addExternalScorerPill(parent,label,count,teamName){
   if(count<=0) return;
@@ -9135,6 +9186,8 @@ function renderPartiteRiepilogo(parent,rows,file,contextRows,scorerRows){
     const scorePair=parseScorePair(res);
     const tavolinoInfo=riepilogoForfeitInfo(r,file);
     const matchGiornataKey=rowGiornataKey(r,file);
+    const explicitExternalGoals=riepilogoExplicitExternalGoals(scorerRows||[],r,file);
+    const explicitExternalMvp=riepilogoExplicitExternalRows(contextRows||[],r,file,'mvp').length>0;
 
     // ── Goal esterni = Goal totali − Goal torneo − Autogoal ─────────────────────────
     // Gli autogoal possono essere in colonna inline OPPURE su righe separate (Sezione=Autogoal).
@@ -9162,6 +9215,11 @@ function renderPartiteRiepilogo(parent,rows,file,contextRows,scorerRows){
     const marcatoriGenericiKnown=filterKnown(marcatoriGenerici);
     let externalCasa=0, externalTrasferta=0, externalGeneric=0;
     if(scorePair && !tavolinoInfo.isForfeit){
+      if(explicitExternalGoals.found){
+        externalCasa=explicitExternalGoals.homeCount;
+        externalTrasferta=explicitExternalGoals.awayCount;
+        externalGeneric=explicitExternalGoals.genericCount;
+      }else{
       const [ghTot,gaTot]=scorePair;
       const golTotali=ghTot+gaTot;
       if(marcatoriCasa.length || marcatoriTrasferta.length){
@@ -9183,12 +9241,13 @@ function renderPartiteRiepilogo(parent,rows,file,contextRows,scorerRows){
         const golTorneo=countGoalsInTokenList(marcatoriGenericiKnown);
         externalGeneric=Math.max(0, golTotali - golTorneo - autogoalCount);
       }
+      }
     }
 
     // ── Premi individuali: verifica se tutti i nominati sono esterni ──────────
     // Solo se la partita è già stata giocata (c'è un risultato leggibile).
     const matchPlayed=!!scorePair;
-    const mvpExternal=matchPlayed && !tavolinoInfo.isForfeit && hasRoster && mvp.length>0 && mvp.every(n=>isPersonExternal(n));
+    const mvpExternal=matchPlayed && !tavolinoInfo.isForfeit && (explicitExternalMvp || (hasRoster && mvp.length>0 && mvp.every(n=>isPersonExternal(n))));
     const portiereExternal=matchPlayed && !tavolinoInfo.isForfeit && hasRoster && portiere.length>0 && portiere.every(n=>isPersonExternal(n));
 
     const m=document.createElement('div'); m.className='match riepilogo-match';
@@ -10106,6 +10165,7 @@ function renderRiepilogoGiornate(){
     const externalScorerResiduals=[];
     if(hasPlayedMatches && hasRosterForExt){
       partite.forEach(r=>{
+        if(riepilogoExplicitExternalGoals(marcatori,r,f).found) return;
         const res=resultText(r);
         const scorePair=parseScorePair(res);
         if(!scorePair) return;
@@ -10161,6 +10221,7 @@ function renderRiepilogoGiornate(){
       const playedPartite=partite.filter(r=>!!parseScorePair(resultText(r)));
       playedPartite.forEach(r=>{
         if(riepilogoForfeitInfo(r,f).isForfeit) return;
+        if(riepilogoExplicitExternalRows(mvp,r,f,'mvp').length) return;
         const casa=firstPresent(r,[['squadra casa','casa','home','squadra 1','team casa']])||Object.values(r)[0]||'';
         const trasferta=firstPresent(r,[['squadra trasferta','trasferta','ospite','away','squadra 2','team trasferta']])||Object.values(r)[1]||'';
         const note=firstPresent(r,[['note','commento','descrizione']]);
@@ -10182,9 +10243,10 @@ function renderRiepilogoGiornate(){
       if(state.portieriSnapshot && state.portieriSnapshot.portieriEsterni){
         const esterniGiornata=state.portieriSnapshot.portieriEsterni[String(giornataKey)];
         if(Array.isArray(esterniGiornata)){
+          const explicitLabels=new Set((portiere||[]).filter(r=>riepilogoIsExplicitExternalRow(r)).map(r=>norm(firstPresent(r,[['partita','match','gara','incontro']]))).filter(Boolean));
           return esterniGiornata.map(({casa,trasferta})=>({
             matchLabel:casa&&trasferta?casa+' vs '+trasferta:''
-          }));
+          })).filter(item=>!explicitLabels.has(norm(item.matchLabel)));
         }
         // Se lo snapshot esiste ma non ha dati per questa giornata → nessun esterno
         return [];
@@ -10219,7 +10281,7 @@ function renderRiepilogoGiornate(){
       _noLink: true
     }));
     // ── Render sezioni ────────────────────────────────────────────────────────
-    const marcatoriRows=[...marcatori,...externalScorerRows];
+    const marcatoriRows=[...marcatori.map(r=>riepilogoExternalDisplayRow(r,'marcatore')),...externalScorerRows];
     renderMiniSection(content,'Marcatori della giornata',marcatoriRows,'player',playerSearch?'':'Nessun marcatore indicato.',tablePrefix+'_marcatori',['sezione','giocatore','marcatore','goal','reti'],['goal','reti'],['goal','reti'],'desc');
     // Costruisce righe sintetiche per premi assegnati a giocatori esterni,
     // da iniettare direttamente nella tabella come righe normali.
@@ -10232,7 +10294,7 @@ function renderRiepilogoGiornate(){
       'PuntiMVP': 'N/A',
       _noLink: true
     }));
-    const mvpRows=[...mvp,...mvpExternalRows];
+    const mvpRows=[...mvp.map(r=>riepilogoExternalDisplayRow(r,'mvp')),...mvpExternalRows];
     const mvpNoInternalText=(!playerSearch&&!mvpRows.length)?'Nessun MVP indicato.':'';
     renderMiniSection(content,'MVP della giornata',mvpRows,'player',mvpNoInternalText,tablePrefix+'_mvp',['sezione','giocatore','puntimvp','punti mvp','mvp','giornata','squadra'],['puntimvp','punti mvp','punti'],['puntimvp','punti mvp','punti'],'desc');
     // Portiere esterni: "Giocatore esterno", squadra "/", partita nella colonna Partita, no link
@@ -10245,7 +10307,7 @@ function renderRiepilogoGiornate(){
       'Partita': matchLabel||'',
       _noLink: true
     }));
-    const portiereRows=[...portiere,...portiereExternalRows];
+    const portiereRows=[...portiere.map(r=>riepilogoExternalDisplayRow(r,'portiere')),...portiereExternalRows];
     const portiereNoInternalText=(!playerSearch&&!norm(state.search)&&!portiereRows.length)?'Nessun miglior portiere indicato.':'';
     renderMiniSection(content,'Miglior portiere',portiereRows,'player',portiereNoInternalText,tablePrefix+'_portiere',['sezione','giocatore','portiere','puntiportiere','punti pt','giornata','squadra','partita'],['puntiportiere','punti pt','punti'],['puntiportiere','punti pt','punti'],'desc');
     const autogoalImgType=rowsHavePlayerColumn(autogoal)?'player':null;

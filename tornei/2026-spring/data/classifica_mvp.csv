@@ -1,13 +1,14 @@
-Posizione;Squadra;Giocatore;PuntiMVP
-1;Auriga Juniors;De Toma Nicola;13
-2;Out Of Office FC;Arena Michele;9
-3;BlackJack;Lo Riso Alessandro;8
-4;BOT & BALL;Anselmi Biagio;8
-5;BOT & BALL;Guri Sabah;8
-6;Out Of Office FC;Saracino Gianvito;8
-7;FC Stealthy Dribblers;Menolascina Nicolandrea;5
-8;FC Stealthy Dribblers;Turi Paolo;5
-9;Auriga Juniors;Rubino Gianluca;4
-10;Auriga Juniors;Spinola Salvatore;4
-11;BlackJack;Fiorella Giacomo;4
-12;Out Of Office FC;Lorusso Salvatore;4
+Posizione;Squadra;Giocatore;PuntiMVP;Note
+1;Out Of Office FC;Arena Michele;9;
+2;Auriga Juniors;De Toma Nicola;8;
+3;Out Of Office FC;Saracino Gianvito;8;
+4;BlackJack;Lo Riso Alessandro;8;
+5;BOT & BALL;Anselmi Biagio;8;
+6;BOT & BALL;Guri Sabah;8;
+7;Auriga Juniors;Nicola De Toma;5;
+8;FC Stealthy Dribblers;Nicolandrea Menolascina;5;
+9;FC Stealthy Dribblers;Turi Paolo;5;
+10;Auriga Juniors;Rubino Gianluca;4;
+11;Auriga Juniors;Spinola Salvatore;4;
+12;Out Of Office FC;Lorusso Salvatore;4;
+13;BlackJack;Fiorella Giacomo;4;
