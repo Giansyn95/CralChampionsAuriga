@@ -247,7 +247,7 @@ function render(){
 }
 function renderTopbar(){
   const top=el('header','topbar');const inner=el('div','topbar-inner');inner.appendChild(el('div','top-title','CRAL Champions · Admin'));
-  const controls=el('div','env-controls');const env=select([{value:'collaudo',label:'Collaudo'},{value:'produzione',label:'Produzione'}],state.target);env.addEventListener('change',async()=>{
+  const controls=el('div','env-controls');const env=select([{value:'collaudo',label:'Collaudo'},{value:'produzione',label:'Produzione'}],state.target);if(state.target==='produzione')env.classList.add('select-prod');env.addEventListener('change',async()=>{
     const next=env.value;if(next===state.target)return;
     if(state.pending.size&&!window.confirm('Cambiare ambiente scarterà le modifiche non pubblicate. Continuare?')){env.value=state.target;return}
     if(!state.targets[next]){state.target=next;renderLogin(next,`Configura l'ambiente ${next==='produzione'?'Produzione':'Collaudo'} per continuare.`);return}
@@ -258,7 +258,6 @@ function renderTopbar(){
   if(!tournamentOptions.some(o=>o.value===state.tournament))tournamentOptions.unshift({value:state.tournament,label:state.tournament});
   const tp=select(tournamentOptions,state.tournament);tp.addEventListener('change',async()=>{const next=tp.value;if(!next||next===state.tournament)return;if(state.pending.size&&!window.confirm('Cambiare torneo scarterà le modifiche non pubblicate. Continuare?')){tp.value=state.tournament;return}state.tournament=next;await loadSnapshot(false)});controls.appendChild(tp);
   controls.appendChild(button('+ Nuovo torneo','secondary',()=>{state.active='newTournament';render()}));
-  const badge=el('span',`env-badge ${state.target==='produzione'?'prod':''}`,state.target==='produzione'?'PRODUZIONE':'COLLAUDO');controls.appendChild(badge);
   controls.appendChild(button('Ricarica','secondary',async()=>{await loadTournamentList();await loadSnapshot(true)}));
   controls.appendChild(button('Esci','ghost',()=>{clearSession();state.targets={collaudo:null,produzione:null};state.snapshot=null;state.model=null;renderLogin('collaudo')}));
   inner.appendChild(controls);top.appendChild(inner);app.appendChild(top)
