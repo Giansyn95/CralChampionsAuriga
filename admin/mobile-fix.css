@@ -1,11 +1,9 @@
 /*
- * CRAL Champions Admin - mobile layout hardening
+ * CRAL Champions Admin - mobile layout hardening v2
  *
- * Scopo:
- * - evitare che tabelle larghe (es. rose Squadre) allarghino il documento;
- * - mantenere topbar e navigazione sempre larghe quanto il viewport;
- * - lasciare lo scroll orizzontale confinato dentro .table-wrap;
- * - impedire il text auto-sizing di Safari che puo far apparire la pagina zoomata.
+ * - confina lo scroll orizzontale delle tabelle;
+ * - mantiene topbar/layout entro il viewport;
+ * - evita l'auto-zoom di Safari iOS sui campi del login e dell'editor.
  */
 
 html {
@@ -58,9 +56,14 @@ body,
   -webkit-overflow-scrolling: touch;
 }
 
+/* Evita zoom da doppio tap sui controlli, senza disabilitare il pinch-to-zoom. */
+button,
+.btn,
+.nav-btn {
+  touch-action: manipulation;
+}
+
 @media (max-width: 1000px) {
-  /* minmax(0,1fr) impedisce al contenuto min-width:720px della tabella
-     di forzare la larghezza dell'intera pagina. */
   .layout {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -72,6 +75,21 @@ body,
   .team-editor,
   .file-list {
     grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 820px) {
+  /*
+   * iOS Safari puo ingrandire il viewport quando mette a fuoco un campo.
+   * 17px tiene i controlli del login sicuramente sopra la soglia di auto-zoom.
+   */
+  .login-card input,
+  .login-card select,
+  .login-card textarea,
+  .login-card .input,
+  .login-card .select,
+  .login-card .textarea {
+    font-size: 17px !important;
   }
 }
 
@@ -88,7 +106,7 @@ body,
     max-width: 100%;
   }
 
-  /* iOS Safari tende a zoomare automaticamente i campi sotto i 16px. */
+  /* Protezione anche per tutti gli altri campi dell'Admin. */
   input,
   select,
   textarea,
