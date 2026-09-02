@@ -1,7 +1,10 @@
 import {
   buildMatchdayPublication, buildModel, csvStringify, existingMatchdayDetails,
   fileKind, manifestChange, norm, objectRows, pagelloneText, parsePagellone, playersForTeam, relativeDataPath, rosterCsv,
-  safeTeamFilename, sectionFiles, validateMatchdayDraft, validatePagelloneEntries
+  safeTeamFilename, sectionFiles, validateMatchdayDraft, validatePagelloneEntries,
+  EVENT_TYPES, eventiCsvContent, idKey, listoneCsvContent, listoneIndex, manifestFantaContent,
+  parseEventiCsv, parseListoneCsv, parseRosterUpload, rosterCsvContent, rosterRelPath,
+  validateListoneRows, validateNewEvent, validateRosterAgainstListone
 } from './core.js';
 import {
   DEFAULT_TARGETS, verifyTarget, getTournaments, getSnapshot,
@@ -9,11 +12,6 @@ import {
   saveSession, loadSession, clearSession
 } from './gh.js';
 import { parseTournamentRegistry } from './tournament.js';
-import {
-  EVENT_TYPES, eventiCsvContent, idKey, listoneCsvContent, listoneIndex, manifestFantaContent,
-  parseEventiCsv, parseListoneCsv, parseRosterUpload, rosterCsvContent, rosterRelPath,
-  validateListoneRows, validateNewEvent, validateRosterAgainstListone
-} from './fantacalcio.js';
 
 const app = document.getElementById('app');
 const state = {
