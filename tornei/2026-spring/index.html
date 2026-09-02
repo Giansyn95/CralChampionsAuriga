@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <!-- CRAL_V16_FRONTEND: autogoal Match Center + Fantacalcio robusto + premi/esterni V14 -->
+  <!-- CRAL_V18_FRONTEND: classifiche premi derivate dai riepiloghi + Fantacalcio baseline stabile + Autogoal UI -->
   <!-- Favicon: icona nella scheda del browser e nei preferiti/segnalibri.
        Usa lo stesso logo del CRAL già presente in immagini/. Se il file
        ha un nome diverso da logo_cral.png, basta cambiare questo percorso.
@@ -946,16 +946,12 @@
       #risultati .match-vs{display:none}
       #risultati .score{margin:0;min-width:54px;padding:5px 6px;border:1px solid var(--line);border-radius:11px;background:var(--soft);text-align:center;font-size:21px;line-height:1.05}
     }
-    /* V15: icona Autogoal dedicata, pallone bianco con macchie rosse. */
-    .autogoal-ball-icon{display:inline-block;width:18px;height:18px;flex:0 0 18px;border-radius:50%;border:1.5px solid #ef4444;background:
-      radial-gradient(circle at 50% 50%,#dc2626 0 17%,transparent 18%),
-      radial-gradient(circle at 23% 28%,#dc2626 0 10%,transparent 11%),
-      radial-gradient(circle at 77% 28%,#dc2626 0 10%,transparent 11%),
-      radial-gradient(circle at 28% 76%,#dc2626 0 10%,transparent 11%),
-      radial-gradient(circle at 73% 74%,#dc2626 0 10%,transparent 11%),
-      #fff;box-shadow:inset 0 0 0 1px rgba(127,29,29,.14),0 2px 7px rgba(220,38,38,.18);vertical-align:-3px}
-    .autogoal-ball-icon.is-small{width:17px;height:17px;flex-basis:17px;vertical-align:middle}
-    .entity-section-title .autogoal-ball-icon{margin-right:7px}
+    /* V18: pallone Autogoal SVG, stesso concetto del pallone marcatori ma con pannelli rossi. */
+    .autogoal-ball-icon{display:inline-block;width:20px;height:20px;flex:0 0 20px;vertical-align:middle;overflow:visible}
+    .autogoal-ball-icon.is-small{width:18px;height:18px;flex-basis:18px}
+    .entity-section-title.is-autogoal-title{justify-content:flex-start;gap:7px}
+    .entity-section-title.is-autogoal-title .autogoal-ball-icon{margin:0}
+
     @media print{.toolbar,.tabs,.search,#errorBanner{display:none}.section{display:block}.wrap{max-width:none}.card,.hero{box-shadow:none}}
     @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
   
@@ -3598,6 +3594,82 @@ function sortMvpRowsByPointsThenTeamRank(objRows){
   });
   return withIdx.map(x=>x.r);
 }
+
+/* V18 — Classifiche MVP / Miglior portiere come dato derivato dai riepiloghi.
+   I file classifica_mvp.csv e classifica_portieri.csv restano compatibili/fallback,
+   ma non sono più la fonte primaria lato FE: questo evita classifiche parziali o
+   duplicati di identità (es. "Iacobellis PT" e "PT Iacobellis") dopo una pubblicazione Admin. */
+function frontendAwardCanonicalRecord(row,kind,file){
+  const person=smartSpace(riepilogoAwardPerson(row,kind)||'');
+  if(!person || riepilogoIsExplicitExternalRow(row,kind)) return null;
+  const raw=String(riepilogoAwardRawPoints(row,kind)||'').trim().replace(',','.');
+  const points=Number(raw);
+  if(!raw || !Number.isFinite(points)) return null;
+  const teamHint=teamDisplayNameForChart(firstPresent(row,[['squadra','team','club']])||'');
+  const rec=uniqueRosterRecordForPersonToken(person,teamHint) || uniqueRosterRecordForPersonToken(person,'');
+  const team=rec?.team || teamHint || teamForPersonToken(person,'',[row]) || '';
+  const display=rec ? (playerDisplayName(rec.row)||playerFullName(rec.row)||person) : person;
+  const identity=rec?.identityKey || ((teamMatchKey(team)||'')+'|'+(personMatchKey(person)||norm(person)));
+  const day=String(rowGiornataKey(row,file)||'');
+  const match=firstPresent(row,[['partita','match','gara','incontro']])||'';
+  return {identity,display,team,points,day,match,row};
+}
+function frontendDerivedAwardObjects(kind){
+  const totals=new Map();
+  const seenEvents=new Set();
+  const files=sectionFiles('riepilogo');
+  files.forEach(file=>{
+    const parsed=parseRiepilogoFile(file);
+    const rows=kind==='portiere'?(parsed.portiere||[]):(parsed.mvp||[]);
+    rows.forEach(row=>{
+      const rec=frontendAwardCanonicalRecord(row,kind,file);
+      if(!rec) return;
+      // Deduplica lo stesso premio se il manifest contiene sia riepilogo per giornata
+      // sia un eventuale riepilogo aggregato.
+      const eventKey=[kind,rec.day,rec.identity,String(rec.points)].join('|');
+      if(seenEvents.has(eventKey)) return;
+      seenEvents.add(eventKey);
+      let total=totals.get(rec.identity);
+      if(!total){
+        total={Giocatore:rec.display,Portiere:rec.display,Squadra:rec.team,PuntiMVP:0,Punti:0,_identity:rec.identity};
+        totals.set(rec.identity,total);
+      }
+      total.Punti+=rec.points;
+      total.PuntiMVP+=rec.points;
+      if(!total.Squadra && rec.team) total.Squadra=rec.team;
+      if(rec.display) { total.Giocatore=rec.display; total.Portiere=rec.display; }
+    });
+  });
+  const out=[...totals.values()];
+  if(!out.length) return [];
+  const ranks=teamRankMap();
+  out.sort((a,b)=>{
+    const pa=kind==='portiere'?a.Punti:a.PuntiMVP;
+    const pb=kind==='portiere'?b.Punti:b.PuntiMVP;
+    if(pb!==pa) return pb-pa;
+    const ra=ranks[norm(a.Squadra)], rb=ranks[norm(b.Squadra)];
+    if(ra!==undefined && rb!==undefined && ra!==rb) return ra-rb;
+    return String(kind==='portiere'?a.Portiere:a.Giocatore).localeCompare(String(kind==='portiere'?b.Portiere:b.Giocatore),'it');
+  });
+  return out;
+}
+function frontendDerivedAwardTable(kind){
+  const rows=frontendDerivedAwardObjects(kind);
+  if(!rows.length) return null;
+  if(kind==='portiere'){
+    return [['Posizione','Portiere','Punti','Squadra'],...rows.map((r,i)=>[String(i+1),r.Portiere,formatProfileNumber(r.Punti),r.Squadra])];
+  }
+  return [['Posizione','Giocatore','Punti MVP','Squadra'],...rows.map((r,i)=>[String(i+1),r.Giocatore,formatProfileNumber(r.PuntiMVP),r.Squadra])];
+}
+function frontendRepairAwardStandings(){
+  const mvpTable=frontendDerivedAwardTable('mvp');
+  const keeperTable=frontendDerivedAwardTable('portiere');
+  const mvpFile=sectionFiles('mvp')[0];
+  const keeperFile=sectionFiles('portieri')[0];
+  if(mvpTable && mvpFile) state.rows[mvpFile]=mvpTable;
+  if(keeperTable && keeperFile) state.rows[keeperFile]=keeperTable;
+}
+
 function sortMarcatoriRowsByGoalsThenTeamRank(objRows){
   // Spareggio tra marcatori a pari goal, in ordine:
   // 1) media goal/partita più alta (stessa formula di renderStatistiche:
@@ -10709,26 +10781,7 @@ function fantaRiepilogoDayOptions(){
   return out.sort((a,b)=>parseInt(a[0],10)-parseInt(b[0],10));
 }
 function fantaPlayedDays(){
-  // V16: una giornata disputata non puo' sparire solo perche' una singola sorgente
-  // e' arrivata in ritardo. Uniamo riepiloghi, rose live, cache e output importati.
-  const calendar=fantaCalendarDays();
-  const max=fantaCalendarMaxDay();
-  const out=new Set();
-  const add=value=>{
-    const n=parseInt(giornataNumberFromText(value)||value,10);
-    if(!Number.isFinite(n)||n<=0)return;
-    if(calendar.size&&!calendar.has(n))return;
-    if(max&&n>max)return;
-    out.add(n);
-  };
-  fantaRiepilogoDayOptions().forEach(([key,label])=>add(giornataNumberFromText(key)||giornataNumberFromText(label)||key));
-  fantaRosterFiles().forEach(file=>{
-    const fileDay=fantaDayFromFile(file);if(fileDay)add(fileDay);
-    rowsToObjects(state.rows[file]||[]).forEach(r=>add(firstPresent(r,[['giornata','day','turno','round']])||fileDay));
-  });
-  (state.fantaPrecomputedData?.results||[]).forEach(r=>add(r.day));
-  try{ fantaReadImportedResults().forEach(r=>add(r.day)); }catch(e){}
-  return out;
+  return new Set(fantaRiepilogoDayOptions().map(([key])=>parseInt(key,10)).filter(n=>Number.isFinite(n)&&n>0));
 }
 function fantaRole(raw){
   const v=fantaNormText(raw);
@@ -11223,11 +11276,9 @@ function fantaCalculateFromRosters(){
       if(!name){ issues.push(file+' riga '+(rowIndex+2)+': partecipante mancante'); return; }
       if(!rawId){ issues.push(file+' riga '+(rowIndex+2)+': idGiocatore mancante'); return; }
       const participantKey=fantaNormText(name);
-      if(validation.enabled && validation.invalidNames.has(participantKey)){
-        // V15: la validazione della prima rosa non deve eliminare il partecipante da
-        // tutte le giornate. Manteniamo il calcolo e segnaliamo l'anomalia una sola volta.
-        const warning='Rosa iniziale non conforme per '+name+': il partecipante resta incluso nei calcoli.';
-        if(!issues.includes(warning))issues.push(warning);
+      if(validation.enabled){
+        if(validation.invalidNames.has(participantKey)) return;
+        if(validation.validNames.size && !validation.validNames.has(participantKey)) return;
       }
       const rosterKey=day+'|'+participantKey;
       const source=firstSource.get(rosterKey);
@@ -11487,53 +11538,21 @@ function ensureFantaDataInBackground(fresh,generation=_dataLoadGeneration,signal
 function fantaDataCacheKey(){
   return Object.keys(state.rows).sort().map(f=>f+':'+((state.rows[f]||[]).length)).join('|');
 }
-function fantaDatasetDailyRows(data){
-  return (Array.isArray(data?.results)?data.results:[]).filter(r=>{
-    const day=parseInt(r?.day,10);
-    return Number.isFinite(day)&&day>0&&fantaNormText(r?.name||'');
-  });
-}
-function fantaMergeDailyDatasets(primary,...fallbacks){
-  const map=new Map();
-  const add=(rows,overwrite)=>rows.forEach(r=>{
-    const day=parseInt(r?.day,10);const name=fantaNormText(r?.name||'');
-    if(!Number.isFinite(day)||day<=0||!name)return;
-    const key=day+'|'+name;
-    if(overwrite||!map.has(key))map.set(key,r);
-  });
-  // Le sorgenti di fallback riempiono i buchi; il live, quando esiste, resta autorevole.
-  fallbacks.filter(Boolean).forEach(data=>add(fantaDatasetDailyRows(data),false));
-  if(primary)add(fantaDatasetDailyRows(primary),true);
-  const results=[...map.values()].sort(fantaCompareResults);
-  const base=primary||fallbacks.find(x=>x&&Array.isArray(x.results))||{};
-  const issues=[...new Set([...(primary?.issues||[]),...fallbacks.flatMap(x=>x?.issues||[])])];
-  return {...base,source:'unificata',results,issues};
-}
 function fantaCurrentData(){
   const hasLiveRosters=fantaRosterFiles().length>0 && fantaListoneFiles().length>0;
-  const key=fantaDataCacheKey()+'|cache:'+(state.fantaPrecomputedData?.results?.length||0);
-  if(_fantaCurrentDataCache&&_fantaCurrentDataCache.key===key) return _fantaCurrentDataCache.data;
-
-  const importedRows=fantaReadImportedResults();
-  const imported=importedRows.length
-    ? {source:'importata',results:importedRows,issues:[],rosterCount:0,playerCount:fantaAllPlayersSorted().length}
-    : null;
-  const cached=state.fantaPrecomputedData;
-
+  const key=fantaDataCacheKey();
   if(hasLiveRosters){
-    const live=fantaCalculateFromRosters();
-    // V16: merge per (giornata, partecipante). Se il live perde G1/G10 o un partecipante,
-    // cache/output completano SOLO quelle righe mancanti; dove il live c'e', vince il live.
-    const data=fantaMergeDailyDatasets(live,cached,imported);
+    if(_fantaCurrentDataCache&&_fantaCurrentDataCache.key===key) return _fantaCurrentDataCache.data;
+    const data=fantaCalculateFromRosters();
     _fantaCurrentDataCache={key,data};
     return data;
   }
-  if(cached||imported){
-    const data=fantaMergeDailyDatasets(cached,imported);
-    _fantaCurrentDataCache={key,data};
-    return data;
-  }
-  const data=fantaCalculateFromRosters();
+  if(state.fantaPrecomputedData) return state.fantaPrecomputedData;
+  if(_fantaCurrentDataCache&&_fantaCurrentDataCache.key===key) return _fantaCurrentDataCache.data;
+  const imported=fantaReadImportedResults();
+  const data=imported.length
+    ? {source:'importata',results:imported,issues:[],rosterCount:0,playerCount:fantaAllPlayersSorted().length}
+    : fantaCalculateFromRosters();
   _fantaCurrentDataCache={key,data};
   return data;
 }
@@ -12715,6 +12734,10 @@ async function loadAuto(fresh){
     state.fantaPrecomputedLoading=false;
     clearImageProbeCache();
     clearDerivedDataCaches();
+    // V18: ricostruisce in memoria MVP e Portieri da TUTTI i riepiloghi caricati.
+    // Nessun file del repository viene modificato: il CSV aggregato resta solo fallback.
+    frontendRepairAwardStandings();
+    clearDerivedDataCaches();
 
     applyConfig(); showErrors(); renderAll(); tryLoadLogo(); warmDesktopPrimaryTabs(); warmPlayerProfileCaches();
     if(ok || state.rows['manifest.csv']) setStatus(dataLoadStatus(ok+(state.rows['manifest.csv']?1:0)),true);
@@ -12747,6 +12770,8 @@ function fantaIngestCsvBatchForCacheBuild(files){
   state.fantaPrecomputedAttempted=true;
   state.fantaPrecomputedLoading=false;
   state.fantaLoading=false;
+  clearDerivedDataCaches();
+  frontendRepairAwardStandings();
   clearDerivedDataCaches();
   applyConfig();
   return Object.keys(state.rows).length;
@@ -13204,15 +13229,31 @@ function cralNavKpi(label,value,sub,primary=false){
   return box;
 }
 function cralNavAutogoalBallIcon(small=false){
-  const icon=document.createElement('span');
-  icon.className='autogoal-ball-icon'+(small?' is-small':'');
-  icon.setAttribute('aria-hidden','true');
-  return icon;
+  const ns='http://www.w3.org/2000/svg';
+  const svg=document.createElementNS(ns,'svg');
+  svg.setAttribute('viewBox','0 0 24 24');
+  svg.setAttribute('aria-hidden','true');
+  svg.classList.add('autogoal-ball-icon');
+  if(small) svg.classList.add('is-small');
+  const add=(tag,attrs)=>{const el=document.createElementNS(ns,tag);Object.entries(attrs).forEach(([k,v])=>el.setAttribute(k,String(v)));svg.appendChild(el);return el;};
+  add('circle',{cx:12,cy:12,r:10.2,fill:'#fff',stroke:'#ef4444','stroke-width':1.35});
+  // Pentagono centrale rosso.
+  add('path',{d:'M12 6.7 15.25 9.05 14.02 12.85 9.98 12.85 8.75 9.05Z',fill:'#ef4444'});
+  // Cinque pannelli periferici rossi, come le macchie nere di un classico pallone.
+  add('path',{d:'M4.2 7.2 7.05 5.15 8.55 6.35 6.75 9.15 4.45 9.05Z',fill:'#ef4444'});
+  add('path',{d:'M15.45 6.35 16.95 5.15 19.8 7.2 19.55 9.05 17.25 9.15Z',fill:'#ef4444'});
+  add('path',{d:'M18.15 13.1 20.15 13.55 19.1 17.15 16.6 18.6 15.65 16.75Z',fill:'#ef4444'});
+  add('path',{d:'M8.35 16.75 7.4 18.6 4.9 17.15 3.85 13.55 5.85 13.1Z',fill:'#ef4444'});
+  add('path',{d:'M10.05 18.15 13.95 18.15 15.15 20.05 12 22 8.85 20.05Z',fill:'#ef4444'});
+  // Cuciture rosse leggere per mantenere l'aspetto da pallone da calcio.
+  add('path',{d:'M8.75 9.05 6.75 9.15 5.85 13.1 8.35 16.75 10.05 18.15M15.25 9.05 17.25 9.15 18.15 13.1 15.65 16.75 13.95 18.15M9.98 12.85 8.35 16.75M14.02 12.85 15.65 16.75M9.98 12.85 5.85 13.1M14.02 12.85 18.15 13.1',fill:'none',stroke:'#ef4444','stroke-width':0.85,'stroke-linecap':'round','stroke-linejoin':'round',opacity:0.82});
+  return svg;
 }
 function cralNavSection(title,emoji,iconClass){
   const sec=document.createElement('section'); sec.className='entity-section';
   const h=document.createElement('h3'); h.className='entity-section-title';
   if(emoji==='__AUTOGOAL__'){
+    h.classList.add('is-autogoal-title');
     h.appendChild(cralNavAutogoalBallIcon(false));
     h.appendChild(document.createTextNode(title));
   }else if(emoji && iconClass){
