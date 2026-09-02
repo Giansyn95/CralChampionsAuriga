@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <!-- CRAL_V22_FRONTEND: discovery Fantacalcio indipendente dal manifest generale + manifest headerless -->
+  <!-- CRAL_V23_FRONTEND: fix normalizzazione path Fantacalcio + discovery live completa -->
   <!-- Favicon: icona nella scheda del browser e nei preferiti/segnalibri.
        Usa lo stesso logo del CRAL già presente in immagini/. Se il file
        ha un nome diverso da logo_cral.png, basta cambiare questo percorso.
@@ -11726,8 +11726,8 @@ window.__cralFantaDebug=()=>{
     }:null,
     cache:state.fantaPrecomputedData?summarize(state.fantaPrecomputedData.results||[]):{days:{},names:[]},
     imported:summarize(fantaReadImportedResults()),
-    discovery:_fantaDiscoveryDebugV22,
-    hint:'V22: rosterDays deve contenere le giornate caricate live. discovery.dedicatedManifest mostra i seed letti da data/fantacalcio/manifest_fantacalcio.csv.'
+    discovery:_fantaDiscoveryDebugV23,
+    hint:'V23: rosterDays deve contenere le giornate live. discovery deve includere fantacalcio/listone_fantacalcio.csv e candidati fantacalcio/giornata1..10/... senza prefissi del repository.'
   };
 };
 
@@ -12735,15 +12735,24 @@ async function fetchPagelloneText(filename,fresh,signal){
 function normalizeFantaCsvPath(path){
   let p=String(path||'').trim().replace(/\\/g,'/').replace(/^\.\//,'');
   if(!p || !/\.csv$/i.test(p)) return '';
-  try{
-    const u=new URL(p, location.href);
-    p=u.pathname.replace(/^\/+/, '');
-  }catch(e){}
-  const dataIdx=p.toLowerCase().lastIndexOf('data/');
-  if(dataIdx>=0) p=p.slice(dataIdx+5);
+
+  // V23: NON risolvere i path relativi con new URL(..., location.href):
+  // trasformava `fantacalcio/...` in `repo/tornei/.../fantacalcio/...`, facendo
+  // fallire sia il riconoscimento del listone sia i fetch delle rose.
+  // Convertiamo in pathname solo URL assoluti; i path relativi restano relativi a data/.
+  if(/^[a-z][a-z0-9+.-]*:\/\//i.test(p)){
+    try{ p=new URL(p).pathname; }catch(e){}
+  }
   p=p.replace(/^\/+/, '');
-  // Rose: solo data/giornataX/rosa_*.csv o roster_*.csv.
-  // Listone/eventi: unici e globali sotto data/fantacalcio/.
+  const lower=p.toLowerCase();
+  const dataMarker='/data/';
+  const dataIdx=lower.lastIndexOf(dataMarker);
+  if(dataIdx>=0) p=p.slice(dataIdx+dataMarker.length);
+  else if(lower.startsWith('data/')) p=p.slice(5);
+  p=p.replace(/^\/+/, '');
+
+  // Rose: data/fantacalcio/giornataX/rosa_*.csv (normalizzato a fantacalcio/...).
+  // Listone/eventi: globali sotto data/fantacalcio/.
   if(/(^|\/)giornata[\s_-]*\d+(?:\/|$)/i.test(p)){
     const name=p.split('/').pop()||'';
     return /^(rosa|roster)[_-]/i.test(name) ? p : '';
@@ -12811,20 +12820,22 @@ function fantaExpandedRosterPathsV22(seedFiles){
   });
   return {declared,derived:[...new Set(derived)],templates,targetDays:[...targetDays].sort((a,b)=>a-b)};
 }
-let _fantaDiscoveryDebugV22={};
+let _fantaDiscoveryDebugV23={};
 async function discoverFantaFiles(fresh=false,signal){
   // V22: il Fantacalcio non dipende piu' dal manifest generale dell'Admin.
   // Un piccolo indice dedicato sotto data/fantacalcio fornisce almeno un seed per
   // partecipante; da quel seed vengono generate tutte le giornate del calendario.
   const general=fantaManifestCsvPaths();
   const dedicated=await fantaDedicatedCsvPathsV22(fresh,signal);
-  const seeds=[...new Set([...general,...dedicated])];
+  const canonicalGlobals=['fantacalcio/listone_fantacalcio.csv','fantacalcio/eventi_fantacalcio.csv'];
+  const seeds=[...new Set([...canonicalGlobals,...general,...dedicated])];
   const expanded=fantaExpandedRosterPathsV22(seeds);
   const nonRoster=[...new Set(seeds.filter(f=>!fantaIsDayRosterPath(f) && f!==FANTA_SOURCE_INDEX_FILE))];
   const files=[...new Set([...nonRoster,...expanded.declared,...expanded.derived])];
-  _fantaDiscoveryDebugV22={
+  _fantaDiscoveryDebugV23={
     generalManifest:general,
     dedicatedManifest:dedicated,
+    canonicalGlobals,
     templates:expanded.templates,
     targetDays:expanded.targetDays,
     candidates:files
@@ -12847,6 +12858,9 @@ async function loadFantaSourceFilesInBackground(fresh=false,generation=_dataLoad
     .then(txt=>({ok:true,f,txt}))
     .catch(error=>({ok:false,f,error}))));
   if(!isCurrentDataLoad(generation)||signal?.aborted) return false;
+  _fantaDiscoveryDebugV23.fetchOk=results.filter(x=>x.ok).map(x=>x.f);
+  _fantaDiscoveryDebugV23.fetchFailed=results.filter(x=>!x.ok).map(x=>x.f);
+  _fantaDiscoveryDebugV23.listoneCandidates=listonePaths;
 
   // Il listone e' obbligatorio; le rose derivate sono probe opzionali. Anche una
   // singola rosa mancante non deve annullare le altre giornate gia' disponibili.
