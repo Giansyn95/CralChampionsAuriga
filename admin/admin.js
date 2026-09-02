@@ -120,7 +120,7 @@ async function initializeAdmin(){
 }
 
 function renderLogin(targetKey='collaudo', error=''){
-  app.innerHTML=''; const screen=el('div','center-screen'); const card=el('div','login-card');
+  resetShell(); app.innerHTML=''; const screen=el('div','center-screen'); const card=el('div','login-card');
   const brand=el('div','brand');const mark=el('div','brand-mark','CR');brand.appendChild(mark);const copy=el('div');copy.appendChild(el('h1','','CRAL Admin'));copy.appendChild(el('p','','Gestione dati e pubblicazione sicura del torneo — versione statica GitHub Pages'));brand.appendChild(copy);card.appendChild(brand);
   card.appendChild(messageBox('info',[
     'Nessun server: questa pagina scrive su GitHub usando direttamente il tuo Personal Access Token.',
@@ -181,7 +181,7 @@ function renderLogin(targetKey='collaudo', error=''){
   screen.appendChild(card); app.appendChild(screen);
   setTimeout(() => token.focus(), 0);
 }
-function renderFatal(text){app.innerHTML='';const screen=el('div','center-screen');const card=el('div','login-card');card.appendChild(messageBox('error',text));card.appendChild(button('Riprova','secondary',sessionCheck));screen.appendChild(card);app.appendChild(screen)}
+function renderFatal(text){resetShell();app.innerHTML='';const screen=el('div','center-screen');const card=el('div','login-card');card.appendChild(messageBox('error',text));card.appendChild(button('Riprova','secondary',sessionCheck));screen.appendChild(card);app.appendChild(screen)}
 
 async function loadSnapshot(confirmDiscard=true){
   if(confirmDiscard&&state.pending.size&&!window.confirm('Ci sono modifiche non pubblicate. Ricaricando verranno scartate. Continuare?'))return false;
@@ -194,7 +194,7 @@ async function loadSnapshot(confirmDiscard=true){
     return true;
   }catch(e){state.busy=false;if(e.status===401){renderLogin(state.target,'Sessione GitHub scaduta o token non più valido: accedi di nuovo.');return false}renderFatal(e.message);return false}
 }
-function renderLoading(text){app.innerHTML='';const screen=el('div','center-screen');const card=el('div','login-card');const row=el('div','btn-row');const spin=el('span','spinner');spin.style.color='var(--blue)';row.appendChild(spin);row.appendChild(el('strong','',text));card.appendChild(row);screen.appendChild(card);app.appendChild(screen)}
+function renderLoading(text){resetShell();app.innerHTML='';const screen=el('div','center-screen');const card=el('div','login-card');const row=el('div','btn-row');const spin=el('span','spinner');spin.style.color='var(--blue)';row.appendChild(spin);row.appendChild(el('strong','',text));card.appendChild(row);screen.appendChild(card);app.appendChild(screen)}
 
 function draftKey(day){return `cral-admin-draft|${state.target}|${state.tournament}|${day}`}
 function saveLocalDayDraft(){if(!state.dayDraft||!state.snapshot)return;try{localStorage.setItem(draftKey(state.dayDraft.day),JSON.stringify({commit:state.snapshot.commitSha,draft:state.dayDraft}))}catch{}}
@@ -241,13 +241,40 @@ function stageGuidedChanges(changes,source,{manifest=true}={}){
   return list.length;
 }
 
-function render(){
-  if(!state.model)return;app.innerHTML='';renderTopbar();const layout=el('div','layout');layout.appendChild(renderSidebar());const main=el('main','main');if(state.status)main.appendChild(messageBox(state.status.type,state.status.text));
-  if(state.active==='dashboard')renderDashboard(main);else if(state.active==='newTournament')renderNewTournament(main);else if(state.active==='giornata')renderGiornata(main);else if(state.active==='squadre')renderSquadre(main);else if(state.active==='calendario')renderCalendario(main);else if(state.active==='pagellone')renderPagellone(main);else if(state.active==='classifiche')renderClassifiche(main);else if(state.active==='files')renderFiles(main);else if(state.active==='publish')renderPublish(main);layout.appendChild(main);app.appendChild(layout)
+let shell = null; // {top, controls, sidebar, main} — montata una sola volta, non ricreata a ogni render
+function resetShell(){ shell = null; }
+function mountShell(){
+  app.innerHTML = '';
+  const top = el('header', 'topbar');
+  const inner = el('div', 'topbar-inner');
+  inner.appendChild(el('div', 'top-title', 'CRAL Champions · Admin'));
+  const controls = el('div', 'env-controls');
+  inner.appendChild(controls);
+  top.appendChild(inner);
+
+  const layout = el('div', 'layout');
+  const sidebar = el('nav', 'sidebar');
+  const main = el('main', 'main');
+  layout.appendChild(sidebar);
+  layout.appendChild(main);
+
+  app.appendChild(top);
+  app.appendChild(layout);
+  shell = { top, controls, sidebar, main };
+  return shell;
 }
-function renderTopbar(){
-  const top=el('header','topbar');const inner=el('div','topbar-inner');inner.appendChild(el('div','top-title','CRAL Champions · Admin'));
-  const controls=el('div','env-controls');const env=select([{value:'collaudo',label:'Collaudo'},{value:'produzione',label:'Produzione'}],state.target);if(state.target==='produzione')env.classList.add('select-prod');env.addEventListener('change',async()=>{
+function render(){
+  if(!state.model)return;
+  if(!shell) mountShell();
+  refreshTopbar();
+  refreshSidebar();
+  const main=shell.main; main.innerHTML='';
+  if(state.status)main.appendChild(messageBox(state.status.type,state.status.text));
+  if(state.active==='dashboard')renderDashboard(main);else if(state.active==='newTournament')renderNewTournament(main);else if(state.active==='giornata')renderGiornata(main);else if(state.active==='squadre')renderSquadre(main);else if(state.active==='calendario')renderCalendario(main);else if(state.active==='pagellone')renderPagellone(main);else if(state.active==='classifiche')renderClassifiche(main);else if(state.active==='files')renderFiles(main);else if(state.active==='publish')renderPublish(main)
+}
+function refreshTopbar(){
+  const controls=shell.controls; controls.innerHTML='';
+  const env=select([{value:'collaudo',label:'Collaudo'},{value:'produzione',label:'Produzione'}],state.target);if(state.target==='produzione')env.classList.add('select-prod');env.addEventListener('change',async()=>{
     const next=env.value;if(next===state.target)return;
     if(state.pending.size&&!window.confirm('Cambiare ambiente scarterà le modifiche non pubblicate. Continuare?')){env.value=state.target;return}
     if(!state.targets[next]){state.target=next;renderLogin(next,`Configura l'ambiente ${next==='produzione'?'Produzione':'Collaudo'} per continuare.`);return}
@@ -257,14 +284,13 @@ function renderTopbar(){
   const tournamentOptions=state.tournaments.map(t=>({value:t.path,label:`${t.current?'★ ':''}${t.title||t.path}`}));
   if(!tournamentOptions.some(o=>o.value===state.tournament))tournamentOptions.unshift({value:state.tournament,label:state.tournament});
   const tp=select(tournamentOptions,state.tournament);tp.addEventListener('change',async()=>{const next=tp.value;if(!next||next===state.tournament)return;if(state.pending.size&&!window.confirm('Cambiare torneo scarterà le modifiche non pubblicate. Continuare?')){tp.value=state.tournament;return}state.tournament=next;await loadSnapshot(false)});controls.appendChild(tp);
-  controls.appendChild(button('+ Nuovo torneo','secondary',()=>{state.active='newTournament';render()}));
   controls.appendChild(button('Ricarica','secondary',async()=>{await loadTournamentList();await loadSnapshot(true)}));
   controls.appendChild(button('Esci','ghost',()=>{clearSession();state.targets={collaudo:null,produzione:null};state.snapshot=null;state.model=null;renderLogin('collaudo')}));
-  inner.appendChild(controls);top.appendChild(inner);app.appendChild(top)
 }
-function renderSidebar(){
-  const side=el('nav','sidebar');const items=[['dashboard','🏠','Dashboard'],['newTournament','➕','Nuovo torneo'],['giornata','⚽','Giornata'],['squadre','👕','Squadre'],['calendario','📅','Calendario'],['pagellone','📣','Pagellone'],['classifiche','🏆','Classifiche'],['files','🗂️','File'],['publish','🚀','Pubblica']];
-  items.forEach(([id,icon,label])=>{const b=el('button',`nav-btn ${state.active===id?'active':''}`);b.type='button';b.appendChild(document.createTextNode(`${icon} ${label}`));if(id==='publish'&&state.pending.size)b.appendChild(el('span','pending-pill',state.pending.size));b.addEventListener('click',()=>{state.active=id;render()});side.appendChild(b)});return side
+function refreshSidebar(){
+  const side=shell.sidebar; side.innerHTML='';
+  const items=[['dashboard','🏠','Dashboard'],['newTournament','➕','Nuovo torneo'],['giornata','⚽','Giornata'],['squadre','👕','Squadre'],['calendario','📅','Calendario'],['pagellone','📣','Pagellone'],['classifiche','🏆','Classifiche'],['files','🗂️','File'],['publish','🚀','Pubblica']];
+  items.forEach(([id,icon,label])=>{const b=el('button',`nav-btn ${state.active===id?'active':''}`);b.type='button';b.appendChild(document.createTextNode(`${icon} ${label}`));if(id==='publish'&&state.pending.size)b.appendChild(el('span','pending-pill',state.pending.size));b.addEventListener('click',()=>{state.active=id;render()});side.appendChild(b)})
 }
 function pageHead(title,sub,actions=[]){const wrap=el('div','page-head');const copy=el('div');copy.appendChild(el('h2','',title));copy.appendChild(el('p','',sub));wrap.appendChild(copy);if(actions.length){const row=el('div','btn-row');actions.forEach(a=>row.appendChild(a));wrap.appendChild(row)}return wrap}
 
@@ -321,7 +347,7 @@ function teamOptions(match, includeBlank=false){const a=[];if(includeBlank)a.pus
 function playerOptions(team, includeBlank=true,current=''){const opts=includeBlank?[{value:'',label:'— seleziona —'}]:[];playersForTeam(state.model,team).forEach(p=>opts.push({value:p.fullName,label:p.displayName}));if(current&&!opts.some(o=>norm(o.value)===norm(current)))opts.splice(includeBlank?1:0,0,{value:current,label:`${current} · valore file`});return opts}
 function addManualMatch(){const teams=state.model.teams.map(t=>t.name);const home=teams[0]||'',away=teams[1]||'';state.dayDraft.matches.push({id:`manual-${Date.now()}`,day:state.dayDraft.day,date:'',home,away,homeGoals:null,awayGoals:null,notes:'',forfeit:false,penalizedTeam:'',details:{scorers:[],externalGoals:[],ownGoals:[],mvp:null,keeper:null}});touchDraft();render()}
 function renderGiornata(main){
-  const days=[...new Set([...state.model.days,state.selectedDay,(state.model.days.at(-1)||0)+1].filter(Boolean))].sort((a,b)=>a-b);const daySel=select(days.map(d=>({value:d,label:`Giornata ${d}`})),state.selectedDay);daySel.addEventListener('change',()=>switchDay(daySel.value));
+  const nextDay=(state.model.days.at(-1)||0)+1;const days=[...new Set([...state.model.days,state.selectedDay,nextDay].filter(Boolean))].sort((a,b)=>a-b);const daySel=select(days.map(d=>({value:d,label:d===nextDay&&!state.model.days.includes(d)?`Giornata ${d} (nuova)`:`Giornata ${d}`})),state.selectedDay);daySel.addEventListener('change',()=>switchDay(daySel.value));
   const actions=[button('+ Partita','secondary',addManualMatch),button('Prepara pubblicazione','gold',prepareMatchday)];main.appendChild(pageHead('Gestione giornata','Risultati, marcatori, MVP, miglior portiere e autogol con controlli di coerenza.',actions));
   const toolbar=el('div','card day-toolbar');toolbar.appendChild(fieldWrap('Giornata',daySel));const reset=button('Ripristina dati repository','ghost',()=>{localStorage.removeItem(draftKey(state.selectedDay));state.dayDraft=makeDayDraft(state.selectedDay);render()});toolbar.appendChild(reset);main.appendChild(toolbar);
   const validation=validateMatchdayDraft(state.model,state.dayDraft);if(validation.errors.length)main.appendChild(messageBox('error',validation.errors));else if(validation.warnings.length)main.appendChild(messageBox('warning',validation.warnings));
