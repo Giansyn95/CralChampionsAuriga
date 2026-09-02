@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="it">
+<!-- CRAL_V24_MATCHCENTER_EXTERNALS: marcature esterne nel Match Center + premi esterni non cliccabili -->
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -1523,8 +1524,8 @@
     .match-center-team{display:block;width:100%;margin-top:10px;font-family:'Oswald',Arial,Helvetica,sans-serif;font-size:clamp(20px,3.6vw,34px);font-weight:800;text-transform:uppercase;line-height:1.02;overflow-wrap:anywhere}
     .match-center-score{min-width:148px;text-align:center}.match-center-score .score-big{font-family:'Oswald',Arial,Helvetica,sans-serif;font-size:clamp(52px,9vw,86px);font-weight:800;line-height:.9;letter-spacing:.025em;text-shadow:0 10px 25px rgba(0,0,0,.28);white-space:nowrap}.match-center-score .status{display:flex;width:max-content;max-width:100%;justify-content:center;margin:10px auto 0;border:1px solid rgba(255,255,255,.28);border-radius:999px;padding:5px 9px;background:rgba(255,255,255,.12);color:#fff;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.055em;text-align:center}
     .match-columns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:16px 18px 0}.match-columns .entity-section{margin:0}
-    .match-person-list{display:flex;flex-direction:column;gap:8px}.match-person{display:flex;align-items:center;gap:9px;padding:9px 10px;border:1px solid var(--line);border-radius:15px;background:var(--soft);min-width:0}.match-person-avatar{width:40px;height:40px;flex:0 0 40px;border-radius:12px;object-fit:cover;background:var(--panel);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900}.match-person-copy{min-width:0;flex:1}.match-person-copy button{display:block;max-width:100%;border:0;background:none;padding:0;color:var(--ink);font:inherit;font-size:12px;font-weight:900;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.match-person-copy button:hover{color:var(--blue)}.match-person-copy span{display:block;margin-top:2px;color:var(--muted);font-size:10px;font-weight:750}.match-person-value{font-size:17px;font-weight:950;color:var(--blue);white-space:nowrap}
-    .match-awards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.match-award{position:relative;overflow:hidden;padding:13px;border-radius:17px;border:1px solid var(--line);background:linear-gradient(145deg,var(--soft),var(--panel));min-width:0}.match-award.is-mvp{border-color:rgba(245,185,66,.5);background:linear-gradient(145deg,rgba(245,185,66,.18),var(--panel))}.match-award small{display:block;color:var(--muted);font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:.06em}.match-award button{display:block;max-width:100%;margin-top:5px;border:0;background:none;padding:0;color:var(--ink);font:inherit;font-weight:900;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.match-award button:hover{color:var(--blue)}
+    .match-person-list{display:flex;flex-direction:column;gap:8px}.match-person{display:flex;align-items:center;gap:9px;padding:9px 10px;border:1px solid var(--line);border-radius:15px;background:var(--soft);min-width:0}.match-person-avatar{width:40px;height:40px;flex:0 0 40px;border-radius:12px;object-fit:cover;background:var(--panel);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900}.match-person-copy{min-width:0;flex:1}.match-person-copy button{display:block;max-width:100%;border:0;background:none;padding:0;color:var(--ink);font:inherit;font-size:12px;font-weight:900;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.match-person-copy button:hover{color:var(--blue)}.match-person-copy .match-static-name{display:block;max-width:100%;color:var(--ink);font-size:12px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.match-person-copy span{display:block;margin-top:2px;color:var(--muted);font-size:10px;font-weight:750}.match-person-value{font-size:17px;font-weight:950;color:var(--blue);white-space:nowrap}
+    .match-awards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.match-award{position:relative;overflow:hidden;padding:13px;border-radius:17px;border:1px solid var(--line);background:linear-gradient(145deg,var(--soft),var(--panel));min-width:0}.match-award.is-mvp{border-color:rgba(245,185,66,.5);background:linear-gradient(145deg,rgba(245,185,66,.18),var(--panel))}.match-award small{display:block;color:var(--muted);font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:.06em}.match-award button{display:block;max-width:100%;margin-top:5px;border:0;background:none;padding:0;color:var(--ink);font:inherit;font-weight:900;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.match-award button:hover{color:var(--blue)}.match-award .match-static-name{display:block;max-width:100%;margin-top:5px;color:var(--ink);font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .match-pagelle-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.match-pagelle-team-col{min-width:0;display:flex;flex-direction:column;gap:7px}.match-pagelle-team-title{margin:0 0 2px;padding:0 2px;color:var(--muted);font-family:'Oswald',Arial,Helvetica,sans-serif;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.045em}.match-pagella{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:8px;align-items:center;padding:9px 10px;border:1px solid var(--line);border-radius:15px;background:var(--soft)}.match-pagella button{border:0;background:none;padding:0;color:var(--ink);font:inherit;font-size:12px;font-weight:900;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}.match-pagella button:hover{color:var(--blue)}.match-pagella-team{color:var(--muted);font-size:9px;font-weight:800}.match-pagella-vote{display:inline-flex;align-items:center;justify-content:center;min-width:37px;height:37px;border-radius:50%;border:2px solid currentColor;font-family:'Oswald',Arial,Helvetica,sans-serif;font-weight:800;color:var(--blue);background:var(--panel)}
     .fanta-impact-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.fanta-impact-row{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:10px;min-width:0;padding:10px 12px;border:1px solid var(--line);border-radius:16px;background:var(--soft);transition:transform .16s ease,border-color .16s ease,background .16s ease}.fanta-impact-row:hover{transform:translateY(-1px);border-color:color-mix(in srgb,var(--blue) 38%,var(--line));background:color-mix(in srgb,var(--soft) 92%,var(--blue) 8%)}.fanta-impact-avatar{width:42px;height:42px;flex:0 0 42px;border-radius:50%;object-fit:cover;background:var(--panel);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;box-shadow:0 0 0 1px var(--line)}.fanta-impact-copy{min-width:0}.fanta-impact-name{display:block;max-width:100%;border:0;background:none;padding:0;color:var(--ink);font:inherit;font-size:12px;font-weight:900;line-height:1.2;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}.fanta-impact-name:hover{color:var(--blue)}.fanta-impact-row p{margin:4px 0 0;color:var(--muted);font-size:10px;font-weight:700;line-height:1.35;white-space:normal}.fanta-impact-score{align-self:center;font-family:'Oswald',Arial,Helvetica,sans-serif;font-size:22px;font-weight:800;color:var(--blue);white-space:nowrap}
     .match-sibling-nav{display:grid;grid-template-columns:1fr 1fr;gap:9px}.match-sibling-btn{display:flex;align-items:center;gap:8px;padding:11px;border:1px solid var(--line);border-radius:16px;background:var(--soft);color:var(--ink);font:inherit;font-size:11px;font-weight:850;cursor:pointer;min-width:0}.match-sibling-btn:only-child{grid-column:1/-1}.match-sibling-btn.is-prev{justify-content:flex-start;text-align:left}.match-sibling-btn.is-next{justify-content:flex-end;text-align:right}.match-sibling-label{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.match-sibling-arrow{flex:0 0 auto;color:var(--blue);font-size:16px;line-height:1}.match-sibling-btn:hover{border-color:rgba(15,90,168,.4)}
@@ -13582,11 +13583,58 @@ function cralNavRowBelongsToMatch(row,file,match){
   const txt=firstPresent(row,[['partita','match','gara','incontro','note','descrizione']]);
   return txt ? (norm(txt).includes(norm(match.home))&&norm(txt).includes(norm(match.away))) : false;
 }
-function cralNavAddPerson(map,name,team,value,row,detail){
+function cralNavAddPerson(map,name,team,value,row,detail,meta={}){
   const clean=smartSpace(cleanRiepilogoScorerName(name)||name); if(!clean) return;
   const key=(personMatchKey(clean)||norm(clean))+'|'+(teamMatchKey(team)||norm(team));
-  const cur=map.get(key)||{name:clean,team,value:0,row:row||null,detail:detail||''};
-  cur.value+=Number(value||0); if(!cur.row&&row) cur.row=row; if(detail) cur.detail=detail; map.set(key,cur);
+  const literalExternal=riepilogoLiteralExternal(clean);
+  const cur=map.get(key)||{name:clean,team,value:0,row:row||null,detail:detail||'',noLink:false,external:false};
+  cur.value+=Number(value||0); if(!cur.row&&row&&!meta.noLink&&!literalExternal) cur.row=row; if(detail) cur.detail=detail;
+  if(meta.noLink||literalExternal) cur.noLink=true;
+  if(meta.external||literalExternal) cur.external=true;
+  if(cur.noLink) cur.row=null;
+  map.set(key,cur);
+}
+function cralNavEnsureExternalScorer(map,team,count){
+  const qty=Math.max(0,Number(count||0)); if(!map||!team||qty<=0) return;
+  const clean='Esterno';
+  const key=(personMatchKey(clean)||norm(clean))+'|'+(teamMatchKey(team)||norm(team));
+  const cur=map.get(key)||{name:clean,team,value:0,row:null,detail:'Marcatura esterna',noLink:true,external:true};
+  // Il conteggio esplicito/residuo descrive il totale di marcature esterne della squadra:
+  // se "Esterno" era gia' presente nella lista marcatori non lo sommiamo una seconda volta.
+  cur.value=Math.max(Number(cur.value||0),qty); cur.row=null; cur.noLink=true; cur.external=true;
+  if(!cur.detail) cur.detail='Marcatura esterna';
+  map.set(key,cur);
+}
+function cralNavMatchExternalGoalCounts(match,partita,parsed,file){
+  const zero={home:0,away:0}; if(!partita) return zero;
+  const scorerRows=parsed?.marcatori||[];
+  const explicit=riepilogoExplicitExternalGoals(scorerRows,partita,file);
+  if(explicit.found){
+    // Le righe Admin sono autorevoli. Se una riga non ha squadra, non la attribuiamo a caso.
+    return {home:explicit.homeCount,away:explicit.awayCount};
+  }
+  const score=parseScorePair(match?.score||firstPresent(partita,[['risultato','score','punteggio']]));
+  if(!score) return zero;
+  const note=firstPresent(partita,[['note','commento','descrizione']]);
+  const homeList=splitPeopleList(firstPresent(partita,[['marcatori casa','marcatori squadra casa','goal casa marcatori','scorer casa','marcatori home']]));
+  const awayList=splitPeopleList(firstPresent(partita,[['marcatori trasferta','marcatori ospite','marcatori squadra trasferta','goal trasferta marcatori','scorer trasferta','marcatori away']]));
+  if(!homeList.length&&!awayList.length) return zero; // senza separazione per squadra non inferiamo.
+  const hasRoster=rosterIdentityRecords().length>0;
+  const known=list=>hasRoster?list.filter(n=>!isPersonExternal(cleanRiepilogoScorerName(n))):list;
+  const knownHome=countGoalsInTokenList(known(homeList));
+  const knownAway=countGoalsInTokenList(known(awayList));
+  let agHome=0,agAway=0;
+  (parsed?.autogoal||[]).filter(r=>cralNavRowBelongsToMatch(r,file,match)).forEach(r=>{
+    // CSV storico: Squadra = beneficiaria, quindi l'autogoal fa parte del punteggio di quella squadra.
+    const beneficiary=teamHintFromRow(r)||'';
+    const qty=riepilogoGoalNumberFromText(firstPresent(r,[['goal','gol','reti','quantita','valore']]))||1;
+    if(cralNavTeamSame(beneficiary,match.home)) agHome+=qty;
+    else if(cralNavTeamSame(beneficiary,match.away)) agAway+=qty;
+  });
+  return {
+    home:Math.max(0,Number(score[0]||0)-knownHome-agHome),
+    away:Math.max(0,Number(score[1]||0)-knownAway-agAway)
+  };
 }
 function cralNavAwardPersonFromRow(row,kind){
   const team=teamHintFromRow(row)||'';
@@ -13739,8 +13787,23 @@ function cralNavMatchDetails(match){
       cralNavAddScorerRowsFallback(scorerRows,file,match,useTeamMap);
     }
 
-    (parsed.mvp||[]).filter(r=>cralNavRowBelongsToMatch(r,file,match)).forEach(r=>{ const person=cralNavAwardPersonFromRow(r,'mvp'); if(person.name) cralNavAddPerson(mvp,person.name,person.team,profilePointsFromRow(r)||1,person.row||r,'MVP'); });
-    (parsed.portiere||[]).filter(r=>cralNavRowBelongsToMatch(r,file,match)).forEach(r=>{ const person=cralNavAwardPersonFromRow(r,'keeper'); if(person.name) cralNavAddPerson(keeper,person.name,person.team,profilePointsFromRow(r)||1,person.row||r,'Miglior portiere'); });
+    // Marcature esterne: le riportiamo anche nel Match Center, una riga per squadra.
+    // Prima usiamo le righe esplicite dell'Admin; per lo storico possiamo inferire il residuo
+    // solo quando la riga partita separa chiaramente marcatori casa/trasferta.
+    const externalGoals=cralNavMatchExternalGoalCounts(match,partita,parsed,file);
+    cralNavEnsureExternalScorer(scorersHome,match.home,externalGoals.home);
+    cralNavEnsureExternalScorer(scorersAway,match.away,externalGoals.away);
+
+    (parsed.mvp||[]).filter(r=>cralNavRowBelongsToMatch(r,file,match)).forEach(r=>{
+      const external=riepilogoIsExplicitExternalRow(r,'mvp');
+      const person=cralNavAwardPersonFromRow(r,'mvp');
+      if(person.name) cralNavAddPerson(mvp,person.name,person.team,profilePointsFromRow(r)||1,external?null:(person.row||r),'MVP',{noLink:external,external});
+    });
+    (parsed.portiere||[]).filter(r=>cralNavRowBelongsToMatch(r,file,match)).forEach(r=>{
+      const external=riepilogoIsExplicitExternalRow(r,'portiere');
+      const person=cralNavAwardPersonFromRow(r,'keeper');
+      if(person.name) cralNavAddPerson(keeper,person.name,person.team,profilePointsFromRow(r)||1,external?null:(person.row||r),'Miglior portiere',{noLink:external,external});
+    });
     (parsed.autogoal||[]).filter(r=>cralNavRowBelongsToMatch(r,file,match)).forEach(r=>{
       // Nel formato storico la colonna Squadra e' la BENEFICIARIA. Nel Match Center
       // mostriamo invece chi ha commesso l'autorete, coerentemente con la tabella Autogoal.
@@ -13761,12 +13824,12 @@ function cralNavMatchDetails(match){
     if(partita && !mvp.size){
       const note=firstPresent(partita,[['note','commento','descrizione']]);
       const mvpInline=splitInlinePeople(firstPresent(partita,[['mvp','migliore in campo','man of the match','motm']])||extractInlineField(note,'MVP'));
-      mvpInline.forEach(x=>{ const row=cralNavContextRowForPlayer(x,''); const team=teamHintFromRow(row)||teamForPersonToken(x,'',[partita]); cralNavAddPerson(mvp,playerDisplayName(row)||x,team,1,row,'MVP'); });
+      mvpInline.forEach(x=>{ const row=cralNavContextRowForPlayer(x,''); const team=teamHintFromRow(row)||teamForPersonToken(x,'',[partita]); const external=riepilogoLiteralExternal(x)||(rosterIdentityRecords().length>0&&isPersonExternal(x)); cralNavAddPerson(mvp,playerDisplayName(row)||x,team,1,external?null:row,'MVP',{noLink:external,external}); });
     }
     if(partita && !keeper.size){
       const note=firstPresent(partita,[['note','commento','descrizione']]);
       const keepInline=splitInlinePeople(firstPresent(partita,[['portiere','miglior portiere','best keeper','goalkeeper']])||extractInlineField(note,'Portiere'));
-      keepInline.forEach(x=>{ const row=cralNavContextRowForPlayer(x,''); const team=teamHintFromRow(row)||teamForPersonToken(x,'',[partita]); cralNavAddPerson(keeper,playerDisplayName(row)||x,team,1,row,'Miglior portiere'); });
+      keepInline.forEach(x=>{ const row=cralNavContextRowForPlayer(x,''); const team=teamHintFromRow(row)||teamForPersonToken(x,'',[partita]); const external=riepilogoLiteralExternal(x)||(rosterIdentityRecords().length>0&&isPersonExternal(x)); cralNavAddPerson(keeper,playerDisplayName(row)||x,team,1,external?null:row,'Miglior portiere',{noLink:external,external}); });
     }
   });
 
@@ -13817,9 +13880,10 @@ function cralNavMatchFantaImpact(match){
 function cralNavMatchPersonRow(person,icon){
   const row=document.createElement('div'); row.className='match-person';
   if(person.teamOnly && person.teamName) row.appendChild(imgOrInitialEl('team',person.teamName,'match-person-avatar'));
+  else if(person.external && person.team) row.appendChild(imgOrInitialEl('team',person.team,'match-person-avatar'));
   else row.appendChild(imgOrInitialEl('player',person.row?playerImageNames(person.row):person.name,'match-person-avatar'));
   const copy=document.createElement('div'); copy.className='match-person-copy';
-  if(person.teamOnly){const b=document.createElement('b');b.textContent=person.name;copy.appendChild(b)}
+  if(person.teamOnly||person.noLink){const b=document.createElement('b');b.className='match-static-name';b.textContent=person.name;copy.appendChild(b)}
   else copy.appendChild(cralNavOpenPlayerButton(person.name,person.row,person.team));
   const s=document.createElement('span'); s.textContent=person.team||''; copy.appendChild(s); row.appendChild(copy);
   const v=document.createElement('div'); v.className='match-person-value';
@@ -13897,7 +13961,7 @@ function openMatchCenter(match,options={}){
     view.appendChild(columns);
   }
   if(details.autogoals.length) view.appendChild(cralNavMatchListSection('Autogoal','__AUTOGOAL__',details.autogoals,'__AUTOGOAL__'));
-  if(details.mvp.length||details.keeper.length){ const awardSec=cralNavSection('Premi partita','🏅'); const awards=document.createElement('div'); awards.className='match-awards'; [...details.mvp.map(x=>({x,label:'MVP',icon:'⭐',cls:' is-mvp'})),...details.keeper.map(x=>({x,label:'Miglior portiere',icon:'🧤',cls:''}))].forEach(({x,label,icon,cls})=>{ const card=document.createElement('div'); card.className='match-award'+cls; const sm=document.createElement('small'); sm.textContent=icon+' '+label; card.appendChild(sm); card.appendChild(cralNavOpenPlayerButton(x.name,x.row,x.team)); awards.appendChild(card); }); awardSec.appendChild(awards); view.appendChild(awardSec); }
+  if(details.mvp.length||details.keeper.length){ const awardSec=cralNavSection('Premi partita','🏅'); const awards=document.createElement('div'); awards.className='match-awards'; [...details.mvp.map(x=>({x,label:'MVP',icon:'⭐',cls:' is-mvp'})),...details.keeper.map(x=>({x,label:'Miglior portiere',icon:'🧤',cls:''}))].forEach(({x,label,icon,cls})=>{ const card=document.createElement('div'); card.className='match-award'+cls; const sm=document.createElement('small'); sm.textContent=icon+' '+label; card.appendChild(sm); if(x.noLink||x.external){ const name=document.createElement('span'); name.className='match-static-name'; name.textContent=x.name; card.appendChild(name); } else card.appendChild(cralNavOpenPlayerButton(x.name,x.row,x.team)); awards.appendChild(card); }); awardSec.appendChild(awards); view.appendChild(awardSec); }
   if(details.pagelle.length){ const sec=cralNavSection('Pagelle della partita','📝'); const grid=document.createElement('div'); grid.className='match-pagelle-grid'; const addTeamColumn=(team,items)=>{ const col=document.createElement('div'); col.className='match-pagelle-team-col'; const h=document.createElement('h4'); h.className='match-pagelle-team-title'; h.textContent=team; col.appendChild(h); const sorted=cralNavSortPagelleForTeam(items,team); if(!sorted.length) col.appendChild(buildEl('div','entity-empty','Nessuna pagella.')); sorted.forEach(x=>{ const card=document.createElement('div'); card.className='match-pagella'; card.appendChild(imgOrInitialEl('player',x.row?playerImageNames(x.row):[x.displayName],'team-roster-avatar')); const c=document.createElement('div'); const b=cralNavOpenPlayerButton(x.displayName,x.row,x.team); c.appendChild(b); const t=document.createElement('div'); t.className='match-pagella-team'; t.textContent=roleDisplayLabel(x.role||fieldLoose(x.row||{},['ruolo','role','posizione','position']))||x.team; c.appendChild(t); card.appendChild(c); const v=document.createElement('span'); v.className='match-pagella-vote'; v.textContent=votoDisplay(x.voto,x.votoLabel); card.appendChild(v); col.appendChild(card); }); grid.appendChild(col); }; addTeamColumn(match.home,details.pagelle.filter(x=>cralNavTeamSame(x.team,match.home))); addTeamColumn(match.away,details.pagelle.filter(x=>cralNavTeamSame(x.team,match.away))); sec.appendChild(grid); view.appendChild(sec); }
   if(fanta.length){ const sec=cralNavSection('Impatto Fantacalcio','♛','gold-crown'); const sub=document.createElement('p'); sub.className='entity-section-sub'; sub.textContent='Punteggio reale della giornata per i giocatori di questa gara che risultano schierati in almeno una rosa Fantacalcio.'; sec.appendChild(sub); const list=document.createElement('div'); list.className='fanta-impact-list'; fanta.forEach(x=>{ const row=document.createElement('div'); row.className='fanta-impact-row'; const imageNames=x.row?playerImageNames(x.row):[x.fullName,x.name].filter(Boolean); row.appendChild(imgOrInitialEl('player',imageNames,'fanta-impact-avatar')); const c=document.createElement('div'); c.className='fanta-impact-copy'; const b=cralNavOpenPlayerButton(x.name,x.row,x.team); b.classList.add('fanta-impact-name'); c.appendChild(b); const p=document.createElement('p'); p.textContent=x.detail; c.appendChild(p); row.appendChild(c); const pts=document.createElement('div'); pts.className='fanta-impact-score'; pts.textContent=x.points+' pt'; row.appendChild(pts); list.appendChild(row); }); sec.appendChild(list); view.appendChild(sec); }
   if(siblings.prev||siblings.next){
