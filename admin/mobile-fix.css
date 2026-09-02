@@ -1,10 +1,11 @@
 /*
- * CRAL Champions Admin - mobile hardening v3
+ * CRAL Champions Admin - mobile hardening v4
  *
- * 1) confina lo scroll orizzontale delle tabelle;
- * 2) mantiene topbar/layout entro il layout viewport;
- * 3) evita l'auto-zoom iOS sui controlli del login/editor;
- * 4) lascia al JS il reset del visual viewport al termine del login.
+ * Obiettivi:
+ * - nessun allargamento della pagina dovuto a tabelle/testi lunghi;
+ * - controlli >= 16px su iOS, quindi niente auto-zoom al focus;
+ * - topbar, sidebar e contenuto sempre confinati al viewport;
+ * - la tabella Squadre resta scrollabile orizzontalmente nel suo contenitore.
  */
 
 html {
@@ -28,17 +29,15 @@ body {
   overscroll-behavior-x: none;
 }
 
-.topbar {
-  width: 100%;
-  max-width: 100%;
-}
-
+.topbar,
 .topbar-inner,
 .env-controls,
 .layout,
 .main,
 .sidebar,
 .card,
+.page-head,
+.page-head > *,
 .team-editor,
 .team-editor > *,
 .file-list,
@@ -48,24 +47,44 @@ body {
   max-width: 100%;
 }
 
+.topbar,
 .topbar-inner,
-.layout {
+.layout,
+.main {
   width: 100%;
 }
 
-/* La tabella puo restare larga, ma deve scorrere SOLO nel suo contenitore. */
+/* I path repository/torneo sono stringhe lunghe: devono poter spezzarsi. */
+.page-head > div,
+.page-head p {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.page-head p {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* La tabella puo essere larga, ma non deve mai allargare il documento. */
 .table-wrap {
   width: 100%;
   overflow-x: auto;
   overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
 }
 
-/* Evita lo zoom da doppio tap sui controlli senza disabilitare il pinch-to-zoom. */
 button,
 .btn,
 .nav-btn {
   touch-action: manipulation;
+}
+
+@supports (min-height: 100dvh) {
+  .center-screen {
+    min-height: 100dvh;
+  }
 }
 
 @media (max-width: 1000px) {
@@ -84,17 +103,14 @@ button,
 }
 
 @media (max-width: 820px) {
-  /*
-   * Safari iOS effettua l'auto-zoom quando un input ha un font calcolato
-   * inferiore a 16px. Lo forziamo sopra la soglia in tutta la schermata login.
-   */
+  /* Safari iOS auto-ingrandisce i campi sotto i 16px. */
   .login-card input,
   .login-card select,
   .login-card textarea,
   .login-card .input,
   .login-card .select,
   .login-card .textarea {
-    font-size: 17px !important;
+    font-size: 16px !important;
   }
 }
 
@@ -109,9 +125,24 @@ button,
   .login-card {
     width: 100%;
     max-width: 100%;
+    min-width: 0;
   }
 
-  /* Protezione anche per gli altri campi dell'Admin. */
+  .top-title {
+    max-width: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .nav-btn {
+    min-width: 0;
+    max-width: 100%;
+  }
+
   input,
   select,
   textarea,
@@ -122,6 +153,6 @@ button,
   .data-table select,
   .entry-row .select,
   .entry-row .input {
-    font-size: 16px;
+    font-size: 16px !important;
   }
 }
