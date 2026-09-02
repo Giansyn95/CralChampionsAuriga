@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <!-- CRAL_V15_FRONTEND: autogoal Match Center + Fantacalcio robusto + premi/esterni V14 -->
+  <!-- CRAL_V16_FRONTEND: autogoal Match Center + Fantacalcio robusto + premi/esterni V14 -->
   <!-- Favicon: icona nella scheda del browser e nei preferiti/segnalibri.
        Usa lo stesso logo del CRAL già presente in immagini/. Se il file
        ha un nome diverso da logo_cral.png, basta cambiare questo percorso.
@@ -10709,14 +10709,13 @@ function fantaRiepilogoDayOptions(){
   return out.sort((a,b)=>parseInt(a[0],10)-parseInt(b[0],10));
 }
 function fantaPlayedDays(){
-  // V15: non dipendere esclusivamente dal filtro Riepilogo. Se una giornata e' presente
-  // nelle rose Fantacalcio o nella cache precalcolata, deve restare disponibile anche
-  // durante caricamenti parziali / cache intermedie del riepilogo.
+  // V16: una giornata disputata non puo' sparire solo perche' una singola sorgente
+  // e' arrivata in ritardo. Uniamo riepiloghi, rose live, cache e output importati.
   const calendar=fantaCalendarDays();
   const max=fantaCalendarMaxDay();
   const out=new Set();
   const add=value=>{
-    const n=parseInt(value,10);
+    const n=parseInt(giornataNumberFromText(value)||value,10);
     if(!Number.isFinite(n)||n<=0)return;
     if(calendar.size&&!calendar.has(n))return;
     if(max&&n>max)return;
@@ -10728,6 +10727,7 @@ function fantaPlayedDays(){
     rowsToObjects(state.rows[file]||[]).forEach(r=>add(firstPresent(r,[['giornata','day','turno','round']])||fileDay));
   });
   (state.fantaPrecomputedData?.results||[]).forEach(r=>add(r.day));
+  try{ fantaReadImportedResults().forEach(r=>add(r.day)); }catch(e){}
   return out;
 }
 function fantaRole(raw){
@@ -11487,43 +11487,53 @@ function ensureFantaDataInBackground(fresh,generation=_dataLoadGeneration,signal
 function fantaDataCacheKey(){
   return Object.keys(state.rows).sort().map(f=>f+':'+((state.rows[f]||[]).length)).join('|');
 }
-function fantaDataCoverage(data){
-  const results=Array.isArray(data?.results)?data.results:[];
-  const days=new Set(),participants=new Set();
-  results.forEach(r=>{
-    const d=parseInt(r?.day,10);if(Number.isFinite(d)&&d>0)days.add(d);
-    const p=fantaNormText(r?.name||'');if(p)participants.add(p);
+function fantaDatasetDailyRows(data){
+  return (Array.isArray(data?.results)?data.results:[]).filter(r=>{
+    const day=parseInt(r?.day,10);
+    return Number.isFinite(day)&&day>0&&fantaNormText(r?.name||'');
   });
-  return {days,participants,rows:results.length};
 }
-function fantaLiveCoversBaseline(live,baseline){
-  if(!baseline?.results?.length)return true;
-  if(!live?.results?.length)return false;
-  const l=fantaDataCoverage(live),b=fantaDataCoverage(baseline);
-  for(const d of b.days)if(!l.days.has(d))return false;
-  for(const p of b.participants)if(!l.participants.has(p))return false;
-  // A parita' di giorni/partecipanti, una perdita netta di righe indica comunque
-  // un caricamento live incompleto (tipicamente uno o piu' file rosa non arrivati).
-  if(l.rows<b.rows)return false;
-  return true;
+function fantaMergeDailyDatasets(primary,...fallbacks){
+  const map=new Map();
+  const add=(rows,overwrite)=>rows.forEach(r=>{
+    const day=parseInt(r?.day,10);const name=fantaNormText(r?.name||'');
+    if(!Number.isFinite(day)||day<=0||!name)return;
+    const key=day+'|'+name;
+    if(overwrite||!map.has(key))map.set(key,r);
+  });
+  // Le sorgenti di fallback riempiono i buchi; il live, quando esiste, resta autorevole.
+  fallbacks.filter(Boolean).forEach(data=>add(fantaDatasetDailyRows(data),false));
+  if(primary)add(fantaDatasetDailyRows(primary),true);
+  const results=[...map.values()].sort(fantaCompareResults);
+  const base=primary||fallbacks.find(x=>x&&Array.isArray(x.results))||{};
+  const issues=[...new Set([...(primary?.issues||[]),...fallbacks.flatMap(x=>x?.issues||[])])];
+  return {...base,source:'unificata',results,issues};
 }
 function fantaCurrentData(){
   const hasLiveRosters=fantaRosterFiles().length>0 && fantaListoneFiles().length>0;
-  const key=fantaDataCacheKey();
+  const key=fantaDataCacheKey()+'|cache:'+(state.fantaPrecomputedData?.results?.length||0);
+  if(_fantaCurrentDataCache&&_fantaCurrentDataCache.key===key) return _fantaCurrentDataCache.data;
+
+  const importedRows=fantaReadImportedResults();
+  const imported=importedRows.length
+    ? {source:'importata',results:importedRows,issues:[],rosterCount:0,playerCount:fantaAllPlayersSorted().length}
+    : null;
+  const cached=state.fantaPrecomputedData;
+
   if(hasLiveRosters){
-    if(_fantaCurrentDataCache&&_fantaCurrentDataCache.key===key) return _fantaCurrentDataCache.data;
     const live=fantaCalculateFromRosters();
-    const cached=state.fantaPrecomputedData;
-    const data=(cached && !fantaLiveCoversBaseline(live,cached)) ? cached : live;
+    // V16: merge per (giornata, partecipante). Se il live perde G1/G10 o un partecipante,
+    // cache/output completano SOLO quelle righe mancanti; dove il live c'e', vince il live.
+    const data=fantaMergeDailyDatasets(live,cached,imported);
     _fantaCurrentDataCache={key,data};
     return data;
   }
-  if(state.fantaPrecomputedData) return state.fantaPrecomputedData;
-  if(_fantaCurrentDataCache&&_fantaCurrentDataCache.key===key) return _fantaCurrentDataCache.data;
-  const imported=fantaReadImportedResults();
-  const data=imported.length
-    ? {source:'importata',results:imported,issues:[],rosterCount:0,playerCount:fantaAllPlayersSorted().length}
-    : fantaCalculateFromRosters();
+  if(cached||imported){
+    const data=fantaMergeDailyDatasets(cached,imported);
+    _fantaCurrentDataCache={key,data};
+    return data;
+  }
+  const data=fantaCalculateFromRosters();
   _fantaCurrentDataCache={key,data};
   return data;
 }
