@@ -9,12 +9,12 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@600;700&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="./admin.css">
-<link rel="stylesheet" href="./mobile-fix.css?v=2">
+<link rel="stylesheet" href="./mobile-fix.css?v=3">
 </head>
 <body>
 <div id="app" class="app-shell" aria-live="polite"></div>
-<!-- Caricato prima di admin.js: su mobile intercetta solo l'autofocus JS del token. -->
-<script src="./mobile-fix.js?v=2"></script>
+<!-- Caricato prima di admin.js: corregge esclusivamente i comportamenti mobile/iOS. -->
+<script src="./mobile-fix.js?v=3"></script>
 <script type="module" src="./admin.js"></script>
 </body>
 </html>
