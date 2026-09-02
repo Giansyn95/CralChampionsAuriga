@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <!-- CRAL_V18_FRONTEND: classifiche premi derivate dai riepiloghi + Fantacalcio baseline stabile + Autogoal UI -->
+  <!-- CRAL_V21_FRONTEND: Fantacalcio cache/live robusto + validazione per partecipante -->
   <!-- Favicon: icona nella scheda del browser e nei preferiti/segnalibri.
        Usa lo stesso logo del CRAL già presente in immagini/. Se il file
        ha un nome diverso da logo_cral.png, basta cambiare questo percorso.
@@ -11238,39 +11238,65 @@ function fantaFirstRosterDay(rosters, playedDays){
   return Number.isFinite(first) ? first : 0;
 }
 function fantaValidationFromFirstRosters(ctx, rosters, playedDays){
-  const firstDay=fantaFirstRosterDay(rosters, playedDays);
-  const groups=new Map();
-  if(!firstDay) return {enabled:false,validNames:new Set(),invalidNames:new Set(),firstDay:0,requiredMovement:4};
+  // V21: la validazione non usa piu' una sola "prima giornata globale".
+  // Ogni partecipante viene validato sulla SUA prima rosa disponibile: questo evita
+  // che chi manca dalla prima giornata caricata venga escluso da tutto il torneo.
+  // Regola del torneo: esattamente 1 PT + 4 giocatori di movimento (5 totali).
+  const participants=new Map();
+  const ensure=(key,name)=>{
+    let p=participants.get(key);
+    if(!p){ p={name,days:new Map()}; participants.set(key,p); }
+    return p;
+  };
   rosters.forEach(file=>{
     rowsToObjects(state.rows[file]||[]).forEach(r=>{
       let day=parseInt(firstPresent(r,[['giornata','day','turno','round']]),10);
       if(!Number.isFinite(day) || day<=0) day=fantaDayFromFile(file);
-      if(day!==firstDay) return;
+      if(!Number.isFinite(day) || day<=0) return;
+      if(playedDays && playedDays.size && !playedDays.has(day)) return;
       const name=String(firstPresent(r,[['partecipante','nome','participant','fantallenatore']])||fantaParticipantFromFile(file)||'').trim();
       const rawId=String(firstPresent(r,[['idGiocatore','id','giocatore','id giocatore']])||'').trim();
       if(!name || !rawId) return;
       const key=fantaNormText(name);
-      let g=groups.get(key);
-      if(!g){ g={name,pt:0,mov:0,total:0,unknown:0,ids:new Set()}; groups.set(key,g); }
-      if(g.ids.has(rawId)) return;
-      g.ids.add(rawId);
-      g.total++;
-      const resolved=fantaResolveRosterPlayer(ctx,r,rawId);
-      if(!resolved.player){ g.unknown++; return; }
-      if(fantaRole(resolved.player.role)==='PT') g.pt++;
-      else g.mov++;
+      const p=ensure(key,name);
+      let d=p.days.get(day);
+      if(!d){ d={rows:[],ids:new Set()}; p.days.set(day,d); }
+      if(d.ids.has(rawId)) return;
+      d.ids.add(rawId); d.rows.push({row:r,rawId});
     });
   });
-  // V19: regola esplicita del torneo: una rosa valida e' esattamente
-  // 1 portiere + 4 giocatori di movimento. Chi non rispetta la regola non entra
-  // nella classifica, nemmeno tramite cache/output di fallback.
+
   const requiredMovement=4;
-  const validNames=new Set(), invalidNames=new Set();
-  groups.forEach((g,key)=>{
-    if(g.pt===1 && g.mov===requiredMovement && g.total===5 && !g.unknown) validNames.add(key);
+  const validNames=new Set(), invalidNames=new Set(), knownNames=new Set();
+  const participantFirstDay={};
+  let firstDay=Infinity;
+  participants.forEach((p,key)=>{
+    knownNames.add(key);
+    const days=[...p.days.keys()].sort((a,b)=>a-b);
+    if(!days.length) return;
+    const day=days[0];
+    participantFirstDay[key]=day;
+    if(day<firstDay) firstDay=day;
+    const d=p.days.get(day);
+    let pt=0,mov=0,unknown=0,total=0;
+    (d?.rows||[]).forEach(({row,rawId})=>{
+      total++;
+      const resolved=fantaResolveRosterPlayer(ctx,row,rawId);
+      if(!resolved.player){ unknown++; return; }
+      if(fantaRole(resolved.player.role)==='PT') pt++;
+      else mov++;
+    });
+    if(pt===1 && mov===requiredMovement && total===5 && unknown===0) validNames.add(key);
     else invalidNames.add(key);
   });
-  return {enabled:true,validNames,invalidNames,firstDay,requiredMovement};
+
+  return {
+    enabled:knownNames.size>0,
+    validNames,invalidNames,knownNames,
+    firstDay:Number.isFinite(firstDay)?firstDay:0,
+    requiredMovement,
+    participantFirstDay
+  };
 }
 function fantaCalculateFromRosters(){
   const ctx=fantaBuildPlayerContext();
@@ -11575,34 +11601,46 @@ function fantaLoadedRosterKeysV19(){
   return keys;
 }
 function fantaMergeMissingResultsV19(live, fallbackSets){
+  // V21: il live ha priorita' riga-per-riga, ma cache/output possono completare
+  // qualsiasi coppia giornata+partecipante che il live non e' riuscito a produrre.
+  // La vecchia logica bloccava il fallback anche quando il file roster era caricato
+  // ma il risultato non veniva generato (es. ID non risolto): era la causa tipica
+  // delle giornate vuote e dei partecipanti mancanti.
   const validation=live&&live.validation;
-  const validNames=validation&&validation.enabled ? validation.validNames : null;
-  const loadedRosterKeys=fantaLoadedRosterKeysV19();
+  const validNames=validation&&validation.enabled ? validation.validNames : new Set();
+  const invalidNames=validation&&validation.enabled ? validation.invalidNames : new Set();
+  const knownNames=validation&&validation.enabled ? (validation.knownNames||new Set([...validNames,...invalidNames])) : new Set();
   const map=new Map();
-  const add=(r,isFallback)=>{
-    if(!r || !Number.isFinite(Number(r.day)) || Number(r.day)<=0 || !String(r.name||'').trim()) return;
-    const participantKey=fantaNormText(r.name);
-    if(validNames && !validNames.has(participantKey)) return;
-    const key=Number(r.day)+'|'+participantKey;
-    if(map.has(key)) return;
-    // Se la rosa live per quella coppia giornata/partecipante e' stata realmente
-    // caricata ma non ha prodotto un risultato, non mascheriamo l'errore con dati
-    // vecchi di cache. Il fallback serve solo per sorgenti live mancanti.
-    if(isFallback && loadedRosterKeys.has(key)) return;
-    map.set(key,r);
+  const sourceByKey=new Map();
+  const add=(r,isFallback,sourceLabel)=>{
+    const day=Number(r&&r.day);
+    const name=String(r&&r.name||'').trim();
+    if(!Number.isFinite(day) || day<=0 || !name) return;
+    const participantKey=fantaNormText(name);
+    // Se il partecipante e' stato realmente osservato nelle rose live ed e' invalido
+    // (non 1 PT + 4 movimento), non deve comparire neppure grazie alla cache.
+    if(knownNames.has(participantKey) && invalidNames.has(participantKey)) return;
+    // Per il live, se la validazione lo conosce deve essere esplicitamente valido.
+    if(!isFallback && knownNames.has(participantKey) && !validNames.has(participantKey)) return;
+    const key=day+'|'+participantKey;
+    if(map.has(key)) return; // live viene aggiunto per primo ed e' autorevole
+    map.set(key,r); sourceByKey.set(key,sourceLabel||'fallback');
   };
-  (live?.results||[]).forEach(r=>add(r,false));
-  (fallbackSets||[]).forEach(set=>(set||[]).forEach(r=>add(r,true)));
+  (live?.results||[]).forEach(r=>add(r,false,'live'));
+  (fallbackSets||[]).forEach((set,idx)=>(set||[]).forEach(r=>add(r,true,idx===0?'cache':'importato')));
   const results=[...map.values()].sort(fantaCompareResults);
+  const usedFallback=[...sourceByKey.values()].some(x=>x!=='live');
   return {
-    source:(fallbackSets||[]).some(set=>(set||[]).some(r=>r&&r.day>0&&!loadedRosterKeys.has(Number(r.day)+'|'+fantaNormText(r.name)))) ? 'ibrida' : (live?.source||'calcolata'),
+    source:usedFallback?'ibrida':(live?.source||'calcolata'),
     results,
     issues:Array.isArray(live?.issues)?live.issues:[],
     rosterCount:Number(live?.rosterCount||0),
     playerCount:Number(live?.playerCount||0),
-    validation:live?.validation
+    validation:live?.validation,
+    sourceByKey
   };
 }
+// CRAL_V21_FANTA_PARTICIPANT_VALIDATION_AND_FALLBACK
 function fantaCurrentData(){
   const hasLiveRosters=fantaRosterFiles().length>0 && fantaListoneFiles().length>0;
   const key=fantaDataCacheKey()+'|cache:'+(state.fantaPrecomputedData?.results?.length||0);
@@ -11666,13 +11704,28 @@ window.__cralFantaDebug=()=>{
   const rosterFiles=fantaRosterFiles();
   const byDay={};
   rosterFiles.forEach(f=>{ const d=fantaDayFromFile(f)||0; (byDay[d]||(byDay[d]=[])).push(f); });
+  const summarize=(rows)=>{
+    const days={}; const names=new Set();
+    (rows||[]).forEach(r=>{ const d=Number(r?.day)||0; const n=String(r?.name||'').trim(); if(!d||!n)return; (days[d]||(days[d]=[])).push(n); names.add(fantaNormText(n)); });
+    Object.keys(days).forEach(d=>days[d]=[...new Set(days[d])].sort((a,b)=>a.localeCompare(b,'it')));
+    return {days,names:[...names].sort()};
+  };
+  const validation=data?.validation;
   return {
     source:data?.source||'',
-    resultDays:[...new Set((data?.results||[]).map(r=>Number(r.day)||0).filter(Boolean))].sort((a,b)=>a-b),
+    final:summarize(data?.results||[]),
     rosterDays:Object.keys(byDay).map(Number).sort((a,b)=>a-b),
     rosterFilesByDay:byDay,
-    validation:data?.validation?{firstDay:data.validation.firstDay,requiredMovement:data.validation.requiredMovement,valid:[...data.validation.validNames],invalid:[...data.validation.invalidNames]}:null,
-    cacheDays:state.fantaPrecomputedData?[...new Set((state.fantaPrecomputedData.results||[]).map(r=>Number(r.day)||0).filter(Boolean))].sort((a,b)=>a-b):[]
+    validation:validation?{
+      firstDay:validation.firstDay,
+      requiredMovement:validation.requiredMovement,
+      valid:[...validation.validNames],
+      invalid:[...validation.invalidNames],
+      participantFirstDay:validation.participantFirstDay||{}
+    }:null,
+    cache:state.fantaPrecomputedData?summarize(state.fantaPrecomputedData.results||[]):{days:{},names:[]},
+    imported:summarize(fantaReadImportedResults()),
+    hint:'Se G1/G10 mancano anche in cache.days e imported.days, i dati non sono disponibili nelle sorgenti caricate. Se sono presenti li ma non in final.days, copia questo oggetto per la diagnosi.'
   };
 };
 
