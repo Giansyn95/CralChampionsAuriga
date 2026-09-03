@@ -128,6 +128,51 @@ async function readFile(branch, filePath) {
   return Buffer.from(String(blob.content || '').replace(/\s+/g, ''), 'base64');
 }
 
+
+async function treeMapAtCommit(commitSha) {
+  const commit = await api('GET', `/git/commits/${commitSha}`);
+  const tree = await getTreeBySha(commit.tree.sha);
+  return new Map((tree.tree || []).filter(x => x.type === 'blob').map(x => [x.path, x]));
+}
+
+async function readFileAtCommit(commitSha, filePath) {
+  const map = await treeMapAtCommit(commitSha);
+  const entry = map.get(filePath);
+  if (!entry) return null;
+  const blob = await getBlob(entry.sha);
+  assert.equal(blob.encoding, 'base64');
+  return Buffer.from(String(blob.content || '').replace(/\s+/g, ''), 'base64');
+}
+
+async function registryAtCommit(commitSha) {
+  const buf = await readFileAtCommit(commitSha, 'tornei.json');
+  if (!buf) throw new Error('tornei.json non trovato nel commit');
+  return JSON.parse(buf.toString('utf8'));
+}
+
+async function waitForBranchFile(branch, filePath, expected, timeoutMs = 20000) {
+  const deadline = Date.now() + timeoutMs;
+  let last = null;
+  let lastError = null;
+  while (Date.now() < deadline) {
+    try {
+      last = await readFile(branch, filePath);
+      const ok = expected === null
+        ? last === null
+        : Buffer.isBuffer(last) && last.equals(expected);
+      if (ok) return;
+      lastError = null;
+    } catch (error) {
+      lastError = error;
+    }
+    await sleep(400);
+  }
+  const actual = last === null ? '<missing>' : JSON.stringify(last?.toString('utf8'));
+  const wanted = expected === null ? '<missing>' : JSON.stringify(expected.toString('utf8'));
+  const detail = lastError ? `; ultimo errore: ${lastError.message}` : '';
+  throw new Error(`Timeout attendendo ${branch}:${filePath}=${wanted}; ultimo valore=${actual}${detail}`);
+}
+
 async function registry(branch) {
   const buf = await readFile(branch, 'tornei.json');
   if (!buf) throw new Error('tornei.json non trovato');
@@ -286,9 +331,26 @@ async function rollbackOnlyTournament(promotedCommitSha) {
   liveRegistry.tornei[idx] = restored;
   changes.push({ path: 'tornei.json', content: JSON.stringify(liveRegistry, null, 2) + '\n' });
 
-  await createAtomicCommit(destBranch, changes, `E2E rollback ${fixtureId}`);
-  assert.equal((await readFile(destBranch, `${prefix}/data/update.txt`)).toString('utf8'), 'NEW\n');
-  assert.equal(await readFile(destBranch, `${prefix}/data/extra-after-promote.txt`), null);
+  const rollbackCommitSha = await createAtomicCommit(destBranch, changes, `E2E rollback ${fixtureId}`);
+
+  // Prima validiamo il commit immutabile appena creato. Questo distingue un vero
+  // errore di rollback da un ritardo di propagazione/cache nella lettura del branch.
+  assert.equal((await readFileAtCommit(rollbackCommitSha, `${prefix}/data/update.txt`)).toString('utf8'), 'NEW\n');
+  assert.equal(await readFileAtCommit(rollbackCommitSha, `${prefix}/data/extra-after-promote.txt`), null);
+  const committedRegistry = await registryAtCommit(rollbackCommitSha);
+  assert.equal(committedRegistry.tornei.find(t => t.cartella === prefix).titolo, 'CRAL E2E automatico');
+  if (unrelated) {
+    assert.equal(
+      committedRegistry.tornei.find(t => t.cartella === unrelated.cartella).titolo,
+      `PRESERVE-${fixtureId}`
+    );
+  }
+
+  // Poi aspettiamo che anche la vista del branch converga allo stesso contenuto.
+  // Una singola GET del ref non basta: endpoint diversi possono vedere per pochi
+  // istanti revisioni differenti dopo l'aggiornamento del ref.
+  await waitForBranchFile(destBranch, `${prefix}/data/update.txt`, Buffer.from('NEW\n'));
+  await waitForBranchFile(destBranch, `${prefix}/data/extra-after-promote.txt`, null);
   const after = await registry(destBranch);
   assert.equal(after.tornei.find(t => t.cartella === prefix).titolo, 'CRAL E2E automatico');
   if (unrelated) assert.equal(after.tornei.find(t => t.cartella === unrelated.cartella).titolo, `PRESERVE-${fixtureId}`);
