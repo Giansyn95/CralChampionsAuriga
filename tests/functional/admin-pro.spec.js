@@ -32,7 +32,7 @@ test('Admin Pro: import CSV prepara file canonico e anteprima di pubblicazione',
   await expect(row).toContainText('Calendario');
   await expect(row).toContainText('calendario.csv');
   await page.getByRole('button', { name: /Prepara importazione/i }).click();
-  await expect(page.getByRole('heading', { name: 'Pubblica' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Pubblicazione', exact: true })).toBeVisible();
   await expect(page.locator('body')).toContainText('Anteprima modifiche');
   await expect(page.locator('body')).toContainText('calendario.csv');
   await expect(page.locator('body')).toContainText('manifest.csv');
