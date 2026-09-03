@@ -130,9 +130,7 @@ function renderLogin(targetKey='collaudo', error=''){
   resetShell(); app.innerHTML=''; const screen=el('div','center-screen'); const card=el('div','login-card');
   const brand=el('div','brand');const mark=el('div','brand-mark','CR');brand.appendChild(mark);const copy=el('div');copy.appendChild(el('h1','','CRAL Admin'));copy.appendChild(el('p','','Gestione dati e pubblicazione sicura del torneo'));brand.appendChild(copy);card.appendChild(brand);
   card.appendChild(messageBox('info',[
-    'Pubblica i risultati o i pagelloni di giornata, aggiorna le classifiche, i dati Fantacalcio o crea un nuovo torneo.',
-    'Nessun server: questa pagina scrive su GitHub usando direttamente il tuo Personal Access Token.',
-    'Il token resta solo in questa scheda del browser (sessionStorage) finché non premi "Esci" o la chiudi. Usa un token fine-grained, limitato al solo repository, con scadenza breve.'
+    'Pubblica i risultati o i pagelloni di giornata, aggiorna le classifiche, i dati Fantacalcio o crea semplicemente un nuovo torneo.'
   ]));
   if(error)card.appendChild(messageBox('error',error));
 
