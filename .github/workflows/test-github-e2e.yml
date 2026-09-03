@@ -1,0 +1,58 @@
+name: E2E GitHub reale - branch temporanei
+
+on:
+  workflow_dispatch:
+    inputs:
+      conferma:
+        description: 'Scrivi ESEGUI TEST GITHUB'
+        required: true
+        type: string
+      base_branch:
+        description: 'Branch da usare come base'
+        required: true
+        default: 'main'
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: cral-real-github-e2e
+  cancel-in-progress: false
+
+jobs:
+  guard:
+    name: Conferma sicurezza
+    runs-on: ubuntu-latest
+    steps:
+      - name: Valida conferma
+        env:
+          CONFIRM: ${{ inputs.conferma }}
+        run: |
+          if [ "$CONFIRM" != "ESEGUI TEST GITHUB" ]; then
+            echo "Conferma non valida. Nessuna modifica eseguita."
+            exit 1
+          fi
+
+  github-e2e:
+    name: Atomic commit + mirror + binari + rollback
+    needs: guard
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+      E2E_BASE_BRANCH: ${{ inputs.base_branch }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.base_branch }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Esegui test GitHub REST su branch temporanei
+        run: node tests/github/atomic-git-e2e.mjs
+      - name: Nota sicurezza
+        if: always()
+        run: |
+          echo "Il test usa solo branch cral-e2e-src-* e cral-e2e-dst-* e li elimina in cleanup."
+          echo "Non modifica main e non accede al repository di Produzione."

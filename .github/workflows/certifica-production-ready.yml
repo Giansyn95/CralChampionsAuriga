@@ -1,0 +1,124 @@
+name: Certifica Production Ready
+
+on:
+  workflow_dispatch:
+    inputs:
+      conferma:
+        description: 'Scrivi CERTIFICA PRODUCTION READY'
+        required: true
+        type: string
+      live_url:
+        description: 'URL pubblico opzionale. Vuoto = GitHub Pages del repo'
+        required: false
+        default: ''
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: cral-production-certification
+  cancel-in-progress: false
+
+jobs:
+  guard:
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          CONFIRM: ${{ inputs.conferma }}
+        run: test "$CONFIRM" = "CERTIFICA PRODUCTION READY"
+
+  quality:
+    name: Suite completa locale
+    needs: guard
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --no-audit --no-fund
+      - run: npm run check:syntax
+      - run: npm run test:unit
+      - run: npx playwright install --with-deps chromium firefox webkit
+      - run: npm run test:ci
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: certification-local-${{ github.run_number }}
+          path: |
+            playwright-report/
+            test-results/
+          if-no-files-found: ignore
+          retention-days: 30
+
+  live:
+    name: Sito pubblicato
+    needs: guard
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Determina URL pubblico
+        shell: bash
+        env:
+          INPUT_URL: ${{ inputs.live_url }}
+        run: |
+          if [ -n "$INPUT_URL" ]; then
+            url="${INPUT_URL%/}"
+          else
+            repo="${GITHUB_REPOSITORY#*/}"
+            owner=$(printf '%s' "$GITHUB_REPOSITORY_OWNER" | tr '[:upper:]' '[:lower:]')
+            url="https://${owner}.github.io/${repo}"
+          fi
+          echo "LIVE_BASE_URL=$url" >> "$GITHUB_ENV"
+      - run: npm install --no-audit --no-fund
+      - run: npx playwright install --with-deps chromium webkit
+      - run: npm run test:live
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: certification-live-${{ github.run_number }}
+          path: |
+            playwright-live-report/
+            test-results/
+          if-no-files-found: ignore
+          retention-days: 30
+
+  github-real:
+    name: GitHub API reale su branch sandbox
+    needs: guard
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+      E2E_BASE_BRANCH: main
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node tests/github/atomic-git-e2e.mjs
+
+  certified:
+    name: PRODUCTION READY
+    if: always()
+    needs: [quality, live, github-real]
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          QUALITY: ${{ needs.quality.result }}
+          LIVE: ${{ needs.live.result }}
+          GITHUB_REAL: ${{ needs.github-real.result }}
+        run: |
+          echo "Quality=$QUALITY"
+          echo "Live=$LIVE"
+          echo "GitHub real=$GITHUB_REAL"
+          test "$QUALITY" = success
+          test "$LIVE" = success
+          test "$GITHUB_REAL" = success
+          echo "✅ CRAL Champions: certificazione Production Ready superata"

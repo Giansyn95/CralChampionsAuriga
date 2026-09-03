@@ -1,0 +1,59 @@
+name: Smoke test sito pubblicato
+
+on:
+  schedule:
+    - cron: '23 4 * * *'
+  workflow_dispatch:
+    inputs:
+      live_url:
+        description: 'URL GitHub Pages opzionale. Vuoto = https://OWNER.github.io/REPO'
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cral-live-smoke
+  cancel-in-progress: true
+
+jobs:
+  live-smoke:
+    name: Live Chromium + Safari/WebKit + iPhone
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Determina URL pubblico
+        shell: bash
+        env:
+          INPUT_URL: ${{ github.event.inputs.live_url || '' }}
+        run: |
+          if [ -n "$INPUT_URL" ]; then
+            url="${INPUT_URL%/}"
+          else
+            repo="${GITHUB_REPOSITORY#*/}"
+            owner=$(printf '%s' "$GITHUB_REPOSITORY_OWNER" | tr '[:upper:]' '[:lower:]')
+            url="https://${owner}.github.io/${repo}"
+          fi
+          echo "LIVE_BASE_URL=$url" >> "$GITHUB_ENV"
+          echo "Test live su: $url"
+      - name: Installa dipendenze test
+        run: npm install --no-audit --no-fund
+      - name: Installa browser Playwright
+        run: npx playwright install --with-deps chromium webkit
+      - name: Esegui smoke test live
+        run: npm run test:live
+      - name: Report live
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-live-${{ github.run_number }}
+          path: |
+            playwright-live-report/
+            test-results/
+          if-no-files-found: ignore
+          retention-days: 14
