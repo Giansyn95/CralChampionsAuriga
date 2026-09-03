@@ -13,11 +13,11 @@
 </head>
 <body>
 <div id="app" class="app-shell" aria-live="polite"></div>
-<!-- Mobile/iOS + logo persistence fix v35. -->
+<!-- Mobile/iOS + logo persistence fix. -->
 <script src="./mobile-fix-v33.js?v=35"></script>
-<!-- Admin Pro deve essere caricato PRIMA del bootstrap: intercetta e estende admin.js/gh.js. -->
-<script src="./admin-pro-v1.js?v=2"></script>
-<!-- Bootstrap v30: logica Admin stabile. -->
+<!-- Admin Pro DEVE essere caricato prima del bootstrap, per intercettare admin.js e gh.js. -->
+<script src="./admin-pro-v1.js?v=4"></script>
+<!-- Bootstrap Admin. -->
 <script type="module" src="./admin-boot-v30.js?v=30"></script>
 </body>
 </html>
