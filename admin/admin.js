@@ -66,6 +66,16 @@ function requireTarget(key){
 }
 
 // ---------------- logo pubblico (schermata di login) ----------------
+// FIX refresh logo: teniamo in cache a livello di modulo l'ultimo logo caricato
+// con successo per una data combinazione owner/repo/branch. renderLogin() viene
+// richiamata per intero ad ogni cambio di select (es. Ambiente), e prima di questo
+// fix il markup del logo ripartiva sempre dal placeholder testuale "CR" mentre
+// il fetch di tornei.json + il caricamento dell'immagine venivano rifatti da zero,
+// producendo il flash percepito come "l'immagine che si ricarica ad ogni cambio
+// impostazione". Con la cache, se torni su una combinazione già vista il logo
+// compare subito, senza passare dal placeholder.
+let brandLogoCache = { key: '', img: null };
+
 function rawGithubUrl(owner, repo, branch, path) {
   return `https://raw.githubusercontent.com/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/${encodeURIComponent(branch)}/${String(path || '').replace(/^\/+/, '')}`;
 }
@@ -85,12 +95,26 @@ async function resolveLogoUrl(owner, repo, branch) {
   } catch { return ''; }
 }
 function loadBrandLogo(markEl, owner, repo, branch) {
+  const key = `${owner}|${repo}|${branch}`;
+  // Se abbiamo già risolto il logo per questa combinazione, mostralo subito: niente flash.
+  if (brandLogoCache.key === key && brandLogoCache.img) {
+    markEl.textContent = '';
+    markEl.classList.add('brand-mark-logo');
+    markEl.appendChild(brandLogoCache.img.cloneNode(true));
+    return;
+  }
   const requestId = (markEl._logoRequest = (markEl._logoRequest || 0) + 1);
   resolveLogoUrl(owner, repo, branch).then(url => {
     if (!url || markEl._logoRequest !== requestId) return;
     const img = new Image();
     img.alt = 'Logo CRAL Champions Auriga';
-    img.onload = () => { if (markEl._logoRequest !== requestId) return; markEl.textContent = ''; markEl.classList.add('brand-mark-logo'); markEl.appendChild(img); };
+    img.onload = () => {
+      if (markEl._logoRequest !== requestId) return;
+      brandLogoCache = { key, img };
+      markEl.textContent = '';
+      markEl.classList.add('brand-mark-logo');
+      markEl.appendChild(img);
+    };
     img.onerror = () => {};
     img.src = url;
   }).catch(() => {});
