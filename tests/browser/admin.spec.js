@@ -33,13 +33,20 @@ test('login Admin è raggiungibile e contiene i controlli essenziali', async ({ 
 test('login Admin mobile resta dentro il viewport', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'iphone', 'Specifico per progetto iPhone');
   await page.goto('/admin/', { waitUntil: 'domcontentloaded' });
+
+  // Il bootstrap dell'Admin è asincrono: DOMContentLoaded non garantisce che
+  // la login-card sia già stata renderizzata. Aspettiamo esplicitamente l'input.
+  const tokenInput = page.locator('.login-card input[type="password"]');
+  await expect(tokenInput).toBeVisible();
+
   const metrics = await page.evaluate(() => ({
     innerWidth,
     scrollWidth: document.documentElement.scrollWidth,
-    viewport: document.querySelector('meta[name="viewport"]')?.content || '',
-    fontSize: getComputedStyle(document.querySelector('.login-card input[type="password"]')).fontSize
+    viewport: document.querySelector('meta[name="viewport"]')?.content || ''
   }));
+  const fontSize = await tokenInput.evaluate(el => getComputedStyle(el).fontSize);
+
   expect(metrics.scrollWidth).toBeLessThanOrEqual(metrics.innerWidth + 2);
   expect(metrics.viewport).toContain('initial-scale=1');
-  expect(parseFloat(metrics.fontSize)).toBeGreaterThanOrEqual(16);
+  expect(parseFloat(fontSize)).toBeGreaterThanOrEqual(16);
 });
