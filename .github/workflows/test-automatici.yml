@@ -1,0 +1,64 @@
+name: Test automatici CRAL Champions
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - 'index.html'
+      - 'sw.js'
+      - 'tornei.json'
+      - 'admin/**'
+      - 'tornei/**'
+      - 'tools/**'
+      - 'tests/**'
+      - 'package.json'
+      - 'playwright.config.js'
+      - '.github/workflows/**'
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cral-tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    name: Integrità + browser
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Installa dipendenze test
+        run: npm install --no-audit --no-fund
+
+      - name: Controllo sintassi JavaScript
+        run: npm run check:syntax
+
+      - name: Installa browser Playwright
+        run: npx playwright install --with-deps chromium webkit
+
+      - name: Esegui test automatici
+        run: npm run test:ci
+
+      - name: Pubblica report Playwright
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-${{ github.run_number }}
+          path: |
+            playwright-report/
+            test-results/
+          if-no-files-found: ignore
+          retention-days: 14
