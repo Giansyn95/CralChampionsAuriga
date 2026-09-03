@@ -57,6 +57,27 @@ async function createBlob(content, encoding = 'utf-8') {
   return api('POST', '/git/blobs', { content, encoding });
 }
 
+const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+async function waitForBranchHead(branch, expectedSha, timeoutMs = 15000) {
+  const deadline = Date.now() + timeoutMs;
+  let lastSha = null;
+  let lastError = null;
+  while (Date.now() < deadline) {
+    try {
+      const ref = await api('GET', refPath(branch));
+      lastSha = ref?.object?.sha || null;
+      if (lastSha === expectedSha) return;
+      lastError = null;
+    } catch (error) {
+      lastError = error;
+    }
+    await sleep(300);
+  }
+  const detail = lastError ? `; ultimo errore: ${lastError.message}` : '';
+  throw new Error(`Timeout attendendo HEAD ${branch}=${expectedSha}; ultimo SHA=${lastSha}${detail}`);
+}
+
 async function createAtomicCommit(branch, changes, message) {
   const head = await getHead(branch);
   const treeEntries = [];
@@ -74,12 +95,19 @@ async function createAtomicCommit(branch, changes, message) {
   }
   const tree = await api('POST', '/git/trees', { base_tree: head.treeSha, tree: treeEntries });
   const commit = await api('POST', '/git/commits', { message, tree: tree.sha, parents: [head.commitSha] });
-  await api('PATCH', refsPath(branch), { sha: commit.sha, force: false });
+  const updatedRef = await api('PATCH', refsPath(branch), { sha: commit.sha, force: false });
+  if (updatedRef?.object?.sha) {
+    assert.equal(updatedRef.object.sha, commit.sha, `GitHub non ha aggiornato subito il ref ${branch}`);
+  }
+  // Le Git Data API possono essere temporaneamente eventually-consistent tra PATCH del ref
+  // e una GET successiva. Non verifichiamo lo stato finche HEAD non espone il commit scritto.
+  await waitForBranchHead(branch, commit.sha);
   return commit.sha;
 }
 
 async function createBranch(branch, fromSha) {
   await api('POST', '/git/refs', { ref: `refs/heads/${branch}`, sha: fromSha });
+  await waitForBranchHead(branch, fromSha);
 }
 
 async function deleteBranch(branch) {
