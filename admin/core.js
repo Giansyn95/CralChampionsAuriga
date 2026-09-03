@@ -810,7 +810,7 @@ export function rosterCsvContent(roster, separator = ';') {
 export const EVENT_TYPES = [
   { value: 'RIGORE_PARATO', label: 'Rigore parato' },
   { value: 'RIGORE_SBAGLIATO', label: 'Rigore sbagliato' },
-  { value: 'AUTOGOAL', label: 'Autogol' }
+  { value: 'AUTOGOAL', label: 'Autogoal' }
 ];
 export function parseEventiCsv(text) {
   const { separator, rows } = parseCsv(text || '');
