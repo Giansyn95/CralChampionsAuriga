@@ -103,10 +103,13 @@
       settleVV = { vv, handler };
     }
 
-    [50, 120, 250, 450, 750, 1100, 1600, 2200].forEach(ms => {
+    // Finestra estesa: con repository piu' grandi (es. tante rose Fantacalcio)
+    // il primo render puo' arrivare piu' tardi e Safari puo' correggere il
+    // viewport anche qualche secondo dopo l'ultimo assestamento da tastiera.
+    [50, 120, 250, 450, 750, 1100, 1600, 2200, 3000, 4000, 5200, 6500].forEach(ms => {
       settleTimers.push(setTimeout(doReset, ms));
     });
-    settleTimer = setTimeout(clearSettle, 2400);
+    settleTimer = setTimeout(clearSettle, 6800);
   }
 
   function waitForKeyboardToClose() {

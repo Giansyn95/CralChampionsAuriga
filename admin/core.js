@@ -673,6 +673,17 @@ export function validatePagelloneEntries(model,entries){
 // verso questi due moduli: un import verso un file esterno aggiuntivo non
 // verrebbe risolto ("does not resolve to a valid URL") dentro il blob.
 
+// I file Fantacalcio (listone, rose, eventi) non richiedono l'iscrizione
+// esplicita in data/manifest.csv per essere considerati validi: il frontend
+// pubblico li scopre con un meccanismo dedicato (fantacalcio/manifest_fantacalcio.csv
+// + derivazione delle giornate dal calendario), a differenza di squadra/
+// calendario/risultati dove l'appartenenza al manifest serve a disambiguare
+// file "vecchi" da quelli attivi. Qui quindi ignoriamo il flag f.active e
+// leggiamo direttamente tutti i file dello snapshot con quel fileKind.
+export function fantaFiles(model, kind) {
+  return (model?.fileList || []).filter(f => fileKind(f.rel) === kind);
+}
+
 // ---------------- normalizzazione ID giocatore ----------------
 // Allineata a fantaIdVariants() del frontend pubblico: un id "1" e un id "001"
 // devono combaciare, così come una qualunque forma con zeri iniziali diversi.

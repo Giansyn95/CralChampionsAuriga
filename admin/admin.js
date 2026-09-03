@@ -2,7 +2,7 @@ import {
   buildMatchdayPublication, buildModel, csvStringify, existingMatchdayDetails,
   fileKind, manifestChange, norm, objectRows, pagelloneText, parsePagellone, playersForTeam, relativeDataPath, rosterCsv,
   safeTeamFilename, sectionFiles, validateMatchdayDraft, validatePagelloneEntries,
-  EVENT_TYPES, eventiCsvContent, idKey, listoneCsvContent, listoneIndex, manifestFantaContent,
+  EVENT_TYPES, eventiCsvContent, fantaFiles, idKey, listoneCsvContent, listoneIndex, manifestFantaContent,
   parseEventiCsv, parseListoneCsv, parseRosterUpload, rosterCsvContent, rosterRelPath,
   validateListoneRows, validateNewEvent, validateRosterAgainstListone
 } from './core.js';
@@ -296,7 +296,7 @@ function refreshTopbar(){
 }
 function refreshSidebar(){
   const side=shell.sidebar; side.innerHTML='';
-  const items=[['dashboard','🏠','Dashboard'],['newTournament','➕','Nuovo torneo'],['giornata','⚽','Giornata'],['squadre','👕','Squadre'],['calendario','📅','Calendario'],['pagellone','📣','Pagellone'],['classifiche','🏆','Classifiche'],['fantacalcio','🎮','Fantacalcio'],['files','🗂️','File'],['publish','🚀','Pubblica']];
+  const items=[['dashboard','🏠','Dashboard'],['newTournament','➕','Nuovo torneo'],['giornata','⚽','Giornata'],['squadre','👕','Squadre'],['calendario','📅','Calendario'],['pagellone','📣','Pagellone'],['fantacalcio','🎮','Fantacalcio'],['classifiche','🏆','Classifiche'],['files','🗂️','File'],['publish','🚀','Pubblica']];
   items.forEach(([id,icon,label])=>{const b=el('button',`nav-btn ${state.active===id?'active':''}`);b.type='button';b.appendChild(document.createTextNode(`${icon} ${label}`));if(id==='publish'&&state.pending.size)b.appendChild(el('span','pending-pill',state.pending.size));b.addEventListener('click',()=>{state.active=id;render()});side.appendChild(b)})
 }
 function pageHead(title,sub,actions=[]){const wrap=el('div','page-head');const copy=el('div');copy.appendChild(el('h2','',title));copy.appendChild(el('p','',sub));wrap.appendChild(copy);if(actions.length){const row=el('div','btn-row');actions.forEach(a=>row.appendChild(a));wrap.appendChild(row)}return wrap}
@@ -466,9 +466,9 @@ function stageFantaChanges(changes, source, fantaManifestRelPaths){
   }
   return count;
 }
-function fantaListoneFile(model){return sectionFiles(model,'fanta_listone')[0]||null}
+function fantaListoneFile(model){return fantaFiles(model,'fanta_listone')[0]||null}
 function fantaCurrentListone(model){const f=fantaListoneFile(model);return f?parseListoneCsv(f.text||''):{players:[],separator:';'}}
-function fantaCurrentEventiFile(model){return sectionFiles(model,'fanta_eventi')[0]||null}
+function fantaCurrentEventiFile(model){return fantaFiles(model,'fanta_eventi')[0]||null}
 function fantaCurrentEventi(model){const f=fantaCurrentEventiFile(model);return f?parseEventiCsv(f.text||''):{separator:';',events:[]}}
 
 async function handleListoneFile(fileList){
@@ -555,7 +555,7 @@ function confirmRosterUpload(){
 }
 function renderRosterSection(main, model){
   const card=el('div','card');card.appendChild(el('h3','','2. Rose partecipanti'));
-  const existingRosters=sectionFiles(model,'fanta_roster');
+  const existingRosters=fantaFiles(model,'fanta_roster');
   const days=[...new Set(existingRosters.map(f=>{const m=f.rel.match(/giornata(\d+)/i);return m?Number(m[1]):null}).filter(Boolean))].sort((a,b)=>a-b);
   card.appendChild(el('p','small muted',days.length?`Rose già pubblicate per le giornate: ${days.join(', ')}.`:'Nessuna rosa caricata ancora.'));
   card.appendChild(messageBox('info',`Colonne attese: giornata;partecipante;idGiocatore. Se una riga non specifica la giornata viene usata quella corrente della scheda Giornata (${state.selectedDay||'—'}). Puoi caricare più file insieme: un file per partecipante oppure un unico CSV con più partecipanti. Se una rosa per lo stesso partecipante/giornata esiste già, verrà sovrascritta.`));
@@ -592,8 +592,8 @@ function addFantaEvent(){
   const model=effectiveModel();
   const listone=fantaCurrentListone(model);
   if(!listone.players.length){state.status={type:'error',text:'Carica prima il listone Fantacalcio.'};render();return}
-  const form=state.fantaEventForm||(state.fantaEventForm={idGiocatore:'',tipoEvento:EVENT_TYPES[0].value,quantita:'1'});
-  const event={giornata:String(state.selectedDay||''),idGiocatore:form.idGiocatore,tipoEvento:form.tipoEvento,quantita:form.quantita||'1'};
+  const form=state.fantaEventForm||(state.fantaEventForm={giornata:state.selectedDay||1,idGiocatore:'',tipoEvento:EVENT_TYPES[0].value,quantita:'1'});
+  const event={giornata:String(form.giornata||''),idGiocatore:form.idGiocatore,tipoEvento:form.tipoEvento,quantita:form.quantita||'1'};
   const idx=listoneIndex(listone.players);
   const errors=validateNewEvent(event,idx);
   if(errors.length){state.status={type:'error',text:errors.join(' ')};render();return}
@@ -621,14 +621,15 @@ function renderEventiSection(main, model){
   if(!listone.players.length){card.appendChild(messageBox('info','Carica prima il listone per poter selezionare i giocatori.'));main.appendChild(card);return}
   const existing=fantaCurrentEventi(model);
   card.appendChild(el('p','small muted',`Eventi già presenti nel file pubblicato: ${existing.events.length}.`));
-  card.appendChild(messageBox('info',`Giornata usata per i nuovi eventi: ${state.selectedDay||'—'} — sincronizzata automaticamente dalla scheda "Giornata". Per registrare eventi su un'altra giornata, selezionala prima lì.`));
-  const form=state.fantaEventForm||(state.fantaEventForm={idGiocatore:'',tipoEvento:EVENT_TYPES[0].value,quantita:'1'});
+  const form=state.fantaEventForm||(state.fantaEventForm={giornata:state.selectedDay||1,idGiocatore:'',tipoEvento:EVENT_TYPES[0].value,quantita:'1'});
+  const dayOptions=[...new Set([...model.days,state.selectedDay,form.giornata].filter(Boolean))].sort((a,b)=>a-b);
+  const gs=select(dayOptions.map(d=>({value:d,label:`Giornata ${d}`})),form.giornata);gs.addEventListener('change',()=>form.giornata=Number(gs.value));
   const playerOptions=[{value:'',label:'— seleziona giocatore —'},...listone.players.map(p=>({value:p.id,label:`${p.id} · ${p.giocatore}${p.squadra?' ('+p.squadra+')':''}`}))];
   const ps=select(playerOptions,form.idGiocatore);ps.addEventListener('change',()=>form.idGiocatore=ps.value);
   const ts=select(EVENT_TYPES.map(t=>({value:t.value,label:t.label})),form.tipoEvento);ts.addEventListener('change',()=>form.tipoEvento=ts.value);
   const qi=input('number',form.quantita||'1');qi.min='1';qi.addEventListener('input',()=>form.quantita=qi.value);
   const grid=el('div','award-grid');
-  grid.appendChild(fieldWrap('Giocatore',ps));grid.appendChild(fieldWrap('Tipo evento',ts));grid.appendChild(fieldWrap('Quantità',qi));
+  grid.appendChild(fieldWrap('Giornata',gs));grid.appendChild(fieldWrap('Giocatore',ps));grid.appendChild(fieldWrap('Tipo evento',ts));grid.appendChild(fieldWrap('Quantità',qi));
   card.appendChild(grid);
   const row=el('div','btn-row');row.appendChild(button('+ Aggiungi evento','secondary',addFantaEvent));card.appendChild(row);
   if(state.fantaNewEvents.length){
