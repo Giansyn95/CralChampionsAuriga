@@ -17,6 +17,12 @@ on:
         required: false
         default: 'current'
 
+# Stesso gruppo del workflow Fantacalcio: entrambi scrivono sul repository e
+# devono essere eseguiti in coda sul medesimo branch.
+concurrency:
+  group: cral-generated-data-${{ github.ref }}
+  cancel-in-progress: false
+
 permissions:
   contents: write
 
@@ -40,7 +46,6 @@ jobs:
         run: |
           current_dir="$(node - <<'NODE'
           const fs = require('fs');
-
           const cfg = JSON.parse(fs.readFileSync('tornei.json', 'utf8'));
           const tornei = Array.isArray(cfg.tornei) ? cfg.tornei : [];
 
@@ -48,7 +53,6 @@ jobs:
             tornei.find(t => t.corrente === true && t.attivo !== false) ||
             tornei.find(t => t.stato === 'in-corso' && t.attivo !== false) ||
             tornei.find(t => t.attivo === true);
-
           if (!torneo || !torneo.cartella) {
             console.error('Nessun torneo corrente/attivo con cartella trovato in tornei.json');
             process.exit(1);
@@ -60,7 +64,6 @@ jobs:
 
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             input="${{ inputs.torneo_dir }}"
-
             if [ -z "$input" ] || [ "$input" = "current" ]; then
               dirs="$current_dir"
             else
@@ -75,7 +78,6 @@ jobs:
           before="${{ github.event.before }}"
           after="${{ github.sha }}"
           git diff --name-only "$before" "$after" > changed_files.txt 2>/dev/null || git diff --name-only HEAD~1 HEAD > changed_files.txt
-
           if grep -qx 'tornei.json' changed_files.txt; then
             dirs="$current_dir"
           else
@@ -102,20 +104,24 @@ jobs:
       - name: Commit snapshot aggiornato
         shell: bash
         run: |
-          snapshot_files=$(find tornei -path '*/data/portieri_snapshot.json' -type f -print)
-          if [ -z "$snapshot_files" ]; then
+          mapfile -t snapshot_files < <(find tornei -path '*/data/portieri_snapshot.json' -type f -print)
+          if [ "${#snapshot_files[@]}" -eq 0 ]; then
             echo "Nessuno snapshot generato."
             exit 0
           fi
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add $snapshot_files
 
+          git add "${snapshot_files[@]}"
           if git diff --cached --quiet; then
             echo "Snapshot portieri gia aggiornato."
             exit 0
           fi
 
           git commit -m "Aggiorna snapshot portieri"
-          git push
+
+          branch="${GITHUB_REF_NAME}"
+          git fetch origin "$branch"
+          git pull --rebase origin "$branch"
+          git push origin "HEAD:$branch"

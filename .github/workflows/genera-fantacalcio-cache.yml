@@ -1,5 +1,4 @@
 name: Genera cache Fantacalcio
-
 on:
   push:
     branches:
@@ -18,9 +17,11 @@ on:
         required: false
         default: 'current'
 
+# Gruppo condiviso anche con genera-portieri-snapshot.yml: i due workflow che
+# scrivono file generati sullo stesso branch vengono serializzati, non cancellati.
 concurrency:
-  group: genera-fantacalcio-cache-${{ github.ref }}
-  cancel-in-progress: true
+  group: cral-generated-data-${{ github.ref }}
+  cancel-in-progress: false
 
 permissions:
   contents: write
@@ -53,7 +54,6 @@ jobs:
 
           const cfg = JSON.parse(fs.readFileSync('tornei.json', 'utf8'));
           const tornei = Array.isArray(cfg.tornei) ? cfg.tornei : [];
-
           const torneo =
             tornei.find(t => t.corrente === true && t.attivo !== false) ||
             tornei.find(t => t.stato === 'in-corso' && t.attivo !== false) ||
@@ -90,7 +90,6 @@ jobs:
             dirs="$current_dir"
           else
             dirs=$(awk -F/ '/^tornei\/[^/]+\// {print $1"/"$2}' changed_files.txt | sort -u | tr '\n' ' ' | sed 's/[[:space:]]*$//')
-
             if [ -z "$dirs" ]; then
               dirs="$current_dir"
             fi
@@ -123,7 +122,6 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
           git add "${cache_files[@]}"
-
           if git diff --cached --quiet; then
             echo "Cache Fantacalcio gia aggiornata."
             exit 0
@@ -132,7 +130,6 @@ jobs:
           git commit -m "Aggiorna cache Fantacalcio"
 
           branch="${GITHUB_REF_NAME}"
-
           git fetch origin "$branch"
           git pull --rebase origin "$branch"
           git push origin "HEAD:$branch"
