@@ -21,6 +21,68 @@ function manifestEntries(file) {
   return lines.slice(1).map(line => line.split(';')[0].trim().replace(/^"|"$/g, '')).filter(Boolean);
 }
 
+function hasAny(headers, aliases) {
+  const h = headers.map(norm);
+  return aliases.some(alias => h.includes(norm(alias)));
+}
+
+function expectAny(headers, aliases, file, label) {
+  expect(
+    hasAny(headers, aliases),
+    `${file}: manca ${label}. Attesi uno tra: ${aliases.join(', ')}`
+  ).toBeTruthy();
+}
+
+function validateCanonicalCsv(file, name) {
+  const h = csvHeader(file);
+
+  if (name === 'calendario.csv') {
+    expectAny(h, ['giornata', 'turno', 'round'], file, 'la colonna giornata');
+    expectAny(h, ['data', 'data partita', 'date'], file, 'la data');
+    expectAny(h, ['squadra casa', 'casa', 'home'], file, 'la squadra di casa');
+    expectAny(h, ['squadra trasferta', 'trasferta', 'away'], file, 'la squadra ospite');
+    return;
+  }
+
+  if (name === 'risultati_partite.csv') {
+    // Il progetto supporta sia il formato tabellare nuovo
+    // (Squadra casa / Squadra trasferta + gol), sia il formato legacy
+    // con una singola colonna Partita/Incontro e Risultato.
+    expectAny(h, ['giornata', 'turno', 'round'], file, 'la colonna giornata');
+
+    const splitTeams =
+      hasAny(h, ['squadra casa', 'casa', 'home']) &&
+      hasAny(h, ['squadra trasferta', 'trasferta', 'away']);
+    const combinedMatch = hasAny(h, ['partita', 'incontro', 'match']);
+    expect(
+      splitTeams || combinedMatch,
+      `${file}: servono Squadra casa + Squadra trasferta oppure una colonna Partita/Incontro`
+    ).toBeTruthy();
+
+    const splitScore =
+      hasAny(h, ['gol casa', 'goal casa', 'reti casa', 'gc']) &&
+      hasAny(h, ['gol trasferta', 'goal trasferta', 'reti trasferta', 'gt']);
+    const combinedScore = hasAny(h, ['risultato', 'score', 'esito']);
+    expect(
+      splitScore || combinedScore,
+      `${file}: servono Gol casa + Gol trasferta oppure una colonna Risultato`
+    ).toBeTruthy();
+    return;
+  }
+
+  const required = {
+    'classifica_squadre.csv': [['squadra']],
+    'classifica_marcatori.csv': [['giocatore', 'nome giocatore'], ['squadra']],
+    'classifica_mvp.csv': [['giocatore', 'nome giocatore'], ['squadra']],
+    'classifica_portieri.csv': [['squadra']],
+    'riepilogo_giornate.csv': [['giornata', 'turno', 'round']]
+  };
+
+  for (const aliases of required[name] || []) {
+    expectAny(h, aliases, file, `una colonna equivalente a ${aliases[0]}`);
+  }
+}
+
 test('tornei.json e struttura tornei sono coerenti', async () => {
   expect(exists('tornei.json'), 'Manca tornei.json').toBeTruthy();
   const registry = JSON.parse(read('tornei.json'));
@@ -80,33 +142,33 @@ test('manifest dei tornei non contiene sorgenti dati concorrenti', async () => {
   }
 });
 
-test('CSV canonici hanno intestazioni minime riconoscibili', async () => {
+test('CSV canonici o legacy supportati hanno intestazioni riconoscibili', async () => {
   const registry = JSON.parse(read('tornei.json'));
-  const required = {
-    'calendario.csv': ['giornata', 'data', 'squadracasa', 'squadratrasferta'],
-    'risultati_partite.csv': ['giornata', 'squadracasa', 'squadratrasferta'],
-    'classifica_squadre.csv': ['squadra'],
-    'classifica_marcatori.csv': ['giocatore', 'squadra'],
-    'classifica_mvp.csv': ['giocatore', 'squadra'],
-    'classifica_portieri.csv': ['squadra'],
-    'riepilogo_giornate.csv': ['giornata']
-  };
+  const known = [
+    'calendario.csv',
+    'risultati_partite.csv',
+    'classifica_squadre.csv',
+    'classifica_marcatori.csv',
+    'classifica_mvp.csv',
+    'classifica_portieri.csv',
+    'riepilogo_giornate.csv'
+  ];
 
   for (const torneo of registry.tornei) {
     const root = `${torneo.cartella}/data`;
-    for (const [name, cols] of Object.entries(required)) {
+    for (const name of known) {
       const file = `${root}/${name}`;
       if (!exists(file)) continue;
-      const h = csvHeader(file).map(norm);
-      for (const col of cols) {
-        expect(h.includes(col), `${file}: manca una colonna equivalente a "${col}"`).toBeTruthy();
-      }
+      validateCanonicalCsv(file, name);
     }
 
     const teamFiles = fs.readdirSync(path.join(ROOT, root)).filter(x => /^squadra_.*\.csv$/i.test(x));
     for (const name of teamFiles) {
-      const h = csvHeader(`${root}/${name}`).map(norm);
-      expect(h.some(x => ['nome', 'giocatore', 'nomegiocatore'].includes(x)), `${root}/${name}: manca Nome/Giocatore`).toBeTruthy();
+      const h = csvHeader(`${root}/${name}`);
+      expect(
+        hasAny(h, ['nome', 'giocatore', 'nome giocatore']),
+        `${root}/${name}: manca Nome/Giocatore`
+      ).toBeTruthy();
     }
   }
 });
