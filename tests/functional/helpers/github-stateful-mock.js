@@ -107,7 +107,7 @@ function sourceRegistry(title = 'Torneo automatico') {
     tornei: [
       {
         id: '2026-test', anno: '2026', stagione: 'Test', slug: 'test', nome: 'Test',
-        cartella: 'tornei/2026-test', titolo, descrizione: 'Fixture Playwright',
+        cartella: 'tornei/2026-test', titolo: title, descrizione: 'Fixture Playwright',
         url: 'tornei/2026-test/', stato: 'in-corso', corrente: true, ordine: 20269, attivo: true
       },
       {
