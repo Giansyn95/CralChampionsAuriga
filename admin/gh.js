@@ -224,7 +224,7 @@ export async function getSnapshot(target, tournamentValue) {
     const base = rel.split('/').pop().toLowerCase();
     if (
       /^squadra[_\s-]/i.test(base) ||
-      /classifica|marcatori|mvp|portieri|risultati|partite|calendario|riepilogo|referto|giornata/i.test(base) ||
+      /classifica|marcatori|mvp|portieri|risultati|partite|calendario|riepilogo|referto|giornata|eventi/i.test(base) ||
       rel.toLowerCase().startsWith('pagelloni/')
     ) wanted.set(e.path, e);
   });

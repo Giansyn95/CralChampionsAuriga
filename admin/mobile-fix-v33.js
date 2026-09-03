@@ -1,15 +1,18 @@
 /*
- * CRAL Champions Admin - mobile/iOS stability v33
+ * CRAL Champions Admin - mobile/iOS stability v34
  *
- * V33 mantiene il viewport META stabile durante login e Admin. Su Safari iOS
- * cambiare maximum-scale/user-scalable subito dopo l'autofill puo' causare un
- * nuovo assestamento del visual viewport e lasciare la pagina leggermente
- * scrollata verso il basso. I campi mobile sono gia' >=16px via CSS, quindi il
- * cambio dinamico del viewport non e' necessario.
+ * V34 aggiunge, oltre al reset dello scroll verticale gia' presente in v33,
+ * anche il reset dello ZOOM: su Safari iOS il focus (anche autofill) su un
+ * campo di testo puo' lasciare la pagina "pinch-zoomata" oltre lo schermo
+ * (contenuto che sborda a destra) e Safari non la rizooma automaticamente
+ * dopo il blur. La tecnica standard per forzare lo zoom a tornare a 1 e'
+ * alternare per un istante il meta viewport verso maximum-scale=1/
+ * user-scalable=no e poi ripristinare il content stabile (che lascia comunque
+ * l'utente libero di pinch-zoomare manualmente in seguito).
  *
- * Il reset verticale viene eseguito SOLO nella transizione LOGIN -> ADMIN e
- * segue gli eventi visualViewport per il breve periodo in cui Safari chiude
- * tastiera/autofill. I normali render dell'Admin non toccano scroll o focus.
+ * Il reset (scroll + zoom) viene eseguito SOLO nella transizione LOGIN ->
+ * ADMIN e segue gli eventi visualViewport per il periodo in cui Safari chiude
+ * tastiera/autofill. I normali render dell'Admin non toccano scroll o zoom.
  */
 (() => {
   'use strict';
@@ -22,6 +25,7 @@
   const app = document.getElementById('app');
   const meta = document.querySelector('meta[name="viewport"]');
   const STABLE_VIEWPORT = 'width=device-width, initial-scale=1, viewport-fit=cover';
+  const FORCE_ZOOM_RESET_VIEWPORT = 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover';
 
   // Evita che Safari ripristini una vecchia posizione dopo la sostituzione del login.
   try { history.scrollRestoration = 'manual'; } catch {}
@@ -66,6 +70,14 @@
     }
   }
 
+  function resetZoom() {
+    if (!meta) return;
+    meta.setAttribute('content', FORCE_ZOOM_RESET_VIEWPORT);
+    requestAnimationFrame(() => {
+      meta.setAttribute('content', STABLE_VIEWPORT);
+    });
+  }
+
   function keepCurrentY() {
     const y = window.scrollY || document.scrollingElement?.scrollTop || 0;
     try { window.scrollTo(0, y); } catch {}
@@ -85,6 +97,7 @@
 
     const doReset = () => {
       if (!app?.querySelector('.topbar')) return;
+      resetZoom();
       resetTop();
       requestAnimationFrame(resetTop);
     };
@@ -104,7 +117,7 @@
     }
 
     // Finestra estesa: con repository piu' grandi (es. tante rose Fantacalcio)
-    // il primo render puo' arrivare piu' tardi e Safari puo' correggere il
+    // il primo render puo' arrivare piu' tardi e Safari puo' correggere zoom/
     // viewport anche qualche secondo dopo l'ultimo assestamento da tastiera.
     [50, 120, 250, 450, 750, 1100, 1600, 2200, 3000, 4000, 5200, 6500].forEach(ms => {
       settleTimers.push(setTimeout(doReset, ms));
