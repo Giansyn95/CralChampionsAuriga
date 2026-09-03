@@ -9,12 +9,11 @@
   - non intercettare CSV, HTML, JS, CSS o altre immagini;
   - usare la cache solo per il file logo_cral.* nella cartella immagini;
   - servire il logo dalla cache quando disponibile e aggiornarlo in background.
-
   Quando modifichi la logica del service worker, aumenta CACHE_NAME.
 */
 
 const CACHE_PREFIX = 'cral-logo-';
-const CACHE_NAME = `${CACHE_PREFIX}v5`;
+const CACHE_NAME = `${CACHE_PREFIX}v6`;
 
 // Accetta solo il logo CRAL vero e proprio, non qualunque immagine che contenga
 // casualmente le parole "logo" e "cral" nel percorso.
@@ -37,7 +36,6 @@ function isCralLogoRequest(request) {
 
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return false;
-
   let pathname = url.pathname;
   try {
     pathname = decodeURIComponent(pathname);
@@ -48,7 +46,6 @@ function isCralLogoRequest(request) {
   const parts = pathname.toLowerCase().split('/').filter(Boolean);
   const filename = parts[parts.length - 1] || '';
   const parentFolder = parts[parts.length - 2] || '';
-
   // Copre sia /immagini/logo_cral.png sia
   // /tornei/<edizione>/immagini/logo_cral.png, senza toccare giocatori/squadre.
   return parentFolder === 'immagini' && CRAL_LOGO_FILE_RE.test(filename);
@@ -73,17 +70,17 @@ async function getCralLogoResponseAndUpdate(request) {
   const cacheKey = getNormalizedCacheKey(request);
   const cached = await cache.match(cacheKey);
 
-  // Strategia cache-first pura: se il logo e gia presente, non viene
-  // effettuata alcuna richiesta di rete in background.
+  // Stale-while-revalidate: se il logo e gia in cache viene mostrato subito,
+  // ma in parallelo viene chiesta una copia fresca alla rete. In questo modo
+  // un logo aggiornato dall'Admin non resta bloccato indefinitamente in cache.
   if (cached) {
     return {
       response: cached,
-      updatePromise: Promise.resolve(null),
+      updatePromise: fetchAndUpdateLogoCache(request, cache, cacheKey).then(() => null),
     };
   }
 
-  // Prima visita o cache pulita: il logo viene scaricato una sola volta
-  // e salvato nella Cache API per i caricamenti successivi.
+  // Prima visita o cache pulita: usa direttamente la rete e salva la risposta.
   const fresh = await fetchAndUpdateLogoCache(request, cache, cacheKey);
   return {
     response: fresh || new Response('Logo CRAL non disponibile.', {
@@ -113,7 +110,6 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   if (!isCralLogoRequest(event.request)) return;
-
   const work = getCralLogoResponseAndUpdate(event.request);
 
   event.respondWith(work.then(({ response }) => response));
