@@ -78,8 +78,17 @@ async function waitForBranchHead(branch, expectedSha, timeoutMs = 15000) {
   throw new Error(`Timeout attendendo HEAD ${branch}=${expectedSha}; ultimo SHA=${lastSha}${detail}`);
 }
 
-async function createAtomicCommit(branch, changes, message) {
-  const head = await getHead(branch);
+async function createAtomicCommit(branch, changes, message, expectedBaseCommitSha = null) {
+  // Quando il chiamante conosce gia il commit base, lavoriamo su quello SHA
+  // immutabile invece di rileggere immediatamente il ref del branch. Questo
+  // evita falsi negativi dovuti alla consistenza eventuale delle GitHub API.
+  let head;
+  if (expectedBaseCommitSha) {
+    const baseCommit = await api('GET', `/git/commits/${expectedBaseCommitSha}`);
+    head = { commitSha: expectedBaseCommitSha, treeSha: baseCommit.tree.sha };
+  } else {
+    head = await getHead(branch);
+  }
   const treeEntries = [];
   for (const change of changes) {
     if (change.delete) {
@@ -133,6 +142,12 @@ async function treeMapAtCommit(commitSha) {
   const commit = await api('GET', `/git/commits/${commitSha}`);
   const tree = await getTreeBySha(commit.tree.sha);
   return new Map((tree.tree || []).filter(x => x.type === 'blob').map(x => [x.path, x]));
+}
+
+async function commitTree(commitSha) {
+  const commit = await api('GET', `/git/commits/${commitSha}`);
+  const tree = await getTreeBySha(commit.tree.sha);
+  return { commit, map: new Map((tree.tree || []).filter(x => x.type === 'blob').map(x => [x.path, x])) };
 }
 
 async function readFileAtCommit(commitSha, filePath) {
@@ -217,34 +232,48 @@ async function seedBranchContents() {
   const srcLogoBlob = await createBlob(sourceLogo.toString('base64'), 'base64');
   const dstLogoBlob = await createBlob(oldLogo.toString('base64'), 'base64');
 
-  await createAtomicCommit(sourceBranch, [
+  const sourceBase = (await getHead(sourceBranch)).commitSha;
+  const destBase = (await getHead(destBranch)).commitSha;
+
+  const sourceSeedSha = await createAtomicCommit(sourceBranch, [
     { path: 'tornei.json', content: JSON.stringify(srcRegistry, null, 2) + '\n' },
     { path: `${prefix}/index.html`, content: '<!doctype html><title>E2E</title>\n' },
     { path: `${prefix}/data/update.txt`, content: 'NEW\n' },
     { path: `${prefix}/data/added.txt`, content: 'ADDED\n' },
     { path: `${prefix}/immagini/logo_cral.png`, sourceSha: srcLogoBlob.sha }
-  ], `E2E seed source ${fixtureId}`);
+  ], `E2E seed source ${fixtureId}`, sourceBase);
 
-  await createAtomicCommit(destBranch, [
+  const destSeedSha = await createAtomicCommit(destBranch, [
     { path: 'tornei.json', content: JSON.stringify(dstRegistry, null, 2) + '\n' },
     { path: `${prefix}/index.html`, content: '<!doctype html><title>E2E</title>\n' },
     { path: `${prefix}/data/update.txt`, content: 'OLD\n' },
     { path: `${prefix}/data/stale.txt`, content: 'STALE\n' },
     { path: `${prefix}/immagini/logo_cral.png`, sourceSha: dstLogoBlob.sha }
-  ], `E2E seed destination ${fixtureId}`);
+  ], `E2E seed destination ${fixtureId}`, destBase);
+
+  // Verifica il seed sui commit immutabili, non sui ref appena aggiornati.
+  assert.equal((await readFileAtCommit(sourceSeedSha, `${prefix}/data/update.txt`)).toString('utf8'), 'NEW\n');
+  assert.equal((await readFileAtCommit(destSeedSha, `${prefix}/data/update.txt`)).toString('utf8'), 'OLD\n');
+
+  return { sourceSeedSha, destSeedSha };
 }
 
-async function mirrorAndPromote() {
-  const src = await treeMap(sourceBranch);
-  const dst = await treeMap(destBranch);
-  const sourceFiles = [...src.map.values()].filter(x => x.path.startsWith(`${prefix}/`));
-  const destFiles = [...dst.map.values()].filter(x => x.path.startsWith(`${prefix}/`));
+async function mirrorAndPromote(sourceCommitSha, destCommitSha) {
+  // Il confronto viene effettuato tra due snapshot immutabili. I ref dei branch
+  // possono propagarsi con ritardi diversi e non devono influenzare il diff.
+  const srcMap = await treeMapAtCommit(sourceCommitSha);
+  const dstMap = await treeMapAtCommit(destCommitSha);
+  const sourceFiles = [...srcMap.values()].filter(x => x.path.startsWith(`${prefix}/`));
+  const destFiles = [...dstMap.values()].filter(x => x.path.startsWith(`${prefix}/`));
   const sourceByPath = new Map(sourceFiles.map(x => [x.path, x]));
   const destByPath = new Map(destFiles.map(x => [x.path, x]));
   const added = sourceFiles.filter(x => !destByPath.has(x.path));
   const updated = sourceFiles.filter(x => destByPath.has(x.path) && destByPath.get(x.path).sha !== x.sha);
   const unchanged = sourceFiles.filter(x => destByPath.has(x.path) && destByPath.get(x.path).sha === x.sha);
   const removed = destFiles.filter(x => !sourceByPath.has(x.path));
+
+  console.log(`Mirror diff: ADD=${added.length} UPDATE=${updated.length} DELETE=${removed.length} SAME=${unchanged.length}`);
+  console.log(`update.txt SHA src=${sourceByPath.get(`${prefix}/data/update.txt`)?.sha || '<missing>'} dst=${destByPath.get(`${prefix}/data/update.txt`)?.sha || '<missing>'}`);
 
   assert.ok(added.length > 0, 'Il test deve contenere almeno un ADD');
   assert.ok(updated.length > 0, 'Il test deve contenere almeno un UPDATE');
@@ -259,8 +288,8 @@ async function mirrorAndPromote() {
   }
   removed.forEach(file => changes.push({ path: file.path, delete: true }));
 
-  const srcRegistry = await registry(sourceBranch);
-  const dstRegistry = await registry(destBranch);
+  const srcRegistry = await registryAtCommit(sourceCommitSha);
+  const dstRegistry = await registryAtCommit(destCommitSha);
   const meta = structuredClone(srcRegistry.tornei.find(t => t.cartella === prefix));
   assert.ok(meta, 'Metadati fixture non trovati');
   for (const t of dstRegistry.tornei || []) {
@@ -277,19 +306,22 @@ async function mirrorAndPromote() {
   dstRegistry.logo = `${prefix}/immagini/logo_cral.png`;
   changes.push({ path: 'tornei.json', content: JSON.stringify(dstRegistry, null, 2) + '\n' });
 
-  return createAtomicCommit(destBranch, changes, `E2E promote ${fixtureId}`);
+  return createAtomicCommit(destBranch, changes, `E2E promote ${fixtureId}`, destCommitSha);
 }
 
-async function verifyMirror() {
-  const src = await treeMap(sourceBranch);
-  const dst = await treeMap(destBranch);
-  const srcPaths = [...src.map.keys()].filter(p => p.startsWith(`${prefix}/`)).sort();
-  const dstPaths = [...dst.map.keys()].filter(p => p.startsWith(`${prefix}/`)).sort();
-  assert.deepEqual(dstPaths, srcPaths, 'La destinazione non è un mirror esatto della cartella sorgente');
-  assert.equal((await readFile(destBranch, `${prefix}/data/update.txt`)).toString('utf8'), 'NEW\n');
-  assert.equal(await readFile(destBranch, `${prefix}/data/stale.txt`), null);
-  assert.deepEqual(await readFile(destBranch, `${prefix}/immagini/logo_cral.png`), await readFile(sourceBranch, `${prefix}/immagini/logo_cral.png`));
-  const reg = await registry(destBranch);
+async function verifyMirror(sourceCommitSha, promotedCommitSha) {
+  const srcMap = await treeMapAtCommit(sourceCommitSha);
+  const dstMap = await treeMapAtCommit(promotedCommitSha);
+  const srcPaths = [...srcMap.keys()].filter(p => p.startsWith(`${prefix}/`)).sort();
+  const dstPaths = [...dstMap.keys()].filter(p => p.startsWith(`${prefix}/`)).sort();
+  assert.deepEqual(dstPaths, srcPaths, 'La destinazione non e un mirror esatto della cartella sorgente');
+  assert.equal((await readFileAtCommit(promotedCommitSha, `${prefix}/data/update.txt`)).toString('utf8'), 'NEW\n');
+  assert.equal(await readFileAtCommit(promotedCommitSha, `${prefix}/data/stale.txt`), null);
+  assert.deepEqual(
+    await readFileAtCommit(promotedCommitSha, `${prefix}/immagini/logo_cral.png`),
+    await readFileAtCommit(sourceCommitSha, `${prefix}/immagini/logo_cral.png`)
+  );
+  const reg = await registryAtCommit(promotedCommitSha);
   const meta = reg.tornei.find(t => t.cartella === prefix);
   assert.equal(meta.corrente, true);
   assert.equal(meta.stato, 'in-corso');
@@ -297,21 +329,21 @@ async function verifyMirror() {
 
 async function rollbackOnlyTournament(promotedCommitSha) {
   const promoted = await api('GET', `/git/commits/${promotedCommitSha}`);
-  const currentRegistry = await registry(destBranch);
+  const currentRegistry = await registryAtCommit(promotedCommitSha);
   const unrelated = (currentRegistry.tornei || []).find(t => t.cartella !== prefix);
   if (unrelated) unrelated.titolo = `PRESERVE-${fixtureId}`;
   const fixture = currentRegistry.tornei.find(t => t.cartella === prefix);
   fixture.titolo = 'Titolo mutato dopo promote';
-  await createAtomicCommit(destBranch, [
+  const mutatedCommitSha = await createAtomicCommit(destBranch, [
     { path: 'tornei.json', content: JSON.stringify(currentRegistry, null, 2) + '\n' },
     { path: `${prefix}/data/update.txt`, content: 'MUTATED\n' },
     { path: `${prefix}/data/extra-after-promote.txt`, content: 'EXTRA\n' }
-  ], `E2E mutate ${fixtureId}`);
+  ], `E2E mutate ${fixtureId}`, promotedCommitSha);
 
-  const now = await treeMap(destBranch);
+  const nowMap = await treeMapAtCommit(mutatedCommitSha);
   const oldTree = await getTreeBySha(promoted.tree.sha);
   const oldMap = new Map((oldTree.tree || []).filter(x => x.type === 'blob').map(x => [x.path, x]));
-  const currentFiles = [...now.map.values()].filter(x => x.path.startsWith(`${prefix}/`));
+  const currentFiles = [...nowMap.values()].filter(x => x.path.startsWith(`${prefix}/`));
   const oldFiles = [...oldMap.values()].filter(x => x.path.startsWith(`${prefix}/`));
   const curByPath = new Map(currentFiles.map(x => [x.path, x]));
   const oldByPath = new Map(oldFiles.map(x => [x.path, x]));
@@ -323,7 +355,7 @@ async function rollbackOnlyTournament(promotedCommitSha) {
   assert.ok(promotedRegistryBlobSha, 'tornei.json storico non trovato');
   const promotedRegistryBlob = await getBlob(promotedRegistryBlobSha);
   const promotedRegistry = JSON.parse(Buffer.from(promotedRegistryBlob.content, 'base64').toString('utf8'));
-  const liveRegistry = await registry(destBranch);
+  const liveRegistry = await registryAtCommit(mutatedCommitSha);
   const oldEntry = promotedRegistry.tornei.find(t => t.cartella === prefix);
   const idx = liveRegistry.tornei.findIndex(t => t.cartella === prefix);
   const restored = structuredClone(oldEntry);
@@ -331,7 +363,7 @@ async function rollbackOnlyTournament(promotedCommitSha) {
   liveRegistry.tornei[idx] = restored;
   changes.push({ path: 'tornei.json', content: JSON.stringify(liveRegistry, null, 2) + '\n' });
 
-  const rollbackCommitSha = await createAtomicCommit(destBranch, changes, `E2E rollback ${fixtureId}`);
+  const rollbackCommitSha = await createAtomicCommit(destBranch, changes, `E2E rollback ${fixtureId}`, mutatedCommitSha);
 
   // Prima validiamo il commit immutabile appena creato. Questo distingue un vero
   // errore di rollback da un ritardo di propagazione/cache nella lettura del branch.
@@ -366,10 +398,10 @@ try {
   createdSource = true;
   await createBranch(destBranch, base.commitSha);
   createdDest = true;
-  await seedBranchContents();
+  const { sourceSeedSha, destSeedSha } = await seedBranchContents();
 
-  const promoted = await mirrorAndPromote();
-  await verifyMirror();
+  const promoted = await mirrorAndPromote(sourceSeedSha, destSeedSha);
+  await verifyMirror(sourceSeedSha, promoted);
   await rollbackOnlyTournament(promoted);
   console.log('✅ GitHub E2E: atomic commit, mirror ADD/UPDATE/DELETE, binari e rollback superati.');
 } finally {
