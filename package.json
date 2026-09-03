@@ -1,0 +1,15 @@
+{
+  "name": "cral-champions-tests",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "test": "playwright test",
+    "test:static": "playwright test --project=static",
+    "test:browser": "playwright test --project=chromium --project=webkit --project=iphone",
+    "test:ci": "playwright test",
+    "check:syntax": "node tests/scripts/syntax-check.mjs"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.55.0"
+  }
+}
