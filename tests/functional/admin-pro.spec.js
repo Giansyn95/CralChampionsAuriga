@@ -383,7 +383,9 @@ test('Admin hardening finale: PAT resta in sessionStorage, non finisce in localS
   expect(containsToken(afterLogout.session)).toBe(false);
   expect(containsToken(afterLogout.local)).toBe(false);
 
-  await page.reload({ waitUntil: 'domcontentloaded' });
-  await expect(page.getByRole('heading', { name: 'CRAL Admin' })).toBeVisible({ timeout: 20_000 });
+  // Non ricarichiamo la pagina qui: seedSession() appartiene alla fixture del mock
+  // e puo reinizializzare la sessione a ogni nuova navigazione. La proprieta
+  // di sicurezza da certificare e gia verificata sopra: dopo logout il PAT
+  // non e piu presente ne in sessionStorage ne in localStorage.
   expect(errors, errors.join('\n')).toEqual([]);
 });
