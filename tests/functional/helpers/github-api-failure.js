@@ -5,6 +5,7 @@ async function failNextGitHubApi(page, {
   pathIncludes = ''
 } = {}) {
   let pending = true;
+  let triggered = false;
 
   await page.route('https://api.github.com/**', async route => {
     const request = route.request();
@@ -17,12 +18,17 @@ async function failNextGitHubApi(page, {
     }
 
     pending = false;
+    triggered = true;
     return route.fulfill({
       status,
       contentType: 'application/json',
       body: JSON.stringify({ message })
     });
   });
+
+  return {
+    wasTriggered: () => triggered
+  };
 }
 
 module.exports = { failNextGitHubApi };
