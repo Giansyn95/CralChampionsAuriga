@@ -11,7 +11,11 @@
  *    comunque una scala > 1, applichiamo un contro-zoom CSS temporaneo che
  *    neutralizza esattamente la scala residua;
  * 5) quando la scala e' tornata a 1, rimuoviamo il fallback e riabilitiamo il
- *    normale pinch-zoom.
+ *    normale pinch-zoom;
+ * 6) [fix] la stessa stabilizzazione (punti 4-5) viene rilanciata ad ogni
+ *    perdita di focus di un campo della Dashboard (non solo al login), cosi'
+ *    da correggere lo zoom residuo anche dopo campi come "Messaggio commit"
+ *    o "Conferma produzione" nella pagina Pubblica.
  */
 
 /* Persistenza del logo durante i rerender del login. */
@@ -370,6 +374,19 @@
     }
     adminSettling = false;
   }
+
+  // Qualsiasi campo della Dashboard (non solo il login) puo' lasciare una
+  // scala residua dopo la chiusura tastiera (es. "Messaggio commit" o
+  // "Conferma produzione" nella pagina Pubblica). Rilanciamo la stessa
+  // stabilizzazione usata all'ingresso in admin ogni volta che un campo
+  // perde il focus, non solo alla transizione login -> admin.
+  document.addEventListener('focusout', event => {
+    if (mode !== 'admin') return;
+    const el = event.target;
+    if (el instanceof HTMLElement && el.matches('input, textarea, select')) {
+      settleAdmin();
+    }
+  }, true);
 
   // Appena l'utente tocca/interagisce con la Dashboard, la stabilizzazione
   // automatica termina subito. Da quel momento il suo scroll e' sovrano.
