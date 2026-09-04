@@ -298,6 +298,13 @@ function buildSummaryRows(draft) {`,
   );
   s = replaceOnce(
     s,
+    "    f.active = k === 'config' || k === 'manifest' || !hasManifest || manifestSet.has(f.rel.toLowerCase());",
+    "    f.active = k === 'config' || k === 'manifest' || !hasManifest || manifestSet.has(f.rel.toLowerCase()) || (k === 'pagellone' && manifestSet.has(f.rel.toLowerCase().split('/').pop()));",
+    'pagellone attivo con nome nudo nel manifest'
+  );
+
+  s = replaceOnce(
+    s,
     "Risultato:`${match.homeGoals} - ${match.awayGoals}`,Partita:matchLabel(match),Note:match.notes || '',",
     "Risultato:`${match.homeGoals} - ${match.awayGoals}`,Partita:matchLabel(match),Note:summaryMatchNotes(match),",
     'rigenerazione note Marcatori MVP'
