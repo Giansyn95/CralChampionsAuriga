@@ -154,7 +154,7 @@ test('Admin hardening: blocca la pubblicazione se il branch cambia dopo lo snaps
     { path: 'tornei/2026-test/data/config.csv', content: `${config}modifica_esterna;si\n` }
   ], 'Modifica concorrente simulata');
 
-  await page.getByRole('button', { name: /^🚀?\s*Pubblica$/ }).click();
+  await page.locator('.sidebar .nav-btn').filter({ hasText: 'Pubblica' }).click();
   await expect(page.getByRole('heading', { name: 'Pubblicazione', exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Pubblica in collaudo' }).click();
 
@@ -192,7 +192,7 @@ test('Admin hardening: permessi insufficienti/403 non perdono le modifiche in so
   await stageSecondCaptain(page);
 
   const originalRoster = mock.source.readFile('tornei/2026-test/data/squadra_Alpha.csv').toString('utf8');
-  await page.getByRole('button', { name: /^🚀?\s*Pubblica$/ }).click();
+  await page.locator('.sidebar .nav-btn').filter({ hasText: 'Pubblica' }).click();
   await expect(page.getByRole('heading', { name: 'Pubblicazione', exact: true })).toBeVisible();
 
   await failNextGitHubApi(page, {
@@ -216,7 +216,7 @@ test('Admin hardening: il nuovo capitano persiste nel CSV dopo pubblicazione e r
   await openAdmin(page, mock);
   await stageSecondCaptain(page);
 
-  await page.getByRole('button', { name: /^🚀?\s*Pubblica$/ }).click();
+  await page.locator('.sidebar .nav-btn').filter({ hasText: 'Pubblica' }).click();
   await page.getByRole('button', { name: 'Pubblica in collaudo' }).click();
   await expect(page.locator('body')).toContainText(/Pubblicazione completata/i, { timeout: 20_000 });
 
