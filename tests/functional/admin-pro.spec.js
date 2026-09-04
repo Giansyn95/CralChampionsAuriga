@@ -281,3 +281,109 @@ test('Admin hardening: crea un nuovo torneo atomico con file base, logo e regist
   expect(previous.corrente).toBe(false);
   expect(errors, errors.join('\n')).toEqual([]);
 });
+
+
+// -----------------------------------------------------------------------------
+// Hardening finale: resilienza API, XSS e gestione della sessione PAT
+// -----------------------------------------------------------------------------
+
+test('Admin hardening finale: errore temporaneo GitHub/503 non perde modifiche e non scrive dati', async ({ page }) => {
+  const mock = createGitHubMock();
+  const errors = watchErrors(page);
+  await openAdmin(page, mock);
+  await stageSecondCaptain(page);
+
+  const originalRoster = mock.source.readFile('tornei/2026-test/data/squadra_Alpha.csv').toString('utf8');
+  await page.locator('.sidebar .nav-btn').filter({ hasText: 'Pubblica' }).click();
+  await expect(page.getByRole('heading', { name: 'Pubblicazione', exact: true })).toBeVisible();
+  const pendingRows = page.locator('.change-row');
+  const pendingBefore = await pendingRows.count();
+  expect(pendingBefore).toBeGreaterThan(0);
+
+  const failure = await failNextGitHubApi(page, {
+    status: 503,
+    message: 'GitHub temporaneamente non disponibile',
+    method: 'GET',
+    pathIncludes: '/git/ref/heads/main'
+  });
+
+  await page.getByRole('button', { name: 'Pubblica in collaudo' }).click();
+  await expect.poll(() => failure.wasTriggered(), { timeout: 10_000 }).toBe(true);
+  await expect(page.locator('body')).toContainText(/GitHub temporaneamente non disponibile/i, { timeout: 20_000 });
+  await expect(page.getByRole('button', { name: 'Pubblica in collaudo' })).toBeVisible();
+  await expect(pendingRows).toHaveCount(pendingBefore);
+  expect(mock.source.readFile('tornei/2026-test/data/squadra_Alpha.csv').toString('utf8')).toBe(originalRoster);
+  expect(errors, errors.join('\n')).toEqual([]);
+});
+
+test('Admin hardening finale: dati squadra con payload XSS vengono trattati come testo e non eseguiti', async ({ page }) => {
+  const mock = createGitHubMock();
+  const errors = watchErrors(page);
+  const payload = '<img data-cral-xss src=x onerror=window.__cralXss=1>';
+  const rosterPath = 'tornei/2026-test/data/squadra_Alpha.csv';
+  const roster = mock.source.readFile(rosterPath).toString('utf8');
+  const hostileRoster = roster.replace(/^Mario;/m, `${payload};`);
+  expect(hostileRoster).not.toBe(roster);
+
+  mock.source.commitChanges('main', [
+    { path: rosterPath, content: hostileRoster }
+  ], 'Fixture XSS di sicurezza');
+
+  await page.addInitScript(() => {
+    window.__cralXss = 0;
+  });
+  await openAdmin(page, mock);
+  await page.getByRole('button', { name: /Squadre/ }).click();
+  await expect(page.getByRole('heading', { name: 'Squadre', exact: true })).toBeVisible();
+  await expect(page.locator('.team-editor .data-table tbody tr')).toHaveCount(2);
+
+  expect(await page.evaluate(() => window.__cralXss)).toBe(0);
+  await expect(page.locator('.team-editor img[data-cral-xss]')).toHaveCount(0);
+  expect(errors, errors.join('\n')).toEqual([]);
+});
+
+test('Admin hardening finale: PAT resta in sessionStorage, non finisce in localStorage e logout lo elimina', async ({ page }) => {
+  const mock = createGitHubMock();
+  await mock.install(page);
+  await mock.seedSession(page, true);
+  const errors = watchErrors(page);
+  let authorization = '';
+
+  page.on('request', request => {
+    if (!authorization && request.url().startsWith('https://api.github.com/')) {
+      authorization = request.headers()['authorization'] || '';
+    }
+  });
+
+  await page.goto('/admin/', { waitUntil: 'domcontentloaded' });
+  await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible({ timeout: 20_000 });
+  await expect.poll(() => authorization, { timeout: 10_000 }).not.toBe('');
+
+  const token = authorization.replace(/^\s*(?:Bearer|token)\s+/i, '').trim();
+  expect(token.length).toBeGreaterThan(0);
+
+  const beforeLogout = await page.evaluate(() => ({
+    session: Object.entries(sessionStorage),
+    local: Object.entries(localStorage)
+  }));
+  const containsToken = (entries) => entries.some(([, value]) => String(value).includes(token));
+  expect(containsToken(beforeLogout.session)).toBe(true);
+  expect(containsToken(beforeLogout.local)).toBe(false);
+  await expect(page.locator('body')).not.toContainText(token);
+
+  const logout = page.locator('button, a').filter({ hasText: /Esci|Logout|Disconnetti/i }).first();
+  await expect(logout).toBeVisible();
+  await logout.click();
+  await expect(page.getByRole('heading', { name: 'CRAL Admin' })).toBeVisible({ timeout: 20_000 });
+
+  const afterLogout = await page.evaluate(() => ({
+    session: Object.entries(sessionStorage),
+    local: Object.entries(localStorage)
+  }));
+  expect(containsToken(afterLogout.session)).toBe(false);
+  expect(containsToken(afterLogout.local)).toBe(false);
+
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  await expect(page.getByRole('heading', { name: 'CRAL Admin' })).toBeVisible({ timeout: 20_000 });
+  expect(errors, errors.join('\n')).toEqual([]);
+});
