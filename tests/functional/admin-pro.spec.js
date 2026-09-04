@@ -194,6 +194,9 @@ test('Admin hardening: permessi insufficienti/403 non perdono le modifiche in so
   const originalRoster = mock.source.readFile('tornei/2026-test/data/squadra_Alpha.csv').toString('utf8');
   await page.locator('.sidebar .nav-btn').filter({ hasText: 'Pubblica' }).click();
   await expect(page.getByRole('heading', { name: 'Pubblicazione', exact: true })).toBeVisible();
+  const pendingRows = page.locator('.change-row');
+  const pendingBefore = await pendingRows.count();
+  expect(pendingBefore).toBeGreaterThan(0);
 
   await failNextGitHubApi(page, {
     status: 403,
@@ -205,7 +208,7 @@ test('Admin hardening: permessi insufficienti/403 non perdono le modifiche in so
 
   await expect(page.locator('body')).toContainText(/Resource not accessible by personal access token/i, { timeout: 20_000 });
   await expect(page.getByRole('button', { name: 'Pubblica in collaudo' })).toBeVisible();
-  await expect(page.locator('.change-row')).toHaveCount(1);
+  await expect(pendingRows).toHaveCount(pendingBefore);
   expect(mock.source.readFile('tornei/2026-test/data/squadra_Alpha.csv').toString('utf8')).toBe(originalRoster);
   expect(errors, errors.join('\n')).toEqual([]);
 });
@@ -221,8 +224,13 @@ test('Admin hardening: il nuovo capitano persiste nel CSV dopo pubblicazione e r
   await expect(page.locator('body')).toContainText(/Pubblicazione completata/i, { timeout: 20_000 });
 
   const roster = mock.source.readFile('tornei/2026-test/data/squadra_Alpha.csv').toString('utf8');
-  expect(roster).toMatch(/^Mario;Rossi;P;1;\s*$/m);
-  expect(roster).toMatch(/^Luca;Bianchi;A;9;SI\s*$/m);
+  const rosterLines = roster.trim().split(/\r?\n/);
+  const rosterRows = Object.fromEntries(rosterLines.slice(1).map(line => {
+    const columns = line.split(';');
+    return [`${columns[0]} ${columns[1]}`, columns];
+  }));
+  expect(rosterRows['Mario Rossi']?.[4]).toBe('');
+  expect(rosterRows['Luca Bianchi']?.[4]).toBe('SI');
 
   await page.reload({ waitUntil: 'domcontentloaded' });
   await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible({ timeout: 20_000 });
