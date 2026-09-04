@@ -21,19 +21,17 @@ on:
 
 permissions:
   contents: read
-
 concurrency:
   group: cral-quality-${{ github.ref }}
   cancel-in-progress: true
-
 jobs:
   static-unit:
     name: Integrità, sintassi e unit test
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
       - name: Installa dipendenze test
@@ -44,15 +42,14 @@ jobs:
         run: npm run test:static
       - name: Unit test logica Admin
         run: npm run test:unit
-
   browser:
     name: Frontend Chromium + Firefox + WebKit + iPhone
     needs: static-unit
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
       - name: Installa dipendenze test
@@ -63,7 +60,7 @@ jobs:
         run: npm run test:browser
       - name: Report browser
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: playwright-browser-${{ github.run_number }}
           path: |
@@ -71,15 +68,14 @@ jobs:
             test-results/
           if-no-files-found: ignore
           retention-days: 14
-
   admin-functional:
     name: Admin funzionale con GitHub API simulate
     needs: static-unit
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
       - name: Installa dipendenze test
@@ -90,7 +86,7 @@ jobs:
         run: npm run test:functional
       - name: Report Admin funzionale
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: playwright-admin-functional-${{ github.run_number }}
           path: |
@@ -98,7 +94,6 @@ jobs:
             test-results/
           if-no-files-found: ignore
           retention-days: 14
-
   quality-gate:
     name: QUALITY GATE
     if: always()

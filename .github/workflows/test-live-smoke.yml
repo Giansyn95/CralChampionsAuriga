@@ -16,15 +16,14 @@ permissions:
 concurrency:
   group: cral-live-smoke
   cancel-in-progress: true
-
 jobs:
   live-smoke:
     name: Live Chromium + Safari/WebKit + iPhone
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
       - name: Determina URL pubblico
@@ -49,7 +48,7 @@ jobs:
         run: npm run test:live
       - name: Report live
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: playwright-live-${{ github.run_number }}
           path: |

@@ -19,7 +19,6 @@ permissions:
 concurrency:
   group: cral-production-certification
   cancel-in-progress: false
-
 jobs:
   guard:
     runs-on: ubuntu-latest
@@ -27,15 +26,14 @@ jobs:
       - env:
           CONFIRM: ${{ inputs.conferma }}
         run: test "$CONFIRM" = "CERTIFICA PRODUCTION READY"
-
   quality:
     name: Suite completa locale
     needs: guard
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
       - run: npm install --no-audit --no-fund
@@ -44,7 +42,7 @@ jobs:
       - run: npx playwright install --with-deps chromium firefox webkit
       - run: npm run test:ci
       - if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: certification-local-${{ github.run_number }}
           path: |
@@ -52,15 +50,14 @@ jobs:
             test-results/
           if-no-files-found: ignore
           retention-days: 30
-
   live:
     name: Sito pubblicato
     needs: guard
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
       - name: Determina URL pubblico
@@ -80,7 +77,7 @@ jobs:
       - run: npx playwright install --with-deps chromium webkit
       - run: npm run test:live
       - if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: certification-live-${{ github.run_number }}
           path: |
@@ -88,7 +85,6 @@ jobs:
             test-results/
           if-no-files-found: ignore
           retention-days: 30
-
   github-real:
     name: GitHub API reale su branch sandbox
     needs: guard
@@ -98,12 +94,11 @@ jobs:
       GH_TOKEN: ${{ github.token }}
       E2E_BASE_BRANCH: main
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
       - run: node tests/github/atomic-git-e2e.mjs
-
   certified:
     name: PRODUCTION READY
     if: always()

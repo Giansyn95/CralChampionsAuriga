@@ -19,7 +19,6 @@ permissions:
 concurrency:
   group: cral-real-github-e2e
   cancel-in-progress: false
-
 jobs:
   guard:
     name: Conferma sicurezza
@@ -33,7 +32,6 @@ jobs:
             echo "Conferma non valida. Nessuna modifica eseguita."
             exit 1
           fi
-
   github-e2e:
     name: Atomic commit + mirror + binari + rollback
     needs: guard
@@ -43,10 +41,10 @@ jobs:
       GH_TOKEN: ${{ github.token }}
       E2E_BASE_BRANCH: ${{ inputs.base_branch }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ inputs.base_branch }}
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
       - name: Esegui test GitHub REST su branch temporanei

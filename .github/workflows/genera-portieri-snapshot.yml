@@ -16,7 +16,6 @@ on:
         description: 'Cartella torneo da elaborare, es. tornei/2026-spring. Usa current per il torneo corrente da tornei.json, oppure all per tutti.'
         required: false
         default: 'current'
-
 # Stesso gruppo del workflow Fantacalcio: entrambi scrivono sul repository e
 # devono essere eseguiti in coda sul medesimo branch.
 concurrency:
@@ -31,12 +30,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
-
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: 20
 
@@ -48,7 +46,6 @@ jobs:
           const fs = require('fs');
           const cfg = JSON.parse(fs.readFileSync('tornei.json', 'utf8'));
           const tornei = Array.isArray(cfg.tornei) ? cfg.tornei : [];
-
           const torneo =
             tornei.find(t => t.corrente === true && t.attivo !== false) ||
             tornei.find(t => t.stato === 'in-corso' && t.attivo !== false) ||
@@ -61,7 +58,6 @@ jobs:
           process.stdout.write(torneo.cartella);
           NODE
           )"
-
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             input="${{ inputs.torneo_dir }}"
             if [ -z "$input" ] || [ "$input" = "current" ]; then
@@ -74,7 +70,6 @@ jobs:
             echo "Tornei richiesti: $dirs"
             exit 0
           fi
-
           before="${{ github.event.before }}"
           after="${{ github.sha }}"
           git diff --name-only "$before" "$after" > changed_files.txt 2>/dev/null || git diff --name-only HEAD~1 HEAD > changed_files.txt
@@ -82,7 +77,6 @@ jobs:
             dirs="$current_dir"
           else
             dirs=$(awk -F/ '/^tornei\/[^/]+\// {print $1"/"$2}' changed_files.txt | sort -u | tr '\n' ' ' | sed 's/[[:space:]]*$//')
-
             if [ -z "$dirs" ]; then
               dirs="$current_dir"
             fi
@@ -100,7 +94,6 @@ jobs:
           else
             node tools/genera_portieri_snapshot.js $dirs
           fi
-
       - name: Commit snapshot aggiornato
         shell: bash
         run: |
@@ -112,7 +105,6 @@ jobs:
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
           git add "${snapshot_files[@]}"
           if git diff --cached --quiet; then
             echo "Snapshot portieri gia aggiornato."

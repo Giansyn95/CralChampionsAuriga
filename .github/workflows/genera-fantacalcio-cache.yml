@@ -16,7 +16,6 @@ on:
         description: 'Cartella torneo da elaborare, es. tornei/2026-spring. Usa current per il torneo corrente da tornei.json, oppure all per tutti.'
         required: false
         default: 'current'
-
 # Gruppo condiviso anche con genera-portieri-snapshot.yml: i due workflow che
 # scrivono file generati sullo stesso branch vengono serializzati, non cancellati.
 concurrency:
@@ -31,12 +30,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
-
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: 20
 
@@ -51,14 +49,12 @@ jobs:
         run: |
           current_dir="$(node - <<'NODE'
           const fs = require('fs');
-
           const cfg = JSON.parse(fs.readFileSync('tornei.json', 'utf8'));
           const tornei = Array.isArray(cfg.tornei) ? cfg.tornei : [];
           const torneo =
             tornei.find(t => t.corrente === true && t.attivo !== false) ||
             tornei.find(t => t.stato === 'in-corso' && t.attivo !== false) ||
             tornei.find(t => t.attivo === true);
-
           if (!torneo || !torneo.cartella) {
             console.error('Nessun torneo corrente/attivo con cartella trovato in tornei.json');
             process.exit(1);
@@ -70,7 +66,6 @@ jobs:
 
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             input="${{ inputs.torneo_dir }}"
-
             if [ -z "$input" ] || [ "$input" = "current" ]; then
               dirs="$current_dir"
             else
@@ -85,7 +80,6 @@ jobs:
           before="${{ github.event.before }}"
           after="${{ github.sha }}"
           git diff --name-only "$before" "$after" > changed_files.txt 2>/dev/null || git diff --name-only HEAD~1 HEAD > changed_files.txt
-
           if grep -qx 'tornei.json' changed_files.txt; then
             dirs="$current_dir"
           else
@@ -97,7 +91,6 @@ jobs:
 
           echo "dirs=$dirs" >> "$GITHUB_OUTPUT"
           echo "Tornei rilevati: $dirs"
-
       - name: Genera data/fantacalcio/fantacalcio_cache.json
         shell: bash
         run: |
@@ -107,7 +100,6 @@ jobs:
           else
             node tools/genera_fantacalcio_cache.js $dirs
           fi
-
       - name: Commit cache aggiornata
         shell: bash
         run: |
@@ -120,7 +112,6 @@ jobs:
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
           git add "${cache_files[@]}"
           if git diff --cached --quiet; then
             echo "Cache Fantacalcio gia aggiornata."
