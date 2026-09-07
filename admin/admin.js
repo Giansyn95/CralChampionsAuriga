@@ -463,11 +463,19 @@ function savePagellone(){
   const file=pagelloneFileForDay(state.selectedPagelloneDay);const rel=file?.rel||`pagelloni/pagellone_giornata_${state.selectedPagelloneDay}.txt`;const path=file?.path||`${state.model.dataRoot}/${rel}`;const count=stageGuidedChanges([{path,content:pagelloneText(state.pagelloneDraft)}],`Pagellone giornata ${state.selectedPagelloneDay}`);state.pagelloneDirty=false;state.status={type:validation.warnings.length?'warning':'success',text:`Pagellone giornata ${state.selectedPagelloneDay} pronto per la pubblicazione (${count} file).${validation.warnings.length?' '+validation.warnings.join(' '):''}`};render()
 }
 
+function renderRankingTable(main,model,{title,kind,emptyText,info=''}){
+  const card=el('div','card ranking-card');card.appendChild(el('h3','',title));if(info)card.appendChild(messageBox('info',info));
+  const file=sectionFiles(model,kind)[0];const parsed=file?.parsed;const rows=kind==='classifica_squadre'?(model.standings||[]):(parsed?.objects||[]);const headers=parsed?.headers||[];
+  if(!rows.length||!headers.length){card.appendChild(el('p','muted',emptyText));main.appendChild(card);return}
+  const wrap=el('div','table-wrap');const table=el('table','data-table');table.dataset.ranking=kind;const th=el('tr');headers.forEach(h=>th.appendChild(el('th','',h)));const thead=el('thead');thead.appendChild(th);table.appendChild(thead);const tb=el('tbody');rows.forEach(r=>{const tr=el('tr');headers.forEach(h=>tr.appendChild(el('td','',r[h]??'')));tb.appendChild(tr)});table.appendChild(tb);wrap.appendChild(table);card.appendChild(wrap);main.appendChild(card)
+}
 function renderClassifiche(main){
-  main.appendChild(pageHead('Classifiche','La giornata ricalcola automaticamente squadre, marcatori, MVP e portieri. Le penalità e le relative note vengono preservate dal file esistente.'));
-  const card=el('div','card');card.appendChild(messageBox('info','Ordinamento automatico squadre: Punti finali → differenza reti → gol fatti → ordine precedente. L’ordine precedente rimane quindi lo spareggio stabile quando i valori numerici sono identici.'));
-  const rows=state.model.standings||[];if(!rows.length){card.appendChild(el('p','muted','Classifica squadre non presente. Verrà generata alla prima pubblicazione di una giornata.'));main.appendChild(card);return}
-  const parsed=sectionFiles(state.model,'classifica_squadre')[0]?.parsed;const headers=parsed?.headers||[];const wrap=el('div','table-wrap');const table=el('table','data-table');const th=el('tr');headers.forEach(h=>th.appendChild(el('th','',h)));const thead=el('thead');thead.appendChild(th);table.appendChild(thead);const tb=el('tbody');rows.forEach(r=>{const tr=el('tr');headers.forEach(h=>tr.appendChild(el('td','',r[h]??'')));tb.appendChild(tr)});table.appendChild(tb);wrap.appendChild(table);card.appendChild(wrap);main.appendChild(card)
+  main.appendChild(pageHead('Classifiche','Anteprima completa delle classifiche che verranno pubblicate: squadre, capocannonieri, MVP e portieri. Le modifiche in sospeso sono incluse nella vista.'));
+  const model=effectiveModel();
+  renderRankingTable(main,model,{title:'Classifica squadre',kind:'classifica_squadre',emptyText:'Classifica squadre non presente. Verrà generata alla prima pubblicazione di una giornata.',info:'Ordinamento automatico squadre: Punti finali → differenza reti → gol fatti → ordine precedente. L’ordine precedente rimane quindi lo spareggio stabile quando i valori numerici sono identici.'});
+  renderRankingTable(main,model,{title:'Capocannonieri',kind:'marcatori',emptyText:'Classifica marcatori non presente. Verrà generata alla prima giornata con marcatori.'});
+  renderRankingTable(main,model,{title:'MVP',kind:'mvp',emptyText:'Classifica MVP non presente. Verrà generata alla prima giornata con un MVP assegnato.'});
+  renderRankingTable(main,model,{title:'Portieri',kind:'portieri',emptyText:'Classifica portieri non presente. Verrà generata alla prima giornata con un miglior portiere assegnato.'});
 }
 
 // ==================== FANTACALCIO ====================

@@ -7,7 +7,7 @@
  */
 
 const BASE = new URL('./', import.meta.url);
-const VERSION = '31';
+const VERSION = '32';
 
 function replaceOnce(source, needle, replacement, label) {
   const index = source.indexOf(needle);
