@@ -414,14 +414,33 @@
     }
     function proAddPublicImageKey(indexText,type,key){
       const constName=type==='player'?'STATIC_PLAYER_IMAGE_KEYS':'STATIC_TEAM_IMAGE_KEYS';
-      const re=new RegExp(`((?:const|let|var)\\s+${constName}\\s*=\\s*new\\s+Set\\s*\\(\\s*\\[)([\\s\\S]*?)(\\]\\s*\\)\\s*;?)`);
-      const text=String(indexText||'');const match=text.match(re);
-      if(!match)throw new Error(`Nel frontend del torneo non trovo ${constName}. Nessuna chiave immagine e stata registrata.`);
-      const existing=[...match[2].matchAll(/['"]([^'"]+)['"]/g)].map(m=>imageAssetKey(m[1]));
+      const text=String(indexText||'');
+      const nameAt=text.indexOf(constName);
+      if(nameAt<0)throw new Error(`Nel frontend del torneo non trovo ${constName}. Nessuna chiave immagine e stata registrata.`);
+      const setAt=text.indexOf('new Set',nameAt);
+      const openParen=setAt>=0?text.indexOf('(',setAt):-1;
+      const openBracket=openParen>=0?text.indexOf('[',openParen):-1;
+      if(setAt<0||openParen<0||openBracket<0)throw new Error(`La dichiarazione ${constName} nel frontend non ha il formato atteso new Set([...]).`);
+      let quote='',escaped=false,closeBracket=-1;
+      for(let i=openBracket+1;i<text.length;i++){
+        const ch=text[i];
+        if(quote){
+          if(escaped){escaped=false;continue}
+          if(ch==='\\'){escaped=true;continue}
+          if(ch===quote)quote='';
+          continue;
+        }
+        if(ch==='"'||ch==="'"){quote=ch;continue}
+        if(ch===']'){closeBracket=i;break}
+      }
+      if(closeBracket<0)throw new Error(`La dichiarazione ${constName} nel frontend e incompleta.`);
+      const body=text.slice(openBracket+1,closeBracket);
+      const existing=[...body.matchAll(/['"]([^'"]+)['"]/g)].map(m=>imageAssetKey(m[1]));
       if(existing.includes(key))return text;
-      const body=match[2].replace(/\s*$/,'');const comma=body.trim()&&!body.trim().endsWith(',')?',':'';
-      const replacement=match[1]+body+comma+`\n  '${key}'\n`+match[3];
-      return text.replace(re,replacement);
+      const trimmed=body.replace(/\s*$/,'');
+      const comma=trimmed.trim()&&!trimmed.trim().endsWith(',')?',':'';
+      const insertion=trimmed+comma+`\n  '${key}'\n`;
+      return text.slice(0,openBracket+1)+insertion+text.slice(closeBracket);
     }
     async function proStageConvertedImage(file,type,key,label){
       const {base64}=await proConvertImage(file,'image/webp',1200,.88);const target=proCurrentTarget();const imagePath=imageAssetPath(type,key);const indexPath=state.tournament+'/index.html';const currentIndex=state.pending.get(indexPath)?.content??await getTextFile(target,indexPath);const patchedIndex=proAddPublicImageKey(currentIndex,type,key);state.pending.set(imagePath,{path:imagePath,contentBase64:base64,binary:true,source:`Immagine ${label} -> ${key}.webp`});if(patchedIndex!==currentIndex)state.pending.set(indexPath,{path:indexPath,content:patchedIndex,source:'Registro immagini frontend'});state.status={type:'success',text:`Immagine ${label} convertita in WebP e pronta per la pubblicazione.`};render();
