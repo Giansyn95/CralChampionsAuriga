@@ -12,10 +12,10 @@
  *    neutralizza esattamente la scala residua;
  * 5) quando la scala e' tornata a 1, rimuoviamo il fallback e riabilitiamo il
  *    normale pinch-zoom;
- * 6) [fix] la stessa stabilizzazione (punti 4-5) viene rilanciata ad ogni
- *    perdita di focus di un campo della Dashboard (non solo al login), cosi'
- *    da correggere lo zoom residuo anche dopo campi come "Messaggio commit"
- *    o "Conferma produzione" nella pagina Pubblica.
+ * 6) la stessa stabilizzazione (punti 4-5) viene rilanciata anche dopo una
+ *    rotazione dello schermo. NON viene piu' rilanciata quando un campo
+ *    qualsiasi della Dashboard perde il focus (scrivere in una textbox o
+ *    scegliere un'opzione da una select non riporta piu' la pagina in cima).
  */
 
 /* Persistenza del logo durante i rerender del login. */
@@ -144,26 +144,6 @@
       document.body.scrollTop = 0;
       document.body.scrollLeft = 0;
     }
-  }
-
-  // Tipi di <input> che su iOS possono aprire la tastiera software e quindi
-  // lasciare una scala residua del viewport una volta chiusa. <select>,
-  // checkbox, radio e simili aprono invece un picker/UI nativa che non
-  // tocca lo zoom della pagina: per questi elementi NON dobbiamo rilanciare
-  // settleAdmin()/resetTop(), altrimenti ogni scelta in un menu a tendina
-  // (es. "Solo andata" / "Andata + ritorno" nel generatore calendario)
-  // riporta la pagina in cima senza motivo.
-  const KEYBOARD_PRONE_TYPES = new Set([
-    'text', 'search', 'email', 'url', 'tel', 'password', 'number',
-    'date', 'datetime-local', 'month', 'week', 'time'
-  ]);
-
-  function opensSoftwareKeyboard(el) {
-    if (!(el instanceof HTMLElement)) return false;
-    if (el.tagName === 'TEXTAREA') return true;
-    if (el.tagName !== 'INPUT') return false;
-    const type = (el.getAttribute('type') || 'text').toLowerCase();
-    return KEYBOARD_PRONE_TYPES.has(type);
   }
 
   function blurActiveField() {
@@ -395,22 +375,14 @@
     adminSettling = false;
   }
 
-  // Qualsiasi campo della Dashboard (non solo il login) puo' lasciare una
-  // scala residua dopo la chiusura tastiera (es. "Messaggio commit" o
-  // "Conferma produzione" nella pagina Pubblica). Rilanciamo la stessa
-  // stabilizzazione usata all'ingresso in admin ogni volta che un campo
-  // perde il focus, non solo alla transizione login -> admin.
-  document.addEventListener('focusout', event => {
-    if (mode !== 'admin') return;
-    // Solo i campi che possono davvero aprire la tastiera software (testo,
-    // numeri, date, textarea...) necessitano della stabilizzazione dello
-    // zoom. <select>, checkbox e radio non la aprono: escluderli evita il
-    // ritorno automatico in cima allo scroll quando l'utente sceglie
-    // semplicemente un'opzione da un menu a tendina.
-    if (opensSoftwareKeyboard(event.target)) {
-      settleAdmin();
-    }
-  }, true);
+  // [rimosso] In precedenza qui c'era un listener 'focusout' che rilanciava
+  // settleAdmin()/resetTop() ogni volta che un campo della Dashboard perdeva
+  // il focus (uscita da un input, da una select, ecc.). Su richiesta, questo
+  // comportamento e' stato eliminato: la stabilizzazione dello zoom resta
+  // attiva solo nei due momenti in cui serve davvero, cioe' subito dopo il
+  // login (Dashboard nata da un reload pulito) e dopo una rotazione dello
+  // schermo. Scrivere in un campo di testo o scegliere un'opzione non
+  // riportera' piu' la pagina in cima.
 
   // Appena l'utente tocca/interagisce con la Dashboard, la stabilizzazione
   // automatica termina subito. Da quel momento il suo scroll e' sovrano.
