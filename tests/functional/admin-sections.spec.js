@@ -305,7 +305,12 @@ test('Giornata: risultato valido genera tutti i file, pubblica e si rilegge al r
 
   await nav(page, 'Giornata');
   await expect(page.getByRole('heading', { name: 'Gestione giornata' })).toBeVisible();
+  const daySelect = page.locator('.day-toolbar select').first();
+  const selectedDay = await daySelect.inputValue();
   const card = page.locator('.match-card').first();
+  const teams = card.locator('.match-body').first().locator('select');
+  const home = await teams.nth(0).inputValue();
+  const away = await teams.nth(1).inputValue();
   const scores = card.locator('.score-input');
   await scores.nth(0).fill('0');
   await scores.nth(1).fill('0');
@@ -315,12 +320,23 @@ test('Giornata: risultato valido genera tutti i file, pubblica e si rilegge al r
   await publishPending(page);
 
   const results = sourceText(mock, 'tornei/2026-test/data/risultati_partite.csv');
-  expect(results).toMatch(/2;[^\n;]*;Beta;0;Alpha;0/);
-  expect(sourceText(mock, 'tornei/2026-test/data/classifica_squadre.csv')).toContain('Beta');
+  const resultRows = results.trim().split(/\r?\n/).slice(1).map(line => line.split(';'));
+  const persisted = resultRows.find(row => String(row[0]) === String(selectedDay) && row[2] === home && row[4] === away);
+  expect(persisted, `Risultato non trovato per giornata ${selectedDay}: ${home} vs ${away}\n${results}`).toBeTruthy();
+  expect(persisted[3]).toBe('0');
+  expect(persisted[5]).toBe('0');
+  expect(sourceText(mock, 'tornei/2026-test/data/classifica_squadre.csv')).toContain(home);
+  expect(sourceText(mock, 'tornei/2026-test/data/classifica_squadre.csv')).toContain(away);
 
   await reloadAdmin(page);
   await nav(page, 'Giornata');
-  const reloadedScores = page.locator('.match-card').first().locator('.score-input');
+  const reloadDaySelect = page.locator('.day-toolbar select').first();
+  if (await reloadDaySelect.inputValue() !== String(selectedDay)) {
+    await reloadDaySelect.selectOption(String(selectedDay));
+  }
+  const reloadedCard = page.locator('.match-card').filter({ hasText: home }).filter({ hasText: away }).first();
+  await expect(reloadedCard).toBeVisible();
+  const reloadedScores = reloadedCard.locator('.score-input');
   await expect(reloadedScores.nth(0)).toHaveValue('0');
   await expect(reloadedScores.nth(1)).toHaveValue('0');
   expect(errors, errors.join('\n')).toEqual([]);
@@ -569,6 +585,9 @@ test('Immagini: stemma squadra e foto giocatore diventano WebP, si pubblicano e 
   await publishPending(page);
   expect(mock.source.readFile('tornei/2026-test/immagini/squadre/alpha.webp')).not.toBeNull();
   expect(mock.source.readFile('tornei/2026-test/immagini/giocatori/rossimario.webp')).not.toBeNull();
+  const publicIndex = sourceText(mock, 'tornei/2026-test/index.html');
+  expect(publicIndex).toMatch(/STATIC_TEAM_IMAGE_KEYS[\s\S]*['"]alpha['"]/);
+  expect(publicIndex).toMatch(/STATIC_PLAYER_IMAGE_KEYS[\s\S]*['"]rossimario['"]/);
 
   await reloadAdmin(page);
   await nav(page, 'Immagini');
