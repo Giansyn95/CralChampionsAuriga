@@ -412,8 +412,19 @@
       try{img=await new Promise((resolve,reject)=>{const node=new Image();node.onload=()=>resolve(node);node.onerror=()=>reject(new Error('Immagine non leggibile.'));node.src=url})}finally{setTimeout(()=>URL.revokeObjectURL(url),0)}
       let w=img.naturalWidth||img.width,h=img.naturalHeight||img.height;const scale=Math.min(1,maxSize/Math.max(w,h));w=Math.max(1,Math.round(w*scale));h=Math.max(1,Math.round(h*scale));const canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;const ctx=canvas.getContext('2d');ctx.drawImage(img,0,0,w,h);const blob=await new Promise((res,rej)=>canvas.toBlob(b=>b?res(b):rej(new Error('Conversione immagine fallita.')),mime,quality));return {blob,base64:await proBlobToBase64(blob),width:w,height:h};
     }
+    function proAddPublicImageKey(indexText,type,key){
+      const constName=type==='player'?'STATIC_PLAYER_IMAGE_KEYS':'STATIC_TEAM_IMAGE_KEYS';
+      const re=new RegExp(`((?:const|let|var)\\s+${constName}\\s*=\\s*new\\s+Set\\s*\\(\\s*\\[)([\\s\\S]*?)(\\]\\s*\\)\\s*;?)`);
+      const text=String(indexText||'');const match=text.match(re);
+      if(!match)throw new Error(`Nel frontend del torneo non trovo ${constName}. Nessuna chiave immagine e stata registrata.`);
+      const existing=[...match[2].matchAll(/['"]([^'"]+)['"]/g)].map(m=>imageAssetKey(m[1]));
+      if(existing.includes(key))return text;
+      const body=match[2].replace(/\s*$/,'');const comma=body.trim()&&!body.trim().endsWith(',')?',':'';
+      const replacement=match[1]+body+comma+`\n  '${key}'\n`+match[3];
+      return text.replace(re,replacement);
+    }
     async function proStageConvertedImage(file,type,key,label){
-      const {base64}=await proConvertImage(file,'image/webp',1200,.88);const target=proCurrentTarget();const imagePath=imageAssetPath(type,key);const indexPath=state.tournament+'/index.html';const currentIndex=state.pending.get(indexPath)?.content??await getTextFile(target,indexPath);const patchedIndex=addPublicImageKey(currentIndex,type,key);state.pending.set(imagePath,{path:imagePath,contentBase64:base64,binary:true,source:`Immagine ${label} -> ${key}.webp`});if(patchedIndex!==currentIndex)state.pending.set(indexPath,{path:indexPath,content:patchedIndex,source:'Registro immagini frontend'});state.status={type:'success',text:`Immagine ${label} convertita in WebP e pronta per la pubblicazione.`};render();
+      const {base64}=await proConvertImage(file,'image/webp',1200,.88);const target=proCurrentTarget();const imagePath=imageAssetPath(type,key);const indexPath=state.tournament+'/index.html';const currentIndex=state.pending.get(indexPath)?.content??await getTextFile(target,indexPath);const patchedIndex=proAddPublicImageKey(currentIndex,type,key);state.pending.set(imagePath,{path:imagePath,contentBase64:base64,binary:true,source:`Immagine ${label} -> ${key}.webp`});if(patchedIndex!==currentIndex)state.pending.set(indexPath,{path:indexPath,content:patchedIndex,source:'Registro immagini frontend'});state.status={type:'success',text:`Immagine ${label} convertita in WebP e pronta per la pubblicazione.`};render();
     }
     async function proCommitLogo(file){
       if(!proNoPending('Aggiornamento logo'))return;
