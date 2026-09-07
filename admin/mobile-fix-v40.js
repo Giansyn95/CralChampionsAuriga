@@ -146,6 +146,26 @@
     }
   }
 
+  // Tipi di <input> che su iOS possono aprire la tastiera software e quindi
+  // lasciare una scala residua del viewport una volta chiusa. <select>,
+  // checkbox, radio e simili aprono invece un picker/UI nativa che non
+  // tocca lo zoom della pagina: per questi elementi NON dobbiamo rilanciare
+  // settleAdmin()/resetTop(), altrimenti ogni scelta in un menu a tendina
+  // (es. "Solo andata" / "Andata + ritorno" nel generatore calendario)
+  // riporta la pagina in cima senza motivo.
+  const KEYBOARD_PRONE_TYPES = new Set([
+    'text', 'search', 'email', 'url', 'tel', 'password', 'number',
+    'date', 'datetime-local', 'month', 'week', 'time'
+  ]);
+
+  function opensSoftwareKeyboard(el) {
+    if (!(el instanceof HTMLElement)) return false;
+    if (el.tagName === 'TEXTAREA') return true;
+    if (el.tagName !== 'INPUT') return false;
+    const type = (el.getAttribute('type') || 'text').toLowerCase();
+    return KEYBOARD_PRONE_TYPES.has(type);
+  }
+
   function blurActiveField() {
     const active = document.activeElement;
     if (active instanceof HTMLElement && active.matches('input, textarea, select')) {
@@ -382,8 +402,12 @@
   // perde il focus, non solo alla transizione login -> admin.
   document.addEventListener('focusout', event => {
     if (mode !== 'admin') return;
-    const el = event.target;
-    if (el instanceof HTMLElement && el.matches('input, textarea, select')) {
+    // Solo i campi che possono davvero aprire la tastiera software (testo,
+    // numeri, date, textarea...) necessitano della stabilizzazione dello
+    // zoom. <select>, checkbox e radio non la aprono: escluderli evita il
+    // ritorno automatico in cima allo scroll quando l'utente sceglie
+    // semplicemente un'opzione da un menu a tendina.
+    if (opensSoftwareKeyboard(event.target)) {
       settleAdmin();
     }
   }, true);
