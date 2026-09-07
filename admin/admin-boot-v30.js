@@ -7,7 +7,7 @@
  */
 
 const BASE = new URL('./', import.meta.url);
-const VERSION = '30';
+const VERSION = '31';
 
 function replaceOnce(source, needle, replacement, label) {
   const index = source.indexOf(needle);
@@ -316,13 +316,16 @@ function buildSummaryRows(draft) {`,
 function patchGh(source) {
   let s = source;
 
-  // Blob Git: supporto contenuto base64 per WebP.
-  s = replaceOnce(
-    s,
-    "        body: JSON.stringify({ content: String(change.content ?? ''), encoding: 'utf-8' })",
-    "        body: JSON.stringify({ content: change.contentBase64 != null ? String(change.contentBase64) : String(change.content ?? ''), encoding: change.contentBase64 != null ? 'base64' : 'utf-8' })",
-    'blob base64 WebP'
-  );
+  // Blob Git: supporto contenuto base64 per WebP. Il sorgente base recente lo
+  // contiene gia; la patch resta compatibile con checkout meno recenti.
+  if (!s.includes("change.contentBase64 != null ? String(change.contentBase64)")) {
+    s = replaceOnce(
+      s,
+      "        body: JSON.stringify({ content: String(change.content ?? ''), encoding: 'utf-8' })",
+      "        body: JSON.stringify({ content: change.contentBase64 != null ? String(change.contentBase64) : String(change.content ?? ''), encoding: change.contentBase64 != null ? 'base64' : 'utf-8' })",
+      'blob base64 WebP'
+    );
+  }
 
   // Lettura generica di un file testuale al commit corrente (serve a registrare
   // automaticamente le nuove chiavi immagine nell'index del torneo).
@@ -346,55 +349,59 @@ export async function getTournaments(target) {`,
   );
 
   // Percorsi pubblicabili: data CSV/TXT/JSON + index torneo + WebP canoniche.
-  s = replaceOnce(
-    s,
-    "function safeDataPath(path, dataRoot) {\n  const p = String(path || '').replace(/^\\/+/, '');\n  const base = p.split('/').pop().toLowerCase();\n  if (/^(fantacalcio_cache|portieri_snapshot)\\.json$/i.test(base)) return false;\n  return p.startsWith(dataRoot + '/') && !p.includes('..') && /\\.(csv|txt|json)$/i.test(p);\n}",
-    `function safeDataPath(path, dataRoot, tournament = '') {
-  const p = String(path || '').replace(/^\\/+/, '');
-  if (!p || p.includes('..')) return false;
-  const base = p.split('/').pop().toLowerCase();
-  if (p.startsWith(dataRoot + '/')) {
-    if (/^(fantacalcio_cache|portieri_snapshot)\\.json$/i.test(base)) return false;
-    return /\\.(csv|txt|json)$/i.test(p);
+  if (!s.includes("function safeDataPath(path, dataRoot, tournament = '')")) {
+    s = replaceOnce(
+      s,
+      "function safeDataPath(path, dataRoot) {\n  const p = String(path || '').replace(/^\\/+/, '');\n  const base = p.split('/').pop().toLowerCase();\n  if (/^(fantacalcio_cache|portieri_snapshot)\\.json$/i.test(base)) return false;\n  return p.startsWith(dataRoot + '/') && !p.includes('..') && /\\.(csv|txt|json)$/i.test(p);\n}",
+      `function safeDataPath(path, dataRoot, tournament = '') {
+    const p = String(path || '').replace(/^\\/+/, '');
+    if (!p || p.includes('..')) return false;
+    const base = p.split('/').pop().toLowerCase();
+    if (p.startsWith(dataRoot + '/')) {
+      if (/^(fantacalcio_cache|portieri_snapshot)\\.json$/i.test(base)) return false;
+      return /\\.(csv|txt|json)$/i.test(p);
+    }
+    if (tournament && p === tournament + '/index.html') return true;
+    if (tournament) {
+      const prefix = tournament + '/immagini/';
+      if (!p.startsWith(prefix)) return false;
+      return /^(?:giocatori|squadre)\\/[a-z0-9]+\\.webp$/i.test(p.slice(prefix.length));
+    }
+    return false;
+  }`,
+      'percorsi WebP/index'
+    );
+    s = replaceOnce(
+      s,
+      "    if (!safeDataPath(path, dataRoot)) throw fail(`Percorso non consentito: ${path}`, 400);",
+      "    if (!safeDataPath(path, dataRoot, tournament)) throw fail(`Percorso non consentito: ${path}`, 400);",
+      'validazione percorso pubblicazione'
+    );
   }
-  if (tournament && p === tournament + '/index.html') return true;
-  if (tournament) {
-    const prefix = tournament + '/immagini/';
-    if (!p.startsWith(prefix)) return false;
-    return /^(?:giocatori|squadre)\\/[a-z0-9]+\\.webp$/i.test(p.slice(prefix.length));
-  }
-  return false;
-}`,
-    'percorsi WebP/index'
-  );
-  s = replaceOnce(
-    s,
-    "    if (!safeDataPath(path, dataRoot)) throw fail(`Percorso non consentito: ${path}`, 400);",
-    "    if (!safeDataPath(path, dataRoot, tournament)) throw fail(`Percorso non consentito: ${path}`, 400);",
-    'validazione percorso pubblicazione'
-  );
 
   // Validazione e accounting dei WebP base64.
-  s = replaceOnce(
-    s,
-    "    if (change.delete) { sanitized.push({ path, delete: true }); continue; }\n    const content = String(change.content ?? '');\n    const bytes = new TextEncoder().encode(content).length;\n    if (bytes > PUB_MAX_FILE_BYTES) throw fail(`File troppo grande: ${path}`, 413);\n    total += bytes;",
-    `    if (change.delete) { sanitized.push({ path, delete: true }); continue; }
-    if (/\\.webp$/i.test(path)) {
-      const contentBase64 = String(change.contentBase64 || '').replace(/\\s+/g, '');
-      if (!contentBase64 || !/^[A-Za-z0-9+/]+={0,2}$/.test(contentBase64)) throw fail(\`${'${path}'}: immagine WebP non valida.\`, 400);
-      const padding = (contentBase64.match(/=+$/) || [''])[0].length;
-      const bytes = Math.floor(contentBase64.length * 3 / 4) - padding;
+  if (!s.includes("sanitized.push({ path, contentBase64 })")) {
+    s = replaceOnce(
+      s,
+      "    if (change.delete) { sanitized.push({ path, delete: true }); continue; }\n    const content = String(change.content ?? '');\n    const bytes = new TextEncoder().encode(content).length;\n    if (bytes > PUB_MAX_FILE_BYTES) throw fail(`File troppo grande: ${path}`, 413);\n    total += bytes;",
+      `    if (change.delete) { sanitized.push({ path, delete: true }); continue; }
+      if (/\\.webp$/i.test(path)) {
+        const contentBase64 = String(change.contentBase64 || '').replace(/\\s+/g, '');
+        if (!contentBase64 || !/^[A-Za-z0-9+/]+={0,2}$/.test(contentBase64)) throw fail(\`${'${path}'}: immagine WebP non valida.\`, 400);
+        const padding = (contentBase64.match(/=+$/) || [''])[0].length;
+        const bytes = Math.floor(contentBase64.length * 3 / 4) - padding;
+        if (bytes > PUB_MAX_FILE_BYTES) throw fail(\`File troppo grande: ${'${path}'}\`, 413);
+        total += bytes;
+        sanitized.push({ path, contentBase64 });
+        continue;
+      }
+      const content = String(change.content ?? '');
+      const bytes = new TextEncoder().encode(content).length;
       if (bytes > PUB_MAX_FILE_BYTES) throw fail(\`File troppo grande: ${'${path}'}\`, 413);
-      total += bytes;
-      sanitized.push({ path, contentBase64 });
-      continue;
-    }
-    const content = String(change.content ?? '');
-    const bytes = new TextEncoder().encode(content).length;
-    if (bytes > PUB_MAX_FILE_BYTES) throw fail(\`File troppo grande: ${'${path}'}\`, 413);
-    total += bytes;`,
-    'validazione WebP base64'
-  );
+      total += bytes;`,
+      'validazione WebP base64'
+    );
+  }
 
   return s;
 }
@@ -662,13 +669,14 @@ function renderImageUploadSection(team,draft){
   );
 
   // Pubblicazione: preserva il contenuto binario base64.
-  s = replaceOnce(
-    s,
-    "const changesArr=[...state.pending.values()].map(({path,content,delete:del})=>({path,content,delete:del}));",
-    "const changesArr=[...state.pending.values()].map(({path,content,contentBase64,binary,delete:del})=>({path,content,contentBase64,binary,delete:del}));",
-    'publish WebP'
-  );
-
+  if (!s.includes("map(({path,content,contentBase64,binary,delete:del})")) {
+    s = replaceOnce(
+      s,
+      "const changesArr=[...state.pending.values()].map(({path,content,delete:del})=>({path,content,delete:del}));",
+      "const changesArr=[...state.pending.values()].map(({path,content,contentBase64,binary,delete:del})=>({path,content,contentBase64,binary,delete:del}));",
+      'publish WebP'
+    );
+  }
 
 
   s += String.raw`

@@ -695,7 +695,7 @@ async function publishChanges(message,productionConfirmation){
   if(!state.pending.size)return;state.busy=true;renderLoading('Pubblicazione atomica su GitHub…');
   try{
     const target=requireTarget(state.target);
-    const changesArr=[...state.pending.values()].map(({path,content,delete:del})=>({path,content,delete:del}));
+    const changesArr=[...state.pending.values()].map(({path,content,contentBase64,binary,delete:del})=>({path,content,contentBase64,binary,delete:del}));
     const result=await ghPublishChanges(target,{tournament:state.tournament,baseCommitSha:state.snapshot.commitSha,changes:changesArr,message,productionConfirmation});
     state.pending.clear();try{localStorage.removeItem(draftKey(state.selectedDay))}catch{}state.status={type:'success',text:`Pubblicazione completata. Commit ${result.sha.slice(0,8)}.`};await loadSnapshot(false);state.status={type:'success',text:`Pubblicazione completata. Commit ${result.sha.slice(0,8)}. ${result.url}`};state.active='dashboard';render()
   }catch(e){

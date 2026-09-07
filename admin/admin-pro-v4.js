@@ -16,6 +16,11 @@
       proRegistry: null,
       proRegistryKey: '',
       proVerifyReport: null,
+      proVerifySignature: '',
+      proSetupAssets: null,
+      proSetupAssetsKey: '',
+      proSetupAssetsLoading: false,
+      proSetupAssetsError: '',
       proHistory: [],
       proHistoryLoading: false,
       proHistoryIncludeRegistry: false,
@@ -63,6 +68,48 @@
     function proCurrentTarget() { return requireTarget(state.target); }
     function proRel(path) { return relativeDataPath(path, state.model?.dataRoot || state.snapshot?.dataRoot || ''); }
     function proBytes(text) { return new TextEncoder().encode(String(text ?? '')).length; }
+    function proStateSignature() {
+      let hash = 2166136261;
+      const add = value => {
+        const text = String(value ?? '');
+        for (let i=0;i<text.length;i++) { hash ^= text.charCodeAt(i); hash = Math.imul(hash, 16777619); }
+      };
+      add(state.target); add(state.tournament); add(state.snapshot?.commitSha || '');
+      [...state.pending.values()].sort((a,b)=>String(a.path).localeCompare(String(b.path))).forEach(change => {
+        add(change.path); add(change.delete ? 'D' : 'U');
+        if (!change.delete) add(change.contentBase64 != null ? change.contentBase64 : change.content);
+      });
+      return `${state.snapshot?.commitSha || ''}:${state.pending.size}:${(hash >>> 0).toString(16)}`;
+    }
+    function proAssetStatusKey() { return `${state.target}|${state.tournament}|${proStateSignature()}`; }
+    async function proRepositoryPathsWithPending() {
+      const target=proCurrentTarget(),head=await getHead(target);
+      if(state.snapshot?.commitSha && head.commitSha!==state.snapshot.commitSha)throw new Error('Il repository è cambiato dopo il caricamento dell’Admin. Ricarica i dati prima di verificare o pubblicare.');
+      const tree=await getTree(target,head.treeSha);
+      if(tree.truncated)throw new Error('Albero GitHub troppo grande/troncato. Ricarica prima di verificare gli asset.');
+      const paths=new Set((tree.tree||[]).filter(x=>x.type==='blob').map(x=>x.path));
+      state.pending.forEach(change=>{if(change.delete)paths.delete(change.path);else paths.add(change.path)});
+      return {paths,head};
+    }
+    function proAssetStatusFromPaths(paths) {
+      const model=effectiveModel();
+      const logo=`${state.tournament}/immagini/logo_cral.png`;
+      const missingTeams=model.teams.filter(t=>!paths.has(imageAssetPath('team',imageAssetKey(t.name)))).map(t=>t.name);
+      const players=model.players||[];
+      const missingPlayers=players.filter(p=>!paths.has(imageAssetPath('player',playerAssetKey(p))));
+      return {logo:paths.has(logo),missingTeams,totalTeams:model.teams.length,missingPlayers:missingPlayers.length,totalPlayers:players.length};
+    }
+    async function proEnsureSetupAssets() {
+      const key=proAssetStatusKey();
+      if(state.proSetupAssetsKey===key && (state.proSetupAssets||state.proSetupAssetsLoading||state.proSetupAssetsError))return;
+      state.proSetupAssetsKey=key;state.proSetupAssets=null;state.proSetupAssetsError='';state.proSetupAssetsLoading=true;
+      try{
+        const {paths}=await proRepositoryPathsWithPending();
+        if(proAssetStatusKey()!==key)return;
+        state.proSetupAssets=proAssetStatusFromPaths(paths);
+      }catch(e){if(proAssetStatusKey()===key)state.proSetupAssetsError=e.message||String(e)}
+      finally{if(proAssetStatusKey()===key){state.proSetupAssetsLoading=false;if(state.active==='setup')render()}}
+    }
     function proNormPath(rel) {
       const p = String(rel || '').trim().replace(/^data\//i,'').replace(/^\/+/, '').replace(/\\/g,'/');
       if (!p || p.includes('..') || !/\.(csv|txt|json)$/i.test(p)) throw new Error('Usa un percorso relativo sotto data/ con estensione .csv, .txt o .json.');
@@ -112,6 +159,8 @@
     }
     async function proRefreshAll(statusText='') {
       state.proRegistry = null; state.proRegistryKey = '';
+      state.proVerifyReport = null; state.proVerifySignature = '';
+      state.proSetupAssets = null; state.proSetupAssetsKey = ''; state.proSetupAssetsLoading = false; state.proSetupAssetsError = '';
       await loadTournamentList();
       await loadSnapshot(false);
       if (statusText) state.status = { type:'success', text:statusText };
@@ -207,21 +256,29 @@
     function proRenderSetup(main) {
       const model=effectiveModel();
       const hasTeams=model.teams.length>0, hasCalendar=sectionFiles(model,'calendario').length>0 && model.calendarMatches.length>0;
-      const hasDays=model.days.length>0, hasFanta=model.fileList.some(f=>f.active!==false && /fantacalcio/i.test(f.rel));
+      const hasDays=[...(model.resultMatches||[]),...(model.summaryMatches||[])].some(m=>(m.homeGoals!==null&&m.awayGoals!==null)||m.forfeit), hasFanta=model.fileList.some(f=>f.active!==false && /fantacalcio/i.test(f.rel));
+      const assetKey=proAssetStatusKey();
+      const assets=state.proSetupAssetsKey===assetKey?state.proSetupAssets:null;
+      if(state.proSetupAssetsKey!==assetKey || (!assets && !state.proSetupAssetsLoading && !state.proSetupAssetsError))void proEnsureSetupAssets();
+      const hasImages=!!assets?.logo && assets.totalTeams>0 && assets.missingTeams.length===0;
+      const verifyCurrent=!!state.proVerifyReport && state.proVerifySignature===proStateSignature();
+      const verifyOk=verifyCurrent && !state.proVerifyReport.errors.length;
       main.appendChild(pageHead('Setup torneo','Procedura guidata per inizializzare e controllare una nuova edizione senza aprire GitHub.'));
       const k=el('div','pro-kpis');
       [['Squadre',model.teams.length],['Giornate',model.days.length],['Partite',model.matches.length],['Modifiche',state.pending.size]].forEach(([l,v])=>{const x=el('div','pro-kpi');x.appendChild(el('b','',v));x.appendChild(el('span','',l));k.appendChild(x)}); main.appendChild(k);
       const card=el('div','card'); card.style.marginTop='14px';
+      const imageDetail=state.proSetupAssetsLoading?'Controllo asset in corso…':state.proSetupAssetsError?`Impossibile verificare gli asset: ${state.proSetupAssetsError}`:assets?`${assets.logo?'Logo presente':'Logo mancante'} · stemmi ${assets.totalTeams-assets.missingTeams.length}/${assets.totalTeams}${assets.totalPlayers?` · foto giocatori ${assets.totalPlayers-assets.missingPlayers}/${assets.totalPlayers} (facoltative)`:''}`:'Asset non ancora verificati.';
+      const verifyLabel=!state.proVerifyReport?'da eseguire':!verifyCurrent?'da rieseguire':verifyOk?'✓ pronto':`${state.proVerifyReport.errors.length} errori`;
       const steps=[
-        ['1','Squadre e rose',hasTeams,'Crea manualmente le squadre oppure importa un CSV unico con tutte le rose.','squadre'],
-        ['2','Calendario',hasCalendar,'Carica un calendario oppure generane uno automaticamente (andata o andata/ritorno).','calendario'],
-        ['3','Dati giornata',hasDays,'Inserisci risultati, marcatori, MVP, portieri e autogoal dalla schermata Giornata.','giornata'],
-        ['4','Fantacalcio',hasFanta,'Carica listone, rose ed eventi speciali se previsti.','fantacalcio'],
-        ['5','Immagini',false,'Carica logo, stemmi e foto; JPG/PNG vengono convertiti automaticamente.','images'],
-        ['6','Verifica',false,'Controlla integrità, manifest, duplicati e riferimenti prima della pubblicazione.','verify'],
-        ['7','Pubblica',state.pending.size===0,'Rivedi l’anteprima e pubblica un unico commit atomico.','publish']
+        {n:'1',title:'Squadre e rose',status:hasTeams?'ready':'todo',label:hasTeams?'✓ pronto':'da completare',desc:'Crea manualmente le squadre oppure importa un CSV unico con tutte le rose.',target:'squadre'},
+        {n:'2',title:'Calendario',status:hasCalendar?'ready':'todo',label:hasCalendar?'✓ pronto':'da completare',desc:'Carica un calendario oppure generane uno automaticamente (andata o andata/ritorno).',target:'calendario'},
+        {n:'3',title:'Dati giornata',status:hasDays?'ready':'todo',label:hasDays?'✓ pronto':'da completare',desc:'Inserisci risultati, marcatori, MVP, portieri e autogoal dalla schermata Giornata.',target:'giornata'},
+        {n:'4',title:'Fantacalcio',status:hasFanta?'ready':'optional',label:hasFanta?'✓ pronto':'opzionale',desc:'Carica listone, rose ed eventi speciali se previsti. Se il torneo non usa il Fantacalcio, questo passaggio può restare vuoto.',target:'fantacalcio'},
+        {n:'5',title:'Immagini',status:state.proSetupAssetsLoading?'checking':hasImages?'ready':'todo',label:state.proSetupAssetsLoading?'controllo…':hasImages?'✓ pronto':'da completare',desc:`Carica logo e stemmi squadra. Le foto giocatore sono consigliate ma non bloccanti. ${imageDetail}`,target:'images'},
+        {n:'6',title:'Verifica',status:verifyOk?'ready':verifyCurrent?'error':'todo',label:verifyLabel,desc:'Esegui il controllo di integrità sullo stato corrente. Qualsiasi modifica successiva rende il report da rieseguire.',target:'verify'},
+        {n:'7',title:'Pubblica',status:state.pending.size===0?'ready':'todo',label:state.pending.size===0?'✓ nessuna modifica in sospeso':`${state.pending.size} da pubblicare`,desc:'Rivedi l’anteprima e pubblica un unico commit atomico. Questo stato indica solo se esistono modifiche locali da pubblicare.',target:'publish'}
       ];
-      steps.forEach(([n,title,ok,desc,target])=>{const row=el('div','pro-step');row.style.margin='14px 0';row.appendChild(el('div','pro-step-num',n));const c=el('div');const h=el('div');h.appendChild(el('strong','',title));h.appendChild(document.createTextNode(' '));h.appendChild(el('span',ok?'pro-ok':'pro-warn',ok?'✓ pronto':'da completare'));c.appendChild(h);c.appendChild(el('div','pro-muted',desc));const b=button('Apri','secondary small',()=>{state.active=target;render()});b.style.marginTop='7px';c.appendChild(b);row.appendChild(c);card.appendChild(row)});
+      steps.forEach(step=>{const row=el('div','pro-step');row.style.margin='14px 0';row.appendChild(el('div','pro-step-num',step.n));const c=el('div');const h=el('div');h.appendChild(el('strong','',step.title));h.appendChild(document.createTextNode(' '));const cls=step.status==='ready'?'pro-ok':step.status==='optional'||step.status==='checking'?'pro-muted':step.status==='error'?'pro-bad':'pro-warn';h.appendChild(el('span',cls,step.label));c.appendChild(h);c.appendChild(el('div','pro-muted',step.desc));const b=button('Apri','secondary small',()=>{state.active=step.target;render()});b.style.marginTop='7px';c.appendChild(b);row.appendChild(c);card.appendChild(row)});
       main.appendChild(card);
     }
 
@@ -393,20 +450,23 @@
       return {errors:[...new Set(errors)],warnings:[...new Set(warnings)],ok};
     }
     async function proRunVerify(){
+      const signature=proStateSignature();
       try{
         const r=proBuildVerifyReport();const registry=await proLoadRegistry(true);const currents=(registry.tornei||[]).filter(t=>t.corrente);if(currents.length!==1)r.warnings.push(`tornei.json contiene ${currents.length} tornei correnti; consigliato esattamente 1.`);const entry=proRegistryEntry(registry);if(!entry)r.errors.push('Torneo corrente dell’Admin assente da tornei.json.');
         if(entry?.corrente && String(entry.stato||'')==='concluso')r.warnings.push('Il torneo è marcato contemporaneamente come corrente e concluso.');
-        const target=proCurrentTarget(),head=await getHead(target),tree=await getTree(target,head.treeSha),paths=new Set((tree.tree||[]).filter(x=>x.type==='blob').map(x=>x.path));
-        const logo=`${state.tournament}/immagini/logo_cral.png`;if(!paths.has(logo))r.warnings.push(`Logo torneo mancante: ${logo}.`);
-        const missingTeams=effectiveModel().teams.filter(t=>!paths.has(imageAssetPath('team',imageAssetKey(t.name)))).map(t=>t.name);if(missingTeams.length)r.warnings.push(`Stemmi squadra mancanti (${missingTeams.length}): ${missingTeams.slice(0,8).join(', ')}${missingTeams.length>8?'...':''}.`);
-        const players=effectiveModel().players||[];const missingPlayers=players.filter(p=>!paths.has(imageAssetPath('player',playerAssetKey(p))));if(players.length&&missingPlayers.length)r.warnings.push(`Foto giocatori mancanti: ${missingPlayers.length} su ${players.length}.`);
+        const {paths}=await proRepositoryPathsWithPending();
+        const assetStatus=proAssetStatusFromPaths(paths);const logo=`${state.tournament}/immagini/logo_cral.png`;if(!assetStatus.logo)r.warnings.push(`Logo torneo mancante: ${logo}.`);
+        if(assetStatus.missingTeams.length)r.warnings.push(`Stemmi squadra mancanti (${assetStatus.missingTeams.length}): ${assetStatus.missingTeams.slice(0,8).join(', ')}${assetStatus.missingTeams.length>8?'...':''}.`);
+        if(assetStatus.totalPlayers&&assetStatus.missingPlayers)r.warnings.push(`Foto giocatori mancanti: ${assetStatus.missingPlayers} su ${assetStatus.totalPlayers}.`);
         const mf=effectiveModel().fileList.find(f=>fileKind(f.rel)==='manifest');if(mf){const raw=parseCsv(mf.text||'').rows.flat().map(x=>String(x||'').trim()).filter(x=>x&&norm(x)!=='file');const seen=new Set(),dup=[];raw.forEach(x=>{const k=norm(x);if(seen.has(k))dup.push(x);seen.add(k)});if(dup.length)r.warnings.push(`manifest.csv contiene righe duplicate: ${[...new Set(dup)].join(', ')}.`)}
-        state.proVerifyReport=r;state.status={type:r.errors.length?'error':r.warnings.length?'warning':'success',text:r.errors.length?`Verifica completata con ${r.errors.length} errori.`:`Verifica completata: nessun errore bloccante.`};render()
+        state.proVerifyReport=r;state.proVerifySignature=signature;
+        const assetKey=proAssetStatusKey();state.proSetupAssetsKey=assetKey;state.proSetupAssets=assetStatus;state.proSetupAssetsError='';state.proSetupAssetsLoading=false;
+        state.status={type:r.errors.length?'error':r.warnings.length?'warning':'success',text:r.errors.length?`Verifica completata con ${r.errors.length} errori.`:`Verifica completata: nessun errore bloccante.`};render()
       }catch(e){state.status={type:'error',text:e.message||String(e)};render()}
     }
     function proFixManifest(){const model=effectiveModel();const entries=model.fileList.filter(f=>!['manifest','config','altro'].includes(fileKind(f.rel))).map(f=>f.rel);proStageManifest(entries,'Ricostruzione automatica manifest');refreshModelFromPending();state.status={type:'success',text:'manifest.csv ricostruito dai file dati rilevati. Controlla Pubblica.'};render()}
     function proRenderVerify(main){
-      main.appendChild(pageHead('Verifica torneo','Controlla coerenza tra squadre, calendario, manifest, riepiloghi e metadati del torneo.',[button('Esegui verifica','gold',proRunVerify),button('Ricostruisci manifest','secondary',proFixManifest)]));const r=state.proVerifyReport;if(!r){main.appendChild(messageBox('info','Premi Esegui verifica per generare il report sullo stato corrente, incluse le modifiche non ancora pubblicate.'));return}const card=el('div','card pro-report');if(!r.errors.length&&!r.warnings.length)card.appendChild(el('div','pro-report-row ok','✓ Nessuna anomalia rilevata.'));r.errors.forEach(x=>card.appendChild(el('div','pro-report-row error',`ERRORE · ${x}`)));r.warnings.forEach(x=>card.appendChild(el('div','pro-report-row warning',`ATTENZIONE · ${x}`)));r.ok.forEach(x=>card.appendChild(el('div','pro-report-row ok',`OK · ${x}`)));main.appendChild(card)
+      main.appendChild(pageHead('Verifica torneo','Controlla coerenza tra squadre, calendario, manifest, riepiloghi e metadati del torneo.',[button('Esegui verifica','gold',proRunVerify),button('Ricostruisci manifest','secondary',proFixManifest)]));const r=state.proVerifyReport;if(!r){main.appendChild(messageBox('info','Premi Esegui verifica per generare il report sullo stato corrente, incluse le modifiche non ancora pubblicate.'));return}const current=state.proVerifySignature===proStateSignature();if(!current)main.appendChild(messageBox('warning','Il report visualizzato non è più aggiornato rispetto allo stato corrente. Esegui di nuovo Verifica prima di pubblicare.'));const card=el('div','card pro-report');if(!r.errors.length&&!r.warnings.length)card.appendChild(el('div','pro-report-row ok','✓ Nessuna anomalia rilevata.'));r.errors.forEach(x=>card.appendChild(el('div','pro-report-row error',`ERRORE · ${x}`)));r.warnings.forEach(x=>card.appendChild(el('div','pro-report-row warning',`ATTENZIONE · ${x}`)));r.ok.forEach(x=>card.appendChild(el('div','pro-report-row ok',`OK · ${x}`)));main.appendChild(card)
     }
 
     async function proGhJson(target,suffix,options={}){

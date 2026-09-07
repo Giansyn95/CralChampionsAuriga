@@ -99,7 +99,7 @@ export async function createAtomicCommit(target, { baseCommitSha, changes, messa
       }
       const blob = await gh(target, repoPath(target, '/git/blobs'), {
         method: 'POST',
-        body: JSON.stringify({ content: String(change.content ?? ''), encoding: 'utf-8' })
+        body: JSON.stringify({ content: change.contentBase64 != null ? String(change.contentBase64) : String(change.content ?? ''), encoding: change.contentBase64 != null ? 'base64' : 'utf-8' })
       });
       entries[index] = { path: change.path, mode: '100644', type: 'blob', sha: blob.sha };
     }
@@ -249,11 +249,21 @@ function structuredBlockCsv(text) {
   const raw = String(text || '');
   return /GIORNATA\s+\d+/i.test(raw) || /^(?:PARTITE|MARCATORI|MVP|MIGLIOR\s+PORTIERE|PORTIERI|AUTOGOAL|STATISTICHE)(?:\s*[;,]|\s*$)/im.test(raw);
 }
-function safeDataPath(path, dataRoot) {
+function safeDataPath(path, dataRoot, tournament = '') {
   const p = String(path || '').replace(/^\/+/, '');
+  if (!p || p.includes('..')) return false;
   const base = p.split('/').pop().toLowerCase();
-  if (/^(fantacalcio_cache|portieri_snapshot)\.json$/i.test(base)) return false;
-  return p.startsWith(dataRoot + '/') && !p.includes('..') && /\.(csv|txt|json)$/i.test(p);
+  if (p.startsWith(dataRoot + '/')) {
+    if (/^(fantacalcio_cache|portieri_snapshot)\.json$/i.test(base)) return false;
+    return /\.(csv|txt|json)$/i.test(p);
+  }
+  if (tournament && p === tournament + '/index.html') return true;
+  if (tournament) {
+    const prefix = tournament + '/immagini/';
+    if (!p.startsWith(prefix)) return false;
+    return /^(?:giocatori|squadre)\/[a-z0-9]+\.webp$/i.test(p.slice(prefix.length));
+  }
+  return false;
 }
 function validateManifestPaths(text) {
   const errors = [];
@@ -280,10 +290,20 @@ export async function publishChanges(target, { tournament: tournamentValue, base
   let total = 0;
   for (const change of list) {
     const path = String(change.path || '').replace(/^\/+/, '');
-    if (!safeDataPath(path, dataRoot)) throw fail(`Percorso non consentito: ${path}`, 400);
+    if (!safeDataPath(path, dataRoot, tournament)) throw fail(`Percorso non consentito: ${path}`, 400);
     if (seen.has(path)) throw fail(`File duplicato nella pubblicazione: ${path}`, 400);
     seen.add(path);
     if (change.delete) { sanitized.push({ path, delete: true }); continue; }
+    if (/\.webp$/i.test(path)) {
+      const contentBase64 = String(change.contentBase64 || '').replace(/\s+/g, '');
+      if (!contentBase64 || !/^[A-Za-z0-9+/]+={0,2}$/.test(contentBase64)) throw fail(`${path}: immagine WebP non valida.`, 400);
+      const padding = (contentBase64.match(/=+$/) || [''])[0].length;
+      const bytes = Math.floor(contentBase64.length * 3 / 4) - padding;
+      if (bytes > PUB_MAX_FILE_BYTES) throw fail(`File troppo grande: ${path}`, 413);
+      total += bytes;
+      sanitized.push({ path, contentBase64 });
+      continue;
+    }
     const content = String(change.content ?? '');
     const bytes = new TextEncoder().encode(content).length;
     if (bytes > PUB_MAX_FILE_BYTES) throw fail(`File troppo grande: ${path}`, 413);
