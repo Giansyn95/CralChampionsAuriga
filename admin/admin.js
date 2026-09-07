@@ -152,7 +152,7 @@ async function initializeAdmin(){
 
 function renderLogin(targetKey='collaudo', error=''){
   resetShell(); app.innerHTML=''; const screen=el('div','center-screen'); const card=el('div','login-card');
-  const brand=el('div','brand');const mark=el('div','brand-mark','CR');brand.appendChild(mark);const copy=el('div');copy.appendChild(el('h1','','CRAL Admin'));copy.appendChild(el('p','','Gestione dati e pubblicazione sicura del torneo'));brand.appendChild(copy);card.appendChild(brand);
+  const brand=el('div','brand');const mark=el('div','brand-mark','CR');brand.appendChild(mark);const copy=el('div');copy.appendChild(el('h1','','CRAL Champions Admin'));copy.appendChild(el('p','','Gestione dati e pubblicazione sicura del torneo'));brand.appendChild(copy);card.appendChild(brand);
   card.appendChild(messageBox('info',[
     'Pubblica i risultati o i pagelloni di giornata, aggiorna le classifiche, i dati Fantacalcio o crea semplicemente un nuovo torneo.'
   ]));
