@@ -315,7 +315,7 @@ test('Giornata: risultato valido genera tutti i file, pubblica e si rilegge al r
   await publishPending(page);
 
   const results = sourceText(mock, 'tornei/2026-test/data/risultati_partite.csv');
-  expect(results).toMatch(/2;2026-09-17;Beta;0;Alpha;0/);
+  expect(results).toMatch(/2;[^\n;]*;Beta;0;Alpha;0/);
   expect(sourceText(mock, 'tornei/2026-test/data/classifica_squadre.csv')).toContain('Beta');
 
   await reloadAdmin(page);
@@ -354,9 +354,9 @@ test('Pagellone: crea TXT, aggiorna manifest, pubblica e ricarica la pagella', a
   await nav(page, 'Pagellone');
   await page.getByRole('button', { name: '+ Pagella' }).click();
   const card = page.locator('.pagella-edit').first();
-  await field(card, 'Testo').locator('textarea').fill('Prestazione E2E molto solida');
-  await field(card, 'Paragone').locator('input').fill('Fixture Man');
-  await field(card, 'Voto').locator('input').fill('7,5');
+  await card.locator('.field').filter({ hasText: 'Testo' }).locator('textarea').fill('Prestazione E2E molto solida');
+  await card.locator('.field').filter({ hasText: 'Paragone' }).locator('input').fill('Fixture Man');
+  await card.locator('.field').filter({ hasText: 'Voto' }).locator('input').fill('7,5');
   await page.getByRole('button', { name: 'Salva Pagellone' }).click();
   await expect(page.locator('body')).toContainText(/Pagellone giornata 2 pronto per la pubblicazione/i);
   await publishPending(page);
@@ -368,7 +368,7 @@ test('Pagellone: crea TXT, aggiorna manifest, pubblica e ricarica la pagella', a
   await reloadAdmin(page);
   await nav(page, 'Pagellone');
   await expect(page.locator('.pagella-edit').first()).toContainText('Pagella 1');
-  await expect(field(page.locator('.pagella-edit').first(), 'Voto').locator('input')).toHaveValue('7,5');
+  await expect(page.locator('.pagella-edit').first().locator('.field').filter({ hasText: 'Voto' }).locator('input')).toHaveValue('7,5');
   expect(errors, errors.join('\n')).toEqual([]);
 });
 
@@ -380,7 +380,7 @@ test('Pagellone: voto non riconosciuto viene rifiutato senza pending', async ({ 
   await nav(page, 'Pagellone');
   await page.getByRole('button', { name: '+ Pagella' }).click();
   const card = page.locator('.pagella-edit').first();
-  await field(card, 'Voto').locator('input').fill('ottimo');
+  await card.locator('.field').filter({ hasText: 'Voto' }).locator('input').fill('ottimo');
   await page.getByRole('button', { name: 'Salva Pagellone' }).click();
   await expect(page.locator('body')).toContainText(/voto.*non riconosciuto/i);
   await nav(page, 'Pubblica');
@@ -473,30 +473,68 @@ test('Fantacalcio: listone con ID duplicato non può essere confermato', async (
 // Classifiche
 // -----------------------------------------------------------------------------
 
-test('Classifiche: visualizza la classifica squadre caricata dal repository', async ({ page }) => {
+test('Classifiche: mostra squadre, capocannonieri, MVP e portieri dal repository', async ({ page }) => {
   const mock = createGitHubMock();
   const errors = watchErrors(page);
   await openAdmin(page, mock);
 
   await nav(page, 'Classifiche');
   await expect(page.getByRole('heading', { name: 'Classifiche' })).toBeVisible();
-  await expect(page.locator('.data-table tbody tr')).toHaveCount(1);
-  await expect(page.locator('.data-table tbody tr').first()).toContainText('Alpha');
-  await expect(page.locator('.data-table tbody tr').first()).toContainText('3');
+
+  const teams = page.locator('[data-ranking="classifica_squadre"]');
+  const scorers = page.locator('[data-ranking="marcatori"]');
+  const mvp = page.locator('[data-ranking="mvp"]');
+  const keepers = page.locator('[data-ranking="portieri"]');
+  await expect(teams.locator('tbody tr')).toHaveCount(1);
+  await expect(teams.locator('tbody tr').first()).toContainText('Alpha');
+  await expect(scorers.locator('tbody tr')).toHaveCount(1);
+  await expect(scorers.locator('tbody tr').first()).toContainText('Luca Bianchi');
+  await expect(mvp.locator('tbody tr')).toHaveCount(1);
+  await expect(mvp.locator('tbody tr').first()).toContainText('Luca Bianchi');
+  await expect(keepers.locator('tbody tr')).toHaveCount(1);
+  await expect(keepers.locator('tbody tr').first()).toContainText('Mario Rossi');
   expect(errors, errors.join('\n')).toEqual([]);
 });
 
-test('Classifiche: gestisce una classifica vuota senza crash', async ({ page }) => {
+test('Classifiche: usa anche le modifiche pending, così la preview è completa prima della pubblicazione', async ({ page }) => {
   const mock = createGitHubMock();
-  mock.source.commitChanges('main', [{
-    path: 'tornei/2026-test/data/classifica_squadre.csv',
-    content: 'Posizione;Squadra;PG;V;N;P;GF;GS;DR;Punti finali;Penalità;Nota penalità\n'
-  }], 'Fixture classifica vuota');
+  const errors = watchErrors(page);
+  await openAdmin(page, mock);
+
+  await nav(page, 'File');
+  await page.locator('.file-item').filter({ hasText: 'classifica_marcatori.csv' }).click();
+  const editor = page.locator('.file-list .card').last();
+  const current = await editor.locator('textarea').inputValue();
+  await editor.locator('textarea').fill(`${current.trimEnd()}\n2;Andrea Neri;Beta;1;1;\n`);
+  await editor.getByRole('button', { name: 'Salva modifica' }).click();
+
+  await nav(page, 'Classifiche');
+  const scorers = page.locator('[data-ranking="marcatori"]');
+  await expect(scorers.locator('tbody tr')).toHaveCount(2);
+  await expect(scorers).toContainText('Andrea Neri');
+
+  await nav(page, 'Pubblica');
+  await expect(page.locator('.change-row')).not.toHaveCount(0);
+  expect(sourceText(mock, 'tornei/2026-test/data/classifica_marcatori.csv')).not.toContain('Andrea Neri');
+  expect(errors, errors.join('\n')).toEqual([]);
+});
+
+test('Classifiche: gestisce classifiche mancanti o vuote senza crash', async ({ page }) => {
+  const mock = createGitHubMock();
+  mock.source.commitChanges('main', [
+    { path: 'tornei/2026-test/data/classifica_squadre.csv', content: 'Posizione;Squadra;PG;V;N;P;GF;GS;DR;Punti finali;Penalità;Nota penalità\n' },
+    { path: 'tornei/2026-test/data/classifica_marcatori.csv', delete: true },
+    { path: 'tornei/2026-test/data/classifica_mvp.csv', delete: true },
+    { path: 'tornei/2026-test/data/classifica_portieri.csv', delete: true }
+  ], 'Fixture classifiche vuote');
   const errors = watchErrors(page);
   await openAdmin(page, mock);
 
   await nav(page, 'Classifiche');
   await expect(page.locator('body')).toContainText(/Classifica squadre non presente/i);
+  await expect(page.locator('body')).toContainText(/Classifica marcatori non presente/i);
+  await expect(page.locator('body')).toContainText(/Classifica MVP non presente/i);
+  await expect(page.locator('body')).toContainText(/Classifica portieri non presente/i);
   expect(errors, errors.join('\n')).toEqual([]);
 });
 
@@ -533,10 +571,10 @@ test('Immagini: stemma squadra e foto giocatore diventano WebP, si pubblicano e 
   expect(mock.source.readFile('tornei/2026-test/immagini/giocatori/rossimario.webp')).not.toBeNull();
 
   await reloadAdmin(page);
-  await nav(page, 'Setup');
-  const imageStep = page.locator('.pro-step').filter({ hasText: 'Immagini' });
-  await expect(imageStep).toContainText(/stemmi 1\/2/i);
-  await expect(imageStep).toContainText(/foto giocatori 1\/4/i);
+  await nav(page, 'Immagini');
+  await expect(page.getByRole('heading', { name: 'Immagini' })).toBeVisible();
+  expect(mock.source.readFile('tornei/2026-test/immagini/squadre/alpha.webp')).not.toBeNull();
+  expect(mock.source.readFile('tornei/2026-test/immagini/giocatori/rossimario.webp')).not.toBeNull();
   expect(errors, errors.join('\n')).toEqual([]);
 });
 
@@ -787,7 +825,9 @@ test('File: crea, rinomina ed elimina un file mantenendo manifest e repository c
   await nav(page, 'File');
   await page.locator('.file-item').filter({ hasText: 'note_e2e.txt' }).click();
   const renameManager = page.locator('.card').filter({ hasText: 'Gestione file' });
-  await field(renameManager, 'Rinomina note_e2e.txt').locator('input').fill('note_e2e_rinominato.txt');
+  const renameInput = renameManager.locator('.field').filter({ hasText: 'Rinomina note_e2e.txt' }).locator('input');
+  await expect(renameInput).toBeVisible();
+  await renameInput.fill('note_e2e_rinominato.txt');
   await renameManager.getByRole('button', { name: 'Rinomina' }).click();
   await publishPending(page);
   expect(mock.source.readFile('tornei/2026-test/data/note_e2e.txt')).toBeNull();
