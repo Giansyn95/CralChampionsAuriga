@@ -179,7 +179,7 @@ test('Admin hardening: token scaduto/401 riporta alla schermata di accesso senza
 
   await page.goto('/admin/', { waitUntil: 'domcontentloaded' });
 
-  await expect(page.getByRole('heading', { name: 'CRAL Admin' })).toBeVisible({ timeout: 20_000 });
+  await expect(page.getByRole('heading', { name: 'CRAL Champions Admin' })).toBeVisible({ timeout: 20_000 });
   await expect(page.locator('body')).toContainText(/token salvato non è più valido/i);
   await expect(page.getByRole('button', { name: 'Verifica e accedi' })).toBeVisible();
   expect(errors, errors.join('\n')).toEqual([]);
@@ -374,7 +374,7 @@ test('Admin hardening finale: PAT resta in sessionStorage, non finisce in localS
   const logout = page.locator('button, a').filter({ hasText: /Esci|Logout|Disconnetti/i }).first();
   await expect(logout).toBeVisible();
   await logout.click();
-  await expect(page.getByRole('heading', { name: 'CRAL Admin' })).toBeVisible({ timeout: 20_000 });
+  await expect(page.getByRole('heading', { name: 'CRAL Champions Admin' })).toBeVisible({ timeout: 20_000 });
 
   const afterLogout = await page.evaluate(() => ({
     session: Object.entries(sessionStorage),
