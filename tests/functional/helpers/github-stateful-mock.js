@@ -146,7 +146,7 @@ function baseTournamentFiles(registry, variant = 'source') {
     : Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Y9ZlS8AAAAASUVORK5CYII=', 'base64');
   const files = {
     'tornei.json': jsonText(registry),
-    'tornei/2026-test/index.html': '<!doctype html><html><body>fixture</body></html>',
+    'tornei/2026-test/index.html': '<!doctype html><html><body>fixture<script>const STATIC_TEAM_IMAGE_KEYS = new Set([]); const STATIC_PLAYER_IMAGE_KEYS = new Set([]);</script></body></html>',
     'tornei/2026-test/data/manifest.csv': [
       'file', 'config.csv', 'squadra_Alpha.csv', 'squadra_Beta.csv', 'calendario.csv',
       'risultati_partite.csv', 'riepilogo_giornate.csv', 'classifica_squadre.csv',
