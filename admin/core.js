@@ -323,6 +323,16 @@ export function findPlayer(model, name, team = '') {
   if (team) return candidates.find(p => norm(p.team) === norm(team)) || null;
   return candidates.length === 1 ? candidates[0] : null;
 }
+export function canonicalPlayerIdentity(model, name, team = '') {
+  const rawName = String(name || '').trim();
+  const rawTeam = String(team || '').trim();
+  const player = findPlayer(model, rawName, rawTeam);
+  return {
+    name: player?.displayName || rawName,
+    team: player?.team || rawTeam,
+    player: player || null
+  };
+}
 function matchLabel(m) { return `${m.home} - ${m.away}`; }
 function rowDay(row, file) { return dayNumber(field(row, ['giornata','turno','round'])) || dayNumber(file) || null; }
 function rowBelongsToMatch(row, match) {
@@ -545,8 +555,8 @@ function makeStandingsChange(model,resultChange){
   return {path:file.path||`${model.dataRoot}/${file.rel}`,rel:file.rel,content:objectsToCsv(headers,objs,parsed.separator||';'),standingsRows:rows,tieWarnings};
 }
 function summaryTextsWithChange(model,summaryChange){ const arr=[]; for(const f of sectionFiles(model,'riepilogo')) arr.push({rel:f.rel,text:f.rel===summaryChange.rel?summaryChange.content:f.text}); if(!arr.some(x=>x.rel===summaryChange.rel))arr.push({rel:summaryChange.rel,text:summaryChange.content}); return arr; }
-function aggregateAwards(model,summaryChange){
-  const scorer=new Map(),mvp=new Map(),keeper=new Map(); const add=(map,name,team,val)=>{const key=`${norm(name)}|${norm(team)}`;const cur=map.get(key)||{name,team,value:0};cur.value+=Number(val||0);map.set(key,cur);};
+export function aggregateAwards(model,summaryChange){
+  const scorer=new Map(),mvp=new Map(),keeper=new Map(); const add=(map,name,team,val)=>{const id=canonicalPlayerIdentity(model,name,team);const key=`${norm(id.name)}|${norm(id.team)}`;const cur=map.get(key)||{name:id.name,team:id.team,value:0};cur.value+=Number(val||0);map.set(key,cur);};
   summaryTextsWithChange(model,summaryChange).forEach(({rel,text})=>{
     const p=parseRiepilogo(text);
     const marcByDay=new Map(), totalsByDay=new Map();
