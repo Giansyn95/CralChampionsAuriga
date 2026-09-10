@@ -5,11 +5,80 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
 <title>CRAL Champions Admin</title>
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://raw.githubusercontent.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@600;700&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+<!--
+  Logo Admin: parte immediatamente dal repository GitHub Pages, senza attendere
+  admin.js -> tornei.json -> raw.githubusercontent.com.
+  Il path coincide con il logo attualmente dichiarato in tornei.json.
+-->
+<link rel="preload"
+      href="../tornei/2026-spring/immagini/logo_cral.png"
+      as="image"
+      type="image/png"
+      fetchpriority="high">
+
 <link rel="stylesheet" href="./admin.css">
 <link rel="stylesheet" href="./mobile-fix.css?v=13">
+
+<!--
+  Mostra subito il logo locale come background del brand-mark.
+  Quando admin.js risolve il logo dinamico, la sua <img> viene semplicemente
+  sovrapposta: niente flash iniziale con la scritta "CR".
+-->
+<style>
+.brand-mark,
+.brand-mark.brand-mark-logo {
+  color: transparent !important;
+  background: var(--panel) url("../tornei/2026-spring/immagini/logo_cral.png") center / cover no-repeat !important;
+  border: 1px solid var(--line);
+}
+</style>
+
+<!--
+  Il bootstrap v30 forza cache:no-store quando rilegge core.js / gh.js / admin.js.
+  Siccome gli URL sono gia' versionati con ?v30src=..., per questi file locali
+  lasciamo lavorare normalmente la cache HTTP del browser.
+
+  Facciamo lo stesso SOLO per tornei.json su raw.githubusercontent.com.
+  Tutte le altre fetch restano completamente invariate.
+-->
+<script>
+(() => {
+  const nativeFetch = window.fetch.bind(window);
+
+  window.fetch = (input, init) => {
+    try {
+      const rawUrl = (typeof input === 'string' || input instanceof URL)
+        ? String(input)
+        : input.url;
+      const url = new URL(rawUrl, window.location.href);
+      const options = init ? { ...init } : {};
+
+      const isLocalAdminSource =
+        url.origin === window.location.origin &&
+        /\/admin\/(?:core|gh|admin)\.js$/.test(url.pathname);
+
+      const isTournamentRegistry =
+        url.hostname === 'raw.githubusercontent.com' &&
+        /\/tornei\.json$/.test(url.pathname);
+
+      if ((isLocalAdminSource || isTournamentRegistry) && options.cache === 'no-store') {
+        delete options.cache;
+        return nativeFetch(input, options);
+      }
+    } catch (_) {
+      // In caso di URL non standard, manteniamo il comportamento originale.
+    }
+
+    return nativeFetch(input, init);
+  };
+})();
+</script>
 </head>
 <body>
 <div id="app" class="app-shell" aria-live="polite"></div>
