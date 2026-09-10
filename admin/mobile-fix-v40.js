@@ -1,15 +1,24 @@
 /*
- * CRAL Champions Admin - mobile/iOS stability v41
+ * CRAL Champions Admin - mobile/iOS stability v43
  *
  * Novita' rispetto a v40:
  * 7) risolto il "salto a sinistra" delle tabelle scrollabili orizzontalmente
  *    (es. la tabella giocatori con le colonne Numero/Presenze/Capitano).
- *    Quando l'utente spunta una checkbox (es. "Capitano"), l'app fa un
- *    re-render delle righe e il contenitore con overflow-x perde il suo
- *    scrollLeft, facendo tornare la tabella all'inizio. Ora teniamo traccia
- *    dello scrollLeft di ogni contenitore scrollabile orizzontalmente dentro
- *    #app e lo ripristiniamo subito dopo ogni mutazione del DOM, se risulta
- *    azzerato in modo inatteso.
+ *    Verificato su admin-boot-v30.js: il gestore della checkbox "Capitano"
+ *    e dell'input "Presenze" NON chiama mai render() e non ricostruisce il
+ *    DOM della tabella, quindi il salto non e' causato da un re-render.
+ *    E' molto probabile che sia Safari iOS a "riportare in vista" il
+ *    controllo toccato dentro il contenitore con scroll orizzontale.
+ *    Usiamo quindi due meccanismi indipendenti dalla causa esatta:
+ *      a) un "blocco" temporaneo (~400ms) che pin-na lo scrollLeft del
+ *         contenitore al valore che aveva subito prima di toccare un
+ *         controllo al suo interno (checkbox/input/select), a meno che
+ *         l'utente non stia davvero trascinando con il dito quel
+ *         contenitore in quel momento;
+ *      b) un ripristino via MutationObserver (come rete di sicurezza) nel
+ *         caso in cui il DOM venga comunque ricostruito altrove, tracciando
+ *         lo scroll per una "firma" stabile della tabella (il testo delle
+ *         intestazioni) invece che per riferimento all'elemento.
  *
  * Tutto il resto (punti 1-6, viewport/zoom su Safari iOS) e' invariato
  * rispetto a v40.
@@ -58,78 +67,164 @@
   keepLogoVisible();
 })();
 
-/* NUOVO in v41: mantiene lo scroll orizzontale delle tabelle quando l'app
- * ri-renderizza le righe (es. dopo aver spuntato "Capitano" o modificato
- * un valore). Senza questo fix, il contenitore con overflow-x torna a
- * scrollLeft = 0 ad ogni re-render e l'utente perde la posizione. */
+/* v43: mantiene lo scroll orizzontale delle tabelle (es. la tabella
+ * giocatori con le colonne Numero/Presenze/Capitano) quando l'utente tocca
+ * un controllo al loro interno. Vedi commento in testa al file per il
+ * ragionamento su a) e b). */
 (() => {
   'use strict';
 
   const app = document.getElementById('app');
-  if (!app || typeof MutationObserver === 'undefined') return;
+  if (!app) return;
 
-  // Elementi scrollabili orizzontalmente che stiamo osservando.
-  const tracked = new Set();
-  // Ultimo scrollLeft "buono" (> 0) noto per ciascun elemento.
-  const lastScrollLeft = new WeakMap();
+  // firma tabella -> ultimo scrollLeft "buono" (> 0) noto.
+  const lastGoodBySignature = new Map();
+  // contenitori che l'utente sta trascinando davvero in questo momento:
+  // su questi NON dobbiamo mai forzare lo scrollLeft.
+  const activeTouch = new WeakSet();
 
   function isHorizontallyScrollable(el) {
-    return (
-      el instanceof HTMLElement &&
-      el.isConnected &&
-      el.scrollWidth - el.clientWidth > 2
-    );
+    return el instanceof HTMLElement && el.scrollWidth - el.clientWidth > 2;
   }
 
-  // Delegation: cattura lo scroll di qualunque discendente scrollabile.
+  // Identifica una tabella/contenitore in modo stabile tra un render e
+  // l'altro, usando il testo delle intestazioni (thead th) come chiave.
+  // Se non troviamo una <table> con intestazioni, ripieghiamo su una
+  // combinazione di classe + numero di colonne della prima riga.
+  function signatureFor(el) {
+    if (!(el instanceof HTMLElement)) return null;
+    const table = el.tagName === 'TABLE' ? el : el.querySelector('table');
+    if (table) {
+      const heads = Array.from(table.querySelectorAll('thead th'))
+        .map(th => th.textContent.trim())
+        .filter(Boolean);
+      if (heads.length) return 'thead:' + heads.join('|');
+
+      const firstRowCells = table.querySelector('tr')?.children?.length || 0;
+      if (firstRowCells) return 'cols:' + firstRowCells + ':' + (el.className || '');
+    }
+    return el.className ? 'class:' + el.className : null;
+  }
+
+  function nearestScrollable(node) {
+    let el = node instanceof HTMLElement ? node : node?.parentElement || null;
+    while (el && el !== app.parentElement) {
+      if (isHorizontallyScrollable(el)) return el;
+      el = el.parentElement;
+    }
+    return null;
+  }
+
+  // (a) Ricorda lo scroll "buono" mentre l'utente scrolla manualmente.
   document.addEventListener(
     'scroll',
     event => {
       const el = event.target;
       if (!(el instanceof HTMLElement) || !app.contains(el)) return;
       if (!isHorizontallyScrollable(el)) return;
-
-      tracked.add(el);
-      if (el.scrollLeft > 0) {
-        lastScrollLeft.set(el, el.scrollLeft);
-      }
+      if (el.scrollLeft <= 0) return;
+      const sig = signatureFor(el);
+      if (sig) lastGoodBySignature.set(sig, el.scrollLeft);
     },
     { capture: true, passive: true }
   );
 
-  function restoreScrollPositions() {
-    tracked.forEach(el => {
-      if (!el.isConnected) {
-        tracked.delete(el);
-        return;
-      }
-      const saved = lastScrollLeft.get(el);
-      if (!saved) return;
-      if (el.scrollLeft === 0 && isHorizontallyScrollable(el)) {
-        el.scrollLeft = saved;
-      }
-    });
+  // (a) Dopo aver toccato/cambiato un controllo dentro un contenitore
+  // scrollabile, blocchiamo per una finestra breve il suo scrollLeft al
+  // valore noto: se qualcosa (Safari o l'app) prova a riportarlo a 0,
+  // lo correggiamo fotogramma per fotogramma finche' la finestra e' aperta.
+  // Se l'utente sta davvero trascinando quel contenitore, non interveniamo.
+  function clampFor(el, ms) {
+    const sig = signatureFor(el);
+    if (!sig) return;
+    const target = lastGoodBySignature.get(sig);
+    if (!target) return;
+    const deadline = performance.now() + ms;
+    (function tick() {
+      if (!el.isConnected || activeTouch.has(el)) return;
+      if (el.scrollLeft !== target) el.scrollLeft = target;
+      if (performance.now() < deadline) requestAnimationFrame(tick);
+    })();
   }
 
-  let restoreQueued = false;
-  function queueRestore() {
-    if (restoreQueued) return;
-    restoreQueued = true;
-    requestAnimationFrame(() => {
-      restoreQueued = false;
-      restoreScrollPositions();
-      // Un secondo passaggio nel frame successivo copre i casi in cui il
-      // framework aggiusta lo scroll dopo il primo layout (es. altezze
-      // calcolate in modo asincrono).
-      requestAnimationFrame(restoreScrollPositions);
-    });
-  }
-
-  new MutationObserver(queueRestore).observe(app, {
-    childList: true,
-    subtree: true,
-    attributes: true
+  ['focusin', 'click', 'change', 'input'].forEach(type => {
+    document.addEventListener(
+      type,
+      event => {
+        const container = nearestScrollable(event.target);
+        if (container) clampFor(container, 400);
+      },
+      { capture: true, passive: true }
+    );
   });
+
+  document.addEventListener(
+    'touchstart',
+    event => {
+      const container = nearestScrollable(event.target);
+      if (container) activeTouch.add(container);
+    },
+    { capture: true, passive: true }
+  );
+  ['touchend', 'touchcancel'].forEach(type => {
+    document.addEventListener(
+      type,
+      event => {
+        const container = nearestScrollable(event.target);
+        if (container) activeTouch.delete(container);
+      },
+      { capture: true, passive: true }
+    );
+  });
+
+  // (b) Rete di sicurezza: se il DOM viene comunque ricostruito da zero
+  // (nuovo nodo per la tabella), ripristiniamo lo scroll su qualunque
+  // elemento con la stessa firma non appena compare.
+  if (typeof MutationObserver !== 'undefined') {
+    function findScrollableCandidates() {
+      let candidates = Array.from(app.querySelectorAll('.table-wrap')).filter(
+        isHorizontallyScrollable
+      );
+      if (candidates.length) return candidates;
+
+      candidates = [];
+      const walker = document.createTreeWalker(app, NodeFilter.SHOW_ELEMENT);
+      let node = walker.nextNode();
+      while (node) {
+        if (isHorizontallyScrollable(node)) candidates.push(node);
+        node = walker.nextNode();
+      }
+      return candidates;
+    }
+
+    function restoreScrollPositions() {
+      if (!lastGoodBySignature.size) return;
+      findScrollableCandidates().forEach(el => {
+        if (el.scrollLeft !== 0) return;
+        const sig = signatureFor(el);
+        if (!sig) return;
+        const saved = lastGoodBySignature.get(sig);
+        if (saved) el.scrollLeft = saved;
+      });
+    }
+
+    let restoreQueued = false;
+    function queueRestore() {
+      if (restoreQueued) return;
+      restoreQueued = true;
+      requestAnimationFrame(() => {
+        restoreQueued = false;
+        restoreScrollPositions();
+        requestAnimationFrame(restoreScrollPositions);
+      });
+    }
+
+    new MutationObserver(queueRestore).observe(app, {
+      childList: true,
+      subtree: true,
+      attributes: true
+    });
+  }
 })();
 
 /* Reset zoom/viewport deterministico per Safari iOS. */
