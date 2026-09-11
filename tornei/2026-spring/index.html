@@ -4419,7 +4419,7 @@ function renderClassifiche(){
     sectionFiles(kind).forEach(f=>{
       let tableRows=state.rows[f];
       if(kind==='classifica_squadre'){
-        tableRows=removeColumnsByNorm(tableRows,['punti originali','puntioriginali']);
+        tableRows=removeColumnsByNorm(tableRows,['punti originali','puntioriginali','pg']);
       }
       if(kind==='marcatori' && !playerSearch && !csvHasAnyNote(state.rows[f])){
         // A pari goal, ordina per posizione della squadra in classifica_squadre.csv
