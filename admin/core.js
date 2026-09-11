@@ -72,6 +72,7 @@ export function field(obj, aliases) {
     if (k !== undefined && String(obj[k] ?? '').trim() !== '') return obj[k];
   }
   for (const alias of aliases) {
+    if (norm(alias).length < 3) continue; // alias troppo corti darebbero falsi positivi (es. 'n' dentro 'Cognome')
     const k = keys.find(x => norm(x).includes(norm(alias)));
     if (k !== undefined && String(obj[k] ?? '').trim() !== '') return obj[k];
   }
