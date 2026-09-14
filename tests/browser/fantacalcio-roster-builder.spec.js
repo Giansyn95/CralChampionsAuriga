@@ -88,3 +88,41 @@ test('Crea la tua rosa resta nascosto se il manifest del torneo non contiene il 
   await page.unrouteAll({ behavior: 'ignoreErrors' });
   expect(errors.filter(e => !/fantacalcio\/(?:manifest_fantacalcio|listone_fantacalcio|eventi_fantacalcio)/.test(e)), errors.join('\n')).toEqual([]);
 });
+
+test('Crea la tua rosa resta nascosto quando l Admin disabilita la finestra', async ({ page }) => {
+  const errors = collectLocalErrors(page);
+  await page.route('**/tornei/2026-spring/data/config.csv*', async route => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'text/csv; charset=utf-8',
+      body: [
+        'chiave;valore',
+        'titolo;CRAL Champions - Auriga 2026',
+        'sottotitolo;Fixture timer',
+        'fantacalcioCreazioneRosaEnabled;false'
+      ].join('\n') + '\n'
+    });
+  });
+  await page.goto('/tornei/2026-spring/', { waitUntil: 'domcontentloaded' });
+  await page.locator('#tab-fantacalcio').click();
+  await expect(page.locator('#fantacalcio.active')).toBeVisible();
+  await expect(page.locator('.fanta-roster-creator-link')).toHaveCount(0);
+  await page.unrouteAll({ behavior: 'ignoreErrors' });
+  expect(errors, errors.join('\n')).toEqual([]);
+});
+
+test('link diretto crea-rosa applica lo stesso blocco configurato dall Admin', async ({ page }) => {
+  const errors = collectLocalErrors(page);
+  await page.route('**/tornei/2026-spring/data/config.csv*', async route => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'text/csv; charset=utf-8',
+      body: 'chiave;valore\nfantacalcioCreazioneRosaEnabled;false\n'
+    });
+  });
+  await page.goto('/tornei/2026-spring/crea-rosa.html', { waitUntil: 'domcontentloaded' });
+  await expect(page.locator('#listoneStatus')).toContainText(/disabilitata dall'admin/i);
+  await expect(page.locator('#downloadRoster')).toBeDisabled();
+  await page.unrouteAll({ behavior: 'ignoreErrors' });
+  expect(errors, errors.join('\n')).toEqual([]);
+});
