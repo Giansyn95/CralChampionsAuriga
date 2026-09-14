@@ -4,9 +4,9 @@
 
   Contratto con il frontend/admin esistente:
   - listone ufficiale: data/fantacalcio/listone_fantacalcio.csv
-  - rosa: giornata;partecipante;idGiocatore
+  - export utente: partecipante;idGiocatore (rosa complessiva)
   - filename download: rosa_<partecipante_slug>.csv
-  - l'Admin ricava la giornata dal contenuto e pubblica col nome canonico interno.
+  - l'Admin replica la rosa su tutte le giornate del calendario e pubblica i file canonici interni.
   - regola rosa: 1 PT + 4 giocatori di movimento (5 totali)
   - budget: baseCreditiSuggeriti del listone; fallback storico 250.
 */
@@ -243,15 +243,13 @@
     return text;
   }
 
-  function buildRosterCsv(participantName, selectedIds, day) {
+  function buildRosterCsv(participantName, selectedIds) {
     const participantValidation = validateParticipant(participantName);
     if (participantValidation.errors.length) throw new Error(participantValidation.errors[0]);
-    const parsedDay = Number.parseInt(day, 10);
-    const safeDay = Number.isFinite(parsedDay) && parsedDay > 0 ? parsedDay : DEFAULT_DAY;
     const separator = ';';
     const rows = [
-      ['giornata', 'partecipante', 'idGiocatore'],
-      ...(selectedIds || []).map(id => [String(safeDay), participantValidation.participant, cleanText(id)])
+      ['partecipante', 'idGiocatore'],
+      ...(selectedIds || []).map(id => [participantValidation.participant, cleanText(id)])
     ];
     return rows.map(row => row.map(value => csvEscape(value, separator)).join(separator)).join('\r\n') + '\r\n';
   }
@@ -447,7 +445,7 @@
       const participant = validateParticipant(participantInput.value);
       const roster = currentValidation();
       if (!state.ready || participant.errors.length || !roster.valid) { renderSummary(); return; }
-      const csv = buildRosterCsv(participant.participant, state.selectedIds, DEFAULT_DAY);
+      const csv = buildRosterCsv(participant.participant, state.selectedIds);
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');

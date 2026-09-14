@@ -77,12 +77,12 @@
             <button id="downloadRoster" class="primary-btn" type="button" disabled>Scarica CSV validato</button>
             <button id="resetRoster" class="secondary-btn" type="button">Azzera</button>
           </div>
-          <p class="admin-note">Il file scaricato usa esattamente il formato accettato dall'Admin/FE: <b>giornata;partecipante;idGiocatore</b>. Il nome sarà <b>rosa_nome_cognome.csv</b>; l'Admin lo pubblicherà automaticamente nel percorso canonico della giornata. Invialo all'admin dalla tua mail aziendale.</p>
+          <p class="admin-note">Il file scaricato è una <b>rosa complessiva</b> nel formato <b>partecipante;idGiocatore</b>. Il nome sarà <b>rosa_nome_cognome.csv</b>; l'Admin lo validerà e lo replicherà automaticamente su tutte le giornate del torneo nel formato interno richiesto dal Fantacalcio. Invialo all'admin dalla tua mail aziendale.</p>
         </section>
       </aside>
     </div>
 
-    <p class="footer-note">Questa pagina non salva la rosa e non invia dati a un server. Il controllo di unicità resta in carico all'admin, che pubblica un solo file per partecipante/giornata.</p>
+    <p class="footer-note">Questa pagina non salva la rosa e non invia dati a un server. Il controllo di unicità resta in carico all'admin, che pubblica una sola rosa complessiva per partecipante e genera i file interni per giornata.</p>
   </main>
   <script src="crea-rosa.js"></script>
 </body>

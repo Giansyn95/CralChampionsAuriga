@@ -13055,16 +13055,17 @@ function renderFantacalcio(){
   const crown=document.createElement('span'); crown.className='gold-crown'; crown.textContent='♛';
   title.appendChild(crown); title.appendChild(document.createTextNode(' Fantacalcio'));
   card.appendChild(title);
-  const intro=document.createElement('p'); intro.className='hint fanta-claim';
-  intro.textContent='Scegli la giornata e il punteggio si aggiorna con risultati e statistiche del torneo.';
-  card.appendChild(intro);
 
   if(fantaRosterCreatorAvailable()){
     const creatorCta=document.createElement('div'); creatorCta.className='fanta-roster-creator-cta';
     const creatorLink=document.createElement('a'); creatorLink.className='fanta-roster-creator-link'; creatorLink.href='crea-rosa.html'; creatorLink.textContent='⚽ Crea la tua rosa';
-    const creatorNote=document.createElement('span'); creatorNote.className='fanta-roster-creator-note'; creatorNote.textContent="Genera il CSV validato sul listone ufficiale e invialo all'admin.";
+    const creatorNote=document.createElement('span'); creatorNote.className='fanta-roster-creator-note'; creatorNote.textContent="Genera il CSV complessivo validato sul listone ufficiale e invialo all'admin.";
     creatorCta.appendChild(creatorLink); creatorCta.appendChild(creatorNote); card.appendChild(creatorCta);
   }
+
+  const intro=document.createElement('p'); intro.className='hint fanta-claim';
+  intro.textContent='Scegli la giornata e il punteggio si aggiorna con risultati e statistiche del torneo.';
+  card.appendChild(intro);
 
   const data=fantaCurrentData();
   let options=fantaAvailableDayOptions(data.results);
