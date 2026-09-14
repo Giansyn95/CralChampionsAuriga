@@ -6,7 +6,7 @@ Il progetto è composto da una singola pagina HTML che legge dati da file CSV e 
 
 ## Funzionalità
 
-- Storico tornei con Hall of Fame consultabile
+- Storico tornei con Hall of Fame consultabile.
 - Home con KPI del torneo, grafici e stato di avanzamento.
 - Classifiche squadre, marcatori, MVP e portieri.
 - Statistiche giocatori, inclusa media gol per partita.
