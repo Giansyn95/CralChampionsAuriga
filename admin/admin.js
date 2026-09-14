@@ -3,7 +3,7 @@ import {
   fileKind, manifestChange, norm, objectRows, pagelloneText, parsePagellone, playersForTeam, relativeDataPath, rosterCsv,
   safeTeamFilename, sectionFiles, validateMatchdayDraft, validatePagelloneEntries,
   EVENT_TYPES, eventiCsvContent, fantaFiles, idKey, listoneCsvContent, listoneIndex, manifestFantaContent,
-  parseEventiCsv, parseListoneCsv, parseRosterUpload, rosterCsvContent, rosterRelPath, expandRosterAcrossDays,
+  parseEventiCsv, parseListoneCsv, parseRosterUpload, rosterCsvContent, rosterRelPath, expandRosterAcrossDays, generateBalancedFantacalcioListone,
   validateListoneRows, validateNewEvent, validateRosterAgainstListone
 } from './core.js';
 import {
@@ -32,6 +32,8 @@ const state = {
   pagelloneDraft: null,
   pagelloneDirty: false,
   fantaListoneUpload: null,
+  fantaGeneratedListone: null,
+  fantaValuationSource: '',
   fantaRosterUpload: null,
   fantaEventForm: null,
   fantaNewEvents: [],
@@ -518,15 +520,84 @@ function confirmListoneUpload(){
   const content=listoneCsvContent(up.players,up.separator||';');
   const count=stageFantaChanges([{path,content}],`Listone Fantacalcio (${up.fileName})`,['listone_fantacalcio.csv']);
   state.fantaListoneUpload=null;
+  state.fantaGeneratedListone=null;
   state.status={type:'success',text:`Listone caricato: ${up.players.length} giocatori pronti per la pubblicazione (${count} file inclusi manifest).`};
   render();
+}
+async function generateListoneFromTournament(){
+  const targetModel=effectiveModel();
+  const sourceTournament=state.fantaValuationSource||state.tournament;
+  state.busy=true;renderLoading(sourceTournament===state.tournament?'Calcolo valori Fantacalcio…':'Caricamento statistiche del torneo di riferimento…');
+  try{
+    let statsModel=targetModel;
+    if(sourceTournament!==state.tournament){
+      const snap=await getSnapshot(requireTarget(state.target),sourceTournament);
+      statsModel=buildModel(snap);
+    }
+    const generated=generateBalancedFantacalcioListone(targetModel,250,statsModel);
+    generated.sourceTournament=sourceTournament;
+    state.fantaGeneratedListone=generated;
+    state.fantaListoneUpload=null;
+    if(generated.diagnostics.errors.length)state.status={type:'error',text:'Generazione listone non completabile: controlla le rose squadra e i dati disponibili.'};
+    else if(generated.diagnostics.warnings.length)state.status={type:'warning',text:'Listone generato con avvisi: verifica l’anteprima prima di confermare.'};
+    else state.status={type:'success',text:'Listone bilanciato generato. Verifica l’anteprima e conferma per prepararlo alla pubblicazione.'};
+  }catch(e){state.status={type:'error',text:`Impossibile generare il listone: ${e.message||e}`};state.fantaGeneratedListone=null}
+  finally{state.busy=false;state.active='fantacalcio';render()}
+}
+function confirmGeneratedListone(){
+  const generated=state.fantaGeneratedListone;
+  if(!generated||generated.diagnostics.errors.length)return;
+  const model=effectiveModel();
+  const path=`${model.dataRoot}/fantacalcio/listone_fantacalcio.csv`;
+  const content=listoneCsvContent(generated.players,';');
+  const count=stageFantaChanges([{path,content}],`Listone Fantacalcio bilanciato automatico (${generated.players.length} giocatori)`,['listone_fantacalcio.csv']);
+  state.fantaGeneratedListone=null;
+  state.status={type:'success',text:`Listone bilanciato pronto per la pubblicazione: ${generated.players.length} giocatori (${count} file inclusi manifest).`};
+  render();
+}
+function renderGeneratedListonePreview(card, generated){
+  const d=generated.diagnostics;
+  if(d.errors.length)card.appendChild(messageBox('error',d.errors));
+  if(d.warnings.length)card.appendChild(messageBox('warning',d.warnings));
+  if(!generated.players.length)return;
+  const checks=(d.pairChecks||[]).map(x=>`${x.ruoli}: rosa minima con entrambi i top = ${x.costoMinimoRosa}/${d.budget} crediti ${x.superaBudget?'✓':'⚠'}`);
+  card.appendChild(messageBox('info',[
+    `Statistiche di riferimento: ${generated.sourceTournament||state.tournament}. Budget: ${d.budget} crediti. Rosa minima possibile: ${d.cheapestRoster}/${d.budget}.`,
+    ...checks,
+    'Valutazione: gol e classifiche individuali, punti/premi MVP, premi portiere, capocannoniere di giornata e piazzamento squadra; confronto normalizzato nel ruolo reale P/D/C/A.'
+  ]));
+  const wrap=el('div','table-wrap');const table=el('table','data-table');
+  const thead=el('thead');const hr=el('tr');['ID','Fanta','Ruolo','Giocatore','Squadra','Crediti','Indice','Indicatori'].forEach(h=>hr.appendChild(el('th','',h)));thead.appendChild(hr);table.appendChild(thead);
+  const tbody=el('tbody');
+  generated.players.forEach(p=>{
+    const v=p.valuation||{};const tr=el('tr');
+    const indicators=p.ruolo==='PT'?`PT ${v.puntiPortiere||0} · premi ${v.premiPortiere||0}`:`Gol ${v.gol||0} · MVP ${v.puntiMVP||0} · premi ${v.premiMVP||0}`;
+    [p.id,p.ruolo,v.ruoloOriginale||'',p.giocatore,p.squadra,p.crediti,`${v.indice||0}/100`,indicators].forEach(x=>tr.appendChild(el('td','',String(x))));
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);wrap.appendChild(table);card.appendChild(wrap);
+  const row=el('div','btn-row');
+  const confirm=button('Usa questo listone','gold',confirmGeneratedListone);confirm.disabled=!!d.errors.length;row.appendChild(confirm);
+  row.appendChild(button('Rigenera','ghost',generateListoneFromTournament));
+  row.appendChild(button('Annulla','ghost',()=>{state.fantaGeneratedListone=null;render()}));
+  card.appendChild(row);
 }
 function renderListoneSection(main, model){
   const card=el('div','card');card.appendChild(el('h3','','1. Listone Fantacalcio'));
   const existing=fantaCurrentListone(model);
-  card.appendChild(el('p','small muted',existing.players.length?`Listone attualmente pubblicato: ${existing.players.length} giocatori.`:'Nessun listone caricato ancora: caricalo per primo, serve a validare le rose e gli eventi.'));
+  card.appendChild(el('p','small muted',existing.players.length?`Listone attualmente pubblicato: ${existing.players.length} giocatori.`:'Nessun listone caricato ancora: generalo automaticamente oppure caricalo da CSV.'));
+  card.appendChild(messageBox('info','Generazione automatica: assegna ID a 3 cifre nello stesso formato attuale e calcola i crediti su base 250 usando gol, classifiche, premi MVP/portiere, capocannonieri di giornata e piazzamento squadra. I top di D/C/A ricevono un premio di scarsità tale da impedire, con il budget minimo di completamento, di schierare insieme due leader di reparto.'));
+  const tournamentOptions=(state.tournaments||[]).map(t=>({value:t.path,label:`${t.title||t.id}${t.path===state.tournament?' · torneo selezionato':''}`}));
+  if(!tournamentOptions.some(o=>o.value===state.tournament))tournamentOptions.unshift({value:state.tournament,label:`${state.tournament} · torneo selezionato`});
+  if(!state.fantaValuationSource||!tournamentOptions.some(o=>o.value===state.fantaValuationSource))state.fantaValuationSource=state.tournament;
+  const sourceSelect=select(tournamentOptions,state.fantaValuationSource);sourceSelect.addEventListener('change',()=>{state.fantaValuationSource=sourceSelect.value;state.fantaGeneratedListone=null;});
+  card.appendChild(fieldWrap('Statistiche di riferimento',sourceSelect));
+  card.appendChild(el('p','small muted','Per un torneo appena creato puoi selezionare l’edizione precedente: gli ID vengono assegnati ai giocatori della rosa corrente, mentre la valutazione usa lo storico del torneo scelto anche se il giocatore ha cambiato squadra.'));
+  const genRow=el('div','btn-row');genRow.appendChild(button('⚙️ Genera listone bilanciato · 250 crediti','gold',generateListoneFromTournament));card.appendChild(genRow);
+  if(state.fantaGeneratedListone)renderGeneratedListonePreview(card,state.fantaGeneratedListone);
+  card.appendChild(el('hr','section-divider'));
   const picker=input('file');picker.accept='.csv,text/csv';picker.addEventListener('change',()=>handleListoneFile(picker.files));
-  card.appendChild(fieldWrap('Carica listone (CSV: id;ruolo;giocatore;squadra;crediti;baseCreditiSuggeriti)',picker));
+  card.appendChild(fieldWrap('Oppure carica listone (CSV: id;ruolo;giocatore;squadra;crediti;baseCreditiSuggeriti)',picker));
   const up=state.fantaListoneUpload;
   if(up){
     if(up.errors.length)card.appendChild(messageBox('error',up.errors));

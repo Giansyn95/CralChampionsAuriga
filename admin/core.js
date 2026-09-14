@@ -758,6 +758,258 @@ export function listoneIndex(players) {
   return map;
 }
 
+// ---------------- GENERATORE LISTONE BILANCIATO ----------------
+// Il listone pubblico mantiene il contratto storico PT/G, ma per la valutazione
+// usiamo il ruolo reale presente nelle rose (P/D/C/A). In questo modo un top di
+// reparto ha un prezzo realmente premium pur senza cambiare il frontend Fanta.
+const FANTA_ROLE_PRICE_BANDS = Object.freeze({
+  P: { min: 18, max: 50 },
+  D: { min: 20, max: 95 },
+  C: { min: 24, max: 105 },
+  A: { min: 30, max: 115 },
+  G: { min: 20, max: 95 }
+});
+function clamp01(value) { return Math.max(0, Math.min(1, Number(value) || 0)); }
+function canonicalFootballRole(value) {
+  const r = norm(value);
+  if (!r) return 'G';
+  if (['p','pt','portiere','goalkeeper','keeper'].includes(r)) return 'P';
+  if (['d','dif','difensore','defender'].includes(r)) return 'D';
+  if (['c','cen','centrocampista','midfielder'].includes(r)) return 'C';
+  if (['a','att','attaccante','forward','striker'].includes(r)) return 'A';
+  return 'G';
+}
+function listoneRoleFromFootballRole(role) { return role === 'P' ? 'PT' : 'G'; }
+function rankStrength(rank, total) {
+  const r = Number(rank), n = Number(total);
+  if (!(r > 0) || !(n > 0)) return 0;
+  if (n === 1) return 1;
+  return clamp01(1 - ((r - 1) / (n - 1)));
+}
+function playerKey(player) { return norm(player?.displayName || player?.fullName); }
+function mapMax(map, keys) {
+  return Math.max(0, ...keys.map(k => Number(map.get(k) || 0)));
+}
+function addMap(map, key, value = 1) { if (key) map.set(key, Number(map.get(key) || 0) + Number(value || 0)); }
+function findRosterPlayer(model, name, team='') {
+  return findPlayer(model, String(name || '').trim(), String(team || '').trim()) || null;
+}
+function rankingMetrics(model, kind, nameAliases, valueAliases) {
+  const value = new Map(), rank = new Map(), appearances = new Map();
+  const files = sectionFiles(model, kind);
+  files.forEach(file => (file.parsed?.objects || objectRows(file.text || '').objects).forEach((row, i) => {
+    const name = field(row, nameAliases), team = field(row, ['squadra','team','club']);
+    const player = findRosterPlayer(model, name, team);
+    if (!player) return;
+    const key = playerKey(player);
+    const raw = field(row, valueAliases);
+    if (String(raw).trim() !== '') value.set(key, num(raw));
+    const pos = intOrNull(field(row, ['posizione','pos','rank'])) || (i + 1);
+    rank.set(key, pos);
+    const pres = intOrNull(field(row, ['presenze','partite','pg','giocate']));
+    if (pres !== null) appearances.set(key, pres);
+  }));
+  return { value, rank, appearances, total: Math.max(...rank.values(), 0) };
+}
+function singularAwards(model) {
+  const mvpWins = new Map(), keeperWins = new Map(), topScorerDays = new Map();
+  (model.summaries || []).forEach(summary => {
+    const parsed = summary.parsed || parseRiepilogo(summary.file?.text || '');
+    const rel = summary.file?.rel || '';
+    (parsed.mvp || []).forEach(row => {
+      const p = findRosterPlayer(model, field(row, ['giocatore','mvp','player']), field(row, ['squadra','team']));
+      if (p) addMap(mvpWins, playerKey(p), 1);
+    });
+    (parsed.portieri || []).forEach(row => {
+      const p = findRosterPlayer(model, field(row, ['portiere','giocatore','player']), field(row, ['squadra','team']));
+      if (p) addMap(keeperWins, playerKey(p), 1);
+    });
+
+    // Premio implicito di capocannoniere di giornata: ricavato dai totali, oppure
+    // aggregato dalle singole righe Marcatore quando il riepilogo non ha i totali.
+    const totals = (parsed.totaliMarcatori || []).length ? parsed.totaliMarcatori : (parsed.marcatori || []);
+    const byDay = new Map();
+    totals.forEach(row => {
+      const day = dayNumber(field(row, ['giornata','turno','round'])) || dayNumber(rel) || 0;
+      const p = findRosterPlayer(model, field(row, ['giocatore','marcatore','player']), field(row, ['squadra','team']));
+      if (!p) return;
+      const k = `${day}|${playerKey(p)}`;
+      const goals = num(field(row, ['gol','goal','reti','quantita','qta','valore']) || 1);
+      byDay.set(k, (byDay.get(k) || 0) + goals);
+    });
+    const dayLeaders = new Map();
+    byDay.forEach((goals, compound) => {
+      const split = compound.indexOf('|');
+      const day = compound.slice(0, split), key = compound.slice(split + 1);
+      const arr = dayLeaders.get(day) || [];
+      arr.push({ key, goals });
+      dayLeaders.set(day, arr);
+    });
+    dayLeaders.forEach(entries => {
+      const best = Math.max(0, ...entries.map(e => e.goals));
+      if (best > 0) entries.filter(e => e.goals === best).forEach(e => addMap(topScorerDays, e.key, 1));
+    });
+  });
+  return { mvpWins, keeperWins, topScorerDays };
+}
+function teamStrengthMap(model) {
+  const out = new Map();
+  const rows = model.standings || [];
+  const total = Math.max(rows.length, (model.teams || []).length, 1);
+  rows.forEach((row, i) => {
+    const team = String(field(row, ['squadra','team','nome','club']) || '').trim();
+    if (!team) return;
+    const rank = intOrNull(field(row, ['posizione','pos','rank'])) || (i + 1);
+    out.set(norm(team), rankStrength(rank, total));
+  });
+  return out;
+}
+export function generateBalancedFantacalcioListone(model, budget = 250, statsModel = model) {
+  const baseBudget = Number.parseInt(String(budget), 10) || 250;
+  const rosterPlayers = (model?.players || []).filter(p => p?.displayName && p?.team);
+  if (!rosterPlayers.length) return { players: [], diagnostics: { errors: ['Nessun giocatore trovato nelle rose squadra.'], warnings: [] } };
+
+  const goals = rankingMetrics(statsModel, 'marcatori', ['giocatore','marcatore','player'], ['gol','goal','reti']);
+  const mvp = rankingMetrics(statsModel, 'mvp', ['giocatore','mvp','player'], ['punti mvp','puntimvp','punti','valore']);
+  const keepers = rankingMetrics(statsModel, 'portieri', ['portiere','giocatore','player'], ['punti portiere','punti pt','punti','valore']);
+  const awards = singularAwards(statsModel);
+  const teamStrength = teamStrengthMap(statsModel);
+  const historicalTeamStrength = new Map();
+  (statsModel?.players || []).forEach(p => historicalTeamStrength.set(playerKey(p), Number(teamStrength.get(norm(p.team)) || 0))); 
+
+  const enriched = rosterPlayers.map(player => ({
+    player,
+    key: playerKey(player),
+    sourceRole: canonicalFootballRole(player.role),
+    goals: Number(goals.value.get(playerKey(player)) || 0),
+    mvpPoints: Number(mvp.value.get(playerKey(player)) || 0),
+    keeperPoints: Number(keepers.value.get(playerKey(player)) || 0),
+    mvpWins: Number(awards.mvpWins.get(playerKey(player)) || 0),
+    keeperWins: Number(awards.keeperWins.get(playerKey(player)) || 0),
+    topScorerDays: Number(awards.topScorerDays.get(playerKey(player)) || 0),
+    scorerRank: Number(goals.rank.get(playerKey(player)) || 0),
+    mvpRank: Number(mvp.rank.get(playerKey(player)) || 0),
+    keeperRank: Number(keepers.rank.get(playerKey(player)) || 0),
+    teamStrength: Number(historicalTeamStrength.get(playerKey(player)) || 0)
+  }));
+
+  const byRole = new Map();
+  enriched.forEach(x => { const arr = byRole.get(x.sourceRole) || []; arr.push(x); byRole.set(x.sourceRole, arr); });
+  byRole.forEach(group => {
+    const keys = group.map(x => x.key);
+    const maxGoals = Math.max(0, ...group.map(x => x.goals));
+    const maxMvp = Math.max(0, ...group.map(x => x.mvpPoints));
+    const maxKeeper = Math.max(0, ...group.map(x => x.keeperPoints));
+    const maxMvpWins = mapMax(awards.mvpWins, keys);
+    const maxKeeperWins = mapMax(awards.keeperWins, keys);
+    const maxTopScorer = mapMax(awards.topScorerDays, keys);
+    group.forEach(x => {
+      const g = maxGoals ? x.goals / maxGoals : 0;
+      const mp = maxMvp ? x.mvpPoints / maxMvp : 0;
+      const kp = maxKeeper ? x.keeperPoints / maxKeeper : 0;
+      const mw = maxMvpWins ? x.mvpWins / maxMvpWins : 0;
+      const kw = maxKeeperWins ? x.keeperWins / maxKeeperWins : 0;
+      const ts = maxTopScorer ? x.topScorerDays / maxTopScorer : 0;
+      const scorerRankScore = rankStrength(x.scorerRank, goals.total);
+      const mvpRankScore = rankStrength(x.mvpRank, mvp.total);
+      const keeperRankScore = rankStrength(x.keeperRank, keepers.total);
+      if (x.sourceRole === 'P') {
+        x.performance = clamp01(0.50 * kp + 0.22 * kw + 0.08 * g + 0.10 * mp + 0.05 * keeperRankScore + 0.05 * x.teamStrength);
+      } else {
+        x.performance = clamp01(0.38 * g + 0.28 * mp + 0.14 * mw + 0.08 * ts + 0.07 * ((scorerRankScore + mvpRankScore) / 2) + 0.05 * x.teamStrength);
+      }
+    });
+
+    group.sort((a,b) => b.performance - a.performance || b.goals - a.goals || b.mvpPoints - a.mvpPoints || a.player.displayName.localeCompare(b.player.displayName, 'it'));
+    const band = FANTA_ROLE_PRICE_BANDS[group[0]?.sourceRole] || FANTA_ROLE_PRICE_BANDS.G;
+    group.forEach((x, index) => {
+      const roleRank = index + 1;
+      const rs = rankStrength(roleRank, group.length);
+      const fraction = clamp01(0.62 * Math.pow(rs, 1.18) + 0.38 * x.performance);
+      let credits = Math.round(band.min + (band.max - band.min) * fraction);
+      if (roleRank === 1) credits = band.max; // il migliore di reparto è davvero premium
+      x.roleRank = roleRank;
+      x.credits = Math.max(band.min, Math.min(band.max, credits));
+    });
+  });
+
+  // ID stabili: se esiste già un listone, preserviamo l'ID associato allo stesso
+  // giocatore così una rigenerazione dei crediti non invalida rose già raccolte. Per un
+  // listone nuovo manteniamo il formato storico: PT prima, poi movimento, alfabetico.
+  const ordered = [...enriched].sort((a,b) => {
+    const aBucket = a.sourceRole === 'P' ? 0 : 1, bBucket = b.sourceRole === 'P' ? 0 : 1;
+    return aBucket - bBucket || a.player.displayName.localeCompare(b.player.displayName, 'it');
+  });
+  const existingListoneFile = fantaFiles(model, 'fanta_listone').find(f => f.active !== false && String(f.text || '').trim());
+  const existingListone = existingListoneFile ? parseListoneCsv(existingListoneFile.text).players : [];
+  const existingByPlayer = new Map();
+  const usedIds = new Set();
+  existingListone.forEach(p => {
+    const id = String(p.id || '').trim();
+    const key = norm(p.giocatore);
+    if (!key || !/^\d{3}$/.test(id) || usedIds.has(id)) return;
+    existingByPlayer.set(key, id); usedIds.add(id);
+  });
+  let nextId = 1;
+  const allocateId = displayName => {
+    const old = existingByPlayer.get(norm(displayName));
+    if (old) return old;
+    while (usedIds.has(String(nextId).padStart(3, '0'))) nextId++;
+    const id = String(nextId++).padStart(3, '0'); usedIds.add(id); return id;
+  };
+  const players = ordered.map((x, i) => ({
+    id: allocateId(x.player.displayName),
+    ruolo: listoneRoleFromFootballRole(x.sourceRole),
+    giocatore: x.player.displayName,
+    squadra: x.player.team,
+    crediti: String(x.credits),
+    baseCreditiSuggeriti: String(baseBudget),
+    row: i + 2,
+    valuation: {
+      ruoloOriginale: x.sourceRole,
+      posizioneRuolo: x.roleRank,
+      indice: Math.round(x.performance * 100),
+      gol: x.goals,
+      puntiMVP: x.mvpPoints,
+      premiMVP: x.mvpWins,
+      capocannoniereGiornata: x.topScorerDays,
+      puntiPortiere: x.keeperPoints,
+      premiPortiere: x.keeperWins
+    }
+  }));
+
+  const warnings = [];
+  if (!goals.value.size && !mvp.value.size && !keepers.value.size) warnings.push('Non risultano classifiche individuali valorizzate nella sorgente scelta: i crediti dipendono soprattutto dal ruolo e dall’ordine relativo. Scegli come riferimento un torneo concluso con statistiche reali.');
+  const historyKeys = new Set([...[...goals.value.keys()], ...[...mvp.value.keys()], ...[...keepers.value.keys()], ...[...awards.mvpWins.keys()], ...[...awards.keeperWins.keys()]]);
+  const withoutHistory = players.filter(p => !historyKeys.has(norm(p.giocatore))).length;
+  if (withoutHistory) warnings.push(`${withoutHistory} giocatori non hanno statistiche individuali nella sorgente scelta: per loro il prezzo usa ruolo e contesto squadra disponibili.`);
+  const movement = players.filter(p => p.ruolo === 'G').sort((a,b) => Number(a.crediti) - Number(b.crediti));
+  const goalie = players.filter(p => p.ruolo === 'PT').sort((a,b) => Number(a.crediti) - Number(b.crediti));
+  const leaders = {};
+  ['D','C','A'].forEach(role => {
+    const x = players.filter(p => p.valuation?.ruoloOriginale === role).sort((a,b) => a.valuation.posizioneRuolo - b.valuation.posizioneRuolo)[0];
+    if (x) leaders[role] = x;
+  });
+  const cheapestPt = Number(goalie[0]?.crediti || 0);
+  const pairChecks = [];
+  const rolePairs = [['D','C'],['D','A'],['C','A']];
+  rolePairs.forEach(([r1,r2]) => {
+    const a = leaders[r1], b = leaders[r2]; if (!a || !b) return;
+    const excluded = new Set([a.id,b.id]);
+    const fillers = movement.filter(p => !excluded.has(p.id)).slice(0,2);
+    if (fillers.length < 2 || !cheapestPt) return;
+    const minCost = Number(a.crediti) + Number(b.crediti) + cheapestPt + fillers.reduce((s,p)=>s+Number(p.crediti),0);
+    pairChecks.push({ ruoli:`${r1}+${r2}`, costoMinimoRosa:minCost, superaBudget:minCost>baseBudget });
+    if (minCost <= baseBudget) warnings.push(`Bilanciamento da rivedere: i top ${r1} e ${r2} possono ancora coesistere in una rosa minima da ${minCost}/${baseBudget} crediti.`);
+  });
+  const cheapestRoster = cheapestPt + movement.slice(0,4).reduce((s,p)=>s+Number(p.crediti),0);
+  const errors = [];
+  if (!goalie.length) errors.push('Nessun portiere rilevato nelle rose squadra.');
+  if (movement.length < 4) errors.push('Servono almeno quattro giocatori di movimento per costruire una rosa valida.');
+  if (cheapestRoster > baseBudget) errors.push(`Il listone non è giocabile: anche la rosa più economica costa ${cheapestRoster}/${baseBudget} crediti.`);
+  return { players, diagnostics: { errors, warnings, budget: baseBudget, cheapestRoster, pairChecks, leaders } };
+}
+
 // ---------------- ROSE (rosa_<partecipante>_giornataN.csv) ----------------
 export function slugParticipant(name) {
   return String(name || '').trim()
