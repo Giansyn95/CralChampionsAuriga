@@ -3018,6 +3018,11 @@ function updateTitle(){
 function applyConfig(){
   const f=Object.keys(state.rows).find(x=>norm(x)==='configcsv');
   if(!f) return;
+  // Queste chiavi possono essere volutamente svuotate dall'Admin: eliminiamo
+  // l'eventuale valore della configurazione precedente prima di rileggere il CSV.
+  delete state.config.fantacalciocreazionerosaenabled;
+  delete state.config.fantacalciocreazionerosaopenfrom;
+  delete state.config.fantacalciocreazionerosacloseat;
   for(const r of rowsToObjects(state.rows[f])){
     const k=norm(col(r,['chiave','key','nome']));
     const v=col(r,['valore','value','testo']);
@@ -13059,7 +13064,9 @@ function renderFantacalcio(){
   if(fantaRosterCreatorAvailable()){
     const creatorCta=document.createElement('div'); creatorCta.className='fanta-roster-creator-cta';
     const creatorLink=document.createElement('a'); creatorLink.className='fanta-roster-creator-link'; creatorLink.href='crea-rosa.html'; creatorLink.textContent='⚽ Crea la tua rosa';
-    const creatorNote=document.createElement('span'); creatorNote.className='fanta-roster-creator-note'; creatorNote.textContent="Genera il CSV complessivo validato sul listone ufficiale e invialo all'admin.";
+    const creatorNote=document.createElement('span'); creatorNote.className='fanta-roster-creator-note';
+    const deadline=fantaRosterCreatorDeadlineLabel();
+    creatorNote.textContent="Genera il CSV complessivo validato sul listone ufficiale e invialo all'admin."+(deadline?` Disponibile fino al ${deadline}.`:'');
     creatorCta.appendChild(creatorLink); creatorCta.appendChild(creatorNote); card.appendChild(creatorCta);
   }
 
@@ -13252,11 +13259,35 @@ function fantaManifestCsvPaths(){
   const rows=state.rows['manifest.csv']||[];
   return [...new Set(fantaPathRowsV22(rows).map(normalizeFantaCsvPath).filter(Boolean))];
 }
+function fantaConfigBool(value,fallback=true){
+  const v=norm(value);
+  if(!v) return fallback;
+  if(['false','0','no','n','off','disabilitato'].includes(v)) return false;
+  if(['true','1','si','s','yes','on','abilitato'].includes(v)) return true;
+  return fallback;
+}
+function fantaRosterCreatorWindowStatus(now=Date.now()){
+  const enabled=fantaConfigBool(state.config.fantacalciocreazionerosaenabled,true);
+  if(!enabled) return {open:false,reason:'disabled',openAt:null,closeAt:null};
+  const openRaw=String(state.config.fantacalciocreazionerosaopenfrom||'').trim();
+  const closeRaw=String(state.config.fantacalciocreazionerosacloseat||'').trim();
+  const openAt=Date.parse(openRaw);
+  const closeAt=Date.parse(closeRaw);
+  if(Number.isFinite(openAt)&&now<openAt) return {open:false,reason:'not-open-yet',openAt,closeAt:Number.isFinite(closeAt)?closeAt:null};
+  if(Number.isFinite(closeAt)&&now>=closeAt) return {open:false,reason:'closed',openAt:Number.isFinite(openAt)?openAt:null,closeAt};
+  return {open:true,reason:'open',openAt:Number.isFinite(openAt)?openAt:null,closeAt:Number.isFinite(closeAt)?closeAt:null};
+}
 function fantaRosterCreatorAvailable(){
-  // Il builder ha senso solo quando il manifest del torneo dichiara il listone ufficiale.
-  // I file crea-rosa.* possono esistere anche nei tornei appena creati, ma la CTA resta
-  // nascosta finché l'Admin non abilita davvero il Fantacalcio pubblicando il listone.
-  return fantaManifestCsvPaths().some(path=>fileKind(path)==='fanta_listone');
+  // Due condizioni indipendenti: Fantacalcio realmente configurato nel manifest
+  // e finestra di iscrizione abilitata/aperta dall'Admin. Se le nuove chiavi non
+  // esistono (tornei legacy), enabled resta true per non introdurre regressioni.
+  if(!fantaManifestCsvPaths().some(path=>fileKind(path)==='fanta_listone')) return false;
+  return fantaRosterCreatorWindowStatus().open;
+}
+function fantaRosterCreatorDeadlineLabel(){
+  const status=fantaRosterCreatorWindowStatus();
+  if(!status.open||!Number.isFinite(status.closeAt)) return '';
+  try{return new Date(status.closeAt).toLocaleString('it-IT',{dateStyle:'medium',timeStyle:'short'});}catch{return '';}
 }
 async function fantaDedicatedCsvPathsV22(fresh=false,signal){
   try{

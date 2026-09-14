@@ -18,6 +18,7 @@
   'use strict';
 
   const MANIFEST_URL = 'data/manifest.csv';
+  const CONFIG_URL = 'data/config.csv';
   const LISTONE_URL = 'data/fantacalcio/listone_fantacalcio.csv';
   const DEFAULT_DAY = 1;
   const DEFAULT_BUDGET = 250;
@@ -66,6 +67,51 @@
       const path = value.replace(/\\/g, '/').replace(/^\/?data\//i, '').replace(/^\/+/, '');
       return /^fantacalcio\/listone_fantacalcio\.csv$/i.test(path);
     });
+  }
+
+  function parseConfig(text) {
+    const parsed = parseDelimited(text);
+    const out = {};
+    if (!parsed.rows.length) return out;
+    const header = parsed.rows[0].map(normalizeKey);
+    const keyIndex = header.findIndex(h => ['chiave', 'key', 'nome'].includes(h));
+    const valueIndex = header.findIndex(h => ['valore', 'value', 'testo'].includes(h));
+    if (keyIndex < 0 || valueIndex < 0) return out;
+    parsed.rows.slice(1).forEach(row => {
+      const key = normalizeKey(row[keyIndex]);
+      if (!key) return;
+      out[key] = cleanText(row[valueIndex]);
+    });
+    return out;
+  }
+
+  function configBool(value, fallback = true) {
+    const v = normalizeKey(value);
+    if (!v) return fallback;
+    if (['false', '0', 'no', 'n', 'off', 'disabilitato'].includes(v)) return false;
+    if (['true', '1', 'si', 's', 'yes', 'on', 'abilitato'].includes(v)) return true;
+    return fallback;
+  }
+
+  function rosterWindowStatus(config, now = Date.now()) {
+    const cfg = config || {};
+    const enabled = configBool(cfg.fantacalciocreazionerosaenabled, true);
+    const openRaw = cleanText(cfg.fantacalciocreazionerosaopenfrom);
+    const closeRaw = cleanText(cfg.fantacalciocreazionerosacloseat);
+    const openAt = Date.parse(openRaw);
+    const closeAt = Date.parse(closeRaw);
+    if (!enabled) return { open: false, reason: 'disabled', openAt: null, closeAt: null };
+    if (Number.isFinite(openAt) && now < openAt) return { open: false, reason: 'not-open-yet', openAt, closeAt: Number.isFinite(closeAt) ? closeAt : null };
+    if (Number.isFinite(closeAt) && now >= closeAt) return { open: false, reason: 'closed', openAt: Number.isFinite(openAt) ? openAt : null, closeAt };
+    return { open: true, reason: 'open', openAt: Number.isFinite(openAt) ? openAt : null, closeAt: Number.isFinite(closeAt) ? closeAt : null };
+  }
+
+  function rosterWindowMessage(status) {
+    if (!status || status.open) return '';
+    if (status.reason === 'disabled') return 'Creazione rose disabilitata dall\'admin.';
+    if (status.reason === 'not-open-yet' && Number.isFinite(status.openAt)) return `Creazione rose non ancora aperta. Apertura: ${new Date(status.openAt).toLocaleString('it-IT')}.`;
+    if (status.reason === 'closed' && Number.isFinite(status.closeAt)) return `Creazione rose chiusa. Termine: ${new Date(status.closeAt).toLocaleString('it-IT')}.`;
+    return 'Creazione rose non disponibile in questo momento.';
   }
 
   function detectSeparator(text) {
@@ -459,6 +505,16 @@
 
     async function loadListone() {
       try {
+        // config.csv governa la disponibilità temporale del builder. Per i tornei
+        // legacy senza le nuove chiavi il comportamento resta aperto (fallback true).
+        let config = {};
+        try {
+          const configResponse = await fetch(`${CONFIG_URL}?t=${Date.now()}`, { cache: 'no-store' });
+          if (configResponse.ok) config = parseConfig(await configResponse.text());
+        } catch { /* compatibilità legacy: config non leggibile => nessun blocco aggiuntivo */ }
+        const access = rosterWindowStatus(config);
+        if (!access.open) throw new Error(rosterWindowMessage(access));
+
         const manifestResponse = await fetch(`${MANIFEST_URL}?t=${Date.now()}`, { cache: 'no-store' });
         if (!manifestResponse.ok) throw new Error(`manifest HTTP ${manifestResponse.status}`);
         if (!manifestHasFantacalcio(await manifestResponse.text())) {
@@ -492,6 +548,7 @@
 
   return {
     MANIFEST_URL,
+    CONFIG_URL,
     LISTONE_URL,
     DEFAULT_DAY,
     DEFAULT_BUDGET,
@@ -504,6 +561,10 @@
     slugParticipant,
     rosterFileName,
     manifestHasFantacalcio,
+    parseConfig,
+    configBool,
+    rosterWindowStatus,
+    rosterWindowMessage,
     parseDelimited,
     fantaRole,
     parseListone,
