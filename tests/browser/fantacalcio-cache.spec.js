@@ -17,10 +17,11 @@ test('Fantacalcio cache-first: il primo rendering non attende le rose live', asy
   await page.route(/\/data\/fantacalcio\/giornata\d+\//i, async route => {
     // Simula una rete lenta per le molte rose. Se il tab le attendesse ancora,
     // la tabella non potrebbe comparire entro il timeout dell'assert qui sotto.
+    // Non usiamo route.fetch(): il test deve poter terminare mentre le richieste
+    // di background sono ancora sospese senza generare un falso errore Playwright.
     await new Promise(resolve => setTimeout(resolve, 5000));
-    const response = await route.fetch();
     rosterCompleted++;
-    await route.fulfill({ response });
+    await route.continue();
   });
 
   await page.goto(torneoUrl, { waitUntil: 'domcontentloaded' });
@@ -32,6 +33,11 @@ test('Fantacalcio cache-first: il primo rendering non attende le rose live', asy
   expect(debug?.source).toBe('precalcolata');
   expect(Object.keys(debug?.final?.days || {}).length).toBeGreaterThan(0);
   expect(rosterCompleted, 'Il primo paint non deve attendere risposte delle rose live').toBe(0);
+
+  // Le richieste alle rose sono volutamente ancora in background. Rimuoviamo
+  // le route ignorando eventuali callback pendenti prima che Playwright chiuda
+  // pagina/context, evitando il flaky "route.fetch/continue: Test ended".
+  await page.unrouteAll({ behavior: 'ignoreErrors' });
 });
 
 test('Fantacalcio fallback: senza cache precalcolata usa correttamente le rose live', async ({ page }, testInfo) => {

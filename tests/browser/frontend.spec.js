@@ -81,7 +81,7 @@ for (const torneo of active) {
     await page.locator('#tab-pulse').click();
     await expect(page.locator('#pulse.active .pulse-shell')).toBeVisible();
     expect(await page.locator('#pulse .pulse-card').count()).toBeGreaterThanOrEqual(2);
-    await expect(page.locator('#pulse .pulse-card').filter({ hasText: /^🏅?\s*Record$/ })).toBeVisible();
+    await expect(page.locator('#pulse .pulse-card h2').filter({ hasText: /Record/i }).first()).toBeVisible();
     const playedMatches = await page.evaluate(() => tournamentInsightMatches().filter(m => String(m.homeGoals) !== '' && String(m.awayGoals) !== '').length);
     if (playedMatches > 0) expect(await page.locator('#pulse .pulse-record').count()).toBeGreaterThan(0);
 
@@ -95,7 +95,7 @@ for (const torneo of active) {
       await playerLink.click();
       await expect(page.locator('.player-profile-card')).toBeVisible();
       expect(await page.locator('.achievement-badge').count()).toBeGreaterThan(0);
-      await page.evaluate(() => closePlayerProfile({ skipRoute:true }));
+      await page.evaluate(() => closePlayerProfile({ skipRoute:true, restoreFocus:false }));
     }
 
     // Il profilo squadra espone il DNA derivato dai risultati senza nuovi dati persistiti.
@@ -107,7 +107,7 @@ for (const torneo of active) {
       await page.evaluate(team => openTeamProfile(team), firstTeam);
       await expect(page.locator('.team-profile-view')).toBeVisible();
       expect(await page.locator('.team-dna-card').count()).toBeGreaterThan(0);
-      await page.evaluate(() => cralNavCloseEntity({ skipRoute:true }));
+      await page.evaluate(() => cralNavCloseEntityOverlay({ skipRoute:true, restoreFocus:false }));
     }
 
     expect(errors, errors.join('\n')).toEqual([]);
