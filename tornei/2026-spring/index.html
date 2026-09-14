@@ -4667,29 +4667,16 @@ function renderTournamentRecords(container,records){
 }
 function renderTournamentPulse(){
   const el=document.getElementById('pulse'); if(!el) return; el.innerHTML='';
-  const pulse=tournamentPulseRound(); const records=tournamentRecordsData(); const standings=tournamentInsightStandings().sort((a,b)=>a.position-b.position);
-  const leader=standings[0]||null;
+  const pulse=tournamentPulseRound(); const records=tournamentRecordsData();
   const shell=document.createElement('div'); shell.className='pulse-shell';
-  const hero=document.createElement('div'); hero.className='card pulse-hero';
-  const kicker=document.createElement('div'); kicker.className='pulse-kicker'; kicker.textContent='CRAL Champions · Tournament Pulse'; hero.appendChild(kicker);
-  const titleRow=document.createElement('div'); titleRow.className='pulse-title-row'; const left=document.createElement('div');
-  const h=document.createElement('h2'); h.className='pulse-title'; h.textContent=pulse.complete?'Torneo concluso. Ecco cosa resta nella storia.':(pulse.progress.inProgress?'La giornata è in corso.':'La prossima giornata parte da qui.'); left.appendChild(h);
-  const sub=document.createElement('p'); sub.className='pulse-subtitle'; sub.textContent=pulse.complete?'Risultati, protagonisti e record vengono calcolati direttamente dai dati ufficiali del torneo.':'Un colpo d’occhio su stato del torneo, prossime sfide, protagonisti e record aggiornati automaticamente.'; left.appendChild(sub); titleRow.appendChild(left);
-  const status=document.createElement('span'); status.className='pulse-status'; status.textContent=pulse.complete?'🏁 Completato':(pulse.progress.inProgress?'🟡 '+pulse.progress.inProgress.label+' in corso':(pulse.progress.next?'🔥 Prossima: '+pulse.progress.next.label:'⏳ In attesa')); titleRow.appendChild(status); hero.appendChild(titleRow);
-  const kpis=document.createElement('div'); kpis.className='pulse-kpis';
-  const kpiData=[
-    [(pulse.progress.playedCount||0)+'/'+(pulse.progress.total||0),'Giornate completate'],
-    [records?records.playedMatches:0,'Partite disputate'],
-    [records?records.totalGoals:0,'Gol segnati'],
-    [leader?leader.team:'—',pulse.complete?'Campione / leader':'Leader attuale']
-  ];
-  kpiData.forEach(([n,l])=>{ const box=document.createElement('div'); box.className='pulse-kpi'; const nv=document.createElement('div'); nv.className='n'; nv.textContent=n; const lb=document.createElement('span'); lb.className='l'; lb.textContent=l; box.appendChild(nv); box.appendChild(lb); kpis.appendChild(box); }); hero.appendChild(kpis); shell.appendChild(hero);
 
+  // Il riepilogo generale del torneo resta nella Dashboard. Tournament Pulse
+  // rimane volutamente focalizzato su giornata e record, evitando duplicazioni.
   const grid=document.createElement('div'); grid.className='pulse-grid';
   const matchCard=document.createElement('div'); matchCard.className='card pulse-card'; const mh=document.createElement('h2'); mh.textContent=pulse.complete?'⚽ Ultima giornata':'⚡ Match Day'; matchCard.appendChild(mh); const note=document.createElement('p'); note.className='pulse-note'; note.textContent=pulse.complete?'Le gare dell’ultima giornata disputata.':(pulse.target?(pulse.target.label+(pulse.progress.inProgress?' · aggiornamento live sui dati disponibili':' · prossime sfide')):'Nessuna giornata disponibile.'); matchCard.appendChild(note);
   const list=document.createElement('div'); list.className='pulse-match-list'; const day=pulse.complete?pulse.latestRound:(pulse.target?.num||pulse.displayRound); const matches=day?cralNavMatchesForDay(day):[]; if(matches.length) matches.forEach(m=>list.appendChild(pulseMatchButton(m))); else { const empty=document.createElement('div'); empty.className='pulse-empty'; empty.textContent='Nessuna partita disponibile per questa giornata.'; list.appendChild(empty); } matchCard.appendChild(list); grid.appendChild(matchCard);
 
-  const recordsCard=document.createElement('div'); recordsCard.className='card pulse-card'; const rh=document.createElement('h2'); rh.textContent='🏅 Record automatici'; recordsCard.appendChild(rh); const rn=document.createElement('p'); rn.className='pulse-note'; rn.textContent='Nessun dato inserito a mano: tutti i record vengono ricalcolati dai risultati e dalle classifiche.'; recordsCard.appendChild(rn); renderTournamentRecords(recordsCard,records); grid.appendChild(recordsCard); shell.appendChild(grid);
+  const recordsCard=document.createElement('div'); recordsCard.className='card pulse-card'; const rh=document.createElement('h2'); rh.textContent='🏅 Record'; recordsCard.appendChild(rh); const rn=document.createElement('p'); rn.className='pulse-note'; rn.textContent='I numeri che hanno segnato il torneo: goleade, serie positive e protagonisti.'; recordsCard.appendChild(rn); renderTournamentRecords(recordsCard,records); grid.appendChild(recordsCard); shell.appendChild(grid);
   const actions=document.createElement('div'); actions.className='pulse-actions'; const dash=document.createElement('button'); dash.type='button'; dash.className='pulse-dashboard-btn'; dash.textContent='Apri dashboard →'; dash.onclick=()=>showTab('home',false,{scrollTop:true}); actions.appendChild(dash); shell.appendChild(actions); el.appendChild(shell);
 }
 
@@ -11968,6 +11955,41 @@ async function loadFantaPrecomputedCache(fresh,generation=_dataLoadGeneration,si
 }
 let _fantaEnsureDataPromise=null;
 let _fantaEnsureDataGeneration=0;
+let _fantaLiveHydrationPromise=null;
+let _fantaLiveHydrationGeneration=0;
+
+// Con una cache precalcolata disponibile il primo paint del Fantacalcio non deve
+// aspettare decine di piccoli fetch delle rose. La verifica live viene quindi
+// eseguita nei tempi morti del browser; un refresh manuale resta invece immediato.
+function scheduleFantaLiveHydration(fresh=false,generation=_dataLoadGeneration,signal){
+  if(!isCurrentDataLoad(generation)||signal?.aborted) return Promise.resolve(false);
+  if(_fantaLiveHydrationPromise && _fantaLiveHydrationGeneration===generation) return _fantaLiveHydrationPromise;
+  const promise=new Promise(resolve=>{
+    const run=async()=>{
+      if(!isCurrentDataLoad(generation)||signal?.aborted){ resolve(false); return; }
+      let ok=false;
+      try{ ok=await loadFantaSourceFilesInBackground(!!fresh,generation,signal); }
+      catch(e){ if(!(signal?.aborted||isAbortError(e))) console.warn('Fantacalcio live hydration:',e); }
+      resolve(!!ok);
+    };
+    if(fresh || !state.fantaPrecomputedData){
+      setTimeout(run,0);
+    }else if('requestIdleCallback' in window){
+      requestIdleCallback(run,{timeout:2600});
+    }else{
+      setTimeout(run,1400);
+    }
+  });
+  _fantaLiveHydrationPromise=promise;
+  _fantaLiveHydrationGeneration=generation;
+  promise.finally(()=>{
+    if(_fantaLiveHydrationPromise===promise){
+      _fantaLiveHydrationPromise=null;
+      _fantaLiveHydrationGeneration=0;
+    }
+  });
+  return promise;
+}
 // Carica portieri_snapshot.json in state.portieriSnapshot (silenzioso se assente)
 async function loadPortieriSnapshot(fresh,generation=_dataLoadGeneration,signal){
   if(!isCurrentDataLoad(generation)) return;
@@ -11985,15 +12007,25 @@ function ensureFantaDataInBackground(fresh,generation=_dataLoadGeneration,signal
   if(_fantaEnsureDataPromise && _fantaEnsureDataGeneration===generation) return _fantaEnsureDataPromise;
   state.fantaLoading=true;
   const promise=(async()=>{
-    // Mostra subito la cache precalcolata se c'è, ma poi verifica/carica le rose reali
-    // dal repository: sono queste la fonte autorevole per partecipanti e calcoli.
+    // Primo paint: preferisci sempre la cache precalcolata. In una visita normale
+    // e' sufficiente per rendere subito classifica, grafico e H2H; le rose reali
+    // vengono poi verificate in background senza bloccare l'interazione.
     const cacheOk=await loadFantaPrecomputedCache(!!fresh,generation,signal);
     if(!isCurrentDataLoad(generation)||signal?.aborted) return false;
     if(cacheOk){
+      state.fantaLoading=false;
       renderTabs();
       if(typeof cralNavScheduleApplyRoute==='function') cralNavScheduleApplyRoute(true);
       if(state.activeTab==='fantacalcio') renderFantacalcio();
+
+      if(!fresh){
+        scheduleFantaLiveHydration(false,generation,signal);
+        return true;
+      }
     }
+
+    // Cache assente oppure refresh esplicito: il live diventa il fallback
+    // immediato, preservando il comportamento autorevole delle rose reali.
     const liveOk=await loadFantaSourceFilesInBackground(!!fresh,generation,signal);
     if(!isCurrentDataLoad(generation)||signal?.aborted) return false;
     state.fantaLoading=false;
@@ -12010,7 +12042,7 @@ function ensureFantaDataInBackground(fresh,generation=_dataLoadGeneration,signal
     if(_fantaEnsureDataPromise===promise){
       _fantaEnsureDataPromise=null;
       _fantaEnsureDataGeneration=0;
-      if(isCurrentDataLoad(generation)) state.fantaLoading=false;
+      if(isCurrentDataLoad(generation) && !state.fantaPrecomputedData) state.fantaLoading=false;
     }
   });
   return promise;
