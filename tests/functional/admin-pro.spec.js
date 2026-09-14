@@ -266,6 +266,9 @@ test('Admin hardening: crea un nuovo torneo atomico con file base, logo e regist
   expect(mock.source.readFile('tornei/2028-estate-e2e/data/config.csv')?.toString('utf8')).toContain('CRAL Champions - Estate E2E 2028');
   expect(mock.source.readFile('tornei/2028-estate-e2e/data/manifest.csv')?.toString('utf8')).toContain('classifica_squadre.csv');
   expect(mock.source.readFile('tornei/2028-estate-e2e/immagini/logo_cral.png')).toEqual(mock.source.readFile('tornei/2026-test/immagini/logo_cral.png'));
+  for (const name of ['crea-rosa.html', 'crea-rosa.css', 'crea-rosa.js']) {
+    expect(mock.source.readFile(`tornei/2028-estate-e2e/${name}`)).toEqual(mock.source.readFile(`tornei/2026-test/${name}`));
+  }
 
   const registry = JSON.parse(mock.source.readFile('tornei.json').toString('utf8'));
   const created = registry.tornei.find(t => t.id === '2028-estate-e2e');
