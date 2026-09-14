@@ -567,12 +567,13 @@ function renderGeneratedListonePreview(card, generated){
     'Valutazione: gol e classifiche individuali, punti/premi MVP, premi portiere, capocannoniere di giornata e piazzamento squadra; confronto normalizzato nel ruolo reale P/D/C/A.'
   ]));
   const wrap=el('div','table-wrap');const table=el('table','data-table');
-  const thead=el('thead');const hr=el('tr');['ID','Fanta','Ruolo','Giocatore','Squadra','Crediti','Indice','Indicatori'].forEach(h=>hr.appendChild(el('th','',h)));thead.appendChild(hr);table.appendChild(thead);
+  const thead=el('thead');const hr=el('tr');['ID','Fanta','Ruolo','Giocatore','Squadra','Crediti','Indice','Stato','Indicatori'].forEach(h=>hr.appendChild(el('th','',h)));thead.appendChild(hr);table.appendChild(thead);
   const tbody=el('tbody');
   generated.players.forEach(p=>{
     const v=p.valuation||{};const tr=el('tr');
-    const indicators=p.ruolo==='PT'?`PT ${v.puntiPortiere||0} · premi ${v.premiPortiere||0}`:`Gol ${v.gol||0} · MVP ${v.puntiMVP||0} · premi ${v.premiMVP||0}`;
-    [p.id,p.ruolo,v.ruoloOriginale||'',p.giocatore,p.squadra,p.crediti,`${v.indice||0}/100`,indicators].forEach(x=>tr.appendChild(el('td','',String(x))));
+    const indicators=v.senzaStorico?'Quotazione neutra di reparto':(p.ruolo==='PT'?`PT ${v.puntiPortiere||0} · premi ${v.premiPortiere||0}`:`Gol ${v.gol||0} · MVP ${v.puntiMVP||0} · premi ${v.premiMVP||0}`);
+    const status=v.senzaStorico?'Nuovo / senza storico':'Storico';
+    [p.id,p.ruolo,v.ruoloOriginale||'',p.giocatore,p.squadra,p.crediti,`${v.indice||0}/100`,status,indicators].forEach(x=>tr.appendChild(el('td','',String(x))));
     tbody.appendChild(tr);
   });
   table.appendChild(tbody);wrap.appendChild(table);card.appendChild(wrap);
@@ -592,7 +593,7 @@ function renderListoneSection(main, model){
   if(!state.fantaValuationSource||!tournamentOptions.some(o=>o.value===state.fantaValuationSource))state.fantaValuationSource=state.tournament;
   const sourceSelect=select(tournamentOptions,state.fantaValuationSource);sourceSelect.addEventListener('change',()=>{state.fantaValuationSource=sourceSelect.value;state.fantaGeneratedListone=null;});
   card.appendChild(fieldWrap('Statistiche di riferimento',sourceSelect));
-  card.appendChild(el('p','small muted','Per un torneo appena creato puoi selezionare l’edizione precedente: gli ID vengono assegnati ai giocatori della rosa corrente, mentre la valutazione usa lo storico del torneo scelto anche se il giocatore ha cambiato squadra.'));
+  card.appendChild(el('p','small muted','Per un torneo appena creato puoi selezionare l’edizione precedente: gli ID vengono assegnati ai giocatori della rosa corrente, mentre la valutazione usa lo storico del torneo scelto anche se il giocatore ha cambiato squadra. I giocatori nuovi, assenti dalla sorgente storica, ricevono una quotazione neutra al centro della fascia del proprio ruolo e vengono evidenziati nell’anteprima.'));
   const genRow=el('div','btn-row');genRow.appendChild(button('⚙️ Genera listone bilanciato · 250 crediti','gold',generateListoneFromTournament));card.appendChild(genRow);
   if(state.fantaGeneratedListone)renderGeneratedListonePreview(card,state.fantaGeneratedListone);
   card.appendChild(el('hr','section-divider'));

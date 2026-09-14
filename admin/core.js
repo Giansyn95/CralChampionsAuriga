@@ -877,10 +877,17 @@ export function generateBalancedFantacalcioListone(model, budget = 250, statsMod
   const historicalTeamStrength = new Map();
   (statsModel?.players || []).forEach(p => historicalTeamStrength.set(playerKey(p), Number(teamStrength.get(norm(p.team)) || 0))); 
 
+  // Un giocatore e' considerato storico se compare nelle rose del torneo di
+  // riferimento. Questo e' intenzionale: anche chi ha chiuso l'edizione con zero
+  // gol/premi ha comunque uno storico; solo i veri nuovi arrivati ricevono una
+  // quotazione neutra di reparto.
+  const historicalPlayers = new Set((statsModel?.players || []).map(playerKey).filter(Boolean));
+
   const enriched = rosterPlayers.map(player => ({
     player,
     key: playerKey(player),
     sourceRole: canonicalFootballRole(player.role),
+    hasHistory: historicalPlayers.has(playerKey(player)),
     goals: Number(goals.value.get(playerKey(player)) || 0),
     mvpPoints: Number(mvp.value.get(playerKey(player)) || 0),
     keeperPoints: Number(keepers.value.get(playerKey(player)) || 0),
@@ -896,14 +903,15 @@ export function generateBalancedFantacalcioListone(model, budget = 250, statsMod
   const byRole = new Map();
   enriched.forEach(x => { const arr = byRole.get(x.sourceRole) || []; arr.push(x); byRole.set(x.sourceRole, arr); });
   byRole.forEach(group => {
-    const keys = group.map(x => x.key);
-    const maxGoals = Math.max(0, ...group.map(x => x.goals));
-    const maxMvp = Math.max(0, ...group.map(x => x.mvpPoints));
-    const maxKeeper = Math.max(0, ...group.map(x => x.keeperPoints));
+    const historicalGroup = group.filter(x => x.hasHistory);
+    const keys = historicalGroup.map(x => x.key);
+    const maxGoals = Math.max(0, ...historicalGroup.map(x => x.goals));
+    const maxMvp = Math.max(0, ...historicalGroup.map(x => x.mvpPoints));
+    const maxKeeper = Math.max(0, ...historicalGroup.map(x => x.keeperPoints));
     const maxMvpWins = mapMax(awards.mvpWins, keys);
     const maxKeeperWins = mapMax(awards.keeperWins, keys);
     const maxTopScorer = mapMax(awards.topScorerDays, keys);
-    group.forEach(x => {
+    historicalGroup.forEach(x => {
       const g = maxGoals ? x.goals / maxGoals : 0;
       const mp = maxMvp ? x.mvpPoints / maxMvp : 0;
       const kp = maxKeeper ? x.keeperPoints / maxKeeper : 0;
@@ -920,16 +928,28 @@ export function generateBalancedFantacalcioListone(model, budget = 250, statsMod
       }
     });
 
-    group.sort((a,b) => b.performance - a.performance || b.goals - a.goals || b.mvpPoints - a.mvpPoints || a.player.displayName.localeCompare(b.player.displayName, 'it'));
+    historicalGroup.sort((a,b) => b.performance - a.performance || b.goals - a.goals || b.mvpPoints - a.mvpPoints || a.player.displayName.localeCompare(b.player.displayName, 'it'));
     const band = FANTA_ROLE_PRICE_BANDS[group[0]?.sourceRole] || FANTA_ROLE_PRICE_BANDS.G;
-    group.forEach((x, index) => {
+    historicalGroup.forEach((x, index) => {
       const roleRank = index + 1;
-      const rs = rankStrength(roleRank, group.length);
+      const rs = rankStrength(roleRank, historicalGroup.length);
       const fraction = clamp01(0.62 * Math.pow(rs, 1.18) + 0.38 * x.performance);
       let credits = Math.round(band.min + (band.max - band.min) * fraction);
-      if (roleRank === 1) credits = band.max; // il migliore di reparto è davvero premium
+      if (roleRank === 1) credits = band.max; // il migliore storico di reparto resta premium
       x.roleRank = roleRank;
       x.credits = Math.max(band.min, Math.min(band.max, credits));
+      x.valuationSource = 'storico';
+    });
+
+    // Nuovi giocatori: nessun ordinamento artificiale per nome e nessuna penalita'
+    // da "zero statistiche". Partono dal punto medio della fascia del ruolo.
+    // L'Admin li evidenzia cosi' la quotazione puo' essere rivista manualmente.
+    const neutralCredits = Math.round((band.min + band.max) / 2);
+    group.filter(x => !x.hasHistory).forEach(x => {
+      x.performance = 0.5;
+      x.roleRank = null;
+      x.credits = neutralCredits;
+      x.valuationSource = 'neutrale_ruolo';
     });
   });
 
@@ -969,6 +989,8 @@ export function generateBalancedFantacalcioListone(model, budget = 250, statsMod
       ruoloOriginale: x.sourceRole,
       posizioneRuolo: x.roleRank,
       indice: Math.round(x.performance * 100),
+      senzaStorico: !x.hasHistory,
+      fonte: x.valuationSource || (x.hasHistory ? 'storico' : 'neutrale_ruolo'),
       gol: x.goals,
       puntiMVP: x.mvpPoints,
       premiMVP: x.mvpWins,
@@ -980,9 +1002,8 @@ export function generateBalancedFantacalcioListone(model, budget = 250, statsMod
 
   const warnings = [];
   if (!goals.value.size && !mvp.value.size && !keepers.value.size) warnings.push('Non risultano classifiche individuali valorizzate nella sorgente scelta: i crediti dipendono soprattutto dal ruolo e dall’ordine relativo. Scegli come riferimento un torneo concluso con statistiche reali.');
-  const historyKeys = new Set([...[...goals.value.keys()], ...[...mvp.value.keys()], ...[...keepers.value.keys()], ...[...awards.mvpWins.keys()], ...[...awards.keeperWins.keys()]]);
-  const withoutHistory = players.filter(p => !historyKeys.has(norm(p.giocatore))).length;
-  if (withoutHistory) warnings.push(`${withoutHistory} giocatori non hanno statistiche individuali nella sorgente scelta: per loro il prezzo usa ruolo e contesto squadra disponibili.`);
+  const withoutHistory = players.filter(p => p.valuation?.senzaStorico).length;
+  if (withoutHistory) warnings.push(`${withoutHistory} giocatori sono nuovi rispetto alla sorgente scelta: ricevono una quotazione neutra al centro della fascia del proprio ruolo e sono evidenziati nell'anteprima.`);
   const movement = players.filter(p => p.ruolo === 'G').sort((a,b) => Number(a.crediti) - Number(b.crediti));
   const goalie = players.filter(p => p.ruolo === 'PT').sort((a,b) => Number(a.crediti) - Number(b.crediti));
   const leaders = {};
