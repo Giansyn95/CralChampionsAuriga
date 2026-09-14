@@ -439,7 +439,7 @@ test('Fantacalcio: listone, rosa partecipante ed evento speciale persistono insi
   });
   await expect(rosterCard.locator('.data-table tbody tr')).toHaveCount(1);
   await rosterCard.getByRole('button', { name: 'Conferma caricamento rose' }).click();
-  await expect(page.locator('body')).toContainText(/1 rose pronte per la pubblicazione/i);
+  await expect(page.locator('body')).toContainText(/1 rose importate.*pronte per la pubblicazione/i);
 
   const eventCard = page.locator('.main > .card').filter({ hasText: '3. Eventi speciali' });
   const eventFields = eventCard.locator('.field');
@@ -461,6 +461,49 @@ test('Fantacalcio: listone, rosa partecipante ed evento speciale persistono insi
   await expect(page.locator('body')).toContainText(/Listone attualmente pubblicato: 3 giocatori/i);
   await expect(page.locator('body')).toContainText(/Eventi già presenti nel file pubblicato: 1/i);
   expect(errors, errors.join('\n')).toEqual([]);
+});
+
+test('Fantacalcio: finestra Crea la tua rosa viene salvata in config.csv', async ({ page }) => {
+  const mock = createGitHubMock();
+  const errors = watchErrors(page);
+  await openAdmin(page, mock);
+
+  await nav(page, 'Fantacalcio');
+  const card = page.locator('.main > .card').filter({ hasText: '0. Creazione rosa utenti' });
+  await expect(card).toBeVisible();
+
+  const checkbox = card.getByRole('checkbox', { name: /Abilita.*Crea la tua rosa/i });
+  await expect(checkbox).toBeChecked(); // fixture legacy: chiave assente => compatibilità aperta
+  const fields = card.locator('.field');
+  await fields.filter({ hasText: 'Apertura' }).locator('input').fill('2030-01-10T09:00');
+  await fields.filter({ hasText: 'Chiusura' }).locator('input').fill('2030-01-20T18:00');
+  await card.getByRole('button', { name: 'Salva disponibilità creazione rosa' }).click();
+  await expect(page.locator('body')).toContainText(/Disponibilità.*aggiornata/i);
+
+  await publishPending(page);
+  const config = sourceText(mock, 'tornei/2026-test/data/config.csv');
+  expect(config).toContain('fantacalcioCreazioneRosaEnabled;true');
+  expect(config).toContain('fantacalcioCreazioneRosaOpenFrom;');
+  expect(config).toContain('fantacalcioCreazioneRosaCloseAt;');
+  expect(config).toContain('titolo;Torneo automatico');
+
+  await reloadAdmin(page);
+  await nav(page, 'Fantacalcio');
+  const reloaded = page.locator('.main > .card').filter({ hasText: '0. Creazione rosa utenti' });
+  await expect(reloaded.getByRole('checkbox', { name: /Abilita.*Crea la tua rosa/i })).toBeChecked();
+  expect(errors, errors.join('\n')).toEqual([]);
+});
+
+test('Fantacalcio: disabilitazione manuale Crea la tua rosa persiste', async ({ page }) => {
+  const mock = createGitHubMock();
+  await openAdmin(page, mock);
+  await nav(page, 'Fantacalcio');
+  const card = page.locator('.main > .card').filter({ hasText: '0. Creazione rosa utenti' });
+  const checkbox = card.getByRole('checkbox', { name: /Abilita.*Crea la tua rosa/i });
+  await checkbox.uncheck();
+  await card.getByRole('button', { name: 'Salva disponibilità creazione rosa' }).click();
+  await publishPending(page);
+  expect(sourceText(mock, 'tornei/2026-test/data/config.csv')).toContain('fantacalcioCreazioneRosaEnabled;false');
 });
 
 test('Fantacalcio: listone con ID duplicato non può essere confermato', async ({ page }) => {
