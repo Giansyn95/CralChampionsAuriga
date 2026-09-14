@@ -13059,10 +13059,12 @@ function renderFantacalcio(){
   intro.textContent='Scegli la giornata e il punteggio si aggiorna con risultati e statistiche del torneo.';
   card.appendChild(intro);
 
-  const creatorCta=document.createElement('div'); creatorCta.className='fanta-roster-creator-cta';
-  const creatorLink=document.createElement('a'); creatorLink.className='fanta-roster-creator-link'; creatorLink.href='crea-rosa.html'; creatorLink.textContent='⚽ Crea la tua rosa';
-  const creatorNote=document.createElement('span'); creatorNote.className='fanta-roster-creator-note'; creatorNote.textContent="Genera il CSV validato sul listone ufficiale e invialo all'admin.";
-  creatorCta.appendChild(creatorLink); creatorCta.appendChild(creatorNote); card.appendChild(creatorCta);
+  if(fantaRosterCreatorAvailable()){
+    const creatorCta=document.createElement('div'); creatorCta.className='fanta-roster-creator-cta';
+    const creatorLink=document.createElement('a'); creatorLink.className='fanta-roster-creator-link'; creatorLink.href='crea-rosa.html'; creatorLink.textContent='⚽ Crea la tua rosa';
+    const creatorNote=document.createElement('span'); creatorNote.className='fanta-roster-creator-note'; creatorNote.textContent="Genera il CSV validato sul listone ufficiale e invialo all'admin.";
+    creatorCta.appendChild(creatorLink); creatorCta.appendChild(creatorNote); card.appendChild(creatorCta);
+  }
 
   const data=fantaCurrentData();
   let options=fantaAvailableDayOptions(data.results);
@@ -13248,6 +13250,12 @@ function fantaPathRowsV22(rows){
 function fantaManifestCsvPaths(){
   const rows=state.rows['manifest.csv']||[];
   return [...new Set(fantaPathRowsV22(rows).map(normalizeFantaCsvPath).filter(Boolean))];
+}
+function fantaRosterCreatorAvailable(){
+  // Il builder ha senso solo quando il manifest del torneo dichiara il listone ufficiale.
+  // I file crea-rosa.* possono esistere anche nei tornei appena creati, ma la CTA resta
+  // nascosta finché l'Admin non abilita davvero il Fantacalcio pubblicando il listone.
+  return fantaManifestCsvPaths().some(path=>fileKind(path)==='fanta_listone');
 }
 async function fantaDedicatedCsvPathsV22(fresh=false,signal){
   try{

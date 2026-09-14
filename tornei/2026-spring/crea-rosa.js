@@ -5,7 +5,8 @@
   Contratto con il frontend/admin esistente:
   - listone ufficiale: data/fantacalcio/listone_fantacalcio.csv
   - rosa: giornata;partecipante;idGiocatore
-  - filename: rosa_<partecipante_slug>_giornataN.csv
+  - filename download: rosa_<partecipante_slug>.csv
+  - l'Admin ricava la giornata dal contenuto e pubblica col nome canonico interno.
   - regola rosa: 1 PT + 4 giocatori di movimento (5 totali)
   - budget: baseCreditiSuggeriti del listone; fallback storico 250.
 */
@@ -16,6 +17,7 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
 
+  const MANIFEST_URL = 'data/manifest.csv';
   const LISTONE_URL = 'data/fantacalcio/listone_fantacalcio.csv';
   const DEFAULT_DAY = 1;
   const DEFAULT_BUDGET = 250;
@@ -47,9 +49,23 @@
       .toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '') || 'partecipante';
   }
 
-  function rosterFileName(participant, day) {
-    const safeDay = Number.parseInt(day, 10);
-    return `rosa_${slugParticipant(participant)}_giornata${Number.isFinite(safeDay) && safeDay > 0 ? safeDay : DEFAULT_DAY}.csv`;
+  function rosterFileName(participant) {
+    return `rosa_${slugParticipant(participant)}.csv`;
+  }
+
+  function manifestHasFantacalcio(text) {
+    const parsed = parseDelimited(text);
+    if (!parsed.rows.length) return false;
+    const rows = parsed.rows;
+    const header = rows[0].map(normalizeKey);
+    const fileIndex = header.findIndex(h => ['file', 'nome', 'filename', 'path', 'percorso'].includes(h));
+    const values = fileIndex >= 0
+      ? rows.slice(1).map(row => cleanText(row[fileIndex]))
+      : rows.flat().map(cleanText);
+    return values.some(value => {
+      const path = value.replace(/\\/g, '/').replace(/^\/?data\//i, '').replace(/^\/+/, '');
+      return /^fantacalcio\/listone_fantacalcio\.csv$/i.test(path);
+    });
   }
 
   function detectSeparator(text) {
@@ -436,7 +452,7 @@
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = rosterFileName(participant.participant, DEFAULT_DAY);
+      a.download = rosterFileName(participant.participant);
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -445,8 +461,13 @@
 
     async function loadListone() {
       try {
+        const manifestResponse = await fetch(`${MANIFEST_URL}?t=${Date.now()}`, { cache: 'no-store' });
+        if (!manifestResponse.ok) throw new Error(`manifest HTTP ${manifestResponse.status}`);
+        if (!manifestHasFantacalcio(await manifestResponse.text())) {
+          throw new Error('Fantacalcio non ancora configurato per questo torneo.');
+        }
         const response = await fetch(`${LISTONE_URL}?t=${Date.now()}`, { cache: 'no-store' });
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        if (!response.ok) throw new Error(`listone HTTP ${response.status}`);
         const parsed = parseListone(await response.text());
         state.players = parsed.players;
         state.budget = parsed.budget;
@@ -472,6 +493,7 @@
   }
 
   return {
+    MANIFEST_URL,
     LISTONE_URL,
     DEFAULT_DAY,
     DEFAULT_BUDGET,
@@ -483,6 +505,7 @@
     idKey,
     slugParticipant,
     rosterFileName,
+    manifestHasFantacalcio,
     parseDelimited,
     fantaRole,
     parseListone,
