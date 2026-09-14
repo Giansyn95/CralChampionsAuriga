@@ -147,6 +147,9 @@ function baseTournamentFiles(registry, variant = 'source') {
   const files = {
     'tornei.json': jsonText(registry),
     'tornei/2026-test/index.html': '<!doctype html><html><body>fixture<script>const STATIC_TEAM_IMAGE_KEYS = new Set([]); const STATIC_PLAYER_IMAGE_KEYS = new Set([]);</script></body></html>',
+    'tornei/2026-test/crea-rosa.html': '<!doctype html><html><body>Crea rosa fixture<script src="crea-rosa.js"></script></body></html>',
+    'tornei/2026-test/crea-rosa.css': '.roster-builder{display:block}',
+    'tornei/2026-test/crea-rosa.js': 'window.CRALRosterBuilder={fixture:true};',
     'tornei/2026-test/data/manifest.csv': [
       'file', 'config.csv', 'squadra_Alpha.csv', 'squadra_Beta.csv', 'calendario.csv',
       'risultati_partite.csv', 'riepilogo_giornate.csv', 'classifica_squadre.csv',
