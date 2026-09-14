@@ -13,25 +13,67 @@ function collectLocalErrors(page) {
   return errors;
 }
 
+async function forceRosterWindowOpen(page) {
+  await page.route('**/tornei/2026-spring/data/config.csv*', async route => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'text/csv; charset=utf-8',
+      body: [
+        'chiave;valore',
+        'titolo;CRAL Champions - Auriga 2026',
+        'sottotitolo;Fixture test',
+        'fantacalcioCreazioneRosaEnabled;true',
+        'fantacalcioCreazioneRosaOpenFrom;',
+        'fantacalcioCreazioneRosaCloseAt;'
+      ].join('\n') + '\n'
+    });
+  });
+}
+
+async function cheapestValidRoster(page) {
+  const players = await page.locator('.player-card').evaluateAll(cards => cards.map(card => {
+    const id = card.dataset.playerId || '';
+    const role = (card.querySelector('.role-pill')?.textContent || '').trim();
+    const meta = card.querySelector('.player-meta')?.textContent || '';
+    const match = meta.match(/([0-9]+(?:[.,][0-9]+)?)\s*crediti/i);
+    const credits = match ? Number(match[1].replace(',', '.')) : Number.POSITIVE_INFINITY;
+    return { id, role, credits };
+  }));
+
+  const keepers = players.filter(p => p.role === 'PT').sort((a, b) => a.credits - b.credits || a.id.localeCompare(b.id));
+  const movement = players.filter(p => p.role !== 'PT').sort((a, b) => a.credits - b.credits || a.id.localeCompare(b.id));
+  expect(keepers.length).toBeGreaterThanOrEqual(1);
+  expect(movement.length).toBeGreaterThanOrEqual(4);
+
+  const chosen = [keepers[0], ...movement.slice(0, 4)];
+  for (const player of chosen) {
+    await page.locator(`.player-card[data-player-id="${player.id}"] .player-add`).click();
+  }
+  return chosen;
+}
+
 test('generatore rosa carica il listone ufficiale e produce un CSV compatibile', async ({ page }) => {
   const errors = collectLocalErrors(page);
+  await forceRosterWindowOpen(page);
+
   const response = await page.goto('/tornei/2026-spring/crea-rosa.html', { waitUntil: 'domcontentloaded' });
   expect(response?.status()).toBe(200);
 
-  await expect(page.locator('#listoneStatus')).toContainText('35 giocatori');
+  await expect(page.locator('#listoneStatus')).toContainText(/Listone ufficiale caricato.*giocatori.*budget 250 crediti/i);
   await expect(page.locator('#creditBudget')).toHaveText('250');
   await expect(page.getByText('Giornata 1', { exact: true })).toHaveCount(0);
   await page.locator('#participantName').fill('Filippo Capurso');
 
-  for (const id of ['001', '010', '021', '028', '030']) {
-    await page.locator(`.player-card[data-player-id="${id}"] .player-add`).click();
-  }
+  // Non dipende dalle quotazioni del listone: sceglie automaticamente la rosa
+  // valida piu' economica disponibile (1 PT + 4 giocatori di movimento).
+  const chosen = await cheapestValidRoster(page);
+  const expectedCredits = chosen.reduce((sum, player) => sum + player.credits, 0);
 
   await expect(page.locator('#validationStatus')).toContainText('Rosa valida');
   await expect(page.locator('#countTotal')).toHaveText('5/5');
   await expect(page.locator('#countPt')).toHaveText('1/1');
   await expect(page.locator('#countMovement')).toHaveText('4/4');
-  await expect(page.locator('#creditUsed')).toHaveText('48');
+  await expect(page.locator('#creditUsed')).toHaveText(String(expectedCredits));
 
   const downloadPromise = page.waitForEvent('download');
   await page.locator('#downloadRoster').click();
@@ -41,19 +83,18 @@ test('generatore rosa carica il listone ufficiale e produce un CSV compatibile',
   const generated = fs.readFileSync(path, 'utf8').replace(/\r\n/g, '\n');
   expect(generated).toBe([
     'partecipante;idGiocatore',
-    'Filippo Capurso;001',
-    'Filippo Capurso;010',
-    'Filippo Capurso;021',
-    'Filippo Capurso;028',
-    'Filippo Capurso;030',
+    ...chosen.map(player => `Filippo Capurso;${player.id}`),
     ''
   ].join('\n'));
   expect(generated).not.toContain('giornata');
+  await page.unrouteAll({ behavior: 'ignoreErrors' });
   expect(errors, errors.join('\n')).toEqual([]);
 });
 
 test('il tab Fantacalcio espone il link al generatore senza alterare la navigazione esistente', async ({ page }) => {
   const errors = collectLocalErrors(page);
+  await forceRosterWindowOpen(page);
+
   await page.goto('/tornei/2026-spring/', { waitUntil: 'domcontentloaded' });
   await page.locator('#tab-fantacalcio').click();
   await expect(page.locator('#fantacalcio.active')).toBeVisible();
@@ -68,12 +109,14 @@ test('il tab Fantacalcio espone il link al generatore senza alterare la navigazi
     return !!cta && !!claim && Boolean(cta.compareDocumentPosition(claim) & Node.DOCUMENT_POSITION_FOLLOWING);
   });
   expect(order).toBe(true);
+  await page.unrouteAll({ behavior: 'ignoreErrors' });
   expect(errors, errors.join('\n')).toEqual([]);
 });
 
 
 test('Crea la tua rosa resta nascosto se il manifest del torneo non contiene il listone Fantacalcio', async ({ page }) => {
   const errors = collectLocalErrors(page);
+  await forceRosterWindowOpen(page);
   await page.route('**/tornei/2026-spring/data/manifest.csv*', async route => {
     await route.fulfill({
       status: 200,
