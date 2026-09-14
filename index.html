@@ -70,6 +70,16 @@
     .current-year{font-family:'Oswald',Arial,Helvetica,sans-serif;font-size:clamp(58px,10vw,104px);font-weight:700;line-height:.9;letter-spacing:.01em;color:var(--gold);text-shadow:0 10px 30px rgba(0,0,0,.22)}
     .current-season{font-family:'Oswald',Arial,Helvetica,sans-serif;font-size:18px;font-weight:600;color:rgba(255,255,255,.66);text-transform:uppercase;letter-spacing:.08em}
 
+    .hall-teaser{position:relative;overflow:hidden;display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:16px;align-items:center;padding:20px 22px;border:1px solid rgba(245,185,66,.45);border-radius:22px;background:linear-gradient(135deg,color-mix(in srgb,var(--panel) 92%,var(--gold) 8%),var(--panel));box-shadow:0 8px 22px var(--shadow)}
+    .hall-teaser::after{content:'';position:absolute;right:-70px;top:-100px;width:230px;height:230px;border-radius:50%;background:radial-gradient(circle,rgba(245,185,66,.20),transparent 68%);pointer-events:none}
+    .hall-icon{position:relative;z-index:1;display:flex;align-items:center;justify-content:center;width:64px;height:64px;border-radius:19px;background:linear-gradient(145deg,var(--gold),#ffe6a3);color:#071d3a;font-size:32px;box-shadow:0 10px 24px rgba(245,185,66,.24)}
+    .hall-copy{position:relative;z-index:1;min-width:0}.hall-copy .eyebrow{margin:0 0 5px;background:var(--blue-soft);border-color:rgba(15,90,168,.20);color:var(--blue)}.hall-copy h2{margin:0;font-family:'Oswald',Arial,Helvetica,sans-serif;font-size:clamp(24px,3vw,32px);color:var(--ink);text-transform:uppercase}.hall-copy p{margin:5px 0 0;color:var(--muted);font-size:13px;line-height:1.45}
+    .hall-open-btn{position:relative;z-index:1;white-space:nowrap;margin:0}
+    .hall-panel{margin-top:12px;padding:18px;border:1px solid var(--line);border-radius:22px;background:var(--panel);box-shadow:0 8px 22px var(--shadow)}
+    .hall-panel[hidden]{display:none}.hall-panel-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:16px}.hall-panel-head h2{margin:0;font-family:'Oswald',Arial,Helvetica,sans-serif;font-size:clamp(28px,4vw,40px);text-transform:uppercase;color:var(--blue)}.hall-panel-head p{margin:4px 0 0;color:var(--muted);font-size:13px}.hall-close{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border:1px solid var(--line);border-radius:13px;background:var(--soft);color:var(--ink);font-size:20px;cursor:pointer}
+    .hall-record-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:18px}.hall-record{min-width:0;padding:14px;border:1px solid var(--line);border-radius:18px;background:linear-gradient(145deg,var(--soft),var(--panel))}.hall-record-icon{font-size:25px}.hall-record small{display:block;margin-top:7px;color:var(--muted);font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:.055em}.hall-record b{display:block;margin-top:3px;color:var(--ink);font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.hall-record span{display:block;margin-top:3px;color:var(--blue);font-family:'Oswald',Arial,Helvetica,sans-serif;font-size:20px;font-weight:700}
+    .hall-history-title{margin:0 0 10px;font-family:'Oswald',Arial,Helvetica,sans-serif;font-size:21px;color:var(--blue);text-transform:uppercase}.hall-history{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:11px}.hall-edition{padding:15px;border:1px solid var(--line);border-radius:18px;background:var(--soft)}.hall-edition-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px}.hall-edition-year{font-family:'Oswald',Arial,Helvetica,sans-serif;font-size:30px;font-weight:700;color:var(--blue);line-height:1}.hall-edition-name{margin-top:2px;color:var(--muted);font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.05em}.hall-edition-list{display:flex;flex-direction:column;gap:7px}.hall-edition-row{display:grid;grid-template-columns:25px minmax(0,1fr);gap:8px;align-items:center}.hall-edition-row i{font-style:normal;font-size:18px;text-align:center}.hall-edition-row small{display:block;color:var(--muted);font-size:8px;font-weight:900;text-transform:uppercase}.hall-edition-row b{display:block;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.hall-edition-link{display:inline-flex;margin-top:12px;color:var(--blue);font-size:11px;font-weight:900}.hall-loading,.hall-empty{padding:22px;border:1px dashed var(--line);border-radius:17px;background:var(--soft);color:var(--muted);font-size:13px;font-weight:700;text-align:center}
+
     .card{background:var(--panel);border:1px solid var(--line);border-radius:22px;padding:18px;box-shadow:0 8px 22px var(--shadow)}
     .section-head{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:14px}
     .section-head h2{margin:0;font-family:'Oswald',Arial,Helvetica,sans-serif;font-size:clamp(22px,3vw,30px);font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:.02em}
@@ -115,6 +125,7 @@
       .current-year{font-size:48px}
       .current-season{font-size:14px;align-self:flex-end;margin-bottom:4px}
       .primary-btn{width:100%;margin-top:15px;padding:12px 16px}
+      .hall-teaser{grid-template-columns:auto minmax(0,1fr);padding:16px;gap:12px}.hall-icon{width:52px;height:52px;border-radius:16px;font-size:27px}.hall-open-btn{grid-column:1/-1;width:100%}.hall-record-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.hall-panel{padding:14px}.hall-history{grid-template-columns:1fr}
       .archive-grid{grid-template-columns:1fr}
       .section-head{align-items:flex-start}
       .archive-actions{justify-content:stretch}
@@ -178,6 +189,25 @@
             <span class="current-year" id="currentYear">—</span>
             <span class="current-season" id="currentSeason"></span>
           </div>
+        </div>
+      </section>
+
+      <section aria-labelledby="hallTeaserTitle" id="hallOfFameSection">
+        <div class="hall-teaser">
+          <div class="hall-icon" aria-hidden="true">🏆</div>
+          <div class="hall-copy">
+            <div class="eyebrow">Leggende CRAL Champions</div>
+            <h2 id="hallTeaserTitle">Hall of Fame</h2>
+            <p>Albo d'oro, bomber all-time, MVP e portieri che hanno lasciato il segno nelle edizioni concluse.</p>
+          </div>
+          <button class="primary-btn hall-open-btn" id="hallOpenBtn" type="button" aria-expanded="false" aria-controls="hallPanel">Entra nella Hall of Fame ›</button>
+        </div>
+        <div class="hall-panel" id="hallPanel" hidden>
+          <div class="hall-panel-head">
+            <div><h2>Hall of Fame</h2><p id="hallSubtitle">La memoria sportiva del CRAL Champions Auriga.</p></div>
+            <button class="hall-close" id="hallCloseBtn" type="button" aria-label="Chiudi Hall of Fame">×</button>
+          </div>
+          <div id="hallContent"><div class="hall-loading">Caricamento record storici…</div></div>
         </div>
       </section>
 
@@ -268,6 +298,73 @@
       const flagged = attivi.filter(t => t.corrente === true);
       return sortTornei(flagged.length ? flagged : attivi)[0];
     }
+
+    /* CRAL_HALL_ENGINE_START */
+    const CRALHallOfFame = (() => {
+      const txt=v=>String(v==null?'':v).trim();
+      const key=v=>txt(v).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'');
+      const num=v=>{ const n=Number(txt(v).replace(/\./g,'').replace(',','.').replace(/[^0-9+\-.]/g,'')); return Number.isFinite(n)?n:0; };
+      const field=(row,names)=>{ for(const name of names){ const k=key(name); for(const [rk,rv] of Object.entries(row||{})){ if(key(rk)===k && txt(rv)!=='') return rv; } } return ''; };
+      function parseCsv(raw){
+        const text=String(raw||'').replace(/^\uFEFF/,''); if(!text.trim()) return [];
+        const first=(text.split(/\r?\n/).find(x=>x.trim())||'');
+        const counts={';':(first.match(/;/g)||[]).length,',':(first.match(/,/g)||[]).length,'\t':(first.match(/\t/g)||[]).length};
+        const sep=Object.entries(counts).sort((a,b)=>b[1]-a[1])[0][0];
+        const rows=[]; let row=[],cell='',quoted=false;
+        for(let i=0;i<text.length;i++){
+          const ch=text[i];
+          if(ch==='"'){
+            if(quoted && text[i+1]==='"'){cell+='"';i++;} else quoted=!quoted;
+          }else if(ch===sep && !quoted){row.push(cell);cell='';}
+          else if((ch==='\n'||ch==='\r') && !quoted){ if(ch==='\r'&&text[i+1]==='\n') i++; row.push(cell);cell=''; if(row.some(x=>txt(x)!=='')) rows.push(row); row=[]; }
+          else cell+=ch;
+        }
+        row.push(cell); if(row.some(x=>txt(x)!=='')) rows.push(row);
+        if(rows.length<2) return [];
+        const headers=rows[0].map(txt);
+        return rows.slice(1).map(cells=>Object.fromEntries(headers.map((h,i)=>[h,txt(cells[i]||'')])));
+      }
+      function topRow(rows,positionNames){
+        if(!rows||!rows.length) return null;
+        return rows.slice().sort((a,b)=>{
+          const ap=num(field(a,positionNames)),bp=num(field(b,positionNames));
+          return (ap||9999)-(bp||9999);
+        })[0]||null;
+      }
+      function addAggregate(map,name,value){
+        name=txt(name); value=num(value); if(!name||!value) return;
+        const k=key(name); if(!map.has(k)) map.set(k,{name,value:0}); const item=map.get(k); item.value+=value;
+      }
+      function best(map){ return [...map.values()].sort((a,b)=>b.value-a.value||a.name.localeCompare(b.name,'it'))[0]||null; }
+      function build(editions){
+        const completed=(editions||[]).filter(e=>e&&e.completed!==false);
+        const titles=new Map(),goals=new Map(),mvpPoints=new Map(),keeperPoints=new Map();
+        const history=[];
+        completed.forEach(e=>{
+          const standings=e.standings||[],scorers=e.scorers||[],mvps=e.mvps||[],keepers=e.keepers||[];
+          const championRow=topRow(standings,['Posizione','Pos','Rank']);
+          const scorerRow=topRow(scorers,['Posizione','Pos','Rank']);
+          const mvpRow=topRow(mvps,['Posizione','Pos','Rank']);
+          const keeperRow=topRow(keepers,['Posizione','Pos','Rank']);
+          const champion=txt(field(championRow,['Squadra','Team','TeamCode']));
+          const topScorer=txt(field(scorerRow,['Giocatore','Player','PlayerName','Nome']));
+          const topMvp=txt(field(mvpRow,['Giocatore','Player','PlayerName','Nome']));
+          const topKeeper=txt(field(keeperRow,['Portiere','Giocatore','Player','PlayerName','Nome']));
+          const scorerGoals=num(field(scorerRow,['Gol','Goal','Reti']));
+          const mvpValue=num(field(mvpRow,['PuntiMVP','Punti','Points']));
+          const keeperValue=num(field(keeperRow,['Punti','PuntiPortiere','Points']));
+          if(champion) addAggregate(titles,champion,1);
+          scorers.forEach(r=>addAggregate(goals,field(r,['Giocatore','Player','PlayerName','Nome']),field(r,['Gol','Goal','Reti'])));
+          mvps.forEach(r=>addAggregate(mvpPoints,field(r,['Giocatore','Player','PlayerName','Nome']),field(r,['PuntiMVP','Punti','Points'])));
+          keepers.forEach(r=>addAggregate(keeperPoints,field(r,['Portiere','Giocatore','Player','PlayerName','Nome']),field(r,['Punti','PuntiPortiere','Points'])));
+          history.push({tournament:e.tournament,champion,topScorer,scorerGoals,topMvp,mvpValue,topKeeper,keeperValue});
+        });
+        history.sort((a,b)=>Number(b.tournament?.ordine||0)-Number(a.tournament?.ordine||0)||Number(b.tournament?.anno||0)-Number(a.tournament?.anno||0));
+        return {editions:completed.length,history,mostTitles:best(titles),allTimeScorer:best(goals),allTimeMvp:best(mvpPoints),allTimeKeeper:best(keeperPoints)};
+      }
+      return {parseCsv,build};
+    })();
+    /* CRAL_HALL_ENGINE_END */
 
     function initTheme(){
       const saved = localStorage.getItem('cral_theme');
@@ -425,8 +522,70 @@
       if (open) panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     });
 
+    let hallConfig = null;
+    let hallLoaded = false;
+    let hallLoading = false;
+    const hallHtml = value => esc(value).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+    function hallBaseUrl(t){
+      let base=esc(t.url || t.cartella || '');
+      if(base && !base.endsWith('/')) base+='/';
+      return base;
+    }
+    async function hallFetchText(url){
+      try{ const r=await fetch(url,{cache:'no-store'}); return r.ok?await r.text():''; }catch(e){ return ''; }
+    }
+    async function loadHallOfFame(){
+      if(hallLoaded||hallLoading) return; hallLoading=true;
+      const content=document.getElementById('hallContent');
+      const tornei=(hallConfig?.tornei||[]).filter(t=>t.attivo!==false && normalizzaStato(t.stato)==='concluso');
+      if(!tornei.length){ content.innerHTML='<div class="hall-empty">La Hall of Fame si popolerà automaticamente alla conclusione della prima edizione.</div>'; hallLoaded=true; hallLoading=false; return; }
+      const editions=await Promise.all(tornei.map(async t=>{
+        const base=hallBaseUrl(t)+'data/';
+        const files=await Promise.all(['classifica_squadre.csv','classifica_marcatori.csv','classifica_mvp.csv','classifica_portieri.csv'].map(f=>hallFetchText(base+f)));
+        return {tournament:t,completed:true,standings:CRALHallOfFame.parseCsv(files[0]),scorers:CRALHallOfFame.parseCsv(files[1]),mvps:CRALHallOfFame.parseCsv(files[2]),keepers:CRALHallOfFame.parseCsv(files[3])};
+      }));
+      renderHallOfFame(CRALHallOfFame.build(editions)); hallLoaded=true; hallLoading=false;
+    }
+    function hallRecord(icon,label,item,suffix){
+      if(!item||!item.name) return '';
+      return `<div class="hall-record"><div class="hall-record-icon">${icon}</div><small>${label}</small><b>${hallHtml(item.name)}</b><span>${hallHtml(item.value)} ${suffix}</span></div>`;
+    }
+    function renderHallOfFame(data){
+      const content=document.getElementById('hallContent');
+      document.getElementById('hallSubtitle').textContent=data.editions===1?'1 edizione conclusa nella storia CRAL Champions.':`${data.editions} edizioni concluse nella storia CRAL Champions.`;
+      const records=[
+        hallRecord('🏆','Pluricampione',data.mostTitles,data.mostTitles?.value===1?'titolo':'titoli'),
+        hallRecord('⚽','Bomber all-time',data.allTimeScorer,'gol'),
+        hallRecord('⭐','Re MVP',data.allTimeMvp,'pt'),
+        hallRecord('🧤','Portiere dei record',data.allTimeKeeper,'pt')
+      ].filter(Boolean).join('');
+      const history=data.history.map(item=>{
+        const t=item.tournament||{}; const season=esc(t.stagione||t.nome||'Edizione');
+        const rows=[];
+        if(item.champion) rows.push(`<div class="hall-edition-row"><i>🏆</i><div><small>Campione</small><b>${hallHtml(item.champion)}</b></div></div>`);
+        if(item.topScorer) rows.push(`<div class="hall-edition-row"><i>⚽</i><div><small>Capocannoniere</small><b>${hallHtml(item.topScorer)} · ${item.scorerGoals} gol</b></div></div>`);
+        if(item.topMvp) rows.push(`<div class="hall-edition-row"><i>⭐</i><div><small>MVP</small><b>${hallHtml(item.topMvp)} · ${item.mvpValue} pt</b></div></div>`);
+        if(item.topKeeper) rows.push(`<div class="hall-edition-row"><i>🧤</i><div><small>Miglior portiere</small><b>${hallHtml(item.topKeeper)} · ${item.keeperValue} pt</b></div></div>`);
+        return `<article class="hall-edition"><div class="hall-edition-top"><div><div class="hall-edition-year">${hallHtml(t.anno||'—')}</div><div class="hall-edition-name">${hallHtml(season)}</div></div><span class="archive-state stato-concluso">✓ Concluso</span></div><div class="hall-edition-list">${rows.join('')}</div>${t.url?`<a class="hall-edition-link" href="${hallHtml(t.url)}">Apri edizione ›</a>`:''}</article>`;
+      }).join('');
+      content.innerHTML=(records?`<div class="hall-record-grid">${records}</div>`:'')+`<h3 class="hall-history-title">Albo d'oro</h3><div class="hall-history">${history||'<div class="hall-empty">Nessun dato storico disponibile.</div>'}</div>`;
+    }
+    function openHallOfFame(updateHash=true){
+      const panel=document.getElementById('hallPanel'),btn=document.getElementById('hallOpenBtn'); panel.hidden=false; btn.setAttribute('aria-expanded','true');
+      loadHallOfFame(); if(updateHash && location.hash!=='#hall-of-fame') history.pushState(null,'','#hall-of-fame');
+      panel.scrollIntoView({behavior:'smooth',block:'start'});
+    }
+    function closeHallOfFame(updateHash=true){
+      const panel=document.getElementById('hallPanel'),btn=document.getElementById('hallOpenBtn'); panel.hidden=true; btn.setAttribute('aria-expanded','false');
+      if(updateHash && location.hash==='#hall-of-fame') history.pushState(null,'',location.pathname+location.search);
+    }
+    document.getElementById('hallOpenBtn').addEventListener('click',()=>openHallOfFame(true));
+    document.getElementById('hallCloseBtn').addEventListener('click',()=>closeHallOfFame(true));
+    window.addEventListener('hashchange',()=>{ if(location.hash==='#hall-of-fame') openHallOfFame(false); else if(!document.getElementById('hallPanel').hidden) closeHallOfFame(false); });
+
     function renderLanding(config){
       const cfg = config || FALLBACK;
+      hallConfig = cfg;
       const tornei = Array.isArray(cfg.tornei) ? cfg.tornei : FALLBACK.tornei;
       const titolo = esc(cfg.titolo || FALLBACK.titolo);
       const primoPiano = Math.max(1, Number(cfg.archivio?.primoPiano || 2));
@@ -442,6 +601,7 @@
       else document.getElementById('currentSection').hidden = true;
 
       renderArchivio(tornei, corrente, primoPiano);
+      if(location.hash==='#hall-of-fame') setTimeout(()=>openHallOfFame(false),0);
     }
 
     initTheme();
