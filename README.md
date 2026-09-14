@@ -6,6 +6,7 @@ Il progetto è composto da una singola pagina HTML che legge dati da file CSV e 
 
 ## Funzionalità
 
+- Storico tornei con Hall of Fame consultabile
 - Home con KPI del torneo, grafici e stato di avanzamento.
 - Classifiche squadre, marcatori, MVP e portieri.
 - Statistiche giocatori, inclusa media gol per partita.
@@ -18,7 +19,6 @@ Il progetto è composto da una singola pagina HTML che legge dati da file CSV e 
 - Ricerca globale per squadre, giocatori e partite.
 - Tabelle ordinabili.
 - Tema chiaro/scuro con preferenza salvata nel browser.
-- Stampa o esportazione in PDF tramite browser.
 - Banner diagnostico per CSV mancanti o con problemi di formato.
 - Supporto a immagini di squadre, giocatori e logo CRAL.
 - Anteprima link tramite metadati Open Graph.
