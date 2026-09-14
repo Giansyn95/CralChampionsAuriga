@@ -91,6 +91,27 @@ test('builder si abilita solo se il manifest del torneo dichiara il listone Fant
   assert.equal(builder.manifestHasFantacalcio(manifestWithoutFanta), false);
 });
 
+test('finestra Crea la tua rosa: flag manuale e timer vengono rispettati', () => {
+  const cfg = builder.parseConfig([
+    'chiave;valore',
+    'fantacalcioCreazioneRosaEnabled;true',
+    'fantacalcioCreazioneRosaOpenFrom;2030-01-10T08:00:00.000Z',
+    'fantacalcioCreazioneRosaCloseAt;2030-01-20T18:00:00.000Z'
+  ].join('\n'));
+
+  assert.equal(builder.rosterWindowStatus(cfg, Date.parse('2030-01-09T12:00:00Z')).reason, 'not-open-yet');
+  assert.equal(builder.rosterWindowStatus(cfg, Date.parse('2030-01-15T12:00:00Z')).open, true);
+  assert.equal(builder.rosterWindowStatus(cfg, Date.parse('2030-01-20T18:00:00Z')).reason, 'closed');
+
+  const disabled = builder.parseConfig('chiave;valore\nfantacalcioCreazioneRosaEnabled;false\n');
+  assert.equal(builder.rosterWindowStatus(disabled, Date.parse('2030-01-15T12:00:00Z')).reason, 'disabled');
+});
+
+test('tornei legacy senza chiavi timer restano abilitati per retrocompatibilità', () => {
+  const cfg = builder.parseConfig('chiave;valore\ntitolo;Torneo legacy\n');
+  assert.equal(builder.rosterWindowStatus(cfg, Date.parse('2030-01-15T12:00:00Z')).open, true);
+});
+
 test('builder rifiuta rose senza PT, duplicate o fuori budget', () => {
   const parsed = builder.parseListone(listoneText);
   const noKeeper = builder.validateRoster(['006', '007', '008', '010', '011'], parsed.players, parsed.budget);

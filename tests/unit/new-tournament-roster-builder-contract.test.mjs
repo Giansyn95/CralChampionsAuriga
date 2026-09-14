@@ -20,3 +20,10 @@ test('il nuovo torneo non abilita Fantacalcio nel manifest iniziale solo perche 
   const dataFilesBlock = tournamentSource.slice(0, tournamentSource.indexOf('function csvEscape'));
   assert.ok(!/fantacalcio\//i.test(dataFilesBlock), 'Il manifest iniziale non deve contenere dati Fantacalcio fittizi');
 });
+
+test('nuovo torneo crea il builder ma lascia chiusa la creazione rose finche l Admin non la abilita', () => {
+  const tournamentSource = fs.readFileSync('admin/tournament.js', 'utf8');
+  assert.ok(tournamentSource.includes("['fantacalcioCreazioneRosaEnabled', 'false']"));
+  assert.ok(tournamentSource.includes("['fantacalcioCreazioneRosaOpenFrom', '']"));
+  assert.ok(tournamentSource.includes("['fantacalcioCreazioneRosaCloseAt', '']"));
+});
