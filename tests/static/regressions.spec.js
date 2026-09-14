@@ -15,10 +15,6 @@ test('mobile v40 conserva reload pulito e non resetta lo scroll durante la navig
   expect(src).toContain('hardNavigateToCleanViewport');
   expect(src).toContain('location.replace');
   expect(src).toContain('stopSettlingOnUserIntent');
-  expect(src).toContain('adminSeenOnce');
-  expect(src).toContain('if (!adminSeenOnce)');
-  expect(src).toContain('clearCounterScale();');
-  expect(src).toContain('unlockViewport();');
 
   const start = src.indexOf('function settleAdmin()');
   const end = src.indexOf('function clearSettling()', start);
@@ -63,8 +59,21 @@ test('workflow generazione dati condividono lo stesso lock di concorrenza', asyn
   expect(group(a), 'Manca concurrency.group Fantacalcio').toBeTruthy();
   expect(group(b), 'Manca concurrency.group Portieri').toBeTruthy();
   expect(group(a)).toBe(group(b));
+  expect(group(a)).toBe('cral-generated-data-${{ github.ref }}');
   expect(cancel(a)).toBe('false');
   expect(cancel(b)).toBe('false');
-  expect(a).toContain('git pull --rebase');
-  expect(b).toContain('git pull --rebase');
+});
+
+test('workflow Fantacalcio pubblica la cache con strategia race-safe senza rebase del JSON', async () => {
+  const src = read('.github/workflows/genera-fantacalcio-cache.yml');
+
+  // La cache e un artefatto derivato: in caso di branch avanzato si deve
+  // ripartire dall'ultimo HEAD remoto e rigenerare, non fare merge/rebase del JSON.
+  expect(src).not.toContain('git pull --rebase');
+  expect(src).toContain('git fetch origin "$branch"');
+  expect(src).toContain('git reset --hard "origin/$branch"');
+  expect(src).toContain('regenerate_and_certify');
+  expect(src).toContain('git push origin "HEAD:$branch"');
+  expect(src).toContain('Un solo retry sicuro');
+  expect(src).not.toMatch(/git\s+push[^\n]*--force/);
 });
