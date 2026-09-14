@@ -337,11 +337,11 @@ function renderDashboard(main){
 
 function slugPart(value){return String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'')}
 function renderNewTournament(main){
-  main.appendChild(pageHead('Nuovo torneo','Crea una nuova edizione senza duplicare i dati del torneo precedente. Vengono copiati solo il motore index.html e, se presente, il logo CRAL.'));
+  main.appendChild(pageHead('Nuovo torneo','Crea una nuova edizione senza duplicare i dati del torneo precedente. Vengono copiati il motore index.html, Crea la tua rosa e, se presente, il logo CRAL.'));
   if(state.pending.size)main.appendChild(messageBox('warning','Hai modifiche dati non ancora pubblicate sul torneo corrente. La creazione di un nuovo torneo e un commit separato: pubblicale o scartale prima per evitare confusione.'));
   const yearDefault=String(new Date().getFullYear());
   const card=el('div','card wizard-card');
-  card.appendChild(messageBox('info','Il template serve solo per riusare la versione corrente dell’app pubblica. Il nuovo data/ nasce vuoto ma con manifest, config e CSV base validi.'));
+  card.appendChild(messageBox('info','Il template riusa la versione corrente dell’app pubblica, inclusa la pagina Crea la tua rosa quando presente. Il nuovo data/ nasce vuoto ma con manifest, config e CSV base validi.'));
   const grid=el('div','wizard-grid');
   const year=input('number',yearDefault);year.min='2020';year.max='2100';
   const season=input('text','Primavera');
@@ -357,7 +357,7 @@ function renderNewTournament(main){
   card.appendChild(grid);
   const current=input('checkbox');current.checked=true;const cr=el('label','checkbox-row');cr.appendChild(current);cr.appendChild(document.createTextNode(' Imposta come torneo corrente in tornei.json'));card.appendChild(cr);
   let prodConfirm=null;if(state.target==='produzione'){card.appendChild(messageBox('warning','Stai creando direttamente nel repository di PRODUZIONE. Per sicurezza e consigliato creare prima in Collaudo.'));prodConfirm=input('text','');prodConfirm.placeholder='CREA TORNEO PRODUZIONE';card.appendChild(fieldWrap('Conferma produzione',prodConfirm))}
-  const summary=el('div','creation-summary');summary.appendChild(el('strong','','Verranno creati:'));summary.appendChild(el('div','small muted','index.html dal template, logo CRAL se disponibile, data/config.csv, data/manifest.csv, classifiche vuote, risultati, calendario, riepilogo e aggiornamento di tornei.json.'));card.appendChild(summary);
+  const summary=el('div','creation-summary');summary.appendChild(el('strong','','Verranno creati:'));summary.appendChild(el('div','small muted','index.html e Crea la tua rosa dal template, logo CRAL se disponibile, data/config.csv, data/manifest.csv, classifiche vuote, risultati, calendario, riepilogo e aggiornamento di tornei.json.'));card.appendChild(summary);
   const actions=el('div','btn-row');actions.style.marginTop='14px';actions.appendChild(button('Crea torneo','gold',()=>createTournament({id:id.value,year:year.value,season:season.value,name:season.value,title:title.value,description:description.value,makeCurrent:current.checked},template.value,prodConfirm?.value||'')));card.appendChild(actions);main.appendChild(card)
 }
 async function createTournament(tournament,templateTournament,productionConfirmation){

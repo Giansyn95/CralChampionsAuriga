@@ -358,6 +358,13 @@ export async function createTournament(target, { baseCommitSha, templateTourname
     getBlobText(target, templateIndex.sha)
   ]);
   const logoEntry = byPath.get(`${templateTournament}/immagini/logo_cral.png`);
+  const rosterBuilderNames = ['crea-rosa.html', 'crea-rosa.css', 'crea-rosa.js'];
+  const rosterBuilderEntries = rosterBuilderNames.map(name => ({ name, entry: byPath.get(`${templateTournament}/${name}`) }));
+  const rosterBuilderFound = rosterBuilderEntries.filter(item => !!item.entry);
+  if (rosterBuilderFound.length > 0 && rosterBuilderFound.length !== rosterBuilderEntries.length) {
+    const missing = rosterBuilderEntries.filter(item => !item.entry).map(item => item.name).join(', ');
+    throw fail(`Template Crea la tua rosa incompleto: mancano ${missing}.`, 409);
+  }
   const publicBaseUrl = target.publicBaseUrl || `https://${target.owner}.github.io/${target.repo}`;
   const publicUrl = `${publicBaseUrl.replace(/\/$/, '')}/${newTournament}`;
   const changes = [
@@ -365,6 +372,7 @@ export async function createTournament(target, { baseCommitSha, templateTourname
     ...tournamentDataChanges(newTournament, checked.value)
   ];
   if (logoEntry) changes.push({ path: `${newTournament}/immagini/logo_cral.png`, sourceSha: logoEntry.sha });
+  rosterBuilderFound.forEach(({ name, entry }) => changes.push({ path: `${newTournament}/${name}`, sourceSha: entry.sha }));
   changes.push({ path: 'tornei.json', content: updateTournamentRegistry(registryText, checked.value, newTournament, !!logoEntry) });
 
   const message = `Admin CRAL: crea torneo ${checked.value.id}`;
