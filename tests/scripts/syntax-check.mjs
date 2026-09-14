@@ -12,6 +12,19 @@ for (const root of roots) {
 }
 if (fs.existsSync('sw.js')) files.push('sw.js');
 
+// Script standalone del generatore rosa Fantacalcio, se presente nelle edizioni.
+if (fs.existsSync('tornei.json')) {
+  try {
+    const registry = JSON.parse(fs.readFileSync('tornei.json', 'utf8'));
+    for (const torneo of registry.tornei || []) {
+      const builder = path.join(String(torneo.cartella || ''), 'crea-rosa.js');
+      if (builder && fs.existsSync(builder)) files.push(builder);
+    }
+  } catch (_) {
+    // tornei.json viene validato piu sotto insieme agli entry point HTML.
+  }
+}
+
 let failures = 0;
 
 function checkScriptSource(src, filename) {
