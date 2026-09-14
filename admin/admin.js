@@ -3,7 +3,7 @@ import {
   fileKind, manifestChange, norm, objectRows, pagelloneText, parsePagellone, playersForTeam, relativeDataPath, rosterCsv,
   safeTeamFilename, sectionFiles, validateMatchdayDraft, validatePagelloneEntries,
   EVENT_TYPES, eventiCsvContent, fantaFiles, idKey, listoneCsvContent, listoneIndex, manifestFantaContent,
-  parseEventiCsv, parseListoneCsv, parseRosterUpload, rosterCsvContent, rosterRelPath,
+  parseEventiCsv, parseListoneCsv, parseRosterUpload, rosterCsvContent, rosterRelPath, expandRosterAcrossDays,
   validateListoneRows, validateNewEvent, validateRosterAgainstListone
 } from './core.js';
 import {
@@ -541,6 +541,7 @@ function renderListoneSection(main, model){
   main.appendChild(card);
 }
 
+function rosterUploadDayFromName(name){const m=String(name||'').match(/giornata[_\s-]*(\d+)/i);const n=m?Number.parseInt(m[1],10):null;return Number.isFinite(n)&&n>0?n:null}
 async function handleRosterFiles(fileList){
   const files=[...(fileList||[])].filter(f=>/\.csv$/i.test(f.name));
   if(!files.length)return;
@@ -548,11 +549,14 @@ async function handleRosterFiles(fileList){
   const listone=fantaCurrentListone(model);
   if(!listone.players.length){state.status={type:'error',text:'Carica prima il listone Fantacalcio: serve per validare gli id giocatore delle rose.'};render();return}
   const idx=listoneIndex(listone.players);
-  const defaultGiornata=state.selectedDay||1;
   const allRosters=[],globalErrors=[];
   for(const file of files){
     const text=await file.text();
-    const {rosters,errors}=parseRosterUpload(text,defaultGiornata);
+    // Il nuovo CSV utente non contiene la giornata: in quel caso è una rosa
+    // complessiva da replicare su TUTTE le giornate del calendario. Manteniamo
+    // compatibilità con i vecchi file _giornataN inferendo N dal filename.
+    const filenameDay=rosterUploadDayFromName(file.name);
+    const {rosters,errors}=parseRosterUpload(text,filenameDay);
     errors.forEach(e=>globalErrors.push(`${file.name}: ${e}`));
     rosters.forEach(r=>allRosters.push({...r,fileName:file.name}));
   }
@@ -560,9 +564,13 @@ async function handleRosterFiles(fileList){
   allRosters.forEach(r=>{
     const {errors,warnings}=validateRosterAgainstListone(r,idx);
     r.errors=errors;r.warnings=warnings;
-    const key=`${r.giornata}|${norm(r.partecipante)}`;
-    if(seenKey.has(key))r.errors.push(`Rosa duplicata per ${r.partecipante} (giornata ${r.giornata}) tra i file caricati insieme: ${seenKey.get(key)} e ${r.fileName}.`);
-    else seenKey.set(key,r.fileName);
+    r.targetDays=expandRosterAcrossDays(r,model.days).map(x=>x.giornata);
+    if(!r.targetDays.length)r.errors.push(`${r.partecipante}: impossibile determinare le giornate del torneo dal calendario.`);
+    r.targetDays.forEach(day=>{
+      const key=`${day}|${norm(r.partecipante)}`;
+      if(seenKey.has(key))r.errors.push(`Rosa duplicata per ${r.partecipante} (giornata ${day}) tra i file caricati insieme: ${seenKey.get(key)} e ${r.fileName}.`);
+      else seenKey.set(key,r.fileName);
+    });
   });
   state.fantaRosterUpload={rosters:allRosters,globalErrors};
   render();
@@ -574,14 +582,16 @@ function confirmRosterUpload(){
   const model=effectiveModel();
   const changes=[],fantaManifestPaths=[];
   up.rosters.forEach(r=>{
-    const rel=rosterRelPath(r.partecipante,r.giornata);
-    const path=`${model.dataRoot}/${rel}`;
-    changes.push({path,content:rosterCsvContent(r,';')});
-    fantaManifestPaths.push(rel.replace(/^fantacalcio\//i,''));
+    expandRosterAcrossDays(r,model.days).forEach(perDay=>{
+      const rel=rosterRelPath(perDay.partecipante,perDay.giornata);
+      const path=`${model.dataRoot}/${rel}`;
+      changes.push({path,content:rosterCsvContent(perDay,';')});
+      fantaManifestPaths.push(rel.replace(/^fantacalcio\//i,''));
+    });
   });
-  const count=stageFantaChanges(changes,`Rose Fantacalcio (${up.rosters.length})`,fantaManifestPaths);
+  const count=stageFantaChanges(changes,`Rose Fantacalcio (${up.rosters.length} import, ${changes.length} file giornata)`,fantaManifestPaths);
   state.fantaRosterUpload=null;
-  state.status={type:'success',text:`${changes.length} rose pronte per la pubblicazione (${count} file inclusi manifest).`};
+  state.status={type:'success',text:`${up.rosters.length} rose importate e trasformate in ${changes.length} file per giornata, pronte per la pubblicazione (${count} file inclusi manifest).`};
   render();
 }
 function renderRosterSection(main, model){
@@ -589,18 +599,19 @@ function renderRosterSection(main, model){
   const existingRosters=fantaFiles(model,'fanta_roster');
   const days=[...new Set(existingRosters.map(f=>{const m=f.rel.match(/giornata(\d+)/i);return m?Number(m[1]):null}).filter(Boolean))].sort((a,b)=>a-b);
   card.appendChild(el('p','small muted',days.length?`Rose già pubblicate per le giornate: ${days.join(', ')}.`:'Nessuna rosa caricata ancora.'));
-  card.appendChild(messageBox('info',`Colonne attese: giornata;partecipante;idGiocatore. Se una riga non specifica la giornata viene usata quella corrente della scheda Giornata (${state.selectedDay||'—'}). Puoi caricare più file insieme: un file per partecipante oppure un unico CSV con più partecipanti. Se una rosa per lo stesso partecipante/giornata esiste già, verrà sovrascritta.`));
+  card.appendChild(messageBox('info',[`Formato consigliato utenti: partecipante;idGiocatore. È una rosa complessiva e l'Admin la replica automaticamente su tutte le giornate del calendario (${model.days.length?model.days.join(', '):'da definire'}).`,`Restano compatibili i CSV puntuali con colonna giornata e i vecchi file con _giornataN nel nome. Se una rosa partecipante/giornata esiste già, verrà sovrascritta.`]));
   const picker=input('file');picker.accept='.csv,text/csv';picker.multiple=true;picker.addEventListener('change',()=>handleRosterFiles(picker.files));
-  card.appendChild(fieldWrap('Carica rose (CSV, anche più file insieme)',picker));
+  card.appendChild(fieldWrap('Carica rose (CSV complessivi o per giornata, anche più file insieme)',picker));
   const up=state.fantaRosterUpload;
   if(up){
     const allErrors=[...up.globalErrors];up.rosters.forEach(r=>allErrors.push(...r.errors));
     const allWarnings=[];up.rosters.forEach(r=>allWarnings.push(...r.warnings));
     if(up.rosters.length){
-      const wrap=el('div','table-wrap');const table=el('table','data-table');const thead=el('thead');const hr=el('tr');['Giornata','Partecipante','Giocatori','Esito'].forEach(h=>hr.appendChild(el('th','',h)));thead.appendChild(hr);table.appendChild(thead);
+      const wrap=el('div','table-wrap');const table=el('table','data-table');const thead=el('thead');const hr=el('tr');['Copertura','Partecipante','Giocatori','Esito'].forEach(h=>hr.appendChild(el('th','',h)));thead.appendChild(hr);table.appendChild(thead);
       const tbody=el('tbody');
       up.rosters.forEach(r=>{
-        const tr=el('tr');[r.giornata,r.partecipante,r.ids.length].forEach(v=>tr.appendChild(el('td','',String(v))));
+        const coverage=r.giornata?`Giornata ${r.giornata}`:`Tutte (${r.targetDays.length})`;
+        const tr=el('tr');[coverage,r.partecipante,r.ids.length].forEach(v=>tr.appendChild(el('td','',String(v))));
         const label=r.errors.length?`${r.errors.length} errori`:(r.warnings.length?`${r.warnings.length} avvisi`:'OK');
         const status=el('td','',label);
         status.style.color=r.errors.length?'#b42318':(r.warnings.length?'#b98900':'#067647');

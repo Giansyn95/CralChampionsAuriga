@@ -771,43 +771,71 @@ export function rosterRelPath(participant, giornata) {
   return `fantacalcio/giornata${giornata}/${rosterFileName(participant, giornata)}`;
 }
 // Un CSV rosa caricato dall'utente può contenere UNA sola rosa (tutte le righe
-// stesso partecipante) oppure PIÙ rose insieme (una per partecipante): in
-// entrambi i casi lo suddividiamo per partecipante.
+// stesso partecipante) oppure PIÙ rose insieme (una per partecipante).
+//
+// Sono supportati due contratti, entrambi intenzionali:
+// 1) rosa COMPLESSIVA utente: partecipante;idGiocatore (nessuna giornata)
+// 2) rosa PUNTUALE legacy/admin: giornata;partecipante;idGiocatore
+//
+// Se la giornata manca e fallbackGiornata non è valorizzata, la rosa viene
+// marcata come complessiva (giornata=null) e sarà l'Admin a replicarla sulle
+// giornate del calendario prima della pubblicazione.
 export function parseRosterUpload(text, fallbackGiornata) {
   const { rows } = parseCsv(text || '');
   const objects = rowsToObjects(rows);
   const errors = [];
   if (!objects.length) { errors.push('Il file non contiene righe di rosa.'); return { rosters: [], errors }; }
+  const fallback = Number.parseInt(String(fallbackGiornata ?? ''), 10);
+  const hasFallback = Number.isFinite(fallback) && fallback > 0;
   const byParticipant = new Map();
   objects.forEach((o, i) => {
     const line = i + 2;
     const giornataRaw = field(o, ['giornata', 'turno', 'round']);
-    const giornata = giornataRaw !== '' ? Number.parseInt(String(giornataRaw), 10) : fallbackGiornata;
+    let giornata = null;
+    if (giornataRaw !== '') {
+      giornata = Number.parseInt(String(giornataRaw), 10);
+      if (!Number.isFinite(giornata) || giornata <= 0) { errors.push(`Riga ${line}: giornata non valida.`); return; }
+    } else if (hasFallback) giornata = fallback;
+
     const partecipante = String(field(o, ['partecipante', 'utente', 'nome partecipante', 'giocatore fantacalcio']) || '').trim();
     const idGiocatore = String(field(o, ['idGiocatore', 'id giocatore', 'id']) || '').trim();
     if (!partecipante) { errors.push(`Riga ${line}: partecipante mancante.`); return; }
-    if (!Number.isFinite(giornata) || giornata <= 0) { errors.push(`Riga ${line}: giornata mancante o non valida.`); return; }
     if (!idGiocatore) { errors.push(`Riga ${line}: idGiocatore mancante.`); return; }
-    const key = `${giornata}|${norm(partecipante)}`;
-    if (!byParticipant.has(key)) byParticipant.set(key, { giornata, partecipante, ids: [], lines: [] });
+    const key = `${giornata == null ? 'ALL' : giornata}|${norm(partecipante)}`;
+    if (!byParticipant.has(key)) byParticipant.set(key, { giornata, complessiva: giornata == null, partecipante, ids: [], lines: [] });
     const entry = byParticipant.get(key);
     entry.ids.push(idGiocatore);
     entry.lines.push(line);
   });
   return { rosters: [...byParticipant.values()], errors };
 }
+export function rosterTargetDays(roster, tournamentDays = []) {
+  const specific = Number.parseInt(String(roster?.giornata ?? ''), 10);
+  if (Number.isFinite(specific) && specific > 0) return [specific];
+  return [...new Set((tournamentDays || [])
+    .map(x => Number.parseInt(String(x), 10))
+    .filter(x => Number.isFinite(x) && x > 0))].sort((a, b) => a - b);
+}
+export function expandRosterAcrossDays(roster, tournamentDays = []) {
+  return rosterTargetDays(roster, tournamentDays).map(giornata => ({
+    ...roster,
+    giornata,
+    complessiva: false
+  }));
+}
 export function validateRosterAgainstListone(roster, listoneMap) {
   const errors = [];
   const warnings = [];
   const seen = new Set();
+  const scope = Number(roster?.giornata) > 0 ? `giornata ${roster.giornata}` : 'rosa complessiva';
   roster.ids.forEach((id, i) => {
     const line = roster.lines[i];
-    if (!listoneMap.has(norm(id))) { errors.push(`${roster.partecipante} (giornata ${roster.giornata}), riga ${line}: id giocatore "${id}" non presente nel listone.`); return; }
+    if (!listoneMap.has(norm(id))) { errors.push(`${roster.partecipante} (${scope}), riga ${line}: id giocatore "${id}" non presente nel listone.`); return; }
     const k = idKey(id);
-    if (seen.has(k)) warnings.push(`${roster.partecipante} (giornata ${roster.giornata}): id "${id}" ripetuto nella stessa rosa.`);
+    if (seen.has(k)) warnings.push(`${roster.partecipante} (${scope}): id "${id}" ripetuto nella stessa rosa.`);
     seen.add(k);
   });
-  if (!roster.ids.length) errors.push(`${roster.partecipante} (giornata ${roster.giornata}): rosa vuota.`);
+  if (!roster.ids.length) errors.push(`${roster.partecipante} (${scope}): rosa vuota.`);
   return { errors, warnings };
 }
 export function rosterCsvContent(roster, separator = ';') {
