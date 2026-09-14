@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Crea la tua rosa · CRAL Champions</title>
+  <meta name="description" content="Genera la rosa Fantacalcio CRAL Champions validata sul listone ufficiale." />
+  <link rel="icon" type="image/png" href="immagini/logo_cral.png" />
+  <link rel="apple-touch-icon" href="immagini/logo_cral.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@600;700&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="crea-rosa.css" />
+</head>
+<body>
+  <main class="roster-wrap" data-roster-builder>
+    <header class="roster-hero">
+      <div class="roster-hero-top">
+        <img class="roster-logo" src="immagini/logo_cral.png" alt="Logo CRAL" />
+        <div class="roster-hero-copy">
+          <p class="roster-kicker">Fantacalcio CRAL Champions</p>
+          <h1>Crea la tua rosa</h1>
+          <p>Scegli i giocatori dal listone ufficiale. Il file viene generato solo quando la rosa rispetta le regole del torneo.</p>
+        </div>
+        <div class="hero-actions">
+          <a class="back-link" href="index.html#tab=fantacalcio">← Fantacalcio</a>
+          <button class="icon-btn" id="themeToggle" type="button" aria-label="Cambia tema">🌙</button>
+        </div>
+      </div>
+    </header>
+
+    <div class="builder-grid">
+      <section class="card" aria-labelledby="builderTitle">
+        <h2 id="builderTitle">Listone ufficiale</h2>
+        <p class="hint">Il listone non può essere sostituito dall'utente: nomi, ruoli e crediti vengono letti direttamente dai dati ufficiali del torneo.</p>
+        <div id="listoneStatus" class="source-status">Caricamento del listone ufficiale…</div>
+
+        <div class="field">
+          <label for="participantName">Nome e cognome del partecipante</label>
+          <input id="participantName" type="text" maxlength="100" autocomplete="name" placeholder="es. Filippo Capurso" />
+        </div>
+
+        <div class="rules-strip" aria-label="Regole composizione rosa">
+          <div class="rule-chip"><strong>5</strong><span>giocatori totali</span></div>
+          <div class="rule-chip"><strong>1 PT</strong><span>portiere</span></div>
+          <div class="rule-chip"><strong>4</strong><span>di movimento</span></div>
+        </div>
+
+        <div class="filters">
+          <input id="playerSearch" type="search" placeholder="Cerca giocatore o squadra…" aria-label="Cerca nel listone" />
+          <select id="roleFilter" aria-label="Filtra per ruolo">
+            <option value="all">Tutti i ruoli</option>
+            <option value="pt">Solo PT</option>
+            <option value="movement">Movimento</option>
+          </select>
+        </div>
+        <div id="playersList" class="players-list" aria-live="polite"></div>
+      </section>
+
+      <aside class="sidebar">
+        <section class="card" aria-labelledby="summaryTitle">
+          <h2 id="summaryTitle">La tua rosa</h2>
+          <div class="summary-grid">
+            <div class="summary-item"><span>Giocatori</span><strong id="countTotal">0/5</strong></div>
+            <div class="summary-item"><span>Portieri PT</span><strong id="countPt">0/1</strong></div>
+            <div class="summary-item"><span>Movimento</span><strong id="countMovement">0/4</strong></div>
+            <div class="summary-item"><span>Crediti residui</span><strong id="creditRemaining">250</strong></div>
+            <div class="summary-item is-wide">
+              <div><span>Budget</span><div class="credit-line"><b id="creditUsed">0</b> / <b id="creditBudget">250</b> crediti</div></div>
+              <span>Giornata 1</span>
+            </div>
+          </div>
+
+          <div id="selectedList" class="selected-list"></div>
+          <div id="validationStatus" class="validation-status is-loading">Caricamento del listone ufficiale…</div>
+
+          <div class="action-row">
+            <button id="downloadRoster" class="primary-btn" type="button" disabled>Scarica CSV validato</button>
+            <button id="resetRoster" class="secondary-btn" type="button">Azzera</button>
+          </div>
+          <p class="admin-note">Il file scaricato usa esattamente il formato accettato dall'Admin/FE: <b>giornata;partecipante;idGiocatore</b>. Invialo all'admin dalla tua mail aziendale.</p>
+        </section>
+      </aside>
+    </div>
+
+    <p class="footer-note">Questa pagina non salva la rosa e non invia dati a un server. Il controllo di unicità resta in carico all'admin, che pubblica un solo file per partecipante/giornata.</p>
+  </main>
+  <script src="crea-rosa.js"></script>
+</body>
+</html>

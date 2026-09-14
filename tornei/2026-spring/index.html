@@ -117,6 +117,9 @@
     h2{margin:0 0 14px;color:var(--blue);font-size:26px;font-family:'Oswald',Arial,Helvetica,sans-serif}
     .upper{text-transform:uppercase}
     .hint{color:var(--muted);font-size:14px;line-height:1.5}
+    .fanta-roster-creator-cta{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 14px}
+    .fanta-roster-creator-link{display:inline-flex;align-items:center;gap:8px;border:0;border-radius:13px;padding:10px 13px;background:linear-gradient(135deg,#f5b942,#ffd76c);color:#302100;text-decoration:none;font-weight:900;font-size:13px;box-shadow:0 7px 18px rgba(245,185,66,.18)}
+    .fanta-roster-creator-note{color:var(--muted);font-size:12px}
     /* ── Ricerca ── */
     .search{width:100%;padding:13px 14px;border:1px solid var(--line);border-radius:14px;margin:0 0 14px;font-size:15px;background:var(--panel);color:var(--ink)}
     /* ── Tabelle ── */
@@ -13055,6 +13058,11 @@ function renderFantacalcio(){
   const intro=document.createElement('p'); intro.className='hint fanta-claim';
   intro.textContent='Scegli la giornata e il punteggio si aggiorna con risultati e statistiche del torneo.';
   card.appendChild(intro);
+
+  const creatorCta=document.createElement('div'); creatorCta.className='fanta-roster-creator-cta';
+  const creatorLink=document.createElement('a'); creatorLink.className='fanta-roster-creator-link'; creatorLink.href='crea-rosa.html'; creatorLink.textContent='⚽ Crea la tua rosa';
+  const creatorNote=document.createElement('span'); creatorNote.className='fanta-roster-creator-note'; creatorNote.textContent="Genera il CSV validato sul listone ufficiale e invialo all'admin.";
+  creatorCta.appendChild(creatorLink); creatorCta.appendChild(creatorNote); card.appendChild(creatorCta);
 
   const data=fantaCurrentData();
   let options=fantaAvailableDayOptions(data.results);
