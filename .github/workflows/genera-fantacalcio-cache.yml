@@ -19,8 +19,8 @@ on:
         default: 'current'
 
 concurrency:
-  group: fantacalcio-cache-${{ github.ref }}
-  cancel-in-progress: true
+  group: cral-generated-data-${{ github.ref }}
+  cancel-in-progress: false
 
 permissions:
   contents: write
