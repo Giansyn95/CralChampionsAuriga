@@ -19,8 +19,8 @@ on:
         default: 'current'
 
 concurrency:
-  group: cral-generated-data-${{ github.ref }}
-  cancel-in-progress: false
+  group: fantacalcio-cache-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: write
@@ -135,30 +135,95 @@ jobs:
         if: steps.fanta.outputs.has_work == 'true'
         shell: bash
         run: |
-          dirs="${{ steps.fanta.outputs.dirs }}"
-          cache_files=()
+          set -euo pipefail
 
-          for dir in $dirs; do
-            cache="$dir/data/fantacalcio/fantacalcio_cache.json"
-            if [ ! -f "$cache" ]; then
-              echo "::error title=Cache Fantacalcio mancante::Attesa cache non trovata: $cache"
-              exit 1
-            fi
-            cache_files+=("$cache")
-          done
+          dirs="${{ steps.fanta.outputs.dirs }}"
+          branch="${GITHUB_REF_NAME}"
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add "${cache_files[@]}"
 
-          if git diff --cached --quiet; then
-            echo "Cache Fantacalcio gia aggiornata e certificata."
+          regenerate_and_certify() {
+            echo "Rigenerazione cache sull'ultimo commit disponibile: $(git rev-parse --short HEAD)"
+            node tools/genera_fantacalcio_cache.js $dirs
+            node tools/genera_fantacalcio_cache.js --validate-only $dirs
+          }
+
+          stage_and_commit() {
+            local cache_files=()
+            local dir cache
+
+            for dir in $dirs; do
+              cache="$dir/data/fantacalcio/fantacalcio_cache.json"
+              if [ ! -f "$cache" ]; then
+                echo "::error title=Cache Fantacalcio mancante::Attesa cache non trovata: $cache"
+                return 2
+              fi
+              cache_files+=("$cache")
+            done
+
+            git add "${cache_files[@]}"
+
+            if git diff --cached --quiet; then
+              echo "Cache Fantacalcio gia aggiornata e certificata sull'ultimo main."
+              return 1
+            fi
+
+            git commit -m "Aggiorna cache Fantacalcio"
+            return 0
+          }
+
+          # La cache e un artefatto derivato: non tentiamo mai merge/rebase del JSON.
+          # Se main e avanzato durante build/certificazione, ripartiamo dall'ultimo main
+          # e rigeneriamo la cache dalle sorgenti correnti.
+          git fetch origin "$branch"
+          remote_head="$(git rev-parse "origin/$branch")"
+          local_head="$(git rev-parse HEAD)"
+
+          if [ "$local_head" != "$remote_head" ]; then
+            echo "::notice title=Main avanzato::Il branch e cambiato durante la generazione. Rigenero la cache sull'ultimo commit remoto."
+            git reset --hard "origin/$branch"
+            regenerate_and_certify
+          fi
+
+          if stage_and_commit; then
+            :
+          else
+            rc=$?
+            if [ "$rc" -eq 1 ]; then
+              echo "### Commit cache Fantacalcio" >> "$GITHUB_STEP_SUMMARY"
+              echo "- ✅ Nessuna modifica da pubblicare: cache gia allineata all'ultimo \`$branch\`." >> "$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
+            exit "$rc"
+          fi
+
+          if git push origin "HEAD:$branch"; then
+            echo "### Commit cache Fantacalcio" >> "$GITHUB_STEP_SUMMARY"
+            echo "- ✅ Cache certificata e pubblicata su \`$branch\`." >> "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
 
-          git commit -m "Aggiorna cache Fantacalcio"
-
-          branch="${GITHUB_REF_NAME}"
+          # Un altro commit puo arrivare tra fetch e push. Un solo retry sicuro:
+          # scartiamo la cache generata sul vecchio HEAD, prendiamo l'ultimo main,
+          # rigeneriamo e ricertifichiamo. Nessun force-push e nessun merge del JSON.
+          echo "::warning title=Branch aggiornato durante il push::Push non accettato. Eseguo un unico retry rigenerando la cache sull'ultimo $branch."
           git fetch origin "$branch"
-          git pull --rebase origin "$branch"
+          git reset --hard "origin/$branch"
+          regenerate_and_certify
+
+          if stage_and_commit; then
+            :
+          else
+            rc=$?
+            if [ "$rc" -eq 1 ]; then
+              echo "### Commit cache Fantacalcio" >> "$GITHUB_STEP_SUMMARY"
+              echo "- ✅ Retry completato: la cache remota era gia aggiornata." >> "$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
+            exit "$rc"
+          fi
+
           git push origin "HEAD:$branch"
+          echo "### Commit cache Fantacalcio" >> "$GITHUB_STEP_SUMMARY"
+          echo "- ✅ Cache rigenerata sull'ultimo \`$branch\`, ricertificata e pubblicata al secondo tentativo." >> "$GITHUB_STEP_SUMMARY"
