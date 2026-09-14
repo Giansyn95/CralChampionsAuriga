@@ -16,8 +16,9 @@ on:
         description: 'Cartella torneo da elaborare, es. tornei/2026-spring. Usa current per il torneo corrente da tornei.json, oppure all per tutti.'
         required: false
         default: 'current'
-# Stesso gruppo del workflow Fantacalcio: entrambi scrivono sul repository e
-# devono essere eseguiti in coda sul medesimo branch.
+
+# Stesso lock del workflow Fantacalcio: i workflow che scrivono dati
+# sul repository devono essere eseguiti in coda sullo stesso branch.
 concurrency:
   group: cral-generated-data-${{ github.ref }}
   cancel-in-progress: false
@@ -28,11 +29,13 @@ permissions:
 jobs:
   build-snapshot:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
         with:
           fetch-depth: 0
+
       - name: Setup Node.js
         uses: actions/setup-node@v7
         with:
@@ -50,6 +53,7 @@ jobs:
             tornei.find(t => t.corrente === true && t.attivo !== false) ||
             tornei.find(t => t.stato === 'in-corso' && t.attivo !== false) ||
             tornei.find(t => t.attivo === true);
+
           if (!torneo || !torneo.cartella) {
             console.error('Nessun torneo corrente/attivo con cartella trovato in tornei.json');
             process.exit(1);
@@ -58,6 +62,7 @@ jobs:
           process.stdout.write(torneo.cartella);
           NODE
           )"
+
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             input="${{ inputs.torneo_dir }}"
             if [ -z "$input" ] || [ "$input" = "current" ]; then
@@ -70,9 +75,11 @@ jobs:
             echo "Tornei richiesti: $dirs"
             exit 0
           fi
+
           before="${{ github.event.before }}"
           after="${{ github.sha }}"
           git diff --name-only "$before" "$after" > changed_files.txt 2>/dev/null || git diff --name-only HEAD~1 HEAD > changed_files.txt
+
           if grep -qx 'tornei.json' changed_files.txt; then
             dirs="$current_dir"
           else
@@ -85,6 +92,195 @@ jobs:
           echo "dirs=$dirs" >> "$GITHUB_OUTPUT"
           echo "Tornei rilevati: $dirs"
 
+      - name: Prepara validatore snapshot
+        id: validator
+        shell: bash
+        run: |
+          validator="$RUNNER_TEMP/validate_portieri_snapshot.js"
+
+          cat > "$validator" <<'NODE'
+          'use strict';
+
+          const fs = require('fs');
+          const path = require('path');
+          const crypto = require('crypto');
+          const cp = require('child_process');
+
+          const dirs = process.argv.slice(2);
+          let checked = 0;
+          const summary = [];
+
+          function isObject(value) {
+            return value && typeof value === 'object' && !Array.isArray(value);
+          }
+
+          function repoPath(file) {
+            return file.replace(/\\/g, '/');
+          }
+
+          function oldSnapshot(rel) {
+            try {
+              const raw = cp.execFileSync('git', ['show', `HEAD:${repoPath(rel)}`], {
+                encoding: 'utf8',
+                stdio: ['ignore', 'pipe', 'ignore']
+              });
+              return JSON.parse(raw);
+            } catch (_) {
+              return null;
+            }
+          }
+
+          function walk(dir, matcher, out = []) {
+            if (!fs.existsSync(dir)) return out;
+            for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+              const full = path.join(dir, entry.name);
+              if (entry.isDirectory()) walk(full, matcher, out);
+              else if (entry.isFile() && matcher(entry.name, full)) out.push(full);
+            }
+            return out;
+          }
+
+          function sourceHash(dir) {
+            const dataDir = path.join(dir, 'data');
+            const files = [];
+            for (const name of ['classifica_portieri.csv', 'calendario_andata_ritorno.csv']) {
+              const f = path.join(dataDir, name);
+              if (fs.existsSync(f)) files.push(f);
+            }
+            walk(dataDir, name => /riepilogo.*\.csv$/i.test(name), files);
+            files.sort((a, b) => repoPath(a).localeCompare(repoPath(b)));
+
+            const h = crypto.createHash('sha256');
+            for (const file of files) {
+              h.update(repoPath(path.relative(process.cwd(), file)));
+              h.update('\0');
+              h.update(fs.readFileSync(file));
+              h.update('\0');
+            }
+            return { hash: h.digest('hex'), files: files.length };
+          }
+
+          function fail(message) {
+            console.error(`::error title=Snapshot portieri non valido::${message}`);
+            process.exitCode = 1;
+          }
+
+          for (const dir of dirs) {
+            const dataDir = path.join(dir, 'data');
+            const sourceCsv = path.join(dataDir, 'classifica_portieri.csv');
+            const snapshotFile = path.join(dataDir, 'portieri_snapshot.json');
+
+            if (!fs.existsSync(sourceCsv)) {
+              console.log(`${dir}: classifica_portieri.csv assente, validazione snapshot non richiesta.`);
+              continue;
+            }
+
+            if (!fs.existsSync(snapshotFile)) {
+              fail(`${dir}: classifica_portieri.csv presente ma ${repoPath(snapshotFile)} non e stato generato.`);
+              continue;
+            }
+
+            let snap;
+            try {
+              snap = JSON.parse(fs.readFileSync(snapshotFile, 'utf8'));
+            } catch (err) {
+              fail(`${dir}: JSON snapshot non leggibile: ${err.message}`);
+              continue;
+            }
+
+            checked++;
+
+            if (!Number.isInteger(snap.giornata) || snap.giornata < 0) {
+              fail(`${dir}: giornata non valida.`);
+            }
+
+            if (!Number.isInteger(snap.totalePunti) || snap.totalePunti < 0) {
+              fail(`${dir}: totalePunti non valido.`);
+            }
+
+            if (!isObject(snap.perPortiere) || !Object.keys(snap.perPortiere).length) {
+              fail(`${dir}: perPortiere assente o vuoto.`);
+            } else {
+              let sum = 0;
+              for (const [name, value] of Object.entries(snap.perPortiere)) {
+                if (!name.trim() || !Number.isInteger(value) || value < 0) {
+                  fail(`${dir}: punteggio non valido per portiere '${name}'.`);
+                  continue;
+                }
+                sum += value;
+              }
+              if (sum !== snap.totalePunti) {
+                fail(`${dir}: totalePunti=${snap.totalePunti}, somma perPortiere=${sum}.`);
+              }
+            }
+
+            if (!isObject(snap.portieriEsterni)) {
+              fail(`${dir}: portieriEsterni deve essere un oggetto.`);
+            } else {
+              for (const [giornata, matches] of Object.entries(snap.portieriEsterni)) {
+                const g = Number(giornata);
+                if (!Number.isInteger(g) || g <= 0 || g > snap.giornata) {
+                  fail(`${dir}: giornata portieriEsterni '${giornata}' non valida.`);
+                }
+                if (!Array.isArray(matches)) {
+                  fail(`${dir}: portieriEsterni[${giornata}] non e un array.`);
+                  continue;
+                }
+                for (const match of matches) {
+                  if (!isObject(match) || !String(match.casa || '').trim() || !String(match.trasferta || '').trim()) {
+                    fail(`${dir}: partita portiere esterno non valida alla giornata ${giornata}.`);
+                  }
+                }
+              }
+            }
+
+            if (!snap.generatoIl || Number.isNaN(Date.parse(snap.generatoIl))) {
+              fail(`${dir}: generatoIl assente o non valido.`);
+            }
+
+            const relSnapshot = repoPath(path.relative(process.cwd(), snapshotFile));
+            const previous = oldSnapshot(relSnapshot);
+            if (previous) {
+              const oldDay = Number(previous.giornata || 0);
+              if (snap.giornata < oldDay) {
+                fail(`${dir}: regressione giornata snapshot (${oldDay} -> ${snap.giornata}).`);
+              }
+
+              const oldExternal = isObject(previous.portieriEsterni) ? previous.portieriEsterni : {};
+              const newExternal = isObject(snap.portieriEsterni) ? snap.portieriEsterni : {};
+              for (const [g, matches] of Object.entries(oldExternal)) {
+                if (!(g in newExternal)) {
+                  fail(`${dir}: persa la registrazione portieriEsterni della giornata ${g}.`);
+                  continue;
+                }
+                if (JSON.stringify(newExternal[g]) !== JSON.stringify(matches)) {
+                  fail(`${dir}: storico portieriEsterni modificato alla giornata ${g}.`);
+                }
+              }
+            }
+
+            const sourceInfo = sourceHash(dir);
+            summary.push(`- ${dir}: giornata ${snap.giornata}, ${Object.keys(snap.perPortiere || {}).length} portieri, totale ${snap.totalePunti}, ${sourceInfo.files} sorgenti, hash ${sourceInfo.hash.slice(0, 16)}...`);
+            console.log(`OK ${dir}: snapshot valido, hash sorgenti ${sourceInfo.hash}`);
+          }
+
+          if (process.exitCode) process.exit(process.exitCode);
+
+          if (process.env.GITHUB_STEP_SUMMARY) {
+            const lines = [
+              '### Certificazione snapshot portieri',
+              '',
+              ...(summary.length ? summary.map(x => `- ✅ ${x.slice(2)}`) : ['- Nessuno snapshot da certificare.']),
+              ''
+            ];
+            fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, lines.join('\n'));
+          }
+
+          console.log(`Snapshot certificati: ${checked}`);
+          NODE
+
+          echo "path=$validator" >> "$GITHUB_OUTPUT"
+
       - name: Genera data/portieri_snapshot.json
         shell: bash
         run: |
@@ -94,26 +290,145 @@ jobs:
           else
             node tools/genera_portieri_snapshot.js $dirs
           fi
+
+      - name: Certifica snapshot generato
+        shell: bash
+        run: |
+          dirs="${{ steps.tornei.outputs.dirs }}"
+          validator="${{ steps.validator.outputs.path }}"
+
+          if [ "$dirs" = "all" ]; then
+            mapfile -t targets < <(find tornei -mindepth 1 -maxdepth 1 -type d -print | sort)
+          else
+            read -r -a targets <<< "$dirs"
+          fi
+
+          node "$validator" "${targets[@]}"
+
       - name: Commit snapshot aggiornato
         shell: bash
         run: |
-          mapfile -t snapshot_files < <(find tornei -path '*/data/portieri_snapshot.json' -type f -print)
-          if [ "${#snapshot_files[@]}" -eq 0 ]; then
-            echo "Nessuno snapshot generato."
-            exit 0
-          fi
+          set -euo pipefail
+
+          dirs="${{ steps.tornei.outputs.dirs }}"
+          validator="${{ steps.validator.outputs.path }}"
+          branch="${GITHUB_REF_NAME}"
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add "${snapshot_files[@]}"
-          if git diff --cached --quiet; then
-            echo "Snapshot portieri gia aggiornato."
+
+          resolve_targets() {
+            if [ "$dirs" = "all" ]; then
+              find tornei -mindepth 1 -maxdepth 1 -type d -print | sort
+            else
+              for dir in $dirs; do
+                printf '%s\n' "$dir"
+              done
+            fi
+          }
+
+          regenerate_and_certify() {
+            echo "Rigenerazione snapshot sull'ultimo commit disponibile: $(git rev-parse --short HEAD)"
+
+            if [ "$dirs" = "all" ]; then
+              node tools/genera_portieri_snapshot.js --all
+            else
+              node tools/genera_portieri_snapshot.js $dirs
+            fi
+
+            mapfile -t targets < <(resolve_targets)
+            node "$validator" "${targets[@]}"
+          }
+
+          stage_and_commit() {
+            local snapshot_files=()
+            local dir snapshot source
+
+            while IFS= read -r dir; do
+              [ -n "$dir" ] || continue
+              source="$dir/data/classifica_portieri.csv"
+              snapshot="$dir/data/portieri_snapshot.json"
+
+              # Se il torneo non usa la classifica portieri non c'e nulla da pubblicare.
+              if [ ! -f "$source" ]; then
+                continue
+              fi
+
+              if [ ! -f "$snapshot" ]; then
+                echo "::error title=Snapshot portieri mancante::Atteso snapshot non trovato: $snapshot"
+                return 2
+              fi
+
+              snapshot_files+=("$snapshot")
+            done < <(resolve_targets)
+
+            if [ "${#snapshot_files[@]}" -eq 0 ]; then
+              echo "Nessuno snapshot portieri da pubblicare."
+              return 1
+            fi
+
+            git add "${snapshot_files[@]}"
+
+            if git diff --cached --quiet; then
+              echo "Snapshot portieri gia aggiornato e certificato sull'ultimo $branch."
+              return 1
+            fi
+
+            git commit -m "Aggiorna snapshot portieri"
+            return 0
+          }
+
+          # Lo snapshot e un artefatto derivato ma usa anche lo snapshot precedente
+          # come baseline. Non facciamo mai merge/rebase del JSON: se il branch e
+          # avanzato, ripartiamo dall'ultimo snapshot remoto, rigeneriamo e validiamo.
+          git fetch origin "$branch"
+          remote_head="$(git rev-parse "origin/$branch")"
+          local_head="$(git rev-parse HEAD)"
+
+          if [ "$local_head" != "$remote_head" ]; then
+            echo "::notice title=Branch avanzato::Il branch e cambiato durante la generazione. Riparto dall'ultimo snapshot remoto e rigenero."
+            git reset --hard "origin/$branch"
+            regenerate_and_certify
+          fi
+
+          if stage_and_commit; then
+            :
+          else
+            rc=$?
+            if [ "$rc" -eq 1 ]; then
+              echo "### Commit snapshot portieri" >> "$GITHUB_STEP_SUMMARY"
+              echo "- ✅ Nessuna modifica da pubblicare: snapshot gia allineato all'ultimo \`$branch\`." >> "$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
+            exit "$rc"
+          fi
+
+          if git push origin "HEAD:$branch"; then
+            echo "### Commit snapshot portieri" >> "$GITHUB_STEP_SUMMARY"
+            echo "- ✅ Snapshot certificato e pubblicato su \`$branch\`." >> "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
 
-          git commit -m "Aggiorna snapshot portieri"
-
-          branch="${GITHUB_REF_NAME}"
+          # Un altro commit puo arrivare tra fetch e push. Un solo retry sicuro:
+          # scartiamo lo snapshot generato sul vecchio HEAD, prendiamo l'ultimo branch,
+          # rigeneriamo usando lo snapshot remoto come baseline e ricertifichiamo.
+          echo "::warning title=Branch aggiornato durante il push::Push non accettato. Eseguo un unico retry sull'ultimo $branch."
           git fetch origin "$branch"
-          git pull --rebase origin "$branch"
+          git reset --hard "origin/$branch"
+          regenerate_and_certify
+
+          if stage_and_commit; then
+            :
+          else
+            rc=$?
+            if [ "$rc" -eq 1 ]; then
+              echo "### Commit snapshot portieri" >> "$GITHUB_STEP_SUMMARY"
+              echo "- ✅ Retry completato: lo snapshot remoto era gia aggiornato." >> "$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
+            exit "$rc"
+          fi
+
           git push origin "HEAD:$branch"
+          echo "### Commit snapshot portieri" >> "$GITHUB_STEP_SUMMARY"
+          echo "- ✅ Snapshot rigenerato sull'ultimo \`$branch\`, ricertificato e pubblicato al secondo tentativo." >> "$GITHUB_STEP_SUMMARY"
