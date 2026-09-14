@@ -285,6 +285,10 @@
   let vvCleanup = null;
   let counterScale = 1;
   let adminSettling = false;
+  // v44: una renderizzazione transitoria (es. Pubblica -> renderLoading -> Dashboard)
+  // non e' un nuovo ingresso nell'Admin. Ricordiamo se la Dashboard e' gia
+  // comparsa in questo documento per non rilanciare settleAdmin() dopo i render.
+  let adminSeenOnce = false;
 
   function num(value, fallback = 0) {
     const n = Number(value);
@@ -618,9 +622,18 @@
 
     if (nextMode === 'admin') {
       stopSessionPoll();
-      if (previousMode !== 'admin') {
+      if (!adminSeenOnce) {
+        adminSeenOnce = true;
         settleAdmin();
         loginAttempt = false;
+      } else {
+        // v44: durante operazioni come Pubblica l'app sostituisce temporaneamente
+        // la Dashboard con una schermata di loading. Il MutationObserver vede
+        // admin -> other -> admin, ma non dobbiamo trattarlo come un nuovo login:
+        // rilanciare settleAdmin() qui causava su iOS un reset/contro-zoom visibile.
+        clearSettling();
+        clearCounterScale();
+        unlockViewport();
       }
       return;
     }
