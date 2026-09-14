@@ -1,4 +1,5 @@
 name: Genera cache Fantacalcio
+
 on:
   push:
     branches:
@@ -13,11 +14,10 @@ on:
   workflow_dispatch:
     inputs:
       torneo_dir:
-        description: 'Cartella torneo da elaborare, es. tornei/2026-spring. Usa current per il torneo corrente da tornei.json, oppure all per tutti.'
+        description: 'Cartella torneo da elaborare, es. tornei/2026-spring. Usa current per il torneo corrente, oppure all per tutti.'
         required: false
         default: 'current'
-# Gruppo condiviso anche con genera-portieri-snapshot.yml: i due workflow che
-# scrivono file generati sullo stesso branch vengono serializzati, non cancellati.
+
 concurrency:
   group: cral-generated-data-${{ github.ref }}
   cancel-in-progress: false
@@ -33,15 +33,11 @@ jobs:
         uses: actions/checkout@v7
         with:
           fetch-depth: 0
+
       - name: Setup Node.js
         uses: actions/setup-node@v7
         with:
           node-version: 20
-
-      - name: Installa Playwright Chromium
-        run: |
-          npm install --no-save playwright-chromium
-          npx playwright install --with-deps chromium
 
       - name: Determina tornei da aggiornare
         id: tornei
@@ -59,7 +55,6 @@ jobs:
             console.error('Nessun torneo corrente/attivo con cartella trovato in tornei.json');
             process.exit(1);
           }
-
           process.stdout.write(torneo.cartella);
           NODE
           )"
@@ -71,7 +66,6 @@ jobs:
             else
               dirs="$input"
             fi
-
             echo "dirs=$dirs" >> "$GITHUB_OUTPUT"
             echo "Tornei richiesti: $dirs"
             exit 0
@@ -80,6 +74,7 @@ jobs:
           before="${{ github.event.before }}"
           after="${{ github.sha }}"
           git diff --name-only "$before" "$after" > changed_files.txt 2>/dev/null || git diff --name-only HEAD~1 HEAD > changed_files.txt
+
           if grep -qx 'tornei.json' changed_files.txt; then
             dirs="$current_dir"
           else
@@ -91,30 +86,73 @@ jobs:
 
           echo "dirs=$dirs" >> "$GITHUB_OUTPUT"
           echo "Tornei rilevati: $dirs"
-      - name: Genera data/fantacalcio/fantacalcio_cache.json
-        shell: bash
-        run: |
-          dirs="${{ steps.tornei.outputs.dirs }}"
-          if [ "$dirs" = "all" ]; then
-            node tools/genera_fantacalcio_cache.js --all
-          else
-            node tools/genera_fantacalcio_cache.js $dirs
-          fi
-      - name: Commit cache aggiornata
-        shell: bash
-        run: |
-          mapfile -t cache_files < <(find tornei -path '*/data/fantacalcio/fantacalcio_cache.json' -type f -print)
 
-          if [ "${#cache_files[@]}" -eq 0 ]; then
-            echo "Nessuna cache generata."
-            exit 0
+      - name: Preflight Fantacalcio
+        id: fanta
+        shell: bash
+        run: |
+          requested="${{ steps.tornei.outputs.dirs }}"
+          report="$RUNNER_TEMP/fantacalcio-preflight.json"
+
+          if [ "$requested" = "all" ]; then
+            node tools/genera_fantacalcio_cache.js --preflight-only --all --report-file "$report"
+          else
+            node tools/genera_fantacalcio_cache.js --preflight-only --report-file "$report" $requested
           fi
+
+          node - "$report" "$GITHUB_OUTPUT" <<'NODE'
+          const fs = require('fs');
+          const [reportFile, outputFile] = process.argv.slice(2);
+          const report = JSON.parse(fs.readFileSync(reportFile, 'utf8'));
+          const ready = Array.isArray(report.ready) ? report.ready : [];
+          const dirs = ready.map(x => x.dir).filter(Boolean);
+          fs.appendFileSync(outputFile, `has_work=${dirs.length ? 'true' : 'false'}\n`);
+          fs.appendFileSync(outputFile, `dirs=${dirs.join(' ')}\n`);
+          console.log(dirs.length ? `Tornei da elaborare: ${dirs.join(', ')}` : 'Nessun torneo con Fantacalcio configurato.');
+          NODE
+
+      - name: Installa Playwright Chromium
+        if: steps.fanta.outputs.has_work == 'true'
+        run: |
+          npm install --no-save playwright-chromium
+          npx playwright install --with-deps chromium
+
+      - name: Genera cache Fantacalcio
+        if: steps.fanta.outputs.has_work == 'true'
+        shell: bash
+        run: |
+          dirs="${{ steps.fanta.outputs.dirs }}"
+          node tools/genera_fantacalcio_cache.js $dirs
+
+      - name: Certifica cache generata
+        if: steps.fanta.outputs.has_work == 'true'
+        shell: bash
+        run: |
+          dirs="${{ steps.fanta.outputs.dirs }}"
+          node tools/genera_fantacalcio_cache.js --validate-only $dirs
+
+      - name: Commit cache aggiornata
+        if: steps.fanta.outputs.has_work == 'true'
+        shell: bash
+        run: |
+          dirs="${{ steps.fanta.outputs.dirs }}"
+          cache_files=()
+
+          for dir in $dirs; do
+            cache="$dir/data/fantacalcio/fantacalcio_cache.json"
+            if [ ! -f "$cache" ]; then
+              echo "::error title=Cache Fantacalcio mancante::Attesa cache non trovata: $cache"
+              exit 1
+            fi
+            cache_files+=("$cache")
+          done
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add "${cache_files[@]}"
+
           if git diff --cached --quiet; then
-            echo "Cache Fantacalcio gia aggiornata."
+            echo "Cache Fantacalcio gia aggiornata e certificata."
             exit 0
           fi
 
