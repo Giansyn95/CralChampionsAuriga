@@ -1569,6 +1569,27 @@
     }
     @media(prefers-reduced-motion:reduce){.entity-nav-backdrop,.entity-sheet,.match[data-rich-nav="1"],.form-match,.profile-match-button,.team-roster-player{transition:none!important}.entity-content{scroll-behavior:auto}}
 
+
+    /* ── Tournament Pulse / Record / Achievement ── */
+    .pulse-shell{display:grid;gap:14px}
+    .pulse-hero{position:relative;overflow:hidden;padding:22px;background:linear-gradient(135deg,color-mix(in srgb,var(--blue) 88%,#04101f),color-mix(in srgb,var(--blue) 50%,#6d28d9));color:#fff;border:0}
+    .pulse-hero:after{content:"";position:absolute;width:220px;height:220px;border-radius:50%;right:-70px;top:-95px;background:rgba(255,255,255,.10);pointer-events:none}
+    .pulse-kicker{font-size:11px;font-weight:950;letter-spacing:.13em;text-transform:uppercase;opacity:.8}
+    .pulse-title-row{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-top:7px}
+    .pulse-title{margin:0;font-size:clamp(25px,4vw,38px);line-height:1.03}.pulse-subtitle{margin:8px 0 0;max-width:760px;font-size:13px;line-height:1.55;opacity:.88}
+    .pulse-status{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;padding:8px 11px;border-radius:999px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.22);font-size:11px;font-weight:900}
+    .pulse-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin-top:18px;position:relative;z-index:1}
+    .pulse-kpi{padding:12px;border-radius:16px;background:rgba(255,255,255,.11);border:1px solid rgba(255,255,255,.15);min-width:0}.pulse-kpi .n{font-size:21px;font-weight:950;line-height:1.05}.pulse-kpi .l{display:block;margin-top:5px;font-size:9px;font-weight:850;text-transform:uppercase;letter-spacing:.06em;opacity:.74;overflow:hidden;text-overflow:ellipsis}
+    .pulse-grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:14px}.pulse-card{padding:18px}.pulse-card h2{margin:0 0 4px}.pulse-note{margin:0 0 13px;color:var(--muted);font-size:11px;line-height:1.45}
+    .pulse-match-list{display:grid;gap:8px}.pulse-match{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:8px;width:100%;padding:11px;border:1px solid var(--line);border-radius:15px;background:var(--soft);color:var(--ink);font:inherit;cursor:pointer;text-align:left;transition:transform .15s ease,border-color .15s ease}.pulse-match:hover{transform:translateY(-1px);border-color:rgba(15,90,168,.42)}
+    .pulse-match-team{display:flex;align-items:center;gap:7px;min-width:0;font-size:11px;font-weight:900}.pulse-match-team:last-child{justify-content:flex-end;text-align:right}.pulse-match-team span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.pulse-match-score{font-size:16px;font-weight:950;white-space:nowrap;color:var(--blue)}
+    .pulse-mini-logo{width:27px;height:27px;flex:0 0 27px;border-radius:50%;object-fit:contain;background:#fff;padding:2px;border:1px solid var(--line)}
+    .pulse-empty{padding:14px;border:1px dashed var(--line);border-radius:14px;color:var(--muted);font-size:11px;text-align:center}
+    .pulse-records{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.pulse-record{display:flex;gap:10px;align-items:flex-start;padding:11px;border:1px solid var(--line);border-radius:15px;background:var(--soft);min-width:0}.pulse-record.is-clickable{cursor:pointer;transition:transform .15s ease,border-color .15s ease}.pulse-record.is-clickable:hover{transform:translateY(-1px);border-color:rgba(15,90,168,.4)}.pulse-record-icon{font-size:20px;line-height:1}.pulse-record-copy{min-width:0}.pulse-record-copy small{display:block;color:var(--muted);font-size:9px;font-weight:850;text-transform:uppercase;letter-spacing:.05em}.pulse-record-copy b{display:block;margin-top:3px;font-size:12px;line-height:1.25}.pulse-record-copy span{display:block;margin-top:3px;color:var(--muted);font-size:10px;line-height:1.3}
+    .pulse-actions{display:flex;justify-content:flex-end;margin-top:12px}.pulse-dashboard-btn{border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:12px;padding:9px 12px;font:inherit;font-size:10px;font-weight:900;cursor:pointer}
+    .player-achievements{margin-top:14px;padding:14px;border:1px solid var(--line);border-radius:18px;background:linear-gradient(145deg,var(--soft),var(--panel))}.player-achievements h3{margin:0 0 10px;font-size:13px}.achievement-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.achievement-badge{display:flex;gap:9px;align-items:flex-start;padding:10px;border-radius:14px;border:1px solid var(--line);background:var(--panel);min-width:0}.achievement-badge.is-gold{border-color:rgba(245,185,66,.55);background:color-mix(in srgb,var(--panel) 88%,#f5b942 12%)}.achievement-icon{font-size:20px;line-height:1}.achievement-copy{min-width:0}.achievement-copy b{display:block;font-size:11px}.achievement-copy span{display:block;margin-top:3px;color:var(--muted);font-size:9px;line-height:1.35}
+    @media(max-width:800px){.pulse-title-row{display:block}.pulse-status{margin-top:12px}.pulse-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.pulse-grid{grid-template-columns:1fr}.pulse-records{grid-template-columns:1fr}.achievement-grid{grid-template-columns:1fr}.pulse-hero{padding:18px}.pulse-match{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr)}}
+
 </style>
 </head>
 <body>
@@ -1620,6 +1641,7 @@
   <input class="search" id="search" placeholder="Cerca squadra, giocatore, partita…" aria-label="Ricerca globale" />
   <div class="tabs" id="tabs" role="tablist"></div>
 
+  <section id="pulse"       class="section"        role="tabpanel"></section>
   <section id="home"        class="section active" role="tabpanel"></section>
   <section id="classifiche" class="section"        role="tabpanel"></section>
   <section id="statistiche" class="section"        role="tabpanel"></section>
@@ -1646,6 +1668,185 @@
    ════════════════════════════════════════════════ */
 
 /* ── Costanti ── */
+/* CRAL_INSIGHTS_ENGINE_START */
+const CRALInsights=(()=>{
+  'use strict';
+
+  function text(value){ return String(value==null?'':value).trim(); }
+  function key(value){
+    return text(value).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'');
+  }
+  function number(value){
+    if(typeof value==='number') return Number.isFinite(value)?value:0;
+    const cleaned=text(value).replace(/\./g,'').replace(',','.').replace(/[^0-9+\-.]/g,'');
+    const n=Number(cleaned);
+    return Number.isFinite(n)?n:0;
+  }
+  function finite(value){ return Number.isFinite(Number(value)); }
+  function roundNumber(value){
+    if(finite(value)) return Number(value);
+    const m=text(value).match(/(\d+)/);
+    return m?Number(m[1]):0;
+  }
+  function normalizeMatch(match,index){
+    const home=text(match&& (match.home ?? match.casa ?? match.squadraCasa));
+    const away=text(match&& (match.away ?? match.trasferta ?? match.squadraTrasferta));
+    const rawHome=match&& (match.homeGoals ?? match.goalsHome ?? match.golCasa ?? match.goalCasa);
+    const rawAway=match&& (match.awayGoals ?? match.goalsAway ?? match.golTrasferta ?? match.goalTrasferta);
+    const homeGoals=rawHome===''||rawHome==null?NaN:number(rawHome);
+    const awayGoals=rawAway===''||rawAway==null?NaN:number(rawAway);
+    const played=!!home && !!away && Number.isFinite(homeGoals) && Number.isFinite(awayGoals);
+    return {
+      home,away,homeGoals,awayGoals,played,
+      round:roundNumber(match&& (match.round ?? match.giornata ?? match.giornataNum)),
+      score:played?(homeGoals+'-'+awayGoals):'',
+      index:Number.isFinite(index)?index:0,
+      source:match||{}
+    };
+  }
+  function normalizeStanding(row,index){
+    return {
+      team:text(row&& (row.team ?? row.squadra ?? row.name)),
+      position:number(row&& (row.position ?? row.posizione ?? row.rank)) || ((index||0)+1),
+      points:number(row&& (row.points ?? row.punti ?? row.puntiFinali)),
+      goalsFor:number(row&& (row.goalsFor ?? row.gf ?? row.golFatti)),
+      goalsAgainst:number(row&& (row.goalsAgainst ?? row.gs ?? row.golSubiti)),
+      source:row||{}
+    };
+  }
+  function normalizeScorer(row,index){
+    return {
+      name:text(row&& (row.name ?? row.player ?? row.giocatore)),
+      team:text(row&& (row.team ?? row.squadra)),
+      goals:number(row&& (row.goals ?? row.goal ?? row.gol ?? row.reti)),
+      position:number(row&& (row.position ?? row.posizione ?? row.rank)) || ((index||0)+1),
+      source:row||{}
+    };
+  }
+  function teamAggregates(matches){
+    const map=new Map();
+    const get=team=>{
+      const k=key(team);
+      if(!map.has(k)) map.set(k,{team:text(team),gf:0,ga:0,played:0,results:[]});
+      return map.get(k);
+    };
+    matches.filter(m=>m.played).forEach(m=>{
+      const h=get(m.home), a=get(m.away);
+      h.gf+=m.homeGoals; h.ga+=m.awayGoals; h.played++;
+      a.gf+=m.awayGoals; a.ga+=m.homeGoals; a.played++;
+      const hResult=m.homeGoals>m.awayGoals?'W':(m.homeGoals===m.awayGoals?'D':'L');
+      const aResult=m.awayGoals>m.homeGoals?'W':(m.homeGoals===m.awayGoals?'D':'L');
+      h.results.push({round:m.round,result:hResult,index:m.index});
+      a.results.push({round:m.round,result:aResult,index:m.index});
+    });
+    return [...map.values()];
+  }
+  function longestRun(results,predicate){
+    let best=0,current=0;
+    (results||[])
+      .slice()
+      .sort((a,b)=>(a.round||0)-(b.round||0)||a.index-b.index)
+      .forEach(item=>{
+        if(predicate(item.result)) { current++; best=Math.max(best,current); }
+        else current=0;
+      });
+    return best;
+  }
+  function buildTournamentRecords(input){
+    input=input||{};
+    const matches=(input.matches||[]).map(normalizeMatch).filter(m=>m.home&&m.away);
+    const played=matches.filter(m=>m.played);
+    const standings=(input.standings||[]).map(normalizeStanding).filter(r=>r.team);
+    const scorers=(input.scorers||[]).map(normalizeScorer).filter(r=>r.name);
+    const aggregates=teamAggregates(matches);
+
+    const highestScoringMatch=played.slice().sort((a,b)=>((b.homeGoals+b.awayGoals)-(a.homeGoals+a.awayGoals))||b.round-a.round)[0]||null;
+    const biggestWin=played.slice().sort((a,b)=>(Math.abs(b.homeGoals-b.awayGoals)-Math.abs(a.homeGoals-a.awayGoals))||((b.homeGoals+b.awayGoals)-(a.homeGoals+a.awayGoals)))[0]||null;
+
+    let attack=null, defense=null;
+    if(standings.length && (standings.some(x=>x.goalsFor>0||x.goalsAgainst>0) || !played.length)){
+      attack=standings.slice().sort((a,b)=>b.goalsFor-a.goalsFor||a.position-b.position)[0]||null;
+      defense=standings.slice().sort((a,b)=>a.goalsAgainst-b.goalsAgainst||a.position-b.position)[0]||null;
+    }else if(aggregates.length){
+      attack=aggregates.slice().sort((a,b)=>b.gf-a.gf)[0]||null;
+      defense=aggregates.slice().sort((a,b)=>a.ga-b.ga)[0]||null;
+    }
+
+    let winStreak=null, unbeatenStreak=null;
+    aggregates.forEach(team=>{
+      const wins=longestRun(team.results,r=>r==='W');
+      const unbeaten=longestRun(team.results,r=>r==='W'||r==='D');
+      if(!winStreak || wins>winStreak.value) winStreak={team:team.team,value:wins};
+      if(!unbeatenStreak || unbeaten>unbeatenStreak.value) unbeatenStreak={team:team.team,value:unbeaten};
+    });
+    if(winStreak && !winStreak.value) winStreak=null;
+    if(unbeatenStreak && !unbeatenStreak.value) unbeatenStreak=null;
+
+    const topScorer=scorers.slice().sort((a,b)=>b.goals-a.goals||a.position-b.position||a.name.localeCompare(b.name))[0]||null;
+
+    return {
+      highestScoringMatch,
+      biggestWin,
+      bestAttack:attack ? {team:attack.team,value:attack.goalsFor!=null?attack.goalsFor:attack.gf} : null,
+      bestDefense:defense ? {team:defense.team,value:defense.goalsAgainst!=null?defense.goalsAgainst:defense.ga} : null,
+      longestWinningStreak:winStreak,
+      longestUnbeatenStreak:unbeatenStreak,
+      topScorer,
+      totalGoals:played.reduce((sum,m)=>sum+m.homeGoals+m.awayGoals,0),
+      playedMatches:played.length
+    };
+  }
+
+  function consecutiveRoundStreak(rounds){
+    const values=[...new Set((rounds||[]).map(roundNumber).filter(n=>n>0))].sort((a,b)=>a-b);
+    let best=0,current=0,prev=null;
+    values.forEach(n=>{
+      current=(prev!==null && n===prev+1)?current+1:1;
+      best=Math.max(best,current); prev=n;
+    });
+    return best;
+  }
+  function buildPlayerAchievements(player){
+    player=player||{};
+    const goals=number(player.goals);
+    const appearances=number(player.appearances);
+    const teamMatches=number(player.teamMatches);
+    const scorerRank=number(player.scorerRank);
+    const mvpRank=number(player.mvpRank);
+    const keeperRank=number(player.keeperRank);
+    const mvpAwards=number(player.mvpAwards);
+    const keeperAwards=number(player.keeperAwards);
+    const goalEntries=(player.goalEntries||[]).map(e=>({round:roundNumber(e.round??e.giornata),value:number(e.value)}));
+    const scoringRounds=goalEntries.filter(e=>e.value>0).map(e=>e.round);
+    const maxRoundGoals=goalEntries.reduce((max,e)=>Math.max(max,e.value),0);
+    const streak=consecutiveRoundStreak(scoringRounds);
+    const out=[];
+    const add=(id,icon,title,description,level)=>out.push({id,icon,title,description,level:level||'bronze'});
+
+    if(player.tournamentComplete && player.teamChampion) add('champion','🏆','Campione','Vincitore del torneo','gold');
+    if(scorerRank===1 && goals>0) add('top-scorer','👑',player.tournamentComplete?'Capocannoniere':'Bomber del momento',goals+' gol nel torneo','gold');
+    else if(scorerRank>1 && scorerRank<=3 && goals>0) add('scorer-podium','🥉','Podio bomber','#'+scorerRank+' nella classifica marcatori','silver');
+    if(goals>=10) add('double-digits','🎯','Doppia cifra',goals+' gol segnati','gold');
+    if(maxRoundGoals>=3) add('hat-trick','⚽','Tripletta',maxRoundGoals+' gol nella stessa giornata','silver');
+    if(streak>=3) add('on-fire','🔥','On fire','A segno per '+streak+' giornate consecutive','gold');
+    if(mvpRank===1 && number(player.mvpPoints)>0) add('mvp-leader','⭐',player.tournamentComplete?'Re degli MVP':'Leader MVP','In vetta alla classifica MVP','gold');
+    else if(mvpAwards>=3) add('mvp-serial','🌟','MVP seriale',mvpAwards+' giornate premiate','silver');
+    if(keeperRank===1 && number(player.keeperPoints)>0) add('best-keeper','🧤',player.tournamentComplete?'Miglior portiere':'Leader portieri','In vetta alla classifica portieri','gold');
+    else if(keeperAwards>=3) add('keeper-wall','🧱','Muro',keeperAwards+' giornate da miglior portiere','silver');
+    if(teamMatches>=3 && appearances>=teamMatches) add('always-there','💯','Sempre presente',appearances+' presenze su '+teamMatches+' partite','silver');
+
+    return out.slice(0,8);
+  }
+
+  return {
+    buildTournamentRecords,
+    buildPlayerAchievements,
+    consecutiveRoundStreak,
+    normalizeMatch
+  };
+})();
+/* CRAL_INSIGHTS_ENGINE_END */
+
 const DEFAULT_TITLE    = 'CRAL Champions - Auriga 2026';
 const DEFAULT_SUBTITLE = 'Classifiche, calendario, risultati e statistiche giocatori';
 const DEFAULT_FILES    = [
@@ -1667,7 +1868,7 @@ const PORTIERI_SNAPSHOT_FILE = 'portieri_snapshot.json';
 const FANTA_CACHE_SCHEMA = 1;
 const CRAL_FANTA_V19_ROSTER4_FALLBACK = true;
 const TABS = [
-  ['home','🏠 Home'],['risultati','⚽ Risultati'],['classifiche','🏆 Classifiche'],
+  ['pulse','🔥 Tournament Pulse'],['home','🏠 Home'],['risultati','⚽ Risultati'],['classifiche','🏆 Classifiche'],
   ['calendario','📅 Calendario'],['squadre','👕 Squadre'],['statistiche','📊 Statistiche'],
   ['riepilogo','📝 Riepilogo giornate'],['pagellone','📣 Pagellone ignorante'],['fantacalcio','Fantacalcio']
 ];
@@ -2703,7 +2904,7 @@ function renderTabs(){
 function syncGlobalSearchVisibility(){
   const searchEl=document.getElementById('search');
   if(!searchEl) return;
-  const hide=state.activeTab==='home'||state.activeTab==='fantacalcio'||state.activeTab==='pagellone';
+  const hide=state.activeTab==='pulse'||state.activeTab==='home'||state.activeTab==='fantacalcio'||state.activeTab==='pagellone';
   searchEl.hidden=hide;
   searchEl.setAttribute('aria-hidden',hide?'true':'false');
   searchEl.tabIndex=hide?-1:0;
@@ -4299,6 +4500,156 @@ function warmupHomeImages(){
   items.forEach(item=>{
     resolveImageForNames(item.type,item.names,{priority:'high',loading:'eager'}).catch(()=>null);
   });
+}
+
+
+function tournamentInsightMatches(){
+  return matchRows().map((r,index)=>{
+    const teams=matchTeamsFromRow(r);
+    let homeGoals=firstPresent(r,[['goal casa','gol casa','reti casa','gc','home goals']]);
+    let awayGoals=firstPresent(r,[['goal trasferta','gol trasferta','reti trasferta','gt','away goals']]);
+    if(String(homeGoals||'').trim()==='' || String(awayGoals||'').trim()===''){
+      const pair=parseScorePair(resultText(r));
+      if(pair){ homeGoals=pair[0]; awayGoals=pair[1]; }
+    }
+    return {
+      round:parseInt(giornataNumberFromText(firstPresent(r,[['giornata','turno','round']]))||'0',10)||0,
+      home:teams[0]||'',away:teams[1]||'',
+      homeGoals:String(homeGoals??'').trim()===''?'':num(homeGoals),
+      awayGoals:String(awayGoals??'').trim()===''?'':num(awayGoals),
+      index
+    };
+  }).filter(m=>m.home&&m.away);
+}
+function tournamentInsightStandings(){
+  const f=sectionFiles('classifica_squadre')[0];
+  if(!f) return [];
+  return rowsToObjects(state.rows[f]||[]).map((r,index)=>({
+    team:firstPresent(r,[['squadra','team','nome','club']])||'',
+    position:num(firstPresent(r,[['posizione','pos','rank']]))||(index+1),
+    points:num(firstPresent(r,[['punti finali','puntifinali','punti','points']]))||0,
+    goalsFor:num(firstPresent(r,[['gol fatti','goal fatti','gf','reti fatte']]))||0,
+    goalsAgainst:num(firstPresent(r,[['gol subiti','goal subiti','gs','reti subite']]))||0
+  })).filter(x=>x.team);
+}
+function tournamentInsightScorers(){
+  return scorers().map((r,index)=>({
+    name:col(r,['giocatore','nome','calciatore','player'])||Object.values(r)[0]||'',
+    team:col(r,['squadra','team'])||'',
+    goals:num(col(r,['goal','gol','reti','g'])),
+    position:num(col(r,['posizione','pos','rank']))||(index+1)
+  })).filter(x=>x.name);
+}
+function tournamentRecordsData(){
+  if(typeof CRALInsights==='undefined') return null;
+  return CRALInsights.buildTournamentRecords({
+    matches:tournamentInsightMatches(),
+    standings:tournamentInsightStandings(),
+    scorers:tournamentInsightScorers()
+  });
+}
+function tournamentPulseRound(){
+  const progress=buildCalendarioProgress(calendarioProgressRoundItems());
+  const complete=isTournamentComplete();
+  const target=complete ? null : (progress.inProgress||progress.next||null);
+  const played=tournamentInsightMatches().filter(m=>String(m.homeGoals)!==''&&String(m.awayGoals)!=='');
+  const latestRound=played.reduce((max,m)=>Math.max(max,m.round||0),0);
+  return {progress,complete,target,latestRound,displayRound:target?.num||latestRound||0};
+}
+function pulseMatchButton(match){
+  const btn=document.createElement('button'); btn.type='button'; btn.className='pulse-match';
+  const team=(name,last)=>{ const wrap=document.createElement('div'); wrap.className='pulse-match-team'; wrap.appendChild(imgOrInitialEl('team',name,'pulse-mini-logo')); const span=document.createElement('span'); span.textContent=name; if(last){ wrap.innerHTML=''; wrap.appendChild(span); wrap.appendChild(imgOrInitialEl('team',name,'pulse-mini-logo')); } else wrap.appendChild(span); return wrap; };
+  btn.appendChild(team(match.home,false));
+  const score=document.createElement('div'); score.className='pulse-match-score'; score.textContent=match.score||'VS'; btn.appendChild(score);
+  btn.appendChild(team(match.away,true));
+  btn.setAttribute('aria-label','Apri Match Center: '+match.home+' contro '+match.away);
+  btn.onclick=()=>openMatchCenter(match);
+  return btn;
+}
+function pulseRecordCard(icon,title,value,detail,onClick){
+  const card=document.createElement(onClick?'button':'div');
+  if(onClick) card.type='button';
+  card.className='pulse-record'+(onClick?' is-clickable':'');
+  const ic=document.createElement('div'); ic.className='pulse-record-icon'; ic.textContent=icon; card.appendChild(ic);
+  const copy=document.createElement('div'); copy.className='pulse-record-copy';
+  const small=document.createElement('small'); small.textContent=title; copy.appendChild(small);
+  const b=document.createElement('b'); b.textContent=value; copy.appendChild(b);
+  if(detail){ const span=document.createElement('span'); span.textContent=detail; copy.appendChild(span); }
+  card.appendChild(copy); if(onClick) card.onclick=onClick; return card;
+}
+function renderTournamentRecords(container,records){
+  if(!records) return;
+  const grid=document.createElement('div'); grid.className='pulse-records';
+  const matchAction=m=>m?()=>openMatchCenter(cralNavResolveMatch({home:m.home,away:m.away,giornataNum:m.round})||{home:m.home,away:m.away,giornataNum:m.round,score:m.score}):null;
+  const teamAction=t=>t?()=>openTeamProfile(t):null;
+  const playerAction=p=>p?()=>openPlayerProfile(p.name,cralNavContextRowForPlayer(p.name,p.team)):null;
+  if(records.highestScoringMatch){ const m=records.highestScoringMatch; grid.appendChild(pulseRecordCard('💥','Partita con più gol',m.home+' '+m.homeGoals+'–'+m.awayGoals+' '+m.away,(m.homeGoals+m.awayGoals)+' gol complessivi',matchAction(m))); }
+  if(records.biggestWin){ const m=records.biggestWin, winner=m.homeGoals>m.awayGoals?m.home:m.away; grid.appendChild(pulseRecordCard('🚀','Vittoria più larga',winner,'+'+Math.abs(m.homeGoals-m.awayGoals)+' gol · '+m.homeGoals+'–'+m.awayGoals,matchAction(m))); }
+  if(records.longestWinningStreak) grid.appendChild(pulseRecordCard('🔥','Serie di vittorie',records.longestWinningStreak.team,records.longestWinningStreak.value+' consecutive',teamAction(records.longestWinningStreak.team)));
+  if(records.longestUnbeatenStreak) grid.appendChild(pulseRecordCard('🛡️','Serie imbattuta',records.longestUnbeatenStreak.team,records.longestUnbeatenStreak.value+' gare',teamAction(records.longestUnbeatenStreak.team)));
+  if(records.bestAttack) grid.appendChild(pulseRecordCard('⚽','Miglior attacco',records.bestAttack.team,records.bestAttack.value+' gol fatti',teamAction(records.bestAttack.team)));
+  if(records.bestDefense) grid.appendChild(pulseRecordCard('🧱','Miglior difesa',records.bestDefense.team,records.bestDefense.value+' gol subiti',teamAction(records.bestDefense.team)));
+  if(records.topScorer) grid.appendChild(pulseRecordCard('👑','Bomber',records.topScorer.name,records.topScorer.goals+' gol · '+records.topScorer.team,playerAction(records.topScorer)));
+  if(grid.children.length) container.appendChild(grid);
+}
+function renderTournamentPulse(){
+  const el=document.getElementById('pulse'); if(!el) return; el.innerHTML='';
+  const pulse=tournamentPulseRound(); const records=tournamentRecordsData(); const standings=tournamentInsightStandings().sort((a,b)=>a.position-b.position);
+  const leader=standings[0]||null;
+  const shell=document.createElement('div'); shell.className='pulse-shell';
+  const hero=document.createElement('div'); hero.className='card pulse-hero';
+  const kicker=document.createElement('div'); kicker.className='pulse-kicker'; kicker.textContent='CRAL Champions · Tournament Pulse'; hero.appendChild(kicker);
+  const titleRow=document.createElement('div'); titleRow.className='pulse-title-row'; const left=document.createElement('div');
+  const h=document.createElement('h2'); h.className='pulse-title'; h.textContent=pulse.complete?'Torneo concluso. Ecco cosa resta nella storia.':(pulse.progress.inProgress?'La giornata è in corso.':'La prossima giornata parte da qui.'); left.appendChild(h);
+  const sub=document.createElement('p'); sub.className='pulse-subtitle'; sub.textContent=pulse.complete?'Risultati, protagonisti e record vengono calcolati direttamente dai dati ufficiali del torneo.':'Un colpo d’occhio su stato del torneo, prossime sfide, protagonisti e record aggiornati automaticamente.'; left.appendChild(sub); titleRow.appendChild(left);
+  const status=document.createElement('span'); status.className='pulse-status'; status.textContent=pulse.complete?'🏁 Completato':(pulse.progress.inProgress?'🟡 '+pulse.progress.inProgress.label+' in corso':(pulse.progress.next?'🔥 Prossima: '+pulse.progress.next.label:'⏳ In attesa')); titleRow.appendChild(status); hero.appendChild(titleRow);
+  const kpis=document.createElement('div'); kpis.className='pulse-kpis';
+  const kpiData=[
+    [(pulse.progress.playedCount||0)+'/'+(pulse.progress.total||0),'Giornate completate'],
+    [records?records.playedMatches:0,'Partite disputate'],
+    [records?records.totalGoals:0,'Gol segnati'],
+    [leader?leader.team:'—',pulse.complete?'Campione / leader':'Leader attuale']
+  ];
+  kpiData.forEach(([n,l])=>{ const box=document.createElement('div'); box.className='pulse-kpi'; const nv=document.createElement('div'); nv.className='n'; nv.textContent=n; const lb=document.createElement('span'); lb.className='l'; lb.textContent=l; box.appendChild(nv); box.appendChild(lb); kpis.appendChild(box); }); hero.appendChild(kpis); shell.appendChild(hero);
+
+  const grid=document.createElement('div'); grid.className='pulse-grid';
+  const matchCard=document.createElement('div'); matchCard.className='card pulse-card'; const mh=document.createElement('h2'); mh.textContent=pulse.complete?'⚽ Ultima giornata':'⚡ Match Day'; matchCard.appendChild(mh); const note=document.createElement('p'); note.className='pulse-note'; note.textContent=pulse.complete?'Le gare dell’ultima giornata disputata.':(pulse.target?(pulse.target.label+(pulse.progress.inProgress?' · aggiornamento live sui dati disponibili':' · prossime sfide')):'Nessuna giornata disponibile.'); matchCard.appendChild(note);
+  const list=document.createElement('div'); list.className='pulse-match-list'; const day=pulse.complete?pulse.latestRound:(pulse.target?.num||pulse.displayRound); const matches=day?cralNavMatchesForDay(day):[]; if(matches.length) matches.forEach(m=>list.appendChild(pulseMatchButton(m))); else { const empty=document.createElement('div'); empty.className='pulse-empty'; empty.textContent='Nessuna partita disponibile per questa giornata.'; list.appendChild(empty); } matchCard.appendChild(list); grid.appendChild(matchCard);
+
+  const recordsCard=document.createElement('div'); recordsCard.className='card pulse-card'; const rh=document.createElement('h2'); rh.textContent='🏅 Record automatici'; recordsCard.appendChild(rh); const rn=document.createElement('p'); rn.className='pulse-note'; rn.textContent='Nessun dato inserito a mano: tutti i record vengono ricalcolati dai risultati e dalle classifiche.'; recordsCard.appendChild(rn); renderTournamentRecords(recordsCard,records); grid.appendChild(recordsCard); shell.appendChild(grid);
+  const actions=document.createElement('div'); actions.className='pulse-actions'; const dash=document.createElement('button'); dash.type='button'; dash.className='pulse-dashboard-btn'; dash.textContent='Apri dashboard →'; dash.onclick=()=>showTab('home'); actions.appendChild(dash); shell.appendChild(actions); el.appendChild(shell);
+}
+
+function playerRankingInsight(kind,data){
+  const f=sectionFiles(kind)[0]; if(!f) return null;
+  const rows=rowsToObjects(state.rows[f]||[]);
+  for(let i=0;i<rows.length;i++){
+    const r=rows[i]; const rowName=col(r,['giocatore','nome','calciatore','player','portiere'])||Object.values(r)[0]||''; const rowTeam=col(r,['squadra','team'])||'';
+    if(!rowName) continue;
+    const same=personTokensReferToSamePlayer(rowName,data.fullName||data.name,rowTeam,data.team) || personTokensReferToSamePlayer(rowName,data.name,rowTeam,data.team);
+    if(!same) continue;
+    return {rank:num(col(r,['posizione','pos','rank']))||(i+1),row};
+  }
+  return null;
+}
+function buildPlayerAchievementData(data){
+  if(typeof CRALInsights==='undefined') return [];
+  const scorer=playerRankingInsight('marcatori',data), mvp=playerRankingInsight('mvp',data), keeper=playerRankingInsight('portieri',data);
+  const scorerRow=scorer?.row||{}; const appearances=num(col(scorerRow,['presenze','partite','pg'])); const ms=teamMatchCounts(); const standings=teamStandingsRow(data.team); const teamRank=standings?num(firstPresent(standings,[['posizione','pos','rank']])):0;
+  return CRALInsights.buildPlayerAchievements({
+    goals:data.goals.total, appearances, teamMatches:ms[norm(data.team)]||0,
+    scorerRank:scorer?.rank||0, mvpRank:mvp?.rank||0, keeperRank:keeper?.rank||0,
+    mvpPoints:data.mvp.total, keeperPoints:data.keeper.total,
+    mvpAwards:(data.mvp.entries||[]).length,
+    keeperAwards:(data.keeper.entries||[]).filter(e=>e.source!=='classifica').length,
+    goalEntries:(data.goals.entries||[]).map(e=>({round:e.giornata,value:e.value})),
+    tournamentComplete:isTournamentComplete(), teamChampion:teamRank===1
+  });
+}
+function playerAchievementsSection(data){
+  const achievements=buildPlayerAchievementData(data); if(!achievements.length) return null;
+  const sec=document.createElement('div'); sec.className='player-achievements'; const h=document.createElement('h3'); h.textContent='🏅 Achievement'; sec.appendChild(h); const grid=document.createElement('div'); grid.className='achievement-grid';
+  achievements.forEach(a=>{ const badge=document.createElement('div'); badge.className='achievement-badge'+(a.level==='gold'?' is-gold':''); const icon=document.createElement('div'); icon.className='achievement-icon'; icon.textContent=a.icon; const copy=document.createElement('div'); copy.className='achievement-copy'; const b=document.createElement('b'); b.textContent=a.title; const span=document.createElement('span'); span.textContent=a.description; copy.appendChild(b); copy.appendChild(span); badge.appendChild(icon); badge.appendChild(copy); grid.appendChild(badge); }); sec.appendChild(grid); return sec;
 }
 
 function renderHome(){
@@ -7149,6 +7500,8 @@ function openPlayerProfile(name,contextRow,options={}){
     stats.appendChild(profileStatTile('Punti MVP',formatProfileNumber(data.mvp.total),data.mvp.entries.length ? data.mvp.entries.length+' giornate MVP' : 'Totale classifica',false));
   }
   body.appendChild(stats);
+  const achievementsSection=playerAchievementsSection(data);
+  if(achievementsSection) body.appendChild(achievementsSection);
 
   const panels=document.createElement('div'); panels.className='player-profile-panels';
   if(!data.isKeeper || data.goals.total>0) panels.appendChild(profileTimelineSection('Goal per giornata','⚽',data.goals.entries,{detail:'',valueSuffix:''},'Nessun dettaglio giornata disponibile per i goal.'));
@@ -12666,6 +13019,7 @@ function markQuickTabRendered(id){ if(QUICK_TAB_IDS.has(id)) _quickTabRenderSign
 function quickTabIsReady(id){ return QUICK_TAB_IDS.has(id) && _quickTabRenderSignatures.get(id)===quickTabRenderSignature(id); }
 function renderSectionById(id){
   switch(id){
+    case 'pulse':       renderTournamentPulse(); break;
     case 'home':        renderHome(); break;
     case 'classifiche': renderClassifiche(); break;
     case 'statistiche': renderStatistiche(); break;
@@ -12890,6 +13244,14 @@ async function loadFantaSourceFilesInBackground(fresh=false,generation=_dataLoad
   return true;
 }
 
+
+function applyTournamentDefaultLanding(){
+  const params=new URLSearchParams(String(location.hash||'').replace(/^#/,''));
+  // Deep link e tab scelti esplicitamente hanno sempre precedenza.
+  if(params.has('tab') || params.has('view')) return;
+  state.activeTab=isTournamentComplete()?'home':'pulse';
+}
+
 async function loadAuto(fresh){
   const generation=beginDataLoad();
   const controller=new AbortController();
@@ -12977,6 +13339,7 @@ async function loadAuto(fresh){
     frontendRepairAwardStandings();
     clearDerivedDataCaches();
 
+    applyTournamentDefaultLanding();
     applyConfig(); showErrors(); renderAll(); tryLoadLogo(); warmDesktopPrimaryTabs(); warmPlayerProfileCaches();
     if(ok || state.rows['manifest.csv']) setStatus(dataLoadStatus(ok+(state.rows['manifest.csv']?1:0)),true);
     else setStatus('Autocaricamento bloccato — verifica manifest.csv o la connessione.');
