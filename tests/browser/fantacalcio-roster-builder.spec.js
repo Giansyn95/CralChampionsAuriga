@@ -39,8 +39,16 @@ test('generatore rosa carica il listone ufficiale e produce un CSV compatibile',
   expect(download.suggestedFilename()).toBe('rosa_filippo_capurso.csv');
   const path = await download.path();
   const generated = fs.readFileSync(path, 'utf8').replace(/\r\n/g, '\n');
-  const expected = fs.readFileSync('tornei/2026-spring/data/fantacalcio/giornata1/rosa_filippo_capurso_giornata1.csv', 'utf8').replace(/\r\n/g, '\n');
-  expect(generated).toBe(expected);
+  expect(generated).toBe([
+    'partecipante;idGiocatore',
+    'Filippo Capurso;001',
+    'Filippo Capurso;010',
+    'Filippo Capurso;021',
+    'Filippo Capurso;028',
+    'Filippo Capurso;030',
+    ''
+  ].join('\n'));
+  expect(generated).not.toContain('giornata');
   expect(errors, errors.join('\n')).toEqual([]);
 });
 
@@ -50,8 +58,16 @@ test('il tab Fantacalcio espone il link al generatore senza alterare la navigazi
   await page.locator('#tab-fantacalcio').click();
   await expect(page.locator('#fantacalcio.active')).toBeVisible();
   const link = page.locator('.fanta-roster-creator-link');
+  const intro = page.locator('.fanta-claim');
   await expect(link).toBeVisible();
   await expect(link).toHaveAttribute('href', 'crea-rosa.html');
+  await expect(intro).toContainText('Scegli la giornata');
+  const order = await page.locator('.fanta-card-shell').evaluate(card => {
+    const cta = card.querySelector('.fanta-roster-creator-cta');
+    const claim = card.querySelector('.fanta-claim');
+    return !!cta && !!claim && Boolean(cta.compareDocumentPosition(claim) & Node.DOCUMENT_POSITION_FOLLOWING);
+  });
+  expect(order).toBe(true);
   expect(errors, errors.join('\n')).toEqual([]);
 });
 
