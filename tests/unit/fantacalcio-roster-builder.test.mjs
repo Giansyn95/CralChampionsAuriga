@@ -7,7 +7,6 @@ const require = createRequire(import.meta.url);
 const builder = require('../../tornei/2026-spring/crea-rosa.js');
 const listoneText = fs.readFileSync('tornei/2026-spring/data/fantacalcio/listone_fantacalcio.csv', 'utf8');
 const sampleRosterBuffer = fs.readFileSync('tornei/2026-spring/data/fantacalcio/giornata1/rosa_filippo_capurso_giornata1.csv');
-const sampleRoster = sampleRosterBuffer.toString('utf8');
 
 const adminCoreSource = fs.readFileSync('admin/core.js', 'utf8');
 const adminCore = await import(`data:text/javascript;base64,${Buffer.from(adminCoreSource).toString('base64')}`);
@@ -31,28 +30,51 @@ test('la rosa campione rispetta la regola 1 PT + 4 movimento e il budget', () =>
   assert.equal(result.remaining, 202);
 });
 
-test('CSV generato e filename sono compatibili con il contratto FE/Admin', () => {
+test('CSV utente generato è complessivo e senza giornata nel nome/contenuto', () => {
   const ids = ['001', '010', '021', '028', '030'];
-  const csv = builder.buildRosterCsv('Filippo Capurso', ids, 1);
-  assert.deepEqual(Buffer.from(csv, 'utf8'), sampleRosterBuffer);
+  const csv = builder.buildRosterCsv('Filippo Capurso', ids);
+  assert.equal(csv, [
+    'partecipante;idGiocatore',
+    'Filippo Capurso;001',
+    'Filippo Capurso;010',
+    'Filippo Capurso;021',
+    'Filippo Capurso;028',
+    'Filippo Capurso;030',
+    ''
+  ].join('\r\n'));
   assert.equal(builder.rosterFileName('Filippo Capurso'), 'rosa_filippo_capurso.csv');
   assert.equal(builder.rosterFileName('Nicola De Leo'), 'rosa_nicola_de_leo.csv');
+  assert.equal(/giornata/i.test(csv), false);
 });
 
-test('il CSV generato viene accettato dal parser reale dell Admin', () => {
-  const generated = builder.buildRosterCsv('Filippo Capurso', ['001', '010', '021', '028', '030'], 1);
+test('Admin accetta il CSV complessivo e lo espande nei file canonici per giornata', () => {
+  const generated = builder.buildRosterCsv('Filippo Capurso', ['001', '010', '021', '028', '030']);
   const parsedListone = adminCore.parseListoneCsv(listoneText);
   const listoneMap = adminCore.listoneIndex(parsedListone.players);
-  const parsedUpload = adminCore.parseRosterUpload(generated, 1);
+  const parsedUpload = adminCore.parseRosterUpload(generated, null);
 
   assert.deepEqual(parsedUpload.errors, []);
   assert.equal(parsedUpload.rosters.length, 1);
-  assert.equal(parsedUpload.rosters[0].giornata, 1);
+  assert.equal(parsedUpload.rosters[0].giornata, null);
+  assert.equal(parsedUpload.rosters[0].complessiva, true);
   assert.equal(parsedUpload.rosters[0].partecipante, 'Filippo Capurso');
   assert.deepEqual(parsedUpload.rosters[0].ids, ['001', '010', '021', '028', '030']);
   assert.deepEqual(adminCore.validateRosterAgainstListone(parsedUpload.rosters[0], listoneMap).errors, []);
-  assert.equal(builder.rosterFileName('Filippo Capurso'), 'rosa_filippo_capurso.csv');
+
+  const expanded = adminCore.expandRosterAcrossDays(parsedUpload.rosters[0], [1, 2, 3]);
+  assert.deepEqual(expanded.map(r => r.giornata), [1, 2, 3]);
+  assert.ok(expanded.every(r => r.complessiva === false));
   assert.equal(adminCore.rosterRelPath('Filippo Capurso', 1), 'fantacalcio/giornata1/rosa_filippo_capurso_giornata1.csv');
+  // Il file interno di giornata 1 mantiene struttura e contenuto del formato FE storico.
+  assert.equal(adminCore.rosterCsvContent(expanded[0], ';').replace(/\r\n/g, '\n'), sampleRosterBuffer.toString('utf8').replace(/\r\n/g, '\n'));
+});
+
+test('Admin mantiene compatibilità con il vecchio CSV già per giornata', () => {
+  const parsedUpload = adminCore.parseRosterUpload(sampleRosterBuffer.toString('utf8'), null);
+  assert.deepEqual(parsedUpload.errors, []);
+  assert.equal(parsedUpload.rosters[0].giornata, 1);
+  assert.equal(parsedUpload.rosters[0].complessiva, false);
+  assert.deepEqual(adminCore.expandRosterAcrossDays(parsedUpload.rosters[0], [1, 2, 3]).map(r => r.giornata), [1]);
 });
 
 
@@ -89,4 +111,20 @@ test('builder rifiuta rose senza PT, duplicate o fuori budget', () => {
   const overBudget = builder.validateRoster(['001', '002', '003', '004', '005'], synthetic, 250);
   assert.equal(overBudget.valid, false);
   assert.ok(overBudget.errors.some(x => /Budget superato/i.test(x)));
+});
+
+test('CTA Crea la tua rosa viene costruita prima della label di selezione giornata', () => {
+  const source = fs.readFileSync('tornei/2026-spring/index.html', 'utf8');
+  const cta = source.indexOf("creatorLink.textContent='⚽ Crea la tua rosa'");
+  const claim = source.indexOf("intro.textContent='Scegli la giornata e il punteggio si aggiorna con risultati e statistiche del torneo.'");
+  assert.ok(cta >= 0, 'CTA Crea la tua rosa non trovata');
+  assert.ok(claim >= 0, 'Label Scegli la giornata non trovata');
+  assert.ok(cta < claim, 'La CTA deve essere costruita prima della label Scegli la giornata');
+});
+
+test('Admin usa la rosa complessiva senza fallback alla giornata selezionata e la espande sul calendario', () => {
+  const source = fs.readFileSync('admin/admin.js', 'utf8');
+  assert.ok(source.includes('parseRosterUpload(text,filenameDay)'), 'Import rosa non usa il nuovo contratto complessivo');
+  assert.ok(source.includes('expandRosterAcrossDays(r,model.days)'), 'Import rosa non viene espanso sulle giornate del calendario');
+  assert.ok(!source.includes('const defaultGiornata=state.selectedDay||1;'), 'Non deve più esistere il fallback implicito alla giornata corrente');
 });
