@@ -690,9 +690,117 @@ function renderEventiSection(main, model){
   main.appendChild(card);
 }
 
+
+const FANTA_ROSTER_WINDOW_KEYS = Object.freeze({
+  enabled: 'fantacalcioCreazioneRosaEnabled',
+  openFrom: 'fantacalcioCreazioneRosaOpenFrom',
+  closeAt: 'fantacalcioCreazioneRosaCloseAt'
+});
+function configValue(model,key){
+  const file=sectionFiles(model,'config')[0];
+  if(!file)return '';
+  const parsed=objectRows(file.text||'');
+  for(const row of parsed.objects||[]){
+    const keys=Object.keys(row||{});
+    const keyCol=keys.find(k=>['chiave','key','nome'].includes(norm(k)));
+    const valueCol=keys.find(k=>['valore','value','testo'].includes(norm(k)));
+    if(!keyCol||!valueCol)continue;
+    if(norm(row[keyCol])===norm(key))return String(row[valueCol]??'').trim();
+  }
+  return '';
+}
+function configBool(value,fallback=true){
+  const v=norm(value);
+  if(!v)return fallback;
+  if(['false','0','no','n','off','disabilitato'].includes(v))return false;
+  if(['true','1','si','s','yes','on','abilitato'].includes(v))return true;
+  return fallback;
+}
+function isoToLocalInput(value){
+  const d=new Date(String(value||''));
+  if(!Number.isFinite(d.getTime()))return '';
+  const pad=n=>String(n).padStart(2,'0');
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+function localInputToIso(value){
+  if(!String(value||'').trim())return '';
+  const d=new Date(value);
+  return Number.isFinite(d.getTime())?d.toISOString():'';
+}
+function fantaRosterWindowConfig(model){
+  const enabledRaw=configValue(model,FANTA_ROSTER_WINDOW_KEYS.enabled);
+  return {
+    enabled:configBool(enabledRaw,true), // compatibilita' tornei creati prima di questa feature
+    explicitEnabled:!!enabledRaw,
+    openFrom:configValue(model,FANTA_ROSTER_WINDOW_KEYS.openFrom),
+    closeAt:configValue(model,FANTA_ROSTER_WINDOW_KEYS.closeAt)
+  };
+}
+function fantaRosterWindowState(cfg,now=Date.now()){
+  if(!cfg.enabled)return {open:false,label:'CHIUSA',detail:'Creazione rose disabilitata manualmente.'};
+  const from=Date.parse(cfg.openFrom||'');
+  const close=Date.parse(cfg.closeAt||'');
+  if(Number.isFinite(from)&&now<from)return {open:false,label:'PROGRAMMATA',detail:`Apertura ${new Date(from).toLocaleString('it-IT')}.`};
+  if(Number.isFinite(close)&&now>=close)return {open:false,label:'CHIUSA',detail:`Termine ${new Date(close).toLocaleString('it-IT')}.`};
+  const detail=Number.isFinite(close)?`Aperta fino al ${new Date(close).toLocaleString('it-IT')}.`:'Aperta senza scadenza.';
+  return {open:true,label:'APERTA',detail};
+}
+function configChangeWithUpdates(model,updates){
+  const file=sectionFiles(model,'config')[0]||{path:`${model.dataRoot}/config.csv`,text:'chiave;valore\n'};
+  const parsed=objectRows(file.text||'chiave;valore\n');
+  let rows=(parsed.rows||[]).map(r=>[...r]);
+  if(!rows.length)rows=[['chiave','valore']];
+  const headers=rows[0];
+  let keyIndex=headers.findIndex(h=>['chiave','key','nome'].includes(norm(h)));
+  let valueIndex=headers.findIndex(h=>['valore','value','testo'].includes(norm(h)));
+  if(keyIndex<0||valueIndex<0){rows=[['chiave','valore']];keyIndex=0;valueIndex=1;}
+  for(const [key,value] of Object.entries(updates)){
+    let row=rows.slice(1).find(r=>norm(r[keyIndex])===norm(key));
+    if(!row){row=Array(Math.max(headers.length,2)).fill('');row[keyIndex]=key;rows.push(row);}
+    while(row.length<=valueIndex)row.push('');
+    row[valueIndex]=String(value??'');
+  }
+  return {path:file.path||`${model.dataRoot}/config.csv`,content:csvStringify(rows,parsed.separator||';')};
+}
+function saveFantaRosterWindow(enabledInput,openInput,closeInput){
+  const openValue=String(openInput.value||'').trim();
+  const closeValue=String(closeInput.value||'').trim();
+  const openIso=localInputToIso(openValue);
+  const closeIso=localInputToIso(closeValue);
+  if(openValue&&!openIso){state.status={type:'error',text:'Data/ora di apertura non valida.'};render();return;}
+  if(closeValue&&!closeIso){state.status={type:'error',text:'Data/ora di chiusura non valida.'};render();return;}
+  if(openIso&&closeIso&&Date.parse(openIso)>=Date.parse(closeIso)){state.status={type:'error',text:'La chiusura deve essere successiva all’apertura.'};render();return;}
+  const model=effectiveModel();
+  const change=configChangeWithUpdates(model,{
+    [FANTA_ROSTER_WINDOW_KEYS.enabled]:enabledInput.checked?'true':'false',
+    [FANTA_ROSTER_WINDOW_KEYS.openFrom]:openIso,
+    [FANTA_ROSTER_WINDOW_KEYS.closeAt]:closeIso
+  });
+  stageGuidedChanges([change],'Finestra creazione rosa Fantacalcio',{manifest:false});
+  state.status={type:'success',text:'Disponibilità “Crea la tua rosa” aggiornata. Pubblica le modifiche per renderla effettiva sul sito.'};
+  render();
+}
+function renderRosterWindowSection(main,model){
+  const card=el('div','card');card.appendChild(el('h3','','0. Creazione rosa utenti'));
+  const cfg=fantaRosterWindowConfig(model);
+  const current=fantaRosterWindowState(cfg);
+  card.appendChild(messageBox(current.open?'success':'info',`Stato attuale: ${current.label}. ${current.detail}`));
+  if(!cfg.explicitEnabled)card.appendChild(el('p','small muted','Compatibilità legacy: questo torneo non ha ancora il flag esplicito, quindi la creazione rosa è considerata abilitata finché non salvi questa configurazione.'));
+  const enabled=input('checkbox','');enabled.checked=cfg.enabled;enabled.className='';
+  const checkRow=el('label','checkbox-row');checkRow.appendChild(enabled);checkRow.appendChild(document.createTextNode('Abilita “Crea la tua rosa”'));card.appendChild(checkRow);
+  const open=input('datetime-local',isoToLocalInput(cfg.openFrom));
+  const close=input('datetime-local',isoToLocalInput(cfg.closeAt));
+  const grid=el('div','award-grid');grid.appendChild(fieldWrap('Apertura (opzionale)',open));grid.appendChild(fieldWrap('Chiusura (opzionale)',close));card.appendChild(grid);
+  const syncDisabled=()=>{open.disabled=!enabled.checked;close.disabled=!enabled.checked;};enabled.addEventListener('change',syncDisabled);syncDisabled();
+  card.appendChild(el('p','small muted','Se abilitata senza date, la funzione resta sempre visibile. Con una finestra temporale, il pulsante compare solo tra apertura e chiusura. Il link diretto a crea-rosa.html applica lo stesso controllo.'));
+  const row=el('div','btn-row');row.appendChild(button('Salva disponibilità creazione rosa','gold',()=>saveFantaRosterWindow(enabled,open,close)));card.appendChild(row);
+  main.appendChild(card);
+}
+
 function renderFantacalcio(main){
   main.appendChild(pageHead('Fantacalcio','Carica listone, rose dei partecipanti ed eventi speciali. Tutto viene validato prima di essere messo in pubblicazione e genera la stessa struttura di file già usata sotto data/fantacalcio.'));
   const model=effectiveModel();
+  renderRosterWindowSection(main, model);
   renderListoneSection(main, model);
   renderRosterSection(main, model);
   renderEventiSection(main, model);

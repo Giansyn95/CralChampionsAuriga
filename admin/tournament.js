@@ -50,7 +50,12 @@ export function tournamentDataChanges(tournamentPath, input) {
   const config = csv([
     ['chiave','valore'],
     ['titolo', value.title],
-    ['sottotitolo', value.description]
+    ['sottotitolo', value.description],
+    // I nuovi tornei partono con il builder copiato ma NON aperto agli utenti.
+    // L'Admin abilita esplicitamente la finestra dalla sezione Fantacalcio.
+    ['fantacalcioCreazioneRosaEnabled', 'false'],
+    ['fantacalcioCreazioneRosaOpenFrom', ''],
+    ['fantacalcioCreazioneRosaCloseAt', '']
   ]);
   const changes = [{ path: `${dataRoot}/config.csv`, content: config }];
   for (const [name, rows] of Object.entries(DATA_FILES)) changes.push({ path: `${dataRoot}/${name}`, content: csv(rows) });
