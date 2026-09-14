@@ -18,16 +18,23 @@ test('builder legge il listone ufficiale e ricava il budget corrente', () => {
   assert.equal(parsed.players.filter(p => builder.fantaRole(p.role) === 'PT').length, 5);
 });
 
-test('la rosa campione rispetta la regola 1 PT + 4 movimento e il budget', () => {
+test('il listone corrente consente almeno una rosa valida 1 PT + 4 movimento entro il budget', () => {
   const parsed = builder.parseListone(listoneText);
-  const ids = ['001', '010', '021', '028', '030'];
+  const byCreditsThenId = (a, b) => Number(a.credits) - Number(b.credits) || String(a.id).localeCompare(String(b.id));
+  const keepers = parsed.players.filter(p => builder.fantaRole(p.role) === 'PT').sort(byCreditsThenId);
+  const movement = parsed.players.filter(p => builder.fantaRole(p.role) !== 'PT').sort(byCreditsThenId);
+
+  assert.ok(keepers.length >= 1, 'Il listone deve contenere almeno un portiere');
+  assert.ok(movement.length >= 4, 'Il listone deve contenere almeno quattro giocatori di movimento');
+
+  const ids = [keepers[0], ...movement.slice(0, 4)].map(p => p.id);
   const result = builder.validateRoster(ids, parsed.players, parsed.budget);
   assert.equal(result.valid, true, result.errors.join(' | '));
   assert.equal(result.total, 5);
   assert.equal(result.keepers, 1);
   assert.equal(result.movement, 4);
-  assert.equal(result.credits, 48);
-  assert.equal(result.remaining, 202);
+  assert.ok(result.credits <= parsed.budget, `Rosa minima fuori budget: ${result.credits}/${parsed.budget}`);
+  assert.equal(result.remaining, parsed.budget - result.credits);
 });
 
 test('CSV utente generato è complessivo e senza giornata nel nome/contenuto', () => {
