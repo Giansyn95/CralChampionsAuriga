@@ -22,7 +22,6 @@
        in rete, quindi appare istantaneo anche offline. -->
   <link rel="preload" as="image" href="immagini/logo_cral.png" fetchpriority="high" />
   <title>CRAL Champions</title>
-  <link rel="preload" href="data/fantacalcio/fantacalcio_cache.json" as="fetch" crossorigin="anonymous">
   <!-- Open Graph: anteprima link su WhatsApp, Telegram, Facebook ecc.
        Letti dai crawler senza eseguire JavaScript, quindi i valori restano fissi
        (non vengono presi dal config.csv, che è dinamico). L'URL punta al repository
@@ -2128,7 +2127,10 @@ function hasFantacalcioContent(){
   try{
     if(state.fantaPrecomputedData && Array.isArray(state.fantaPrecomputedData.results) && state.fantaPrecomputedData.results.length) return true;
     if(sectionFiles('fanta_output').length) return true;
-    return fantaRosterFiles().length>0 && fantaListoneFiles().length>0;
+    if(fantaRosterFiles().length>0 && fantaListoneFiles().length>0) return true;
+    // Il manifest rende disponibile il tab subito, senza obbligare la landing a
+    // scaricare/parsingare la cache Fantacalcio durante il primo paint.
+    return /(^|[\r\n])\s*fantacalcio\//i.test(String(state.files['manifest.csv']||''));
   }catch(e){ return false; }
 }
 function isTabAvailable(id){
@@ -3152,8 +3154,11 @@ function showTab(id,focusTab=false,options={}){
   });
   syncGlobalSearchVisibility();
   // Classifiche e Risultati possono essere gia stati preparati in idle su desktop.
-  // In quel caso il primo click cambia solo la visibilita del pannello, senza un render sincrono.
+  // Fantacalcio resta invece lazy: nessun DOM pesante viene costruito durante il bootstrap.
   if(!quickTabIsReady(id)) renderActiveSection();
+  if(id==='fantacalcio' && state.fantaPrecomputedData){
+    scheduleFantaLiveHydration(false,_dataLoadGeneration);
+  }
   if(!options.skipRoute && typeof cralNavReplaceTab==='function') cralNavReplaceTab(id);
   // Alcune azioni contestuali devono comportarsi come una vera navigazione
   // di pagina e ripartire dall'alto.
@@ -12432,9 +12437,10 @@ function scheduleFantaLiveHydration(fresh=false,generation=_dataLoadGeneration,s
     if(fresh || !state.fantaPrecomputedData){
       setTimeout(run,0);
     }else if('requestIdleCallback' in window){
-      requestIdleCallback(run,{timeout:2600});
+      // Prima lascia completare paint/interazione del tab, poi valida le rose live.
+      setTimeout(()=>requestIdleCallback(run,{timeout:5200}),700);
     }else{
-      setTimeout(run,1400);
+      setTimeout(run,1800);
     }
   });
   _fantaLiveHydrationPromise=promise;
@@ -12473,13 +12479,14 @@ function ensureFantaDataInBackground(fresh,generation=_dataLoadGeneration,signal
       state.fantaLoading=false;
       renderTabs();
       if(typeof cralNavScheduleApplyRoute==='function') cralNavScheduleApplyRoute(true);
-      if(state.activeTab==='fantacalcio') renderFantacalcio();
-      else warmDesktopFantacalcio();
-
-      if(!fresh){
-        scheduleFantaLiveHydration(false,generation,signal);
-        return true;
+      if(state.activeTab==='fantacalcio'){
+        renderFantacalcio();
+        if(!fresh) scheduleFantaLiveHydration(false,generation,signal);
       }
+
+      // Fuori dal tab Fantacalcio ci fermiamo alla cache: niente DOM nascosto e
+      // niente scansione delle rose durante l'avvio della pagina.
+      if(!fresh) return true;
     }
 
     // Cache assente oppure refresh esplicito: il live diventa il fallback
@@ -13617,18 +13624,24 @@ function warmDesktopPrimaryTabs(){
   // senza costruire tabelle e righe proprio durante l'interazione dell'utente.
   requestIdleCallback(step,{timeout:700});
 }
-function warmDesktopFantacalcio(){
-  if(!window.matchMedia('(min-width:721px)').matches) return;
-  if(!state.fantaPrecomputedData || state.activeTab==='fantacalcio' || quickTabIsReady('fantacalcio')) return;
-  const generation=_dataLoadGeneration;
-  const run=()=>{
-    if(generation!==_dataLoadGeneration || state.activeTab==='fantacalcio' || !state.fantaPrecomputedData || quickTabIsReady('fantacalcio')) return;
-    renderSectionById('fantacalcio');
-  };
-  if('requestIdleCallback' in window) requestIdleCallback(run,{timeout:850});
-  else setTimeout(run,80);
-}
 function renderAll(){ updateTitle(); renderTabs(); syncGlobalSearchVisibility(); renderActiveSection(); if(typeof cralNavScheduleApplyRoute==='function') cralNavScheduleApplyRoute(true); }
+
+function scheduleInitialFantaBootstrap(fresh,generation=_dataLoadGeneration,signal){
+  const run=async()=>{
+    if(!isCurrentDataLoad(generation)||signal?.aborted) return;
+    const available=await ensureFantaDataInBackground(!!fresh,generation,signal);
+    if(!isCurrentDataLoad(generation)||signal?.aborted) return;
+    if(available) await loadPortieriSnapshot(!!fresh,generation,signal);
+  };
+  if(fresh){ run(); return; }
+  const queue=()=>{
+    if(!isCurrentDataLoad(generation)||signal?.aborted) return;
+    if('requestIdleCallback' in window) requestIdleCallback(run,{timeout:5200});
+    else setTimeout(run,0);
+  };
+  // La landing deve diventare interattiva prima del lavoro Fantacalcio.
+  setTimeout(queue,1200);
+}
 
 /* ══════════════════════════════════
    CARICAMENTO FILE
@@ -13850,7 +13863,6 @@ async function loadFantaSourceFilesInBackground(fresh=false,generation=_dataLoad
     warmMatchCenterFantaCaches();
   }catch(e){ _fantaCurrentDataCache=null; }
   if(state.activeTab==='fantacalcio') renderFantacalcio();
-  else warmDesktopFantacalcio();
   return true;
 }
 
@@ -13936,7 +13948,9 @@ async function loadAuto(fresh){
     state.riepilogoFilterInitialized=false;
     state.selectedFantaGiornata='totale';
     state.fantaResultFileKeys=[];
-    state.fantaLoading=true;
+    // Nessun lavoro Fantacalcio e' ancora partito: la landing resta libera di
+    // completare paint e interazione; il bootstrap Fanta viene schedulato dopo.
+    state.fantaLoading=false;
     state.selectedPagelloneGiornata='';
     state.selectedPagellonePartita='';
     state.fantaPrecomputedData=null;
@@ -13954,9 +13968,7 @@ async function loadAuto(fresh){
     if(ok || state.rows['manifest.csv']) setStatus(dataLoadStatus(ok+(state.rows['manifest.csv']?1:0)),true);
     else setStatus('Autocaricamento bloccato — verifica manifest.csv o la connessione.');
 
-    const fantaAvailable=await ensureFantaDataInBackground(fresh,generation,signal);
-    if(!isCurrentDataLoad(generation) || signal.aborted) return;
-    if(fantaAvailable) await loadPortieriSnapshot(fresh,generation,signal);
+    scheduleInitialFantaBootstrap(fresh,generation,signal);
   }catch(e){
     if(!isCurrentDataLoad(generation) || signal.aborted || isAbortError(e)) return;
     setStatus('Errore durante il caricamento dati: '+String(e&&e.message||e));
