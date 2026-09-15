@@ -14,7 +14,7 @@ test('parser Hall of Fame legge CSV separati da punto e virgola',()=>{
   assert.equal(rows[0].Gol,'7');
 });
 
-test('Hall of Fame aggrega titoli e statistiche solo dai dataset passati',()=>{
+test('Hall of Fame aggrega statistiche solo dai dataset passati e individua il primo campione',()=>{
   const data=hall.build([
     {
       completed:true,
@@ -34,10 +34,15 @@ test('Hall of Fame aggrega titoli e statistiche solo dai dataset passati',()=>{
     }
   ]);
   assert.equal(data.editions,2);
-  assert.deepEqual(data.mostTitles,{name:'Team A',value:2});
-  assert.deepEqual(data.allTimeScorer,{name:'Mario Rossi',value:15});
-  assert.deepEqual(data.allTimeMvp,{name:'Mario Rossi',value:7});
-  assert.deepEqual(data.allTimeKeeper,{name:'Paolo Verdi',value:8});
+  // La squadra campione dell'edizione più vecchia (2025), non più "chi ha vinto di più".
+  assert.equal(data.firstChampion.name,'Team A');
+  assert.equal(data.firstChampion.value,'2025');
+  assert.equal(data.allTimeScorer.name,'Mario Rossi');
+  assert.equal(data.allTimeScorer.value,15);
+  assert.equal(data.allTimeMvp.name,'Mario Rossi');
+  assert.equal(data.allTimeMvp.value,7);
+  assert.equal(data.allTimeKeeper.name,'Paolo Verdi');
+  assert.equal(data.allTimeKeeper.value,8);
   assert.equal(data.history[0].tournament.anno,'2026');
 });
 
@@ -62,10 +67,13 @@ test('Hall of Fame esclude esplicitamente le edizioni non concluse',()=>{
   ]);
 
   assert.equal(data.editions,1);
-  assert.deepEqual(data.mostTitles,{name:'Team A',value:1});
-  assert.deepEqual(data.allTimeScorer,{name:'Mario Rossi',value:10});
-  assert.deepEqual(data.allTimeMvp,{name:'Mario Rossi',value:7});
-  assert.deepEqual(data.allTimeKeeper,{name:'Paolo Verdi',value:5});
+  assert.equal(data.firstChampion.name,'Team A');
+  assert.equal(data.allTimeScorer.name,'Mario Rossi');
+  assert.equal(data.allTimeScorer.value,10);
+  assert.equal(data.allTimeMvp.name,'Mario Rossi');
+  assert.equal(data.allTimeMvp.value,7);
+  assert.equal(data.allTimeKeeper.name,'Paolo Verdi');
+  assert.equal(data.allTimeKeeper.value,5);
   assert.equal(data.history.length,1);
   assert.equal(data.history[0].tournament.stagione,'Primavera');
 });
@@ -83,8 +91,35 @@ test('Hall of Fame tollera dataset storici parziali senza interrompere il render
   ]);
 
   assert.equal(data.editions,1);
-  assert.deepEqual(data.mostTitles,{name:'Team A',value:1});
+  assert.equal(data.firstChampion.name,'Team A');
   assert.equal(data.allTimeScorer,null);
   assert.equal(data.allTimeMvp,null);
   assert.equal(data.allTimeKeeper,null);
+});
+
+test('A parità di valore vince chi ha raggiunto il record per primo, non l\'ordine alfabetico',()=>{
+  const data=hall.build([
+    {
+      // Edizione più vecchia: Zorro Bianchi segna 5 gol per primo.
+      completed:true,
+      tournament:{anno:'2024',stagione:'Primavera',ordine:20241},
+      standings:[{Posizione:'1',Squadra:'Team A'}],
+      scorers:[{Posizione:'1',Giocatore:'Zorro Bianchi',Gol:'5'}],
+      mvps:[],
+      keepers:[]
+    },
+    {
+      // Edizione successiva: Ada Rossi eguaglia lo stesso totale (5 gol),
+      // ma più tardi nel tempo. Alfabeticamente "Ada" batterebbe "Zorro",
+      // ma deve vincere chi ci è arrivato prima: Zorro Bianchi.
+      completed:true,
+      tournament:{anno:'2025',stagione:'Primavera',ordine:20251},
+      standings:[{Posizione:'1',Squadra:'Team B'}],
+      scorers:[{Posizione:'1',Giocatore:'Ada Rossi',Gol:'5'}],
+      mvps:[],
+      keepers:[]
+    }
+  ]);
+  assert.equal(data.allTimeScorer.name,'Zorro Bianchi');
+  assert.equal(data.allTimeScorer.value,5);
 });
