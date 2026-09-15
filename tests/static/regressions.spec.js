@@ -79,11 +79,12 @@ test('workflow Fantacalcio pubblica la cache con strategia race-safe senza rebas
 });
 
 
-test('landing Hall of Fame usa il marchio Champions-inspired SVG', async () => {
+test('landing Hall of Fame usa il marchio premium European-nights SVG', async () => {
   const src = read('index.html');
-  expect(src).toContain('hall-champions-mark');
-  expect(src).toContain('class="hall-cup"');
-  expect(src).toContain('class="hall-star"');
+  expect(src).toContain('hall-elite-mark');
+  expect(src).toContain('class="hall-elite-cup"');
+  expect(src).toContain('class="hall-elite-spark"');
+  expect(src).toContain('hallEliteGold');
   expect(src).not.toContain('<div class="hall-icon" aria-hidden="true">🏆</div>');
 });
 
@@ -102,8 +103,11 @@ test('frontend Classifiche/Riepilogo/Fantacalcio mantiene i nuovi contratti UI',
   expect(src).toContain("if(fantaCompactMobile()){");
   expect(src).toContain("scheduleFantaSecondaryWidgets(card,data,compact,renderToken)");
   expect(src).toContain("const QUICK_TAB_IDS = new Set(['classifiche','risultati','fantacalcio'])");
-  expect(src).toContain('function warmDesktopFantacalcio()');
-  expect(src).toContain('data/fantacalcio/fantacalcio_cache.json" as="fetch"');
+  expect(src).toContain('function scheduleInitialFantaBootstrap(');
+  expect(src).toContain("setTimeout(queue,1200)");
+  expect(src).toContain("if(id==='fantacalcio' && state.fantaPrecomputedData)");
+  expect(src).not.toContain('function warmDesktopFantacalcio()');
+  expect(src).not.toContain('data/fantacalcio/fantacalcio_cache.json" as="fetch"');
   expect(src).toContain("className='fanta-roster-creator-link-meta'");
   expect(src).toContain('Iscrizioni aperte · fino al');
   expect(src).toContain('.fanta-roster-creator-link{');
