@@ -83,8 +83,8 @@ test('frontend Classifiche/Riepilogo/Fantacalcio mantiene i nuovi contratti UI',
   const src = read('tornei/2026-spring/index.html');
   expect(src).toContain("['classifica','🏆 Classifiche']");
   expect(src).toContain("className='classifiche-highlights'");
-  expect(src).toContain("'Top 5 marcatori'");
-  expect(src).toContain("'Miglior portiere'");
+  expect(src).toContain('Top 5 marcatori');
+  expect(src).toContain('Miglior portiere');
   expect(src).toContain("if(fantaCompactMobile()){");
   expect(src).toContain("scheduleFantaSecondaryWidgets(card,data,compact,renderToken)");
   expect(src).not.toContain('Portiere: rimosso dalla scheda partita');
