@@ -119,6 +119,11 @@
     .hint{color:var(--muted);font-size:14px;line-height:1.5}
     .fanta-roster-creator-cta{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 14px}
     .fanta-roster-creator-link{display:inline-flex;align-items:center;gap:8px;border:0;border-radius:13px;padding:10px 13px;background:linear-gradient(135deg,#f5b942,#ffd76c);color:#302100;text-decoration:none;font-weight:900;font-size:13px;box-shadow:0 7px 18px rgba(245,185,66,.18)}
+    .fanta-roster-creator-icon{display:inline-flex;align-items:center;justify-content:center;line-height:1;flex:0 0 auto}
+    .fanta-roster-creator-copy{display:flex;align-items:center;min-width:0}
+    .fanta-roster-creator-link-title{font-weight:900;line-height:1.15}
+    .fanta-roster-creator-link-meta{display:none}
+    .fanta-roster-creator-arrow{display:none}
     .fanta-roster-creator-note{color:var(--muted);font-size:12px}
     /* ── Ricerca ── */
     .search{width:100%;padding:13px 14px;border:1px solid var(--line);border-radius:14px;margin:0 0 14px;font-size:15px;background:var(--panel);color:var(--ink)}
@@ -1182,9 +1187,32 @@
     .fanta-table-full th:nth-child(3),.fanta-table-full td:nth-child(3){min-width:170px;max-width:240px;font-weight:800}
     .fanta-table-full th:nth-child(14),.fanta-table-full td:nth-child(14){min-width:280px;max-width:420px}
     .fanta-table-full th:nth-child(15),.fanta-table-full td:nth-child(15){min-width:200px;max-width:360px}
+    @keyframes fantaRosterCreatorShine{0%,58%{left:-42%}78%,100%{left:132%}}
+    @media (prefers-reduced-motion:reduce){.fanta-roster-creator-link::before{animation:none!important}}
     @media(max-width:720px){
       .fanta-card-shell{padding:14px;border-radius:18px}
-      .fanta-card-shell h2{font-size:24px;margin-bottom:8px}
+      .fanta-card-shell h2{font-size:24px;margin-bottom:10px}
+      .fanta-roster-creator-cta{display:block;margin:0 0 14px}
+      .fanta-roster-creator-link{
+        position:relative;isolation:isolate;overflow:hidden;width:100%;min-height:74px;
+        display:grid;grid-template-columns:44px minmax(0,1fr) 28px;align-items:center;gap:11px;
+        padding:12px 13px;border-radius:18px;
+        background:linear-gradient(135deg,#f4b62d 0%,#ffd86f 54%,#f7c23d 100%);
+        box-shadow:0 12px 28px rgba(245,185,66,.28),0 0 0 1px rgba(255,227,145,.24) inset;
+        transform:translateZ(0);
+      }
+      .fanta-roster-creator-link::before{
+        content:'';position:absolute;z-index:-1;inset:-35% auto -35% -42%;width:34%;
+        background:linear-gradient(90deg,transparent,rgba(255,255,255,.38),transparent);
+        transform:skewX(-18deg);animation:fantaRosterCreatorShine 3.4s ease-in-out infinite;
+      }
+      .fanta-roster-creator-link:active{transform:scale(.985)}
+      .fanta-roster-creator-icon{width:44px;height:44px;border-radius:14px;background:rgba(255,255,255,.46);font-size:22px;box-shadow:0 4px 12px rgba(92,61,0,.10)}
+      .fanta-roster-creator-copy{display:flex;flex-direction:column;align-items:flex-start;gap:4px;min-width:0}
+      .fanta-roster-creator-link-title{font-size:17px;line-height:1.05;letter-spacing:-.01em}
+      .fanta-roster-creator-link-meta{display:block;font-size:9.5px;line-height:1.2;font-weight:900;text-transform:uppercase;letter-spacing:.055em;color:rgba(63,43,0,.72);white-space:normal}
+      .fanta-roster-creator-arrow{display:grid;place-items:center;width:28px;height:28px;border-radius:999px;background:rgba(48,33,0,.10);font-size:17px;font-weight:900}
+      .fanta-roster-creator-note{display:none}
       .fanta-claim{font-size:13px;line-height:1.4;margin-bottom:10px}
       .fanta-actions{display:block;margin:8px 0 12px}
       .fanta-actions .search{width:100%;min-width:0;font-size:16px;padding:11px 12px}
@@ -13483,9 +13511,16 @@ function renderFantacalcio(){
 
   if(fantaRosterCreatorAvailable()){
     const creatorCta=document.createElement('div'); creatorCta.className='fanta-roster-creator-cta';
-    const creatorLink=document.createElement('a'); creatorLink.className='fanta-roster-creator-link'; creatorLink.href='crea-rosa.html'; creatorLink.textContent='⚽ Crea la tua rosa';
-    const creatorNote=document.createElement('span'); creatorNote.className='fanta-roster-creator-note';
+    const creatorLink=document.createElement('a'); creatorLink.className='fanta-roster-creator-link'; creatorLink.href='crea-rosa.html';
+    const creatorIcon=document.createElement('span'); creatorIcon.className='fanta-roster-creator-icon'; creatorIcon.textContent='⚽'; creatorIcon.setAttribute('aria-hidden','true');
+    const creatorCopy=document.createElement('span'); creatorCopy.className='fanta-roster-creator-copy';
+    const creatorTitle=document.createElement('span'); creatorTitle.className='fanta-roster-creator-link-title'; creatorTitle.textContent='Crea la tua rosa';
     const deadline=fantaRosterCreatorDeadlineLabel();
+    const creatorMeta=document.createElement('span'); creatorMeta.className='fanta-roster-creator-link-meta'; creatorMeta.textContent=deadline?`Iscrizioni aperte · fino al ${deadline}`:'Iscrizioni aperte';
+    const creatorArrow=document.createElement('span'); creatorArrow.className='fanta-roster-creator-arrow'; creatorArrow.textContent='→'; creatorArrow.setAttribute('aria-hidden','true');
+    creatorCopy.appendChild(creatorTitle); creatorCopy.appendChild(creatorMeta);
+    creatorLink.appendChild(creatorIcon); creatorLink.appendChild(creatorCopy); creatorLink.appendChild(creatorArrow);
+    const creatorNote=document.createElement('span'); creatorNote.className='fanta-roster-creator-note';
     creatorNote.textContent="Genera il CSV complessivo validato sul listone ufficiale e invialo all'admin."+(deadline?` Disponibile fino al ${deadline}.`:'');
     creatorCta.appendChild(creatorLink); creatorCta.appendChild(creatorNote); card.appendChild(creatorCta);
   }
