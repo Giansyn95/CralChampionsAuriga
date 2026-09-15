@@ -1616,27 +1616,51 @@
     .projection-team{display:flex;align-items:center;gap:8px;min-width:0;font-weight:900}.projection-team span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     .projection-points{text-align:right;font-size:18px;font-weight:950;color:var(--blue);white-space:nowrap}.projection-points small{display:block;margin-top:1px;color:var(--muted);font-size:8px;font-weight:850;text-transform:uppercase;letter-spacing:.04em}
     .classifiche-chart-card{overflow:hidden}.classifiche-chart-card .chart-container{height:360px}
-    .classifiche-highlights{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.35fr) minmax(0,1fr);gap:12px;margin:0 0 14px}
-    .classifiche-highlight-card{min-width:0;border:1px solid var(--line);border-radius:20px;background:linear-gradient(145deg,var(--panel),var(--soft));padding:15px;box-shadow:0 7px 20px var(--shadow);overflow:hidden}
-    .classifiche-highlight-card.is-mvp{background:linear-gradient(145deg,rgba(245,185,66,.16),var(--panel));border-color:rgba(245,185,66,.42)}
-    .classifiche-highlight-card.is-keeper{background:linear-gradient(145deg,rgba(59,130,246,.12),var(--panel));border-color:rgba(59,130,246,.28)}
+    /* Gli highlight individuali sono un riepilogo mobile: su desktop restano le classifiche complete. */
+    .classifiche-highlights{display:none}
+    .classifiche-highlight-card{position:relative;min-width:0;border:1px solid var(--line);border-radius:20px;background:linear-gradient(145deg,var(--panel),var(--soft));padding:15px;box-shadow:0 10px 26px rgba(7,29,58,.12);overflow:hidden}
+    .classifiche-highlight-card:before{content:"";position:absolute;inset:0 auto 0 0;width:4px;background:var(--blue);opacity:.9}
+    .classifiche-highlight-card.is-mvp{background:linear-gradient(135deg,rgba(245,185,66,.20),var(--panel) 62%);border-color:rgba(245,185,66,.46)}
+    .classifiche-highlight-card.is-mvp:before{background:linear-gradient(#ffd86b,#b77900)}
+    .classifiche-highlight-card.is-scorers{background:linear-gradient(135deg,rgba(59,130,246,.14),var(--panel) 64%)}
+    .classifiche-highlight-card.is-keeper{background:linear-gradient(135deg,rgba(45,212,191,.13),var(--panel) 64%);border-color:rgba(45,212,191,.30)}
+    .classifiche-highlight-card.is-keeper:before{background:linear-gradient(#5eead4,#0f766e)}
     .classifiche-highlight-head{display:flex;align-items:center;gap:8px;margin-bottom:11px;color:var(--blue);font-size:10px;font-weight:950;text-transform:uppercase;letter-spacing:.07em}
-    .classifiche-highlight-head .icon{font-size:18px;line-height:1}.classifiche-highlight-person{display:grid;grid-template-columns:56px minmax(0,1fr);gap:11px;align-items:center}
-    .classifiche-highlight-avatar{width:56px;height:56px;border-radius:16px;object-fit:cover;background:var(--soft);border:1px solid var(--line)}
+    .classifiche-highlight-head .icon{font-size:18px;line-height:1}.classifiche-highlight-status{margin-left:auto;padding:4px 7px;border:1px solid var(--line);border-radius:999px;background:rgba(255,255,255,.55);color:var(--muted);font-size:8px;font-weight:950;letter-spacing:.08em}
+    .classifiche-highlight-person{display:grid;grid-template-columns:56px minmax(0,1fr);gap:11px;align-items:center}
+    .classifiche-highlight-avatar{width:56px;height:56px;border-radius:16px;object-fit:cover;background:var(--soft);border:1px solid var(--line);box-shadow:0 5px 15px rgba(7,29,58,.13)}
     .classifiche-highlight-name{display:block;width:100%;border:0;background:none;padding:0;color:var(--ink);font:inherit;font-size:16px;font-weight:950;text-align:left;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     .classifiche-highlight-name:hover{color:var(--blue)}.classifiche-highlight-meta{margin-top:3px;color:var(--muted);font-size:10px;font-weight:800;line-height:1.35}
     .classifiche-highlight-value{margin-top:7px;color:var(--blue);font-size:18px;font-weight:950}.classifiche-highlight-value small{font-size:9px;color:var(--muted);font-weight:850;text-transform:uppercase}
-    .classifiche-top5-list{display:grid;gap:6px}.classifiche-top5-row{display:grid;grid-template-columns:25px 30px minmax(0,1fr) auto;gap:7px;align-items:center;border:0;background:transparent;padding:4px 0;color:var(--ink);font:inherit;text-align:left;cursor:pointer}
+    .classifiche-top5-list{display:grid;gap:6px}.classifiche-top5-row{display:grid;grid-template-columns:25px 30px minmax(0,1fr) auto;gap:7px;align-items:center;border:0;background:transparent;padding:5px 0;color:var(--ink);font:inherit;text-align:left;cursor:pointer}
     .classifiche-top5-row:hover .classifiche-top5-name{color:var(--blue)}.classifiche-top5-rank{width:23px;height:23px;border-radius:8px;display:grid;place-items:center;background:var(--soft);border:1px solid var(--line);color:var(--blue);font-size:9px;font-weight:950}
+    .classifiche-top5-row:nth-child(1) .classifiche-top5-rank{background:linear-gradient(145deg,#ffe38a,#d69b17);border-color:#d4a72c;color:#5c3d00}
+    .classifiche-top5-row:nth-child(2) .classifiche-top5-rank{background:linear-gradient(145deg,#f5f7fa,#aeb7c2);border-color:#a8b0ba;color:#39424c}
+    .classifiche-top5-row:nth-child(3) .classifiche-top5-rank{background:linear-gradient(145deg,#e5aa78,#a76032);border-color:#a76032;color:#fff}
     .classifiche-top5-avatar{width:30px;height:30px;border-radius:9px;object-fit:cover;background:var(--soft);border:1px solid var(--line)}.classifiche-top5-copy{min-width:0}
     .classifiche-top5-name{display:block;font-size:11px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.classifiche-top5-team{display:block;margin-top:1px;color:var(--muted);font-size:8px;font-weight:750;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .classifiche-top5-goals{color:var(--blue);font-size:14px;font-weight:950;white-space:nowrap}
+    .classifiche-mobile-ranking-actions{display:none}
+    .classifiche-secondary-ranking{display:block}
     @media(max-width:720px){
       .classifiche-switch{top:6px;gap:4px;padding:4px;border-radius:15px}
       .classifiche-switch-btn{padding:9px 5px;font-size:9px;border-radius:11px;white-space:nowrap}
       .classifiche-chart-card{padding:13px}.classifiche-chart-card .chart-container{height:330px}
       .projection-row{grid-template-columns:31px minmax(0,1fr) auto;padding:9px 8px}.projection-rank{width:28px;height:28px}.projection-points{font-size:16px}
-      .classifiche-highlights{grid-template-columns:1fr;gap:9px}.classifiche-highlight-card{padding:13px;border-radius:17px}.classifiche-highlight-person{grid-template-columns:50px minmax(0,1fr)}.classifiche-highlight-avatar{width:50px;height:50px;border-radius:14px}
+      .classifiche-highlights{display:grid;grid-template-columns:1fr;gap:10px;margin:2px 0 10px}
+      .classifiche-highlight-card{padding:14px 14px 14px 16px;border-radius:18px;box-shadow:0 12px 26px rgba(7,29,58,.14)}
+      .classifiche-highlight-head{margin-bottom:10px}.classifiche-highlight-status{display:inline-flex}
+      .classifiche-highlight-person{grid-template-columns:54px minmax(0,1fr)}.classifiche-highlight-avatar{width:54px;height:54px;border-radius:15px}
+      .classifiche-highlight-name{font-size:15px}.classifiche-highlight-value{font-size:19px}
+      .classifiche-top5-list{gap:3px}.classifiche-top5-row{grid-template-columns:27px 32px minmax(0,1fr) auto;padding:5px 0}.classifiche-top5-avatar{width:32px;height:32px}.classifiche-top5-goals{font-size:13px}
+      .classifiche-mobile-ranking-actions{display:block;margin:2px 0 14px;padding:12px;border:1px solid var(--line);border-radius:18px;background:linear-gradient(145deg,var(--soft),var(--panel));box-shadow:0 8px 20px rgba(7,29,58,.08)}
+      .classifiche-mobile-ranking-title{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 9px;color:var(--ink);font-size:11px;font-weight:950;text-transform:uppercase;letter-spacing:.05em}.classifiche-mobile-ranking-title span{color:var(--muted);font-size:8px;font-weight:850}
+      .classifiche-mobile-ranking-buttons{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+      .classifiche-mobile-ranking-btn{min-width:0;border:1px solid var(--line);border-radius:14px;background:var(--panel);color:var(--blue);padding:9px 4px;font:inherit;font-size:9px;font-weight:950;cursor:pointer;box-shadow:0 4px 10px rgba(7,29,58,.06);transition:transform .15s ease,background .15s ease,border-color .15s ease}
+      .classifiche-mobile-ranking-btn .ico{display:block;font-size:18px;line-height:1;margin-bottom:4px}.classifiche-mobile-ranking-btn:hover{transform:translateY(-1px)}
+      .classifiche-mobile-ranking-btn.active{background:rgba(15,90,168,.12);border-color:rgba(15,90,168,.38);box-shadow:inset 0 0 0 1px rgba(15,90,168,.08)}
+      .classifiche-secondary-ranking{display:none}
+      .classifiche-secondary-ranking.is-mobile-open{display:block;scroll-margin-top:72px}
     }
 
     /* ── UI refresh: Tournament Pulse adattivo + Fantacalcio mobile compatto ── */
@@ -5110,12 +5134,14 @@ function classificheTopScorers(limit=5){
     rank:index+1
   })).filter(x=>x.name);
 }
-function buildClassifichePersonHighlight(kind,icon,title,person,value,label){
+function buildClassifichePersonHighlight(kind,icon,title,person,value,label,status){
   if(!person||!person.name) return null;
   const card=document.createElement('div'); card.className='classifiche-highlight-card '+(kind==='mvp'?'is-mvp':'is-keeper');
   const head=document.createElement('div'); head.className='classifiche-highlight-head';
   const ic=document.createElement('span'); ic.className='icon'; ic.textContent=icon; head.appendChild(ic);
-  const txt=document.createElement('span'); txt.textContent=title; head.appendChild(txt); card.appendChild(head);
+  const txt=document.createElement('span'); txt.textContent=title; head.appendChild(txt);
+  if(status){ const chip=document.createElement('span'); chip.className='classifiche-highlight-status'; chip.textContent=status; head.appendChild(chip); }
+  card.appendChild(head);
   const personWrap=document.createElement('div'); personWrap.className='classifiche-highlight-person';
   personWrap.appendChild(imgOrInitialEl('player',[person.name],'classifiche-highlight-avatar',{priority:'high',loading:'eager'}));
   const copy=document.createElement('div');
@@ -5132,12 +5158,14 @@ function buildClassificheHighlights(){
   const keeper=wrappedBestKeeper();
   const scorers=classificheTopScorers(5);
   if(!mvp && !keeper && !scorers.length) return null;
+  const finalStatus=isTournamentComplete()?'Finale':'Attuale';
   const wrap=document.createElement('div'); wrap.className='classifiche-highlights'; wrap.setAttribute('aria-label','Protagonisti del torneo');
-  const mvpCard=buildClassifichePersonHighlight('mvp','⭐',isTournamentComplete()?'MVP del torneo':'MVP attuale',mvp,mvp?.points||0,'punti MVP');
+  const mvpCard=buildClassifichePersonHighlight('mvp','⭐','MVP del torneo',mvp,mvp?.points||0,'punti MVP',finalStatus);
   if(mvpCard) wrap.appendChild(mvpCard);
   if(scorers.length){
     const card=document.createElement('div'); card.className='classifiche-highlight-card is-scorers';
-    const head=document.createElement('div'); head.className='classifiche-highlight-head'; head.innerHTML='<span class="icon">⚽</span><span>Top 5 marcatori</span>'; card.appendChild(head);
+    const head=document.createElement('div'); head.className='classifiche-highlight-head';
+    head.innerHTML='<span class="icon">⚽</span><span>Top 5 marcatori</span><span class="classifiche-highlight-status">'+finalStatus+'</span>'; card.appendChild(head);
     const list=document.createElement('div'); list.className='classifiche-top5-list';
     scorers.forEach(item=>{
       const row=document.createElement('button'); row.type='button'; row.className='classifiche-top5-row'; row.onclick=()=>openPlayerProfile(item.name,cralNavContextRowForPlayer(item.name,item.team));
@@ -5150,9 +5178,34 @@ function buildClassificheHighlights(){
     });
     card.appendChild(list); wrap.appendChild(card);
   }
-  const keeperCard=buildClassifichePersonHighlight('keeper','🧤',isTournamentComplete()?'Miglior portiere':'Leader portieri',keeper,keeper?.points||0,'punti portiere');
+  const keeperCard=buildClassifichePersonHighlight('keeper','🧤','Miglior portiere',keeper,keeper?.points||0,'punti portiere',finalStatus);
   if(keeperCard) wrap.appendChild(keeperCard);
   return wrap.children.length?wrap:null;
+}
+function toggleClassificheMobileDetail(kind,button){
+  const root=document.getElementById('classifiche');
+  if(!root) return;
+  const targets=[...root.querySelectorAll('.classifiche-secondary-ranking[data-classifiche-kind="'+kind+'"]')];
+  if(!targets.length) return;
+  const wasOpen=targets.some(node=>node.classList.contains('is-mobile-open'));
+  root.querySelectorAll('.classifiche-secondary-ranking').forEach(node=>node.classList.remove('is-mobile-open'));
+  root.querySelectorAll('.classifiche-mobile-ranking-btn').forEach(btn=>{ btn.classList.remove('active'); btn.setAttribute('aria-expanded','false'); });
+  if(wasOpen) return;
+  targets.forEach(node=>node.classList.add('is-mobile-open'));
+  if(button){ button.classList.add('active'); button.setAttribute('aria-expanded','true'); }
+  requestAnimationFrame(()=>targets[0]?.scrollIntoView({behavior:'smooth',block:'start'}));
+}
+function buildClassificheMobileRankingActions(){
+  if(isPlayerSearchActive() || norm(state.search)) return null;
+  const defs=[['marcatori','⚽','Marcatori'],['mvp','⭐','MVP'],['portieri','🧤','Portieri']].filter(([kind])=>sectionFiles(kind).length);
+  if(!defs.length) return null;
+  const panel=document.createElement('div'); panel.className='classifiche-mobile-ranking-actions'; panel.setAttribute('aria-label','Classifiche complete');
+  const title=document.createElement('div'); title.className='classifiche-mobile-ranking-title'; title.innerHTML='<b>Classifiche complete</b><span>tocca per aprire</span>'; panel.appendChild(title);
+  const buttons=document.createElement('div'); buttons.className='classifiche-mobile-ranking-buttons';
+  defs.forEach(([kind,icon,label])=>{
+    const btn=document.createElement('button'); btn.type='button'; btn.className='classifiche-mobile-ranking-btn'; btn.dataset.classificheTarget=kind; btn.setAttribute('aria-expanded','false'); btn.innerHTML='<span class="ico">'+icon+'</span><span>'+label+'</span>'; btn.onclick=()=>toggleClassificheMobileDetail(kind,btn); buttons.appendChild(btn);
+  });
+  panel.appendChild(buttons); return panel;
 }
 
 function renderClassificheTables(el){
@@ -5225,13 +5278,16 @@ function renderClassificheTables(el){
       }
 
       found=true;
-      const card=document.createElement('div'); card.className='card'; card.style.marginBottom='14px';
+      const card=document.createElement('div'); card.className='card'; card.style.marginBottom='14px'; card.dataset.classificheKind=kind;
+      if(!playerSearch && ['marcatori','mvp','portieri'].includes(kind)) card.classList.add('classifiche-secondary-ranking');
       const h=document.createElement('h2'); h.className='upper'; h.textContent=title;
       card.appendChild(h); card.appendChild(buildTable(tableRows,norm(f),imgType,priority,highlight));
       el.appendChild(card);
       if(kind==='classifica_squadre' && !playerSearch && !highlightsRendered){
         const highlightsNode=buildClassificheHighlights();
         if(highlightsNode) el.appendChild(highlightsNode);
+        const rankingActions=buildClassificheMobileRankingActions();
+        if(rankingActions) el.appendChild(rankingActions);
         highlightsRendered=true;
       }
     });
