@@ -93,5 +93,9 @@ test('frontend Classifiche/Riepilogo/Fantacalcio mantiene i nuovi contratti UI',
   expect(src).toContain('top:auto!important');
   expect(src).toContain("if(fantaCompactMobile()){");
   expect(src).toContain("scheduleFantaSecondaryWidgets(card,data,compact,renderToken)");
+  expect(src).toContain("className='fanta-roster-creator-link-meta'");
+  expect(src).toContain('Iscrizioni aperte · fino al');
+  expect(src).toContain('.fanta-roster-creator-link{');
+  expect(src).toContain('grid-template-columns:44px minmax(0,1fr) 28px');
   expect(src).not.toContain('Portiere: rimosso dalla scheda partita');
 });
