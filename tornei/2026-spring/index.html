@@ -1666,6 +1666,44 @@
     .classifiche-highlight-card.is-scorers{background:linear-gradient(135deg,rgba(59,130,246,.14),var(--panel) 64%)}
     .classifiche-highlight-card.is-keeper{background:linear-gradient(135deg,rgba(45,212,191,.13),var(--panel) 64%);border-color:rgba(45,212,191,.30)}
     .classifiche-highlight-card.is-keeper:before{background:linear-gradient(#5eead4,#0f766e)}
+    /* ── Effetto "carta FIFA" premium per le card MVP e Miglior portiere (mobile) ──
+       Sfondo metallico scuro, bordo sfumato dorato/acqua, riflesso animato che
+       "scorre" sulla carta e testo con finitura foil, per un effetto da trading
+       card da collezione invece della card informativa piatta. */
+    .classifiche-highlight-card.is-mvp,.classifiche-highlight-card.is-keeper{
+      position:relative;isolation:isolate;border:1px solid transparent;
+      background-clip:padding-box,border-box;background-origin:padding-box,border-box;
+      transition:transform .18s ease,box-shadow .18s ease;
+    }
+    .classifiche-highlight-card.is-mvp{
+      background-image:linear-gradient(160deg,#2a1c06 0%,#140d03 48%,#2a1c06 100%),linear-gradient(135deg,#fff2bf,#f5b942 35%,#8a5a00 65%,#fff2bf 100%);
+      box-shadow:0 16px 32px rgba(138,90,0,.38),inset 0 1px 0 rgba(255,255,255,.2),inset 0 -16px 24px rgba(0,0,0,.32);
+    }
+    .classifiche-highlight-card.is-keeper{
+      background-image:linear-gradient(160deg,#04211f 0%,#03100f 48%,#04211f 100%),linear-gradient(135deg,#d7fff6,#5eead4 35%,#0f766e 65%,#d7fff6 100%);
+      box-shadow:0 16px 32px rgba(15,118,110,.35),inset 0 1px 0 rgba(255,255,255,.18),inset 0 -16px 24px rgba(0,0,0,.32);
+    }
+    .classifiche-highlight-card.is-mvp:before,.classifiche-highlight-card.is-keeper:before{display:none}
+    .classifiche-highlight-card.is-mvp>*,.classifiche-highlight-card.is-keeper>*{position:relative;z-index:1}
+    .classifiche-highlight-card.is-mvp:after,.classifiche-highlight-card.is-keeper:after{
+      content:"";position:absolute;inset:0;z-index:2;pointer-events:none;border-radius:inherit;
+      background:linear-gradient(115deg,transparent 22%,rgba(255,255,255,.6) 36%,rgba(255,255,255,.05) 48%,transparent 62%);
+      background-size:240% 240%;background-position:-60% -60%;mix-blend-mode:overlay;
+      animation:cralFifaShine 4.8s ease-in-out infinite;
+    }
+    @keyframes cralFifaShine{0%,16%{background-position:-60% -60%}56%,100%{background-position:140% 140%}}
+    .classifiche-highlight-card.is-mvp .classifiche-highlight-head,.classifiche-highlight-card.is-keeper .classifiche-highlight-head{color:#fff8e3}
+    .classifiche-highlight-card.is-mvp .icon{filter:drop-shadow(0 0 7px rgba(255,216,107,.9))}
+    .classifiche-highlight-card.is-keeper .icon{filter:drop-shadow(0 0 7px rgba(94,234,212,.9))}
+    .classifiche-highlight-card.is-mvp .classifiche-highlight-status,.classifiche-highlight-card.is-keeper .classifiche-highlight-status{background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.3);color:#fff8e3}
+    .classifiche-highlight-card.is-mvp .classifiche-highlight-name{background:linear-gradient(120deg,#fff6d9,#ffd86b 45%,#f6c453 60%,#fff6d9);-webkit-background-clip:text;background-clip:text;color:transparent}
+    .classifiche-highlight-card.is-keeper .classifiche-highlight-name{background:linear-gradient(120deg,#e8fffa,#5eead4 45%,#2dd4bf 60%,#e8fffa);-webkit-background-clip:text;background-clip:text;color:transparent}
+    .classifiche-highlight-card.is-mvp .classifiche-highlight-meta,.classifiche-highlight-card.is-keeper .classifiche-highlight-meta{color:rgba(255,255,255,.7)}
+    .classifiche-highlight-card.is-mvp .classifiche-highlight-value{color:#ffe38a;text-shadow:0 0 16px rgba(255,216,107,.55)}
+    .classifiche-highlight-card.is-keeper .classifiche-highlight-value{color:#99f6e4;text-shadow:0 0 16px rgba(94,234,212,.55)}
+    .classifiche-highlight-card.is-mvp .classifiche-highlight-value small,.classifiche-highlight-card.is-keeper .classifiche-highlight-value small{color:rgba(255,255,255,.6)}
+    .classifiche-highlight-card.is-mvp .classifiche-highlight-avatar,.classifiche-highlight-card.is-keeper .classifiche-highlight-avatar{border-color:rgba(255,255,255,.4);box-shadow:0 6px 16px rgba(0,0,0,.45),0 0 0 3px rgba(255,255,255,.1)}
+    .classifiche-highlight-card.is-mvp:active,.classifiche-highlight-card.is-keeper:active{transform:scale(.98)}
     .classifiche-highlight-head{display:flex;align-items:center;gap:8px;margin-bottom:11px;color:var(--blue);font-size:10px;font-weight:950;text-transform:uppercase;letter-spacing:.07em}
     .classifiche-highlight-head .icon{font-size:18px;line-height:1}.classifiche-highlight-status{margin-left:auto;padding:4px 7px;border:1px solid var(--line);border-radius:999px;background:rgba(255,255,255,.55);color:var(--muted);font-size:8px;font-weight:950;letter-spacing:.08em}
     .classifiche-highlight-person{display:grid;grid-template-columns:56px minmax(0,1fr);gap:11px;align-items:center}
@@ -4455,7 +4493,9 @@ function renderChartAndamentoSquadre(){
       interaction:{mode:'nearest',intersect:false},
       plugins:{
         legend:{position:'bottom',labels:{color:c.text,boxWidth:10,boxHeight:10,usePointStyle:true,font:{weight:'800'},padding:12}},
-        title:{display:true,text:data.hasMatches?'Andamento punti e proiezione a fine campionato':'Proiezione da classifica attuale',color:c.text,font:{size:14,weight:'800'},padding:{bottom:8}},
+        // Titolo interno disattivato: il grafico è già introdotto dall'H2 esterno,
+        // niente ripetizione della stessa etichetta due volte.
+        title:{display:false},
         tooltip:{
           backgroundColor:'rgba(7,29,58,.94)',displayColors:true,titleFont:{weight:'800'},
           callbacks:{
@@ -4467,7 +4507,7 @@ function renderChartAndamentoSquadre(){
           }
         }
       },
-      layout:{padding:{top:6,right:14,left:6,bottom:0}},
+      layout:{padding:{top:2,right:14,left:6,bottom:0}},
       scales:{
         x:{ticks:{color:c.text,font:{weight:'800'},maxRotation:0,autoSkip:true},grid:{display:false},border:{display:false}},
         y:{beginAtZero:true,ticks:{color:c.text,font:{weight:'700'}},grid:{color:c.grid,drawBorder:false},border:{display:false}}
@@ -4497,7 +4537,7 @@ function renderChartClassificheAndamento(){
     const color=teamTrendColor(item.team,index,teams.length);
     return {label:item.team,data:item.data,tension:.34,spanGaps:true,borderColor:color,backgroundColor:color,pointBackgroundColor:color,pointBorderColor:'#fff',pointBorderWidth:2,borderWidth:3.25,pointRadius:3,pointHoverRadius:6,fill:false};
   });
-  const chart=new Chart(canvas,{type:'line',data:{labels,datasets},options:{responsive:true,maintainAspectRatio:false,animation:{duration:650,easing:'easeOutQuart'},interaction:{mode:'nearest',intersect:false},plugins:{legend:{position:'bottom',labels:{color:c.text,boxWidth:10,boxHeight:10,usePointStyle:true,font:{weight:'800'},padding:12}},title:{display:true,text:'Andamento punti per giornata',color:c.text,font:{size:14,weight:'800'},padding:{bottom:8}},tooltip:{backgroundColor:'rgba(7,29,58,.94)',displayColors:true,titleFont:{weight:'800'},callbacks:{label:(ctx)=>ctx.dataset.label+': '+Number(ctx.parsed.y||0).toFixed(0)+' punti'}}},layout:{padding:{top:6,right:14,left:6,bottom:0}},scales:{x:{ticks:{color:c.text,font:{weight:'800'},maxRotation:0,autoSkip:true},grid:{display:false},border:{display:false}},y:{beginAtZero:true,ticks:{color:c.text,font:{weight:'700'},stepSize:1},grid:{color:c.grid,drawBorder:false},border:{display:false}}}}});
+  const chart=new Chart(canvas,{type:'line',data:{labels,datasets},options:{responsive:true,maintainAspectRatio:false,animation:{duration:650,easing:'easeOutQuart'},interaction:{mode:'nearest',intersect:false},plugins:{legend:{position:'bottom',labels:{color:c.text,boxWidth:10,boxHeight:10,usePointStyle:true,font:{weight:'800'},padding:12}},title:{display:false},tooltip:{backgroundColor:'rgba(7,29,58,.94)',displayColors:true,titleFont:{weight:'800'},callbacks:{label:(ctx)=>ctx.dataset.label+': '+Number(ctx.parsed.y||0).toFixed(0)+' punti'}}},layout:{padding:{top:2,right:14,left:6,bottom:0}},scales:{x:{ticks:{color:c.text,font:{weight:'800'},maxRotation:0,autoSkip:true},grid:{display:false},border:{display:false}},y:{beginAtZero:true,ticks:{color:c.text,font:{weight:'700'},stepSize:1},grid:{color:c.grid,drawBorder:false},border:{display:false}}}}});
   window._chart.chartClassificheAndamento=chart;
   applyLogoColorsToTrendChart(chart,{teams});
   requestAnimationFrame(()=>{ try{ chart.resize(); chart.update('none'); }catch(e){} });
@@ -4506,7 +4546,9 @@ function renderChartClassificheProiezione(){
   const data=teamTrendProjectionData();
   const ordered=[...data.teams].sort((a,b)=>b.projection-a.projection || b.total-a.total || String(a.team).localeCompare(String(b.team),'it'));
   if(!ordered.length) return;
-  drawBarChart('chartClassificheProiezione',ordered.map(x=>x.team),ordered.map(x=>x.projection),'Punti proiettati','team',isTournamentComplete()?'Classifica finale':'Proiezione a fine campionato');
+  // Titolo interno vuoto: la card ha già l'H2 esterno con lo stesso testo,
+  // evitiamo di mostrarlo due volte dentro il grafico.
+  drawBarChart('chartClassificheProiezione',ordered.map(x=>x.team),ordered.map(x=>x.projection),'Punti proiettati','team','');
   window._chart.chartClassificheProiezione=window._chart.chartClassificheProiezione||window._chart['chartClassificheProiezione'];
 }
 function scheduleClassificheChartRender(view){
