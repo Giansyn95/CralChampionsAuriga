@@ -1643,7 +1643,20 @@
     .classifiche-mobile-ranking-actions{display:none}
     .classifiche-secondary-ranking{display:block}
     @media(max-width:720px){
-      .classifiche-switch{top:6px;gap:4px;padding:4px;border-radius:15px}
+      /* Mantiene Classifiche / Andamento / Proiezione sempre raggiungibili durante lo scroll mobile. */
+      #classifiche,.classifiche-hub{overflow:visible}
+      .classifiche-switch{
+        position:sticky!important;
+        top:calc(env(safe-area-inset-top, 0px) + 6px);
+        z-index:120;
+        gap:4px;
+        padding:4px;
+        border-radius:15px;
+        background:color-mix(in srgb,var(--soft) 92%,transparent);
+        -webkit-backdrop-filter:blur(12px);
+        backdrop-filter:blur(12px);
+        box-shadow:0 10px 24px rgba(7,29,58,.18)
+      }
       .classifiche-switch-btn{padding:9px 5px;font-size:9px;border-radius:11px;white-space:nowrap}
       .classifiche-chart-card{padding:13px}.classifiche-chart-card .chart-container{height:330px}
       .projection-row{grid-template-columns:31px minmax(0,1fr) auto;padding:9px 8px}.projection-rank{width:28px;height:28px}.projection-points{font-size:16px}
