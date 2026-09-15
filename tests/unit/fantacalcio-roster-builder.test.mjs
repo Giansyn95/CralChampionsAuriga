@@ -143,7 +143,7 @@ test('builder rifiuta rose senza PT, duplicate o fuori budget', () => {
 
 test('CTA Crea la tua rosa viene costruita prima della label di selezione giornata', () => {
   const source = fs.readFileSync('tornei/2026-spring/index.html', 'utf8');
-  const cta = source.indexOf("creatorLink.textContent='⚽ Crea la tua rosa'");
+  const cta = source.indexOf("creatorTitle.textContent='Crea la tua rosa'");
   const claim = source.indexOf("intro.textContent='Scegli la giornata e il punteggio si aggiorna con risultati e statistiche del torneo.'");
   assert.ok(cta >= 0, 'CTA Crea la tua rosa non trovata');
   assert.ok(claim >= 0, 'Label Scegli la giornata non trovata');
