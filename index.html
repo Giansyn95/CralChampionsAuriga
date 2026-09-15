@@ -72,8 +72,9 @@
 
     .hall-teaser{position:relative;overflow:hidden;display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:16px;align-items:center;padding:20px 22px;border:1px solid rgba(245,185,66,.45);border-radius:22px;background:linear-gradient(135deg,color-mix(in srgb,var(--panel) 92%,var(--gold) 8%),var(--panel));box-shadow:0 8px 22px var(--shadow)}
     .hall-teaser::after{content:'';position:absolute;right:-70px;top:-100px;width:230px;height:230px;border-radius:50%;background:radial-gradient(circle,rgba(245,185,66,.20),transparent 68%);pointer-events:none}
-    .hall-icon{position:relative;z-index:1;display:flex;align-items:center;justify-content:center;width:68px;height:68px;border-radius:21px;background:radial-gradient(circle at 35% 28%,#173f78 0,#0d274d 44%,#07192f 100%);border:1px solid rgba(245,185,66,.62);box-shadow:0 12px 30px rgba(7,25,47,.34),inset 0 0 24px rgba(59,130,246,.16)}
-    .hall-icon svg{width:49px;height:49px;display:block;filter:drop-shadow(0 5px 8px rgba(0,0,0,.30))}.hall-icon .hall-cup{fill:none;stroke:#ffd56a;stroke-width:2.35;stroke-linecap:round;stroke-linejoin:round}.hall-icon .hall-star{fill:#ffd56a}.hall-icon .hall-orbit{fill:none;stroke:rgba(255,213,106,.42);stroke-width:1.1;stroke-dasharray:2.4 3.4}
+    .hall-icon{position:relative;z-index:1;display:flex;align-items:center;justify-content:center;width:72px;height:72px;border-radius:24px;background:radial-gradient(circle at 34% 24%,#1d4c8f 0,#0b2851 42%,#06152b 100%);border:1px solid rgba(255,214,111,.68);box-shadow:0 14px 34px rgba(4,15,34,.42),0 0 0 1px rgba(255,255,255,.035) inset,0 0 28px rgba(62,132,246,.15) inset;isolation:isolate}
+    .hall-icon::before{content:'';position:absolute;inset:7px;border-radius:19px;background:conic-gradient(from 18deg,rgba(255,221,132,.16),transparent 16%,transparent 34%,rgba(87,156,255,.14) 48%,transparent 63%,transparent 84%,rgba(255,221,132,.16));filter:blur(.2px);z-index:-1}
+    .hall-icon svg{width:58px;height:58px;display:block;filter:drop-shadow(0 7px 12px rgba(0,0,0,.34))}.hall-elite-halo{fill:none;stroke:rgba(255,224,148,.28);stroke-width:1.1}.hall-elite-orbit{fill:none;stroke:rgba(112,171,255,.38);stroke-width:1;stroke-dasharray:1.6 4.2}.hall-elite-spark{fill:url(#hallEliteGold)}.hall-elite-cup{fill:url(#hallEliteGold);stroke:#ffe3a0;stroke-width:.55;stroke-linejoin:round}.hall-elite-cut{fill:#0a2348}.hall-elite-line{fill:none;stroke:url(#hallEliteGold);stroke-width:1.55;stroke-linecap:round;stroke-linejoin:round;opacity:.9}
     .hall-copy{position:relative;z-index:1;min-width:0}.hall-copy .eyebrow{margin:0 0 5px;background:var(--blue-soft);border-color:rgba(15,90,168,.20);color:var(--blue)}.hall-copy h2{margin:0;font-family:'Oswald',Arial,Helvetica,sans-serif;font-size:clamp(24px,3vw,32px);color:var(--ink);text-transform:uppercase}.hall-copy p{margin:5px 0 0;color:var(--muted);font-size:13px;line-height:1.45}
     .hall-open-btn{position:relative;z-index:1;white-space:nowrap;margin:0}
     .hall-panel{margin-top:12px;padding:18px;border:1px solid var(--line);border-radius:22px;background:var(--panel);box-shadow:0 8px 22px var(--shadow)}
@@ -195,7 +196,17 @@
 
       <section aria-labelledby="hallTeaserTitle" id="hallOfFameSection">
         <div class="hall-teaser">
-          <div class="hall-icon" aria-hidden="true"><svg class="hall-champions-mark" viewBox="0 0 64 64" focusable="false"><circle class="hall-orbit" cx="32" cy="31" r="23"/><path class="hall-cup" d="M22 18h20v8c0 8-4.5 13.2-10 15.2C26.5 39.2 22 34 22 26v-8Zm0 4h-6v3.5c0 5.5 3.8 9 8.8 9.8M42 22h6v3.5c0 5.5-3.8 9-8.8 9.8M32 41.5V48m-8 0h16m-13 5h10"/><path class="hall-star" d="m32 9 1.7 3.5 3.9.6-2.8 2.7.7 3.9-3.5-1.9-3.5 1.9.7-3.9-2.8-2.7 3.9-.6L32 9Z"/><path class="hall-star" d="m13.5 18.5 1.1 2.2 2.5.4-1.8 1.7.4 2.5-2.2-1.2-2.2 1.2.4-2.5-1.8-1.7 2.5-.4 1.1-2.2Zm37 0 1.1 2.2 2.5.4-1.8 1.7.4 2.5-2.2-1.2-2.2 1.2.4-2.5-1.8-1.7 2.5-.4 1.1-2.2ZM15.5 40l1 2 2.2.3-1.6 1.6.4 2.2-2-1.1-2 1.1.4-2.2-1.6-1.6 2.2-.3 1-2Zm33 0 1 2 2.2.3-1.6 1.6.4 2.2-2-1.1-2 1.1.4-2.2-1.6-1.6 2.2-.3 1-2Z"/></svg></div>
+          <div class="hall-icon" aria-hidden="true"><svg class="hall-elite-mark" viewBox="0 0 72 72" focusable="false">
+              <defs>
+                <linearGradient id="hallEliteGold" x1="13" y1="8" x2="58" y2="63" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#fff2bd"/><stop offset=".28" stop-color="#ffd66b"/><stop offset=".62" stop-color="#e9a72d"/><stop offset="1" stop-color="#fff0ad"/></linearGradient>
+              </defs>
+              <circle class="hall-elite-halo" cx="36" cy="36" r="28.5"/>
+              <path class="hall-elite-orbit" d="M12.5 40.5C16.2 18.7 34.8 7.8 54.9 17.2M17.1 54.7C37.2 64.1 55.8 53.2 59.5 31.4"/>
+              <path class="hall-elite-spark" d="m36 5.8 1.55 3.55 3.55 1.55-3.55 1.55L36 16l-1.55-3.55-3.55-1.55 3.55-1.55L36 5.8Zm21.9 12.5 1.1 2.5 2.5 1.1-2.5 1.1-1.1 2.5-1.1-2.5-2.5-1.1 2.5-1.1 1.1-2.5ZM14.1 18.3l1.1 2.5 2.5 1.1-2.5 1.1-1.1 2.5-1.1-2.5-2.5-1.1 2.5-1.1 1.1-2.5Zm43.8 28.1.9 2.05 2.05.9-2.05.9-.9 2.05-.9-2.05-2.05-.9 2.05-.9.9-2.05ZM14.1 46.4l.9 2.05 2.05.9-2.05.9-.9 2.05-.9-2.05-2.05-.9 2.05-.9.9-2.05Z"/>
+              <path class="hall-elite-cup" d="M24.2 20.2h23.6v8.1c0 8.65-4.7 14.15-9.75 16.25v5.15h6.45v4H27.5v-4h6.45v-5.15c-5.05-2.1-9.75-7.6-9.75-16.25v-8.1Z"/>
+              <path class="hall-elite-cut" d="M28.5 24.4h15v4.15c0 6.15-2.95 10.25-7.5 12.15-4.55-1.9-7.5-6-7.5-12.15V24.4Z"/>
+              <path class="hall-elite-line" d="M24.4 24.1h-5.2v3.1c0 5.25 3.25 8.45 7.6 9.45M47.6 24.1h5.2v3.1c0 5.25-3.25 8.45-7.6 9.45M31.1 58.2h9.8"/>
+            </svg></div>
           <div class="hall-copy">
             <div class="eyebrow">Leggende CRAL Champions</div>
             <h2 id="hallTeaserTitle">Hall of Fame</h2>
