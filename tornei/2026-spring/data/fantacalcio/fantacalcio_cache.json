@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "generatedAt": "2026-09-15T08:42:42.672Z",
+  "generatedAt": "2026-09-15T09:16:04.506Z",
   "source": "calcolata",
   "rosterCount": 80,
   "playerCount": 35,
@@ -11629,7 +11629,7 @@
   ],
   "_meta": {
     "certificationVersion": 1,
-    "generatedAt": "2026-09-15T08:42:42.775Z",
+    "generatedAt": "2026-09-15T09:16:04.612Z",
     "sourceHash": "4a41eb9de936413913c3cb011f2a20a69900c14977364391c779b889116e80cd",
     "sourceFiles": 106,
     "fantacalcioCsvFiles": 83,
