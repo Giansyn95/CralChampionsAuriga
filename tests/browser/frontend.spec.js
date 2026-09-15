@@ -43,6 +43,30 @@ test('landing page carica senza errori locali critici', async ({ page, request }
   expect(errors, errors.join('\n')).toEqual([]);
 });
 
+test('Hall of Fame resta compatta e leggibile su mobile', async ({ page }) => {
+  await page.setViewportSize({ width: 402, height: 874 });
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
+
+  const teaser = page.locator('.hall-teaser');
+  await expect(teaser).toBeVisible();
+  await expect(page.locator('.hall-icon .hall-elite-mark')).toBeVisible();
+  await expect(page.locator('.hall-feature')).toHaveCount(4);
+  await expect(page.locator('#hallOpenBtn')).toBeVisible();
+
+  const teaserBox = await teaser.boundingBox();
+  const iconBox = await page.locator('.hall-icon').boundingBox();
+  const buttonBox = await page.locator('#hallOpenBtn').boundingBox();
+  expect(teaserBox).not.toBeNull();
+  expect(iconBox).not.toBeNull();
+  expect(buttonBox).not.toBeNull();
+  expect(teaserBox.height).toBeLessThan(315);
+  expect(iconBox.width).toBeLessThanOrEqual(65);
+  expect(buttonBox.height).toBeLessThanOrEqual(54);
+
+  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+  expect(overflow).toBeLessThanOrEqual(1);
+});
+
 test('Hall of Fame dalla landing aggrega le edizioni concluse', async ({ page }) => {
   const errors = collectRuntimeErrors(page);
   await page.goto('/', { waitUntil: 'domcontentloaded' });
