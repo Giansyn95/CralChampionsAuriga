@@ -243,6 +243,23 @@ test("mobile: Pulse è la landing unica, Classifiche è compatta e il Wrapped re
     await page.locator('#tab-fantacalcio').click();
     await expect(page.locator('#fantacalcio.active .fanta-mobile-list')).toBeVisible({ timeout: 4000 });
     await expect(page.locator('#fantacalcio.active .fanta-table-desktop')).toHaveCount(0);
+
+    // Quando la creazione rosa è aperta, la CTA deve essere la principale azione mobile:
+    // full-width, con stato/scadenza leggibili e senza la nota desktop ridondante.
+    const creatorAvailable=await page.evaluate(() => fantaRosterCreatorAvailable());
+    if (creatorAvailable) {
+      const creatorLink=page.locator('#fantacalcio.active .fanta-roster-creator-link');
+      const creatorMeta=page.locator('#fantacalcio.active .fanta-roster-creator-link-meta');
+      await expect(creatorLink).toBeVisible();
+      await expect(creatorMeta).toBeVisible();
+      await expect(creatorMeta).toContainText(/Iscrizioni aperte/i);
+      await expect(page.locator('#fantacalcio.active .fanta-roster-creator-note')).toBeHidden();
+      const widths=await page.locator('#fantacalcio.active .fanta-card-shell').evaluate(card => {
+        const link=card.querySelector('.fanta-roster-creator-link');
+        return {card:card.getBoundingClientRect().width,link:link?.getBoundingClientRect().width||0};
+      });
+      expect(widths.link).toBeGreaterThan(widths.card * .88);
+    }
   }
 });
 
