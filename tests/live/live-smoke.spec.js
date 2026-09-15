@@ -61,7 +61,11 @@ test('torneo live corrente carica dati e tab principali', async ({ page, request
   await expect(page.locator('#classifiche.active .classifiche-switch-btn')).toHaveCount(3);
   await expect(page.locator('#classifiche .classifiche-switch-btn').filter({ hasText: 'Classifiche' })).toBeVisible();
   const hasHighlightData = await page.evaluate(() => !!currentMvpOfTournament() || !!wrappedBestKeeper() || classificheTopScorers(5).length>0);
-  if (hasHighlightData) await expect(page.locator('#classifiche .classifiche-highlights')).toBeVisible();
+  const mobileClassifiche = await page.evaluate(() => matchMedia('(max-width:720px)').matches);
+  if (hasHighlightData) {
+    if (mobileClassifiche) await expect(page.locator('#classifiche .classifiche-highlights')).toBeVisible();
+    else await expect(page.locator('#classifiche .classifiche-highlights')).toBeHidden();
+  }
   await page.getByRole('tab', { name: /Andamento/i }).click();
   await expect(page.locator('#chartClassificheAndamento')).toBeVisible();
   await page.getByRole('tab', { name: /Proiezione/i }).click();
