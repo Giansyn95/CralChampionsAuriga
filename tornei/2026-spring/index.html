@@ -1698,7 +1698,7 @@
         backdrop-filter:none;
         box-shadow:0 8px 20px rgba(7,29,58,.10)
       }
-      .classifiche-switch-btn{padding:9px 5px;font-size:9px;border-radius:11px;white-space:nowrap}
+      .classifiche-switch-btn{padding:10px 6px;font-size:11px;line-height:1.15;letter-spacing:-.01em;border-radius:11px;white-space:nowrap}
       .classifiche-chart-card{padding:13px}.classifiche-chart-card .chart-container{height:330px}
       .projection-row{grid-template-columns:31px minmax(0,1fr) auto;padding:9px 8px}.projection-rank{width:28px;height:28px}.projection-points{font-size:16px}
       .classifiche-highlights{display:grid;grid-template-columns:1fr;gap:10px;margin:2px 0 10px}
@@ -13688,6 +13688,13 @@ function scheduleInitialFantaBootstrap(fresh,generation=_dataLoadGeneration,sign
     if(available) await loadPortieriSnapshot(!!fresh,generation,signal);
   };
   if(fresh){ run(); return; }
+  const mobile=window.matchMedia('(max-width:720px)').matches;
+  if(mobile){
+    // Su mobile la cache Fanta era gia reattiva e non bloccava la landing: la prepariamo
+    // quasi subito, senza aspettare l'idle desktop, cosi il tab e' pronto al primo tap.
+    requestAnimationFrame(()=>setTimeout(run,120));
+    return;
+  }
   const queue=()=>{
     if(!isCurrentDataLoad(generation)||signal?.aborted) return;
     if('requestIdleCallback' in window){
@@ -13697,8 +13704,8 @@ function scheduleInitialFantaBootstrap(fresh,generation=_dataLoadGeneration,sign
       },{timeout:5200});
     }else setTimeout(run,0);
   };
-  // Bootstrap automatico molto deferito: prima viene la fluidita della landing.
-  // Hover/focus/touch sul tab Fantacalcio anticipano comunque il caricamento su intenzione utente.
+  // Desktop: manteniamo il bootstrap fuori dalla finestra critica iniziale.
+  // Hover/focus sul tab Fantacalcio puo comunque anticipare il caricamento su intenzione utente.
   setTimeout(queue,2600);
 }
 
