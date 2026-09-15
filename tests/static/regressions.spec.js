@@ -89,6 +89,8 @@ test('frontend Classifiche/Riepilogo/Fantacalcio mantiene i nuovi contratti UI',
   expect(src).toContain("card.dataset.classificheKind=kind");
   expect(src).toContain("card.classList.add('classifiche-secondary-ranking')");
   expect(src).toContain('toggleClassificheMobileDetail');
+  expect(src).toContain('position:sticky!important');
+  expect(src).toContain('top:calc(env(safe-area-inset-top, 0px) + 6px)');
   expect(src).toContain("if(fantaCompactMobile()){");
   expect(src).toContain("scheduleFantaSecondaryWidgets(card,data,compact,renderToken)");
   expect(src).not.toContain('Portiere: rimosso dalla scheda partita');
