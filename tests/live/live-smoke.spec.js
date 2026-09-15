@@ -51,7 +51,23 @@ test('torneo live corrente carica dati e tab principali', async ({ page, request
   expect(text.length).toBeGreaterThan(100);
   expect(text).toMatch(/Calendario|Classifica|Squadre|Risultati/i);
 
-  const tabs = page.locator('[role="tab"]');
+  // Contratto UX corrente: Tournament Pulse è sempre la landing e Home non esiste più.
+  await expect(page.locator('#pulse.active')).toBeVisible();
+  await expect(page.locator('#tab-home')).toHaveCount(0);
+  await expect(page.locator('.pulse-dashboard-btn')).toHaveCount(0);
+
+  // Classifiche contiene le tre viste, senza impilarle tutte insieme.
+  await page.locator('#tab-classifiche').click();
+  await expect(page.locator('#classifiche.active .classifiche-switch-btn')).toHaveCount(3);
+  await expect(page.locator('#classifiche .classifiche-switch-btn').filter({ hasText: 'Classifiche' })).toBeVisible();
+  const hasHighlightData = await page.evaluate(() => !!currentMvpOfTournament() || !!wrappedBestKeeper() || classificheTopScorers(5).length>0);
+  if (hasHighlightData) await expect(page.locator('#classifiche .classifiche-highlights')).toBeVisible();
+  await page.getByRole('tab', { name: /Andamento/i }).click();
+  await expect(page.locator('#chartClassificheAndamento')).toBeVisible();
+  await page.getByRole('tab', { name: /Proiezione/i }).click();
+  await expect(page.locator('#chartClassificheProiezione')).toBeVisible();
+
+  const tabs = page.locator('#tabs [role="tab"]');
   const count = await tabs.count();
   expect(count).toBeGreaterThanOrEqual(4);
   for (let i = 0; i < Math.min(count, 8); i++) {
