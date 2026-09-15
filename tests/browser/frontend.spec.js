@@ -86,21 +86,29 @@ for (const torneo of active) {
     const playedMatches = await page.evaluate(() => tournamentInsightMatches().filter(m => String(m.homeGoals) !== '' && String(m.awayGoals) !== '').length);
     if (playedMatches > 0) expect(await page.locator('#pulse .pulse-record').count()).toBeGreaterThan(0);
 
-    // La vista Classifiche espone gli highlight compatti subito sotto la classifica squadre.
+    // Gli highlight sono un riepilogo premium solo mobile; su desktop restano le classifiche estese.
     await page.locator('#tab-classifiche').click();
     await expect(page.locator('#classifiche .classifiche-switch-btn').filter({ hasText: 'Classifiche' })).toBeVisible();
+    const mobileClassifiche = await page.evaluate(() => matchMedia('(max-width:720px)').matches);
     const highlightAvailability = await page.evaluate(() => ({
       mvp: !!currentMvpOfTournament(),
       keeper: !!wrappedBestKeeper(),
       scorers: classificheTopScorers(5).length
     }));
+    const highlights = page.locator('#classifiche .classifiche-highlights');
     if (highlightAvailability.mvp || highlightAvailability.keeper || highlightAvailability.scorers) {
-      await expect(page.locator('#classifiche .classifiche-highlights')).toBeVisible();
-      if (highlightAvailability.mvp) await expect(page.locator('#classifiche .classifiche-highlight-card.is-mvp')).toBeVisible();
-      if (highlightAvailability.keeper) await expect(page.locator('#classifiche .classifiche-highlight-card.is-keeper')).toBeVisible();
-      if (highlightAvailability.scorers) {
-        await expect(page.locator('#classifiche .classifiche-highlight-card.is-scorers')).toBeVisible();
-        expect(await page.locator('#classifiche .classifiche-top5-row').count()).toBe(Math.min(5, highlightAvailability.scorers));
+      if (mobileClassifiche) {
+        await expect(highlights).toBeVisible();
+        await expect(page.locator('#classifiche .classifiche-mobile-ranking-actions')).toBeVisible();
+        if (highlightAvailability.mvp) await expect(page.locator('#classifiche .classifiche-highlight-card.is-mvp')).toBeVisible();
+        if (highlightAvailability.keeper) await expect(page.locator('#classifiche .classifiche-highlight-card.is-keeper')).toBeVisible();
+        if (highlightAvailability.scorers) {
+          await expect(page.locator('#classifiche .classifiche-highlight-card.is-scorers')).toBeVisible();
+          expect(await page.locator('#classifiche .classifiche-top5-row').count()).toBe(Math.min(5, highlightAvailability.scorers));
+        }
+      } else {
+        await expect(highlights).toBeHidden();
+        await expect(page.locator('#classifiche .classifiche-mobile-ranking-actions')).toBeHidden();
       }
     }
 
@@ -109,6 +117,10 @@ for (const torneo of active) {
     const topScorer = await page.evaluate(() => tournamentInsightScorers().sort((a,b) => a.position-b.position)[0] || null);
     if (topScorer) {
       await page.evaluate(() => showTab('classifiche', false, { skipRoute:true }));
+      if (await page.evaluate(() => matchMedia('(max-width:720px)').matches)) {
+        const marcatoriBtn=page.locator('#classifiche .classifiche-mobile-ranking-btn[data-classifiche-target="marcatori"]');
+        if (await marcatoriBtn.count()) await marcatoriBtn.click();
+      }
       const playerLink = page.locator('#classifiche .player-link').filter({ hasText: topScorer.name }).first();
       await expect(playerLink, `Link giocatore non trovato per ${topScorer.name}`).toBeVisible();
       await playerLink.click();
@@ -199,6 +211,21 @@ test("mobile: Pulse è la landing unica, Classifiche è compatta e il Wrapped re
   await page.locator('#classifiche .classifiche-switch-btn').filter({ hasText: 'Classifiche' }).click();
   await expect(page.locator('#chartClassificheAndamento')).toHaveCount(0);
   await expect(page.locator('#chartClassificheProiezione')).toHaveCount(0);
+
+  // Mobile: protagonisti subito visibili; le classifiche individuali estese si aprono una alla volta.
+  const hasHighlightData = await page.evaluate(() => !!currentMvpOfTournament() || !!wrappedBestKeeper() || classificheTopScorers(5).length>0);
+  if (hasHighlightData) {
+    await expect(page.locator('#classifiche .classifiche-highlights')).toBeVisible();
+    await expect(page.locator('#classifiche .classifiche-mobile-ranking-actions')).toBeVisible();
+    const marcatoriBtn=page.locator('#classifiche .classifiche-mobile-ranking-btn[data-classifiche-target="marcatori"]');
+    if (await marcatoriBtn.count()) {
+      await expect(page.locator('#classifiche .classifiche-secondary-ranking[data-classifiche-kind="marcatori"]')).toBeHidden();
+      await marcatoriBtn.click();
+      await expect(page.locator('#classifiche .classifiche-secondary-ranking[data-classifiche-kind="marcatori"]')).toBeVisible();
+      await expect(marcatoriBtn).toHaveAttribute('aria-expanded','true');
+      await expect(page.locator('#classifiche .classifiche-secondary-ranking[data-classifiche-kind="mvp"]')).toBeHidden();
+    }
+  }
 
   // Fantacalcio mobile costruisce solo le card: la tabella desktop non viene più creata inutilmente.
   if (await page.locator('#tab-fantacalcio').count()) {

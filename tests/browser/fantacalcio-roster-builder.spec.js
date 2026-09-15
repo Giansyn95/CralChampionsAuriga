@@ -102,7 +102,7 @@ test('il tab Fantacalcio espone il link al generatore senza alterare la navigazi
   const intro = page.locator('.fanta-claim');
   await expect(link).toBeVisible();
   await expect(link).toHaveAttribute('href', 'crea-rosa.html');
-  await expect(intro).toContainText('Scegli la giornata');
+  await expect(intro).toContainText('Ogni punto pesa.');
   const order = await page.locator('.fanta-card-shell').evaluate(card => {
     const cta = card.querySelector('.fanta-roster-creator-cta');
     const claim = card.querySelector('.fanta-claim');
