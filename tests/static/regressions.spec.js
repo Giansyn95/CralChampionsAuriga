@@ -89,6 +89,13 @@ test('landing Hall of Fame usa il marchio premium European-nights SVG', async ()
   expect(src).toContain('Bomber all-time');
   expect(src).toContain('Portieri');
   expect(src).not.toContain('<div class="hall-icon" aria-hidden="true">🏆</div>');
+  // Su mobile il teaser resta premium ma compatto: icona e titolo condividono la prima riga,
+  // mentre descrizione, record e CTA sfruttano tutta la larghezza.
+  expect(src).toContain('grid-template-columns:64px minmax(0,1fr)');
+  expect(src).toContain('.hall-icon{grid-column:1;grid-row:1/3;width:64px;height:64px');
+  expect(src).toContain('.hall-copy{display:contents}');
+  expect(src).toContain('.hall-copy h2{grid-column:2;grid-row:2');
+  expect(src).toContain('.hall-open-btn{grid-column:1/-1;grid-row:5');
 });
 
 test('frontend Classifiche/Riepilogo/Fantacalcio mantiene i nuovi contratti UI', async () => {
