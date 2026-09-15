@@ -46,6 +46,7 @@ test('landing page carica senza errori locali critici', async ({ page, request }
 test('Hall of Fame dalla landing aggrega le edizioni concluse', async ({ page }) => {
   const errors = collectRuntimeErrors(page);
   await page.goto('/', { waitUntil: 'domcontentloaded' });
+  await expect(page.locator('.hall-icon .hall-champions-mark')).toBeVisible();
   await page.locator('#hallOpenBtn').click();
   await expect(page.locator('#hallPanel')).toBeVisible();
   const completed = registry.tornei.filter(t => t.attivo !== false && /conclus/i.test(String(t.stato || '')));
@@ -238,8 +239,15 @@ test("mobile: Pulse è la landing unica, Classifiche è compatta e il Wrapped re
     }
   }
 
+  // Desktop: dopo il caricamento cache il Fantacalcio viene preparato in idle mentre il tab è ancora nascosto.
+  // Il primo click non deve quindi costruire la tabella da zero sul thread principale.
+  if (await page.locator('#tab-fantacalcio').count() && await page.evaluate(() => innerWidth > 720)) {
+    await page.waitForFunction(() => !!document.querySelector('#fantacalcio .fanta-table-desktop'), null, { timeout: 5000 });
+    await expect(page.locator('#fantacalcio .fanta-table-desktop')).toHaveCount(1);
+  }
+
   // Fantacalcio mobile costruisce solo le card: la tabella desktop non viene più creata inutilmente.
-  if (await page.locator('#tab-fantacalcio').count()) {
+  if (await page.locator('#tab-fantacalcio').count() && await page.evaluate(() => innerWidth <= 720)) {
     await page.locator('#tab-fantacalcio').click();
     await expect(page.locator('#fantacalcio.active .fanta-mobile-list')).toBeVisible({ timeout: 4000 });
     await expect(page.locator('#fantacalcio.active .fanta-table-desktop')).toHaveCount(0);
