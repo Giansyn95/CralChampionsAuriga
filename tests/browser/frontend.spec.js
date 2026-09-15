@@ -200,6 +200,15 @@ test("mobile: Pulse è la landing unica, Classifiche è compatta e il Wrapped re
   const switches = page.locator('#classifiche .classifiche-switch-btn');
   await expect(switches).toHaveCount(3);
 
+  // Il selettore Classifiche / Andamento / Proiezione resta ancorato in alto durante lo scroll mobile.
+  const classSwitch = page.locator('#classifiche .classifiche-switch');
+  await classSwitch.scrollIntoViewIfNeeded();
+  await page.evaluate(() => window.scrollBy(0, 700));
+  await page.waitForTimeout(120);
+  const stickyTop = await classSwitch.evaluate(el => el.getBoundingClientRect().top);
+  expect(stickyTop).toBeGreaterThanOrEqual(0);
+  expect(stickyTop).toBeLessThanOrEqual(24);
+
   await page.getByRole('tab', { name: /Andamento/i }).click();
   await expect(page.locator('#chartClassificheAndamento')).toBeVisible();
   await expect(page.locator('#chartClassificheProiezione')).toHaveCount(0);
