@@ -85,6 +85,9 @@ test('landing Hall of Fame usa il marchio premium European-nights SVG', async ()
   expect(src).toContain('class="hall-elite-cup"');
   expect(src).toContain('class="hall-elite-spark"');
   expect(src).toContain('hallEliteGold');
+  expect(src).toContain('class="hall-feature-list"');
+  expect(src).toContain('Bomber all-time');
+  expect(src).toContain('Portieri');
   expect(src).not.toContain('<div class="hall-icon" aria-hidden="true">🏆</div>');
 });
 
@@ -100,10 +103,13 @@ test('frontend Classifiche/Riepilogo/Fantacalcio mantiene i nuovi contratti UI',
   expect(src).toContain('toggleClassificheMobileDetail');
   expect(src).toContain('position:static!important');
   expect(src).toContain('top:auto!important');
+  expect(src).toContain('font-size:11px;line-height:1.15');
   expect(src).toContain("if(fantaCompactMobile()){");
   expect(src).toContain("scheduleFantaSecondaryWidgets(card,data,compact,renderToken)");
   expect(src).toContain("const QUICK_TAB_IDS = new Set(['classifiche','risultati','fantacalcio'])");
   expect(src).toContain('function scheduleInitialFantaBootstrap(');
+  expect(src).toContain("const mobile=window.matchMedia('(max-width:720px)').matches");
+  expect(src).toContain('requestAnimationFrame(()=>setTimeout(run,120))');
   expect(src).toContain("setTimeout(queue,2600)");
   expect(src).toContain('function primeFantacalcioOnIntent()');
   expect(src).toContain("b.addEventListener('pointerenter',primeFantacalcioOnIntent");
