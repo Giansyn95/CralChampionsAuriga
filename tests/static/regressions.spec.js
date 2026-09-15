@@ -85,6 +85,10 @@ test('frontend Classifiche/Riepilogo/Fantacalcio mantiene i nuovi contratti UI',
   expect(src).toContain("className='classifiche-highlights'");
   expect(src).toContain('Top 5 marcatori');
   expect(src).toContain('Miglior portiere');
+  expect(src).toContain("className='classifiche-mobile-ranking-actions'");
+  expect(src).toContain("card.dataset.classificheKind=kind");
+  expect(src).toContain("card.classList.add('classifiche-secondary-ranking')");
+  expect(src).toContain('toggleClassificheMobileDetail');
   expect(src).toContain("if(fantaCompactMobile()){");
   expect(src).toContain("scheduleFantaSecondaryWidgets(card,data,compact,renderToken)");
   expect(src).not.toContain('Portiere: rimosso dalla scheda partita');
