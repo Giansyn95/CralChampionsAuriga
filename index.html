@@ -351,15 +351,32 @@
           return (ap||9999)-(bp||9999);
         })[0]||null;
       }
-      function addAggregate(map,name,value){
+      // editionRank: chiave numerica crescente per ordinare le edizioni in ordine
+      // cronologico (dalla più vecchia alla più recente), usata per capire chi ha
+      // ottenuto un certo record per primo quando due protagonisti sono a pari valore.
+      const editionRank=t=>{ const o=Number(t?.ordine); if(Number.isFinite(o)&&o) return o; const y=Number(t?.anno); return Number.isFinite(y)?y*10:9e15; };
+      function addAggregate(map,name,value,rank,label){
         name=txt(name); value=num(value); if(!name||!value) return;
-        const k=key(name); if(!map.has(k)) map.set(k,{name,value:0}); const item=map.get(k); item.value+=value;
+        const k=key(name);
+        if(!map.has(k)) map.set(k,{name,value:0,firstRank:rank,firstLabel:label});
+        const item=map.get(k); item.value+=value;
+        // Ricorda l'edizione più vecchia in cui il protagonista compare in classifica:
+        // serve a stabilire chi ha "il record da più tempo" in caso di parità.
+        if(rank<item.firstRank){ item.firstRank=rank; item.firstLabel=label; }
       }
-      function best(map){ return [...map.values()].sort((a,b)=>b.value-a.value||a.name.localeCompare(b.name,'it'))[0]||null; }
+      // A parità di valore vince chi ha raggiunto per primo quel traguardo
+      // (edizione cronologicamente più vecchia); solo come ultimissima risorsa
+      // si usa l'ordine alfabetico, per garantire un risultato deterministico.
+      function best(map){ return [...map.values()].sort((a,b)=>b.value-a.value||a.firstRank-b.firstRank||a.name.localeCompare(b.name,'it'))[0]||null; }
       function build(editions){
-        const completed=(editions||[]).filter(e=>e&&e.completed!==false);
-        const titles=new Map(),goals=new Map(),mvpPoints=new Map(),keeperPoints=new Map();
+        // Le squadre del torneo cambiano ad ogni edizione, quindi ordiniamo le
+        // edizioni concluse in ordine cronologico crescente: è l'unico modo per
+        // sapere con certezza chi ha stabilito un record "per primo".
+        const completed=(editions||[]).filter(e=>e&&e.completed!==false)
+          .slice().sort((a,b)=>editionRank(a.tournament)-editionRank(b.tournament));
+        const goals=new Map(),mvpPoints=new Map(),keeperPoints=new Map();
         const history=[];
+        let firstChampion=null;
         completed.forEach(e=>{
           const standings=e.standings||[],scorers=e.scorers||[],mvps=e.mvps||[],keepers=e.keepers||[];
           const championRow=topRow(standings,['Posizione','Pos','Rank']);
@@ -373,14 +390,15 @@
           const scorerGoals=num(field(scorerRow,['Gol','Goal','Reti']));
           const mvpValue=num(field(mvpRow,['PuntiMVP','Punti','Points']));
           const keeperValue=num(field(keeperRow,['Punti','PuntiPortiere','Points']));
-          if(champion) addAggregate(titles,champion,1);
-          scorers.forEach(r=>addAggregate(goals,field(r,['Giocatore','Player','PlayerName','Nome']),field(r,['Gol','Goal','Reti'])));
-          mvps.forEach(r=>addAggregate(mvpPoints,field(r,['Giocatore','Player','PlayerName','Nome']),field(r,['PuntiMVP','Punti','Points'])));
-          keepers.forEach(r=>addAggregate(keeperPoints,field(r,['Portiere','Giocatore','Player','PlayerName','Nome']),field(r,['Punti','PuntiPortiere','Points'])));
+          const rank=editionRank(e.tournament), label=txt(e.tournament?.anno||e.tournament?.stagione||'');
+          if(champion && !firstChampion) firstChampion={name:champion,value:label,tournament:e.tournament};
+          scorers.forEach(r=>addAggregate(goals,field(r,['Giocatore','Player','PlayerName','Nome']),field(r,['Gol','Goal','Reti']),rank,label));
+          mvps.forEach(r=>addAggregate(mvpPoints,field(r,['Giocatore','Player','PlayerName','Nome']),field(r,['PuntiMVP','Punti','Points']),rank,label));
+          keepers.forEach(r=>addAggregate(keeperPoints,field(r,['Portiere','Giocatore','Player','PlayerName','Nome']),field(r,['Punti','PuntiPortiere','Points']),rank,label));
           history.push({tournament:e.tournament,champion,topScorer,scorerGoals,topMvp,mvpValue,topKeeper,keeperValue});
         });
         history.sort((a,b)=>Number(b.tournament?.ordine||0)-Number(a.tournament?.ordine||0)||Number(b.tournament?.anno||0)-Number(a.tournament?.anno||0));
-        return {editions:completed.length,history,mostTitles:best(titles),allTimeScorer:best(goals),allTimeMvp:best(mvpPoints),allTimeKeeper:best(keeperPoints)};
+        return {editions:completed.length,history,firstChampion,allTimeScorer:best(goals),allTimeMvp:best(mvpPoints),allTimeKeeper:best(keeperPoints)};
       }
       return {parseCsv,build};
     })();
@@ -574,7 +592,7 @@
       const content=document.getElementById('hallContent');
       document.getElementById('hallSubtitle').textContent=data.editions===1?'1 edizione conclusa nella storia CRAL Champions.':`${data.editions} edizioni concluse nella storia CRAL Champions.`;
       const records=[
-        hallRecord('🏆','Pluricampione',data.mostTitles,data.mostTitles?.value===1?'titolo':'titoli'),
+        hallRecord('🥇','Primo Campione',data.firstChampion,'edizione d\'esordio'),
         hallRecord('⚽','Bomber all-time',data.allTimeScorer,'gol'),
         hallRecord('⭐','Re MVP',data.allTimeMvp,'pt'),
         hallRecord('🧤','Portiere dei record',data.allTimeKeeper,'pt')
