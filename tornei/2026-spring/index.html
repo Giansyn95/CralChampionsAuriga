@@ -1719,6 +1719,31 @@
     .classifiche-top5-avatar{width:30px;height:30px;border-radius:9px;object-fit:cover;background:var(--soft);border:1px solid var(--line)}.classifiche-top5-copy{min-width:0}
     .classifiche-top5-name{display:block;font-size:11px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.classifiche-top5-team{display:block;margin-top:1px;color:var(--muted);font-size:8px;font-weight:750;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .classifiche-top5-goals{color:var(--blue);font-size:14px;font-weight:950;white-space:nowrap}
+    /* ── Riga del #1 marcatore: stesso trattamento "carta FIFA" premium delle
+       card MVP/Portiere, applicato solo al vero record-holder della lista
+       (le altre 4 righe restano pulite per non appesantire la lettura). */
+    .classifiche-top5-row:first-child{
+      position:relative;isolation:isolate;overflow:hidden;
+      margin:0 -8px 2px;padding:9px 8px;border-radius:14px;
+      border:1px solid transparent;
+      background-clip:padding-box,border-box;background-origin:padding-box,border-box;
+      background-image:linear-gradient(160deg,#2a1c06 0%,#140d03 48%,#2a1c06 100%),linear-gradient(135deg,#fff2bf,#f5b942 35%,#8a5a00 65%,#fff2bf 100%);
+      box-shadow:0 10px 22px rgba(138,90,0,.32),inset 0 1px 0 rgba(255,255,255,.18);
+      transition:transform .18s ease;
+    }
+    .classifiche-top5-row:first-child:active{transform:scale(.98)}
+    .classifiche-top5-row:first-child>*{position:relative;z-index:1}
+    .classifiche-top5-row:first-child:after{
+      content:"";position:absolute;inset:0;z-index:2;pointer-events:none;border-radius:inherit;
+      background:linear-gradient(115deg,transparent 22%,rgba(255,255,255,.55) 36%,rgba(255,255,255,.05) 48%,transparent 62%);
+      background-size:240% 240%;background-position:-60% -60%;mix-blend-mode:overlay;
+      animation:cralFifaShine 4.8s ease-in-out infinite;
+    }
+    .classifiche-top5-row:first-child .classifiche-top5-rank{background:linear-gradient(145deg,#ffe38a,#d69b17);border-color:#fff2bf;color:#5c3d00;box-shadow:0 0 10px rgba(255,216,107,.55)}
+    .classifiche-top5-row:first-child .classifiche-top5-avatar{border-color:rgba(255,255,255,.4);box-shadow:0 4px 12px rgba(0,0,0,.4),0 0 0 2px rgba(255,255,255,.12)}
+    .classifiche-top5-row:first-child .classifiche-top5-name,.classifiche-top5-row:first-child:hover .classifiche-top5-name{background:linear-gradient(120deg,#fff6d9,#ffd86b 45%,#f6c453 60%,#fff6d9);-webkit-background-clip:text;background-clip:text;color:transparent}
+    .classifiche-top5-row:first-child .classifiche-top5-team{color:rgba(255,255,255,.68)}
+    .classifiche-top5-row:first-child .classifiche-top5-goals{color:#ffe38a;text-shadow:0 0 12px rgba(255,216,107,.55)}
     .classifiche-mobile-ranking-actions{display:none}
     .classifiche-secondary-ranking{display:block}
     @media(max-width:720px){
