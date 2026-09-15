@@ -46,7 +46,7 @@ test('landing page carica senza errori locali critici', async ({ page, request }
 test('Hall of Fame dalla landing aggrega le edizioni concluse', async ({ page }) => {
   const errors = collectRuntimeErrors(page);
   await page.goto('/', { waitUntil: 'domcontentloaded' });
-  await expect(page.locator('.hall-icon .hall-champions-mark')).toBeVisible();
+  await expect(page.locator('.hall-icon .hall-elite-mark')).toBeVisible();
   await page.locator('#hallOpenBtn').click();
   await expect(page.locator('#hallPanel')).toBeVisible();
   const completed = registry.tornei.filter(t => t.attivo !== false && /conclus/i.test(String(t.stato || '')));
