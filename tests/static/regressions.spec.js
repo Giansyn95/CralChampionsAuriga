@@ -104,7 +104,10 @@ test('frontend Classifiche/Riepilogo/Fantacalcio mantiene i nuovi contratti UI',
   expect(src).toContain("scheduleFantaSecondaryWidgets(card,data,compact,renderToken)");
   expect(src).toContain("const QUICK_TAB_IDS = new Set(['classifiche','risultati','fantacalcio'])");
   expect(src).toContain('function scheduleInitialFantaBootstrap(');
-  expect(src).toContain("setTimeout(queue,1200)");
+  expect(src).toContain("setTimeout(queue,2600)");
+  expect(src).toContain('function primeFantacalcioOnIntent()');
+  expect(src).toContain("b.addEventListener('pointerenter',primeFantacalcioOnIntent");
+  expect(src).toContain("if(!window.matchMedia('(min-width:721px)').matches) return;");
   expect(src).toContain("if(id==='fantacalcio' && state.fantaPrecomputedData)");
   expect(src).not.toContain('function warmDesktopFantacalcio()');
   expect(src).not.toContain('data/fantacalcio/fantacalcio_cache.json" as="fetch"');
@@ -114,3 +117,15 @@ test('frontend Classifiche/Riepilogo/Fantacalcio mantiene i nuovi contratti UI',
   expect(src).toContain('grid-template-columns:44px minmax(0,1fr) 28px');
   expect(src).not.toContain('Portiere: rimosso dalla scheda partita');
 });
+
+test('frontend quality pass mantiene accessibilita, touch target e navigazione mobile compatta', async () => {
+  const src = read('tornei/2026-spring/index.html');
+  expect(src).toContain('--tap-target:44px');
+  expect(src).toContain('scroll-snap-type:x proximity');
+  expect(src).toContain('function centerActiveTournamentTab(button)');
+  expect(src).toContain('class="skip-link" href="#tabs"');
+  expect(src).toContain('id="status" role="status" aria-live="polite"');
+  expect(src).toContain(':where(button,a,input,select,summary,[role="button"],[role="tab"]):focus-visible');
+  expect(src).toContain('min-height:var(--tap-target)');
+});
+
