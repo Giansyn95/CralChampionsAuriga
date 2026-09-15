@@ -22,6 +22,7 @@
        in rete, quindi appare istantaneo anche offline. -->
   <link rel="preload" as="image" href="immagini/logo_cral.png" fetchpriority="high" />
   <title>CRAL Champions</title>
+  <link rel="preload" href="data/fantacalcio/fantacalcio_cache.json" as="fetch" crossorigin="anonymous">
   <!-- Open Graph: anteprima link su WhatsApp, Telegram, Facebook ecc.
        Letti dai crawler senza eseguire JavaScript, quindi i valori restano fissi
        (non vengono presi dal config.csv, che è dinamico). L'URL punta al repository
@@ -12473,6 +12474,7 @@ function ensureFantaDataInBackground(fresh,generation=_dataLoadGeneration,signal
       renderTabs();
       if(typeof cralNavScheduleApplyRoute==='function') cralNavScheduleApplyRoute(true);
       if(state.activeTab==='fantacalcio') renderFantacalcio();
+      else warmDesktopFantacalcio();
 
       if(!fresh){
         scheduleFantaLiveHydration(false,generation,signal);
@@ -13483,7 +13485,7 @@ function fantaFoldSection(title,node){
 let _fantaUiRenderToken=0;
 function scheduleFantaSecondaryWidgets(card,data,compact,token){
   const run=()=>{
-    if(token!==_fantaUiRenderToken || !card.isConnected || state.activeTab!=='fantacalcio') return;
+    if(token!==_fantaUiRenderToken || !card.isConnected) return;
     if((state.selectedFantaGiornata||'totale')==='totale'){
       const chart=fantaBuildChart(data);
       if(chart){ const fold=fantaFoldSection('📈 Andamento classifica',chart); if(fold) card.appendChild(fold); }
@@ -13572,9 +13574,16 @@ function renderFantacalcio(){
 /* Il tab usa la cache precalcolata per il primo paint e verifica poi le rose reali in data/giornataX/: i file live diventano la sorgente autorevole per partecipanti e punteggi. */
 
 /* Renderizza SOLO la sezione attiva per efficienza */
-const QUICK_TAB_IDS = new Set(['classifiche','risultati']);
+const QUICK_TAB_IDS = new Set(['classifiche','risultati','fantacalcio']);
 const _quickTabRenderSignatures = new Map();
-function quickTabRenderSignature(id){ return id+'|'+_dataLoadGeneration+'|'+norm(state.search); }
+function quickTabRenderSignature(id){
+  if(id==='fantacalcio'){
+    return id+'|'+_dataLoadGeneration+'|'+(state.selectedFantaGiornata||'totale')+'|'+
+      String(state.fantaPrecomputedData?.generatedAt||state.fantaPrecomputedData?.results?.length||0)+'|'+
+      fantaRosterFiles().length+'|'+fantaListoneFiles().length;
+  }
+  return id+'|'+_dataLoadGeneration+'|'+norm(state.search);
+}
 function markQuickTabRendered(id){ if(QUICK_TAB_IDS.has(id)) _quickTabRenderSignatures.set(id,quickTabRenderSignature(id)); }
 function quickTabIsReady(id){ return QUICK_TAB_IDS.has(id) && _quickTabRenderSignatures.get(id)===quickTabRenderSignature(id); }
 function renderSectionById(id){
@@ -13607,6 +13616,17 @@ function warmDesktopPrimaryTabs(){
   // Prepara i due tab nascosti nei tempi morti: il primo click deve limitarsi a mostrarli,
   // senza costruire tabelle e righe proprio durante l'interazione dell'utente.
   requestIdleCallback(step,{timeout:700});
+}
+function warmDesktopFantacalcio(){
+  if(!window.matchMedia('(min-width:721px)').matches) return;
+  if(!state.fantaPrecomputedData || state.activeTab==='fantacalcio' || quickTabIsReady('fantacalcio')) return;
+  const generation=_dataLoadGeneration;
+  const run=()=>{
+    if(generation!==_dataLoadGeneration || state.activeTab==='fantacalcio' || !state.fantaPrecomputedData || quickTabIsReady('fantacalcio')) return;
+    renderSectionById('fantacalcio');
+  };
+  if('requestIdleCallback' in window) requestIdleCallback(run,{timeout:850});
+  else setTimeout(run,80);
 }
 function renderAll(){ updateTitle(); renderTabs(); syncGlobalSearchVisibility(); renderActiveSection(); if(typeof cralNavScheduleApplyRoute==='function') cralNavScheduleApplyRoute(true); }
 
@@ -13830,6 +13850,7 @@ async function loadFantaSourceFilesInBackground(fresh=false,generation=_dataLoad
     warmMatchCenterFantaCaches();
   }catch(e){ _fantaCurrentDataCache=null; }
   if(state.activeTab==='fantacalcio') renderFantacalcio();
+  else warmDesktopFantacalcio();
   return true;
 }
 
