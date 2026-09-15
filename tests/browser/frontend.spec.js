@@ -239,13 +239,6 @@ test("mobile: Pulse è la landing unica, Classifiche è compatta e il Wrapped re
     }
   }
 
-  // Desktop: dopo il caricamento cache il Fantacalcio viene preparato in idle mentre il tab è ancora nascosto.
-  // Il primo click non deve quindi costruire la tabella da zero sul thread principale.
-  if (await page.locator('#tab-fantacalcio').count() && await page.evaluate(() => innerWidth > 720)) {
-    await page.waitForFunction(() => !!document.querySelector('#fantacalcio .fanta-table-desktop'), null, { timeout: 5000 });
-    await expect(page.locator('#fantacalcio .fanta-table-desktop')).toHaveCount(1);
-  }
-
   // Fantacalcio mobile costruisce solo le card: la tabella desktop non viene più creata inutilmente.
   if (await page.locator('#tab-fantacalcio').count() && await page.evaluate(() => innerWidth <= 720)) {
     await page.locator('#tab-fantacalcio').click();
@@ -268,6 +261,46 @@ test("mobile: Pulse è la landing unica, Classifiche è compatta e il Wrapped re
       });
       expect(widths.link).toBeGreaterThan(widths.card * .88);
     }
+  }
+});
+
+
+
+test('mobile: tutti i tab del torneo restano nella viewport e la navigazione mantiene touch target adeguati', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'iphone', 'Specifico per progetto iPhone');
+  const torneo = active[0];
+  test.skip(!torneo, 'Nessun torneo attivo');
+  const url = '/' + String(torneo.url || `${torneo.cartella}/`).replace(/^\/+/, '');
+  await page.goto(url, { waitUntil: 'domcontentloaded' });
+  await expect(page.locator('#tab-pulse')).toBeVisible({ timeout: 5000 });
+
+  const tabIds = await page.locator('#tabs .tab').evaluateAll(nodes => nodes.map(n => n.dataset.tab).filter(Boolean));
+  expect(tabIds.length).toBeGreaterThan(4);
+
+  for (const id of tabIds) {
+    const tab = page.locator(`#tab-${id}`);
+    const box = await tab.boundingBox();
+    expect(box?.height || 0, `Touch target troppo basso per ${id}`).toBeGreaterThanOrEqual(40);
+    await tab.click();
+    await page.waitForTimeout(180);
+    const metrics = await page.evaluate(() => ({
+      viewport: innerWidth,
+      scrollWidth: document.documentElement.scrollWidth,
+      bodyWidth: document.body.scrollWidth
+    }));
+    expect(metrics.scrollWidth, `Overflow orizzontale nel tab ${id}`).toBeLessThanOrEqual(metrics.viewport + 2);
+    expect(metrics.bodyWidth, `Overflow body nel tab ${id}`).toBeLessThanOrEqual(metrics.viewport + 2);
+  }
+
+  // Il tab attivo viene riportato automaticamente nella porzione visibile della barra orizzontale.
+  if (tabIds.includes('fantacalcio')) {
+    await page.locator('#tab-fantacalcio').click();
+    await page.waitForTimeout(380);
+    const visible = await page.locator('#tab-fantacalcio').evaluate(el => {
+      const r=el.getBoundingClientRect();
+      return r.left >= -1 && r.right <= innerWidth + 1;
+    });
+    expect(visible).toBeTruthy();
   }
 });
 

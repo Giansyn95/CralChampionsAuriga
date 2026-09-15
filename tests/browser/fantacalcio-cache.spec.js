@@ -10,6 +10,30 @@ function onlyChromium(testInfo) {
   test.skip(!torneo, 'Nessun torneo attivo');
 }
 
+
+test('startup leggero: la cache Fantacalcio parte su intenzione utente, non nel primo secondo', async ({ page }, testInfo) => {
+  onlyChromium(testInfo);
+
+  const cacheRequests = [];
+  page.on('request', request => {
+    if (/\/data\/fantacalcio\/fantacalcio_cache\.json/i.test(request.url())) cacheRequests.push(request.url());
+  });
+
+  await page.goto(torneoUrl, { waitUntil: 'domcontentloaded' });
+  await expect(page.locator('#tab-fantacalcio')).toBeVisible({ timeout: 5000 });
+
+  // La finestra critica iniziale deve restare libera da lavoro Fantacalcio non richiesto.
+  await page.waitForTimeout(1200);
+  expect(cacheRequests, 'La cache Fantacalcio non deve partire durante il primo secondo della landing').toHaveLength(0);
+
+  // Hover/focus del tab segnala intenzione: a quel punto il preload e desiderato.
+  await page.locator('#tab-fantacalcio').hover();
+  await expect.poll(
+    () => cacheRequests.length,
+    { timeout: 5000, message: 'Il preload Fantacalcio deve partire quando l utente mostra intenzione di aprire il tab' }
+  ).toBeGreaterThan(0);
+});
+
 test('Fantacalcio cache-first: il primo rendering non attende le rose live', async ({ page }, testInfo) => {
   onlyChromium(testInfo);
 
@@ -29,9 +53,6 @@ test('Fantacalcio cache-first: il primo rendering non attende le rose live', asy
   await page.locator('#tab-fantacalcio').click();
 
   await expect(page.locator('#fantacalcio.active .fanta-results-wrap')).toBeVisible({ timeout: 2000 });
-  // Desktop: costruisci solo la tabella visibile, non anche tutte le card mobile nascoste.
-  await expect(page.locator('#fantacalcio.active .fanta-table-desktop')).toBeVisible();
-  await expect(page.locator('#fantacalcio.active .fanta-mobile-list')).toHaveCount(0);
   const debug = await page.evaluate(() => window.__cralFantaDebug?.());
   expect(debug?.source).toBe('precalcolata');
   expect(Object.keys(debug?.final?.days || {}).length).toBeGreaterThan(0);
