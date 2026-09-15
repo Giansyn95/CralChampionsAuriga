@@ -72,10 +72,11 @@ for (const torneo of active) {
     expect(text.length).toBeGreaterThan(100);
     expect(text).toMatch(/Calendario|Classifica|Squadre|Risultati/i);
 
-    // Landing intelligente: torneo aperto -> Pulse, torneo concluso -> Home/Dashboard.
-    const expectedLanding = await page.evaluate(() => isTournamentComplete() ? 'home' : 'pulse');
+    // Tournament Pulse è la landing unica, sia a torneo aperto sia a torneo concluso.
     const activeSection = await page.locator('.section.active').getAttribute('id');
-    expect(activeSection).toBe(expectedLanding);
+    expect(activeSection).toBe('pulse');
+    await expect(page.locator('#tab-home')).toHaveCount(0);
+    await expect(page.getByRole('button', { name: /Apri dashboard/i })).toHaveCount(0);
 
     // Tournament Pulse resta sempre raggiungibile anche a torneo concluso.
     await page.locator('#tab-pulse').click();
@@ -84,6 +85,24 @@ for (const torneo of active) {
     await expect(page.locator('#pulse .pulse-card h2').filter({ hasText: /Record/i }).first()).toBeVisible();
     const playedMatches = await page.evaluate(() => tournamentInsightMatches().filter(m => String(m.homeGoals) !== '' && String(m.awayGoals) !== '').length);
     if (playedMatches > 0) expect(await page.locator('#pulse .pulse-record').count()).toBeGreaterThan(0);
+
+    // La vista Classifiche espone gli highlight compatti subito sotto la classifica squadre.
+    await page.locator('#tab-classifiche').click();
+    await expect(page.locator('#classifiche .classifiche-switch-btn').filter({ hasText: 'Classifiche' })).toBeVisible();
+    const highlightAvailability = await page.evaluate(() => ({
+      mvp: !!currentMvpOfTournament(),
+      keeper: !!wrappedBestKeeper(),
+      scorers: classificheTopScorers(5).length
+    }));
+    if (highlightAvailability.mvp || highlightAvailability.keeper || highlightAvailability.scorers) {
+      await expect(page.locator('#classifiche .classifiche-highlights')).toBeVisible();
+      if (highlightAvailability.mvp) await expect(page.locator('#classifiche .classifiche-highlight-card.is-mvp')).toBeVisible();
+      if (highlightAvailability.keeper) await expect(page.locator('#classifiche .classifiche-highlight-card.is-keeper')).toBeVisible();
+      if (highlightAvailability.scorers) {
+        await expect(page.locator('#classifiche .classifiche-highlight-card.is-scorers')).toBeVisible();
+        expect(await page.locator('#classifiche .classifiche-top5-row').count()).toBe(Math.min(5, highlightAvailability.scorers));
+      }
+    }
 
     // Il leader marcatori deve essere apribile tramite un click reale da desktop/mobile
     // e deve mostrare gli achievement senza generare errori JavaScript.
@@ -114,7 +133,29 @@ for (const torneo of active) {
   });
 }
 
-test("mobile: Tournament Pulse -> Dashboard torna sempre all'inizio della pagina", async ({ page }, testInfo) => {
+test('Riepilogo giornata mostra il miglior portiere anche nella scheda partita', async ({ page }) => {
+  const torneo = active[0];
+  test.skip(!torneo, 'Nessun torneo attivo');
+  const url = '/' + String(torneo.url || `${torneo.cartella}/`).replace(/^\/+/, '');
+  await page.goto(url, { waitUntil: 'domcontentloaded' });
+  await page.waitForTimeout(900);
+  await page.locator('#tab-riepilogo').click();
+  await expect(page.locator('#riepilogo.active')).toBeVisible();
+
+  const expected = await page.evaluate(() => {
+    const files=sectionFiles('riepilogo');
+    const selected=state.selectedRiepilogoGiornata;
+    const file=selected ? files.find(f=>riepilogoFileHasGiornata(f,selected)) : files[files.length-1];
+    if(!file) return false;
+    const parsed=parseRiepilogoFile(file);
+    return (parsed.portiere||[]).some(r=>!selected || rowGiornataKey(r,file)===selected);
+  });
+  if (expected) {
+    await expect(page.locator('#riepilogo .riepilogo-match [aria-label="Miglior portiere"]').first()).toBeVisible();
+  }
+});
+
+test("mobile: Pulse è la landing unica, Classifiche è compatta e il Wrapped resta raggiungibile", async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'iphone', 'Specifico per progetto iPhone');
   const torneo = active[0];
   test.skip(!torneo, 'Nessun torneo attivo');
@@ -122,17 +163,49 @@ test("mobile: Tournament Pulse -> Dashboard torna sempre all'inizio della pagina
   await page.goto(url, { waitUntil: 'domcontentloaded' });
   await page.waitForTimeout(900);
 
-  await page.locator('#tab-pulse').click();
+  // Il Pulse è l'unica landing: Home e il vecchio CTA Dashboard non devono più esistere.
   await expect(page.locator('#pulse.active')).toBeVisible();
-  const button = page.locator('.pulse-dashboard-btn');
-  await button.scrollIntoViewIfNeeded();
-  await page.evaluate(() => window.scrollBy(0, Math.max(250, window.innerHeight * 0.65)));
-  expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(0);
+  await expect(page.locator('#tab-home')).toHaveCount(0);
+  await expect(page.locator('.pulse-dashboard-btn')).toHaveCount(0);
 
-  await button.click();
-  await expect(page.locator('#home.active')).toBeVisible();
-  await page.waitForFunction(() => window.scrollY === 0);
-  expect(await page.evaluate(() => window.scrollY)).toBe(0);
+  // Il Wrapped mantiene la logica originale: solo mobile + torneo concluso + dati sufficienti.
+  const complete = await page.evaluate(() => isTournamentComplete());
+  const canShowWrapped = await page.evaluate(() => {
+    return isTournamentComplete() && wrappedIsMobileDevice() && wrappedSlidesData().length > 2;
+  });
+  if (complete && canShowWrapped) {
+    const wrappedBanner = page.locator('#pulse .wrapped-banner');
+    await expect(wrappedBanner).toBeVisible();
+    await wrappedBanner.click();
+    await expect(page.locator('#wrappedOverlay')).toBeVisible();
+    await page.getByRole('button', { name: 'Chiudi' }).click();
+    await expect(page.locator('#wrappedOverlay')).toHaveCount(0);
+  }
+
+  // Su mobile Classifiche mostra una sola vista alla volta tramite i tre switch interni.
+  await page.locator('#tab-classifiche').click();
+  await expect(page.locator('#classifiche.active')).toBeVisible();
+  const switches = page.locator('#classifiche .classifiche-switch-btn');
+  await expect(switches).toHaveCount(3);
+
+  await page.getByRole('tab', { name: /Andamento/i }).click();
+  await expect(page.locator('#chartClassificheAndamento')).toBeVisible();
+  await expect(page.locator('#chartClassificheProiezione')).toHaveCount(0);
+
+  await page.getByRole('tab', { name: /Proiezione/i }).click();
+  await expect(page.locator('#chartClassificheProiezione')).toBeVisible();
+  await expect(page.locator('#chartClassificheAndamento')).toHaveCount(0);
+
+  await page.locator('#classifiche .classifiche-switch-btn').filter({ hasText: 'Classifiche' }).click();
+  await expect(page.locator('#chartClassificheAndamento')).toHaveCount(0);
+  await expect(page.locator('#chartClassificheProiezione')).toHaveCount(0);
+
+  // Fantacalcio mobile costruisce solo le card: la tabella desktop non viene più creata inutilmente.
+  if (await page.locator('#tab-fantacalcio').count()) {
+    await page.locator('#tab-fantacalcio').click();
+    await expect(page.locator('#fantacalcio.active .fanta-mobile-list')).toBeVisible({ timeout: 4000 });
+    await expect(page.locator('#fantacalcio.active .fanta-table-desktop')).toHaveCount(0);
+  }
 });
 
 test('layout mobile non crea overflow orizzontale della pagina', async ({ page }, testInfo) => {

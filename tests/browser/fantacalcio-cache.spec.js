@@ -29,6 +29,9 @@ test('Fantacalcio cache-first: il primo rendering non attende le rose live', asy
   await page.locator('#tab-fantacalcio').click();
 
   await expect(page.locator('#fantacalcio.active .fanta-results-wrap')).toBeVisible({ timeout: 2000 });
+  // Desktop: costruisci solo la tabella visibile, non anche tutte le card mobile nascoste.
+  await expect(page.locator('#fantacalcio.active .fanta-table-desktop')).toBeVisible();
+  await expect(page.locator('#fantacalcio.active .fanta-mobile-list')).toHaveCount(0);
   const debug = await page.evaluate(() => window.__cralFantaDebug?.());
   expect(debug?.source).toBe('precalcolata');
   expect(Object.keys(debug?.final?.days || {}).length).toBeGreaterThan(0);
