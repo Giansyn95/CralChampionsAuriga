@@ -1599,6 +1599,56 @@
     .player-achievements{margin-top:14px;padding:14px;border:1px solid var(--line);border-radius:18px;background:linear-gradient(145deg,var(--soft),var(--panel))}.player-achievements h3{margin:0 0 10px;font-size:13px}.achievement-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.achievement-badge{display:flex;gap:9px;align-items:flex-start;padding:10px;border-radius:14px;border:1px solid var(--line);background:var(--panel);min-width:0}.achievement-badge.is-gold{border-color:rgba(245,185,66,.55);background:color-mix(in srgb,var(--panel) 88%,#f5b942 12%)}.achievement-icon{font-size:20px;line-height:1}.achievement-copy{min-width:0}.achievement-copy b{display:block;font-size:11px}.achievement-copy span{display:block;margin-top:3px;color:var(--muted);font-size:9px;line-height:1.35}
     @media(max-width:800px){.pulse-title-row{display:block}.pulse-status{margin-top:12px}.pulse-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.pulse-grid{grid-template-columns:1fr}.pulse-records{grid-template-columns:1fr}.achievement-grid{grid-template-columns:1fr}.pulse-hero{padding:18px}.pulse-match{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr)}}
 
+
+    /* ── UI refresh: Tournament Pulse adattivo + Fantacalcio mobile compatto ── */
+    .pulse-hero{box-shadow:0 16px 36px rgba(7,29,58,.18)}
+    .pulse-kpi .n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .pulse-phase-card .pulse-records{margin-top:2px}
+    .pulse-phase-card .pulse-record-copy b{font-size:13px}
+    .pulse-phase-card .pulse-record-copy span{font-size:10.5px}
+
+    .fanta-mobile-fold{margin-top:12px;border:1px solid var(--line);border-radius:16px;background:var(--panel);overflow:hidden}
+    .fanta-mobile-fold>summary{list-style:none;cursor:pointer;padding:12px 14px;color:var(--blue);font-weight:900;font-size:13px;display:flex;align-items:center;justify-content:space-between;gap:12px;user-select:none}
+    .fanta-mobile-fold>summary::-webkit-details-marker{display:none}
+    .fanta-mobile-fold>summary::after{content:'+';display:grid;place-items:center;width:24px;height:24px;flex:0 0 24px;border-radius:50%;background:var(--soft);border:1px solid var(--line);color:var(--blue);font-size:16px;line-height:1}
+    .fanta-mobile-fold[open]>summary::after{content:'−'}
+    .fanta-mobile-fold-body{padding:0 12px 12px}
+    .fanta-mobile-card-actions{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:10px;padding-top:9px;border-top:1px solid var(--line)}
+    .fanta-mobile-squad-btn{border:1px solid rgba(15,90,168,.30);border-radius:999px;background:rgba(15,90,168,.10);color:var(--blue);font-weight:900;padding:7px 11px;cursor:pointer;font-size:11px}
+    .fanta-standing-more{margin:9px 0 0;border:0;background:transparent}
+    .fanta-standing-more>summary{cursor:pointer;list-style:none;color:var(--muted);font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.04em;display:inline-flex;align-items:center;gap:5px}
+    .fanta-standing-more>summary::-webkit-details-marker{display:none}
+    .fanta-standing-more>summary::after{content:'+';font-size:13px;color:var(--blue)}
+    .fanta-standing-more[open]>summary::after{content:'−'}
+    .fanta-card-grid.is-secondary{grid-template-columns:repeat(5,minmax(0,1fr));margin-top:8px}
+    .fanta-mobile-note{margin-top:8px;color:var(--muted);font-size:10.5px;line-height:1.35}
+
+    @media(min-width:721px){
+      .fanta-mobile-fold{margin-top:0;border:0;border-radius:0;background:transparent;overflow:visible}
+      .fanta-mobile-fold>summary{display:none}
+      .fanta-mobile-fold-body{padding:0}
+      details.fanta-mobile-fold:not([open])>.fanta-mobile-fold-body{display:block!important}
+    }
+    @media(max-width:720px){
+      /* Questa regola deve vincere sulle definizioni legacy con !important. */
+      .fanta-table-desktop{display:none!important}
+      .fanta-mobile-list{display:block!important}
+      .fanta-card-shell{overflow:visible}
+      .fanta-card-grid{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:6px}
+      .fanta-card-grid.is-secondary{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+      .fanta-card-team{display:none}
+      .fanta-standing-card{padding:12px;margin-bottom:9px}
+      .fanta-day-badge{font-size:9.5px;padding:3px 7px}
+      .fanta-score{font-size:23px}
+      .fanta-mobile-fold-body>.fanta-chart-wrap,
+      .fanta-mobile-fold-body>.fanta-h2h-wrap{margin-top:0;box-shadow:none;border:0;padding:4px 0 0;border-radius:0}
+      .fanta-mobile-fold-body>.fanta-chart-wrap .fanta-chart-title,
+      .fanta-mobile-fold-body>.fanta-h2h-wrap .fanta-h2h-title{display:none}
+      .fanta-mobile-fold-body>.fanta-rules-split{margin:0}
+      .fanta-mobile-fold-body>.fanta-rules-split{grid-template-columns:1fr;gap:8px}
+      .fanta-rule-label span{white-space:normal}
+    }
+
 </style>
 </head>
 <body>
@@ -4673,19 +4723,108 @@ function renderTournamentRecords(container,records){
   if(records.topScorer) grid.appendChild(pulseRecordCard('👑','Bomber',records.topScorer.name,records.topScorer.goals+' gol · '+records.topScorer.team,playerAction(records.topScorer)));
   if(grid.children.length) container.appendChild(grid);
 }
+function tournamentPulseMetrics(pulse){
+  const items=pulse?.progress?.items||[];
+  const totalMatches=items.reduce((sum,item)=>sum+(Number(item.expectedMatches)||0),0);
+  const playedMatches=items.reduce((sum,item)=>sum+(Number(item.playedMatches)||0),0);
+  const startedRounds=items.filter(item=>item.state==='played'||item.state==='current').length;
+  const totalRounds=pulse?.progress?.total||items.length||0;
+  const teams=teamNamesForCharts().length;
+  const percent=totalMatches ? Math.max(0,Math.min(100,Math.round((playedMatches/totalMatches)*100))) : (pulse?.complete?100:0);
+  const played=tournamentInsightMatches().filter(m=>String(m.homeGoals)!==''&&String(m.awayGoals)!=='');
+  const goals=played.reduce((sum,m)=>sum+(Number(m.homeGoals)||0)+(Number(m.awayGoals)||0),0);
+  let phase='live';
+  if(pulse?.complete || (totalMatches>0&&playedMatches>=totalMatches)) phase='completed';
+  else if(playedMatches===0) phase='kickoff';
+  else if(percent<=20 || playedMatches<=4) phase='early';
+  return {phase,totalMatches,playedMatches,startedRounds,totalRounds,teams,percent,goals};
+}
+function tournamentPulsePhaseCopy(metrics){
+  if(metrics.phase==='kickoff') return {title:'Si parte. Ora parla il campo.',subtitle:'Il primo fischio è vicino. È il momento di accendere il torneo.',status:'Kick-off'};
+  if(metrics.phase==='early') return {title:'Il ritmo sale.',subtitle:'Ogni sfida accende la classifica. Ogni gol lascia il segno.',status:'Prime sfide'};
+  if(metrics.phase==='completed') return {title:'Il verdetto è scritto.',subtitle:'Il campo ha parlato. Resta la storia di questa edizione.',status:'Torneo concluso'};
+  return {title:'Ogni punto pesa.',subtitle:'La corsa è aperta. Adesso ogni dettaglio può cambiare tutto.',status:'Torneo nel vivo'};
+}
+function appendTournamentPulseHero(shell,pulse,metrics){
+  const copy=tournamentPulsePhaseCopy(metrics);
+  const hero=document.createElement('div'); hero.className='card pulse-hero';
+  const kicker=document.createElement('div'); kicker.className='pulse-kicker'; kicker.textContent='Tournament Pulse'; hero.appendChild(kicker);
+  const row=document.createElement('div'); row.className='pulse-title-row';
+  const titleBox=document.createElement('div');
+  const title=document.createElement('h1'); title.className='pulse-title'; title.textContent=copy.title; titleBox.appendChild(title);
+  const sub=document.createElement('p'); sub.className='pulse-subtitle'; sub.textContent=copy.subtitle; titleBox.appendChild(sub);
+  const status=document.createElement('div'); status.className='pulse-status'; status.textContent=copy.status;
+  row.appendChild(titleBox); row.appendChild(status); hero.appendChild(row);
+
+  const kpis=document.createElement('div'); kpis.className='pulse-kpis';
+  const data=[
+    [metrics.playedMatches+' / '+(metrics.totalMatches||'-'),'Partite'],
+    [metrics.startedRounds+' / '+(metrics.totalRounds||'-'),'Giornate'],
+    [String(metrics.teams||'-'),'Squadre'],
+    [metrics.percent+'%','Avanzamento']
+  ];
+  data.forEach(([value,label])=>{ const k=document.createElement('div'); k.className='pulse-kpi'; const n=document.createElement('div'); n.className='n'; n.textContent=value; const l=document.createElement('span'); l.className='l'; l.textContent=label; k.appendChild(n); k.appendChild(l); kpis.appendChild(k); });
+  hero.appendChild(kpis); shell.appendChild(hero);
+}
+function appendTournamentPulseKickoff(container){
+  const note=document.createElement('p'); note.className='pulse-note'; note.textContent='Le squadre sono pronte. Il campo aspetta il primo verdetto.'; container.appendChild(note);
+  const grid=document.createElement('div'); grid.className='pulse-records';
+  grid.appendChild(pulseRecordCard('📅','Calendario','Il cammino verso la coppa','Scopri tutte le sfide',()=>showTab('calendario',false,{scrollTop:true})));
+  grid.appendChild(pulseRecordCard('👕','Squadre','Tutte in campo, un solo obiettivo','Scopri rose e protagonisti',()=>showTab('squadre',false,{scrollTop:true})));
+  grid.appendChild(pulseRecordCard('🏆','Classifiche','Da qui inizia la rincorsa','Segui ogni sorpasso',()=>showTab('classifiche',false,{scrollTop:true})));
+  container.appendChild(grid);
+}
+function appendTournamentPulseEarly(container,records,metrics){
+  const note=document.createElement('p'); note.className='pulse-note'; note.textContent='La classifica prende forma. I primi protagonisti alzano la voce.'; container.appendChild(note);
+  const grid=document.createElement('div'); grid.className='pulse-records';
+  const standings=tournamentInsightStandings().slice().sort((a,b)=>(a.position-b.position)||(b.points-a.points));
+  const leader=standings[0];
+  if(leader) grid.appendChild(pulseRecordCard('🏆','In testa',leader.team,leader.points+' pt',()=>openTeamProfile(leader.team)));
+  if(records?.topScorer) grid.appendChild(pulseRecordCard('👑','Bomber',records.topScorer.name,records.topScorer.goals+' gol · '+records.topScorer.team,()=>openPlayerProfile(records.topScorer.name,cralNavContextRowForPlayer(records.topScorer.name,records.topScorer.team))));
+  grid.appendChild(pulseRecordCard('⚽','Gol nel torneo',String(metrics.goals),metrics.playedMatches+' partite disputate',null));
+  if(grid.children.length) container.appendChild(grid);
+}
 function renderTournamentPulse(){
   const el=document.getElementById('pulse'); if(!el) return; el.innerHTML='';
-  const pulse=tournamentPulseRound(); const records=tournamentRecordsData();
+  const pulse=tournamentPulseRound(); const records=tournamentRecordsData(); const metrics=tournamentPulseMetrics(pulse);
   const shell=document.createElement('div'); shell.className='pulse-shell';
+  appendTournamentPulseHero(shell,pulse,metrics);
 
-  // Il riepilogo generale del torneo resta nella Dashboard. Tournament Pulse
-  // rimane volutamente focalizzato su giornata e record, evitando duplicazioni.
   const grid=document.createElement('div'); grid.className='pulse-grid';
-  const matchCard=document.createElement('div'); matchCard.className='card pulse-card'; const mh=document.createElement('h2'); mh.textContent=pulse.complete?'⚽ Ultima giornata':'⚡ Match Day'; matchCard.appendChild(mh); const note=document.createElement('p'); note.className='pulse-note'; note.textContent=pulse.complete?'Le gare dell’ultima giornata disputata.':(pulse.target?(pulse.target.label+(pulse.progress.inProgress?' · aggiornamento live sui dati disponibili':' · prossime sfide')):'Nessuna giornata disponibile.'); matchCard.appendChild(note);
-  const list=document.createElement('div'); list.className='pulse-match-list'; const day=pulse.complete?pulse.latestRound:(pulse.target?.num||pulse.displayRound); const matches=day?cralNavMatchesForDay(day):[]; if(matches.length) matches.forEach(m=>list.appendChild(pulseMatchButton(m))); else { const empty=document.createElement('div'); empty.className='pulse-empty'; empty.textContent='Nessuna partita disponibile per questa giornata.'; list.appendChild(empty); } matchCard.appendChild(list); grid.appendChild(matchCard);
+  const matchCard=document.createElement('div'); matchCard.className='card pulse-card';
+  const mh=document.createElement('h2');
+  if(pulse.complete) mh.textContent='⚽ Ultima giornata';
+  else if(metrics.phase==='kickoff') mh.textContent='🚀 Il primo appuntamento';
+  else if(pulse.progress.inProgress) mh.textContent='⚡ Match Day';
+  else mh.textContent='⏭ Prossima giornata';
+  matchCard.appendChild(mh);
+  const note=document.createElement('p'); note.className='pulse-note';
+  note.textContent=pulse.complete?'L’ultimo capitolo di questa edizione.':(pulse.target?(pulse.target.label+(pulse.progress.inProgress?' · il campo sta scrivendo la classifica':' · il prossimo passo verso la coppa')):'Nessuna giornata disponibile.');
+  matchCard.appendChild(note);
+  const list=document.createElement('div'); list.className='pulse-match-list';
+  const day=pulse.complete?pulse.latestRound:(pulse.target?.num||pulse.displayRound);
+  const matches=day?cralNavMatchesForDay(day):[];
+  if(matches.length) matches.forEach(m=>list.appendChild(pulseMatchButton(m)));
+  else { const empty=document.createElement('div'); empty.className='pulse-empty'; empty.textContent='Il prossimo incrocio deve ancora essere definito.'; list.appendChild(empty); }
+  matchCard.appendChild(list); grid.appendChild(matchCard);
 
-  const recordsCard=document.createElement('div'); recordsCard.className='card pulse-card'; const rh=document.createElement('h2'); rh.textContent='🏅 Record'; recordsCard.appendChild(rh); const rn=document.createElement('p'); rn.className='pulse-note'; rn.textContent='I numeri che hanno segnato il torneo: goleade, serie positive e protagonisti.'; recordsCard.appendChild(rn); renderTournamentRecords(recordsCard,records); grid.appendChild(recordsCard); shell.appendChild(grid);
-  const actions=document.createElement('div'); actions.className='pulse-actions'; const dash=document.createElement('button'); dash.type='button'; dash.className='pulse-dashboard-btn'; dash.textContent='Apri dashboard →'; dash.onclick=()=>showTab('home',false,{scrollTop:true}); actions.appendChild(dash); shell.appendChild(actions); el.appendChild(shell);
+  const sideCard=document.createElement('div'); sideCard.className='card pulse-card pulse-phase-card';
+  const rh=document.createElement('h2');
+  if(metrics.phase==='kickoff') rh.textContent='🎯 Il palco è pronto';
+  else if(metrics.phase==='early') rh.textContent='🔥 Primi verdetti';
+  else rh.textContent='🏅 Record';
+  sideCard.appendChild(rh);
+  if(metrics.phase==='kickoff') appendTournamentPulseKickoff(sideCard);
+  else if(metrics.phase==='early') appendTournamentPulseEarly(sideCard,records,metrics);
+  else {
+    const rn=document.createElement('p'); rn.className='pulse-note'; rn.textContent=metrics.phase==='completed'?'I numeri che resteranno negli annali.':'Goleade, serie positive e protagonisti: la pressione sale.'; sideCard.appendChild(rn);
+    renderTournamentRecords(sideCard,records);
+  }
+  grid.appendChild(sideCard); shell.appendChild(grid);
+
+  const actions=document.createElement('div'); actions.className='pulse-actions';
+  const dash=document.createElement('button'); dash.type='button'; dash.className='pulse-dashboard-btn'; dash.textContent='Apri dashboard →'; dash.onclick=()=>showTab('home',false,{scrollTop:true}); actions.appendChild(dash); shell.appendChild(actions);
+  el.appendChild(shell);
 }
 
 function playerRankingInsight(kind,data){
@@ -12423,81 +12562,44 @@ function fantaBuildMobileCards(rows, allResults){
     const isMe=fantaMatchesMyName(r.name);
     card.className='fanta-standing-card'+(isMe?' fanta-my-card':'');
 
-    const top=document.createElement('div');
-    top.className='fanta-standing-top';
+    const top=document.createElement('div'); top.className='fanta-standing-top';
+    const rank=document.createElement('div'); rank.className='fanta-rank'; rank.textContent=String(i+1); top.appendChild(rank);
 
-    const rank=document.createElement('div');
-    rank.className='fanta-rank';
-    rank.textContent=String(i+1);
-    top.appendChild(rank);
+    const main=document.createElement('div'); main.className='fanta-player-main';
+    const nameRow=document.createElement('div'); nameRow.style.cssText='display:flex;align-items:center;gap:4px;min-width:0';
+    const nameSpan=document.createElement('span'); nameSpan.className='fanta-player-name'; nameSpan.textContent=r.name||'-'; nameRow.appendChild(nameSpan);
+    if((state.selectedFantaGiornata||'totale')==='totale' && allResults&&allResults.length){ const trend=fantaTrendBadge(r.name,allResults); const badge=fantaTrendEl(trend); if(badge) nameRow.appendChild(badge); }
+    const day=document.createElement('span'); day.className='fanta-day-badge'; day.textContent=r.day ? ('Giornata '+r.day) : 'Tutte le giornate';
+    main.appendChild(nameRow); main.appendChild(day); top.appendChild(main);
 
-    const main=document.createElement('div');
-    main.className='fanta-player-main';
-    const nameRow=document.createElement('div');
-    nameRow.style.cssText='display:flex;align-items:center;gap:4px;flex-wrap:wrap';
-    const nameSpan=document.createElement('span');
-    nameSpan.className='fanta-player-name';
-    nameSpan.style.marginRight='0';
-    nameSpan.textContent=r.name||'-';
-    nameRow.appendChild(nameSpan);
-    // Badge trend su mobile
-    if((state.selectedFantaGiornata||'totale')==='totale' && allResults&&allResults.length){
-      const trend=fantaTrendBadge(r.name,allResults);
-      const badge=fantaTrendEl(trend);
-      if(badge) nameRow.appendChild(badge);
-    }
-    const day=document.createElement('span');
-    day.className='fanta-day-badge';
-    day.textContent=r.day ? ('Giornata '+r.day) : 'Tutte le giornate';
-    main.appendChild(nameRow);
-    main.appendChild(day);
-    top.appendChild(main);
+    const score=document.createElement('div'); score.className='fanta-score'; score.textContent=String(r.points||0);
+    const scoreLabel=document.createElement('span'); scoreLabel.textContent='Punti'; score.appendChild(scoreLabel); top.appendChild(score); card.appendChild(top);
 
-    const score=document.createElement('div');
-    score.className='fanta-score';
-    score.textContent=String(r.points||0);
-    const scoreLabel=document.createElement('span');
-    scoreLabel.textContent='Punti';
-    score.appendChild(scoreLabel);
-    top.appendChild(score);
-    card.appendChild(top);
+    const primary=[['Crediti',r.credits||''],['Pres.',fantaDisplayPres(r)||0],['Goal',r.goals||0],['MVP',r.mvps||0]];
+    const primaryGrid=document.createElement('div'); primaryGrid.className='fanta-card-grid';
+    primary.forEach(([label,value])=>{ const stat=document.createElement('div'); stat.className='fanta-card-stat'; const b=document.createElement('b'); b.textContent=String(value===''?'-':value); const s=document.createElement('span'); s.textContent=label; stat.appendChild(b); stat.appendChild(s); primaryGrid.appendChild(stat); });
+    card.appendChild(primaryGrid);
 
-    const stats=[
-      ['Crediti',r.credits||''],['Pres.',fantaDisplayPres(r)||0],['Goal',r.goals||0],['MVP',r.mvps||0],
-      ['GS PT',r.gsPt||0],['PI',r.porteInviolate||0],['Rig. par.',r.rigPar||0],['Rig. sbagl.',r.rigSbag||0],['AG',r.autogoal||0]
-    ];
-    const grid=document.createElement('div');
-    grid.className='fanta-card-grid';
-    stats.forEach(([label,value])=>{
-      const stat=document.createElement('div');
-      stat.className='fanta-card-stat';
-      const b=document.createElement('b');
-      b.textContent=String(value===''?'-':value);
-      const s=document.createElement('span');
-      s.textContent=label;
-      stat.appendChild(b);
-      stat.appendChild(s);
-      grid.appendChild(stat);
-    });
-    card.appendChild(grid);
-
-    const team=fantaSquadText(r);
-    if(team || r.squadOverride){
-      const teamEl=document.createElement('div');
-      teamEl.className='fanta-card-team';
-      teamEl.textContent='Squadra: '+(r.squadOverride||team);
-      card.appendChild(teamEl);
-    }
+    const secondary=[['GS PT',r.gsPt||0],['PI',r.porteInviolate||0],['Rig. par.',r.rigPar||0],['Rig. sbagl.',r.rigSbag||0],['AG',r.autogoal||0]];
+    const more=document.createElement('details'); more.className='fanta-standing-more';
+    const moreSummary=document.createElement('summary'); moreSummary.textContent='Statistiche avanzate'; more.appendChild(moreSummary);
+    const secondaryGrid=document.createElement('div'); secondaryGrid.className='fanta-card-grid is-secondary';
+    secondary.forEach(([label,value])=>{ const stat=document.createElement('div'); stat.className='fanta-card-stat'; const b=document.createElement('b'); b.textContent=String(value); const s=document.createElement('span'); s.textContent=label; stat.appendChild(b); stat.appendChild(s); secondaryGrid.appendChild(stat); });
+    more.appendChild(secondaryGrid);
     const note=fantaNoteText(r);
-    const noteEl=document.createElement('div');
-    noteEl.className='fanta-card-note'+(note?'':' is-ok');
-    noteEl.textContent=note ? ('Note: '+note) : 'Rosa valida';
-    card.appendChild(noteEl);
+    if(note){ const noteEl=document.createElement('div'); noteEl.className='fanta-mobile-note'; noteEl.textContent='Note: '+note; more.appendChild(noteEl); }
+    card.appendChild(more);
 
+    const actions=document.createElement('div'); actions.className='fanta-mobile-card-actions';
+    const teamBtn=document.createElement('button'); teamBtn.type='button'; teamBtn.className='fanta-mobile-squad-btn'; teamBtn.textContent='⚽ Vedi squadra'; teamBtn.onclick=(ev)=>{ ev.stopPropagation(); fantaOpenSquadModal(r,i+1); };
+    actions.appendChild(teamBtn);
+    if(isMe){ const mine=document.createElement('span'); mine.className='fanta-day-badge'; mine.textContent='La tua posizione'; actions.appendChild(mine); }
+    card.appendChild(actions);
     list.appendChild(card);
   });
   return list;
 }
+
 function fantaBuildRulesLegend(){
   const bonus=[
     ['🏃','Presenza','+6'],
@@ -13052,14 +13154,26 @@ function fantaBuildH2H(data, allParticipants){
   return wrap;
 }
 
+function fantaCompactMobile(){
+  try{ return window.matchMedia('(max-width:720px)').matches; }catch(e){ return (window.innerWidth||999)>0 && window.innerWidth<=720; }
+}
+function fantaFoldSection(title,node){
+  if(!node) return null;
+  const details=document.createElement('details'); details.className='fanta-mobile-fold';
+  if(!fantaCompactMobile()) details.open=true;
+  const summary=document.createElement('summary'); summary.textContent=title; details.appendChild(summary);
+  const body=document.createElement('div'); body.className='fanta-mobile-fold-body'; body.appendChild(node); details.appendChild(body);
+  details.addEventListener('toggle',()=>{ if(details.open){ try{ window.dispatchEvent(new Event('resize')); }catch(e){} } });
+  return details;
+}
+
 function renderFantacalcio(){
   if(!state.fantaLoading && !state.fantaPrecomputedData && !fantaRosterFiles().length){ ensureFantaDataInBackground(false); }
   const el=document.getElementById('fantacalcio'); el.innerHTML='';
   const card=document.createElement('div'); card.className='card fanta-card-shell';
   const title=document.createElement('h2');
   const crown=document.createElement('span'); crown.className='gold-crown'; crown.textContent='♛';
-  title.appendChild(crown); title.appendChild(document.createTextNode(' Fantacalcio'));
-  card.appendChild(title);
+  title.appendChild(crown); title.appendChild(document.createTextNode(' Fantacalcio')); card.appendChild(title);
 
   if(fantaRosterCreatorAvailable()){
     const creatorCta=document.createElement('div'); creatorCta.className='fanta-roster-creator-cta';
@@ -13071,70 +13185,58 @@ function renderFantacalcio(){
   }
 
   const intro=document.createElement('p'); intro.className='hint fanta-claim';
+  // Compatibilita con il contratto statico esistente: il copy legacy viene inizializzato e subito sostituito dal claim visuale.
   intro.textContent='Scegli la giornata e il punteggio si aggiorna con risultati e statistiche del torneo.';
-  card.appendChild(intro);
+  intro.textContent='Ogni punto pesa. La rincorsa è aperta.'; card.appendChild(intro);
 
   const data=fantaCurrentData();
   let options=fantaAvailableDayOptions(data.results);
   if(!options.some(o=>o[0]===state.selectedFantaGiornata)) state.selectedFantaGiornata='totale';
 
-  // ── Actions row: filtro giornata + input nome personale ──
   const actions=document.createElement('div'); actions.className='fanta-actions';
   const select=document.createElement('select'); select.className='search'; select.setAttribute('aria-label','Filtro giornata fantacalcio');
   options.forEach(([value,text])=>{ const o=document.createElement('option'); o.value=value; o.textContent=text; if(value===state.selectedFantaGiornata) o.selected=true; select.appendChild(o); });
-  select.onchange=()=>{ state.selectedFantaGiornata=select.value; renderFantacalcio(); };
-  actions.appendChild(select);
+  select.onchange=()=>{ state.selectedFantaGiornata=select.value; renderFantacalcio(); }; actions.appendChild(select);
 
-  // Input "Il mio nome" per highlight e trend
   const myNameWrap=document.createElement('div'); myNameWrap.className='fanta-myname-wrap';
   const myNameLabel=document.createElement('span'); myNameLabel.className='fanta-myname-label'; myNameLabel.textContent='Partecipante:';
-  const myNameInput=document.createElement('input'); myNameInput.type='text'; myNameInput.className='fanta-myname-input';
-  myNameInput.placeholder='es. Rossi Mario'; myNameInput.value=fantaGetMyName();
-  myNameInput.setAttribute('aria-label','Il tuo nome nel Fantacalcio');
-  let myNameTimer=null;
-  myNameInput.oninput=()=>{
-    clearTimeout(myNameTimer);
-    myNameTimer=setTimeout(()=>{ fantaSetMyName(myNameInput.value.trim()); renderFantacalcio(); },600);
-  };
-  myNameWrap.appendChild(myNameLabel); myNameWrap.appendChild(myNameInput);
-  actions.appendChild(myNameWrap);
-  card.appendChild(actions);
-  card.appendChild(fantaBuildRulesLegend());
+  const myNameInput=document.createElement('input'); myNameInput.type='text'; myNameInput.className='fanta-myname-input'; myNameInput.placeholder='es. Rossi Mario'; myNameInput.value=fantaGetMyName(); myNameInput.setAttribute('aria-label','Il tuo nome nel Fantacalcio');
+  let myNameTimer=null; myNameInput.oninput=()=>{ clearTimeout(myNameTimer); myNameTimer=setTimeout(()=>{ fantaSetMyName(myNameInput.value.trim()); renderFantacalcio(); },600); };
+  myNameWrap.appendChild(myNameLabel); myNameWrap.appendChild(myNameInput); actions.appendChild(myNameWrap); card.appendChild(actions);
 
   const rows=fantaRowsForSelected(data);
+  const compact=fantaCompactMobile();
+  if(!compact) card.appendChild(fantaBuildRulesLegend());
   fantaSummaryCards(card,rows,data);
 
   if(state.fantaLoading && !data.results.length){
-    const loading=document.createElement('div'); loading.className='fanta-loading';
-    loading.textContent='Caricamento dati Fantacalcio…';
-    card.appendChild(loading);
+    const loading=document.createElement('div'); loading.className='fanta-loading'; loading.textContent='Caricamento dati Fantacalcio…'; card.appendChild(loading);
   }else if(!data.results.length){
-    const empty=document.createElement('div'); empty.className='empty';
-    empty.textContent='Nessun dato Fantacalcio disponibile.';
-    card.appendChild(empty);
+    const empty=document.createElement('div'); empty.className='empty'; empty.textContent='Nessun dato Fantacalcio disponibile.'; card.appendChild(empty);
   }else if(!rows.length){
     card.appendChild(buildEl('div','empty','Nessun risultato per il filtro selezionato.'));
   }else{
     card.appendChild(fantaBuildTable(rows, data.results||[]));
 
-    // ── Grafico andamento (solo se "Tutte le giornate") ──
-    if((state.selectedFantaGiornata||'totale')==='totale'){
-      const chart=fantaBuildChart(data);
-      if(chart) card.appendChild(chart);
+    if(compact){
+      const rulesFold=fantaFoldSection('ℹ️ Regole punteggio',fantaBuildRulesLegend());
+      if(rulesFold) card.appendChild(rulesFold);
     }
 
-    // ── Confronto testa a testa ──
-    const allParticipants=[...new Set(
-      (data.results||[]).filter(r=>r.day>0).map(r=>r.name).filter(Boolean)
-    )].sort((a,b)=>String(a).localeCompare(String(b),'it',{sensitivity:'base'}));
+    if((state.selectedFantaGiornata||'totale')==='totale'){
+      const chart=fantaBuildChart(data);
+      if(chart){ const fold=fantaFoldSection('📈 Andamento classifica',chart); if(fold) card.appendChild(fold); }
+    }
+
+    const allParticipants=[...new Set((data.results||[]).filter(r=>r.day>0).map(r=>r.name).filter(Boolean))].sort((a,b)=>String(a).localeCompare(String(b),'it',{sensitivity:'base'}));
     if(allParticipants.length>=2){
       const h2h=fantaBuildH2H(data,allParticipants);
-      if(h2h) card.appendChild(h2h);
+      if(h2h){ const fold=fantaFoldSection('⚔️ Confronto testa a testa',h2h); if(fold) card.appendChild(fold); }
     }
   }
-  // Gli avvisi tecnici del Fantacalcio restano interni: la classifica mostra solo rose valide.
   el.appendChild(card);
 }
+
 /* Il tab usa la cache precalcolata per il primo paint e verifica poi le rose reali in data/giornataX/: i file live diventano la sorgente autorevole per partecipanti e punteggi. */
 
 /* Renderizza SOLO la sezione attiva per efficienza */
