@@ -1706,6 +1706,14 @@
     .classifiche-highlight-card.is-mvp:active,.classifiche-highlight-card.is-keeper:active{transform:scale(.98)}
     .classifiche-highlight-head{display:flex;align-items:center;gap:8px;margin-bottom:11px;color:var(--blue);font-size:10px;font-weight:950;text-transform:uppercase;letter-spacing:.07em}
     .classifiche-highlight-head .icon{font-size:18px;line-height:1}.classifiche-highlight-status{margin-left:auto;padding:4px 7px;border:1px solid var(--line);border-radius:999px;background:rgba(255,255,255,.55);color:var(--muted);font-size:8px;font-weight:950;letter-spacing:.08em}
+    /* Top 5: il badge vive su una card blu/notturna. Il vecchio chip chiaro con
+       testo muted perdeva molto contrasto, soprattutto su iPhone. */
+    .classifiche-highlight-card.is-scorers .classifiche-highlight-status{
+      background:linear-gradient(135deg,#dbeafe,#f8fbff);
+      border-color:#93c5fd;color:#0b3f82;
+      box-shadow:0 3px 10px rgba(59,130,246,.18);
+      text-shadow:none;
+    }
     .classifiche-highlight-person{display:grid;grid-template-columns:56px minmax(0,1fr);gap:11px;align-items:center}
     .classifiche-highlight-avatar{width:56px;height:56px;border-radius:16px;object-fit:cover;background:var(--soft);border:1px solid var(--line);box-shadow:0 5px 15px rgba(7,29,58,.13)}
     .classifiche-highlight-name{display:block;width:100%;border:0;background:none;padding:0;color:var(--ink);font:inherit;font-size:16px;font-weight:950;text-align:left;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -1931,6 +1939,7 @@
     .wrapped-share{
       color:#071d3a;background:linear-gradient(115deg,#f5b942 0%,#ffd979 55%,#fff0bd 100%);
       border:1px solid rgba(255,255,255,.36);box-shadow:0 12px 30px rgba(245,185,66,.20);
+      min-width:126px;min-height:38px;justify-content:center;white-space:nowrap;flex:0 0 auto;
     }
     .wrapped-share:disabled{color:#071d3a;opacity:.58}
 
@@ -6453,9 +6462,14 @@ function wrappedWithTimeout(promise,ms,label,signal){
 function wrappedUpdateShareStatus(text,disabled=true){
   wrappedState.videoStatusText=text||'📲 Condividi';
   const btn=wrappedState.activeShareBtn;
-  if(btn && btn.isConnected){
+  // Aggiorna anche un bottone appena creato ma non ancora inserito nel document.
+  // Alla riapertura del Wrapped il video può essere già pronto: in quel momento
+  // openWrapped crea il nuovo bottone PRIMA di appendere l'overlay al body.
+  // Il vecchio controllo isConnected lasciava quindi il bottone senza testo,
+  // facendolo apparire come un piccolo cerchio dorato su Safari/iPhone.
+  if(btn){
     btn.disabled=!!disabled;
-    btn.innerHTML=wrappedState.videoStatusText;
+    btn.textContent=wrappedState.videoStatusText;
   }
 }
 function wrappedAbortableDelay(ms,signal){
@@ -7358,12 +7372,12 @@ async function wrappedPrepareVideoInBackground(signature){
     wrappedState.videoBlob=new Blob(chunks,{type:finalType});
     wrappedState.videoReady=true;
     wrappedUpdateShareStatus('📲 Condividi',false);
-    if(btn() && btn().isConnected) btn().onclick=()=>wrappedShareVideo(btn());
+    if(btn()) btn().onclick=()=>wrappedShareVideo(btn());
   }catch(error){
     if(!error || error.name!=='AbortError'){
       console.error('Wrapped: generazione video non riuscita.',error);
       wrappedUpdateShareStatus('↻ Riprova la preparazione',false);
-      if(btn() && btn().isConnected) btn().onclick=()=>wrappedPrepareVideoInBackground(wrappedState.videoSlidesSignature);
+      if(btn()) btn().onclick=()=>wrappedPrepareVideoInBackground(wrappedState.videoSlidesSignature);
     }
   }finally{
     wrappedRemoveExportHost(controller);
@@ -7541,14 +7555,14 @@ function openWrapped(){
       // aggiornerà da solo (vedi wrappedPrepareVideoInBackground) man mano
       // che la preparazione avanza, fino a diventare cliccabile.
       shareBtn.disabled=true;
-      shareBtn.innerHTML=wrappedState.videoStatusText||'⏳ Preparo il video…';
+      shareBtn.textContent=wrappedState.videoStatusText||'⏳ Preparo il video…';
     } else {
       // Nessuna generazione utilizzabile in corso (dati diversi, mai avviata,
       // o interrotta da un errore): (ri)parte da zero. Avviata subito dopo che
       // l'overlay è nel DOM, così quando l'utente clicca "Condividi" il blob è
       // già pronto e navigator.share può essere chiamato sincrono nel click
       // handler (senza await che rompe la user gesture).
-      shareBtn.innerHTML='📲 Condividi';
+      shareBtn.textContent='📲 Condividi';
       requestAnimationFrame(()=>wrappedPrepareVideoInBackground(signature));
     }
   }
