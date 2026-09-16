@@ -1829,6 +1829,120 @@
       .fanta-rule-label span{white-space:normal}
     }
 
+
+    /* ── Premium palette refresh: Tournament Pulse + Wrapped ──
+       Palette coerente con il resto del sito: navy CRAL, royal blue,
+       violetto profondo e oro usato solo come accento. */
+    .pulse-hero{
+      isolation:isolate;
+      border:1px solid rgba(245,185,66,.28);
+      background:
+        radial-gradient(circle at 88% 8%,rgba(245,185,66,.20),transparent 28%),
+        radial-gradient(circle at 8% 100%,rgba(59,130,246,.26),transparent 36%),
+        radial-gradient(circle at 82% 82%,rgba(124,58,237,.18),transparent 34%),
+        linear-gradient(135deg,#06111f 0%,#0a1b34 48%,#15132f 100%);
+      box-shadow:0 22px 52px rgba(3,10,24,.30),inset 0 1px 0 rgba(255,255,255,.10);
+    }
+    .pulse-hero::before{
+      content:"";position:absolute;inset:0;z-index:0;pointer-events:none;opacity:.55;
+      background:
+        linear-gradient(115deg,transparent 0 42%,rgba(255,255,255,.055) 49%,transparent 56%),
+        repeating-linear-gradient(135deg,rgba(255,255,255,.028) 0 1px,transparent 1px 16px);
+    }
+    .pulse-hero:after{
+      width:260px;height:260px;right:-92px;top:-116px;
+      background:radial-gradient(circle,rgba(245,185,66,.22) 0%,rgba(245,185,66,.08) 38%,transparent 70%);
+      box-shadow:0 0 70px rgba(245,185,66,.10);
+    }
+    .pulse-hero>*{position:relative;z-index:1}
+    .pulse-kicker{color:#f8ce67;opacity:1;text-shadow:0 0 22px rgba(245,185,66,.24)}
+    .pulse-title{text-shadow:0 8px 30px rgba(0,0,0,.36)}
+    .pulse-subtitle{color:rgba(231,239,250,.88)}
+    .pulse-status{
+      color:#f7f9fc;background:linear-gradient(145deg,rgba(7,20,38,.58),rgba(20,24,52,.52));
+      border:1px solid rgba(245,185,66,.36);box-shadow:inset 0 1px 0 rgba(255,255,255,.10),0 10px 24px rgba(0,0,0,.18);
+      backdrop-filter:blur(12px);
+    }
+    .pulse-kpi{
+      background:linear-gradient(145deg,rgba(255,255,255,.105),rgba(255,255,255,.045));
+      border:1px solid rgba(255,255,255,.15);
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.10),0 10px 28px rgba(0,0,0,.12);
+      backdrop-filter:blur(10px);
+    }
+    .pulse-kpi .n{color:#fff;text-shadow:0 4px 18px rgba(0,0,0,.28)}
+    .pulse-kpi .l{color:#c7d6e9;opacity:.88}
+
+    .wrapped-banner{
+      isolation:isolate;position:relative;
+      border:1px solid rgba(245,185,66,.34);
+      background:
+        radial-gradient(circle at 92% 18%,rgba(245,185,66,.26),transparent 26%),
+        radial-gradient(circle at 10% 110%,rgba(59,130,246,.30),transparent 40%),
+        linear-gradient(118deg,#06111f 0%,#0b2141 46%,#24153f 78%,#39283a 100%);
+      box-shadow:0 18px 42px rgba(5,15,31,.30),inset 0 1px 0 rgba(255,255,255,.10);
+      transition:transform .18s ease,filter .18s ease,box-shadow .18s ease;
+    }
+    .wrapped-banner::before{
+      content:"";position:absolute;inset:-80% -20%;z-index:0;pointer-events:none;opacity:.5;
+      background:linear-gradient(110deg,transparent 39%,rgba(255,255,255,.16) 49%,transparent 59%);
+      transform:translateX(-24%) rotate(4deg);
+    }
+    .wrapped-banner::after{
+      content:"✦";position:absolute;right:58px;top:14px;z-index:0;color:#f5b942;font-size:25px;opacity:.78;
+      text-shadow:0 0 20px rgba(245,185,66,.48);
+    }
+    .wrapped-banner>*{position:relative;z-index:1}
+    .wrapped-banner:hover{filter:brightness(1.05);transform:translateY(-1px);box-shadow:0 22px 48px rgba(5,15,31,.36),inset 0 1px 0 rgba(255,255,255,.12)}
+    .wrapped-banner .wb-icon{
+      width:48px;height:48px;display:grid;place-items:center;border-radius:15px;font-size:27px;
+      background:linear-gradient(145deg,rgba(255,255,255,.15),rgba(255,255,255,.055));
+      border:1px solid rgba(255,255,255,.16);box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 10px 24px rgba(0,0,0,.18);
+      backdrop-filter:blur(10px);
+    }
+    .wrapped-banner .wb-title{color:#fff;text-shadow:0 6px 22px rgba(0,0,0,.30)}
+    .wrapped-banner .wb-sub{color:#cfdaea}
+    .wrapped-banner .wb-arrow{
+      width:34px;height:34px;display:grid;place-items:center;border-radius:50%;font-size:18px;opacity:1;
+      color:#071d3a;background:linear-gradient(135deg,#f5b942,#ffe09a);box-shadow:0 8px 22px rgba(245,185,66,.24);
+    }
+
+    .wrapped-overlay{
+      background:
+        radial-gradient(circle at 15% 10%,rgba(245,185,66,.18),transparent 28%),
+        radial-gradient(circle at 86% 16%,rgba(88,80,236,.24),transparent 34%),
+        radial-gradient(circle at 50% 100%,rgba(37,99,235,.30),transparent 42%),
+        linear-gradient(160deg,#030916 0%,#07172f 48%,#0d1024 100%);
+    }
+    .wrapped-overlay::before{background:radial-gradient(circle,rgba(245,185,66,.22),transparent 68%)}
+    .wrapped-overlay::after{background:radial-gradient(circle,rgba(59,130,246,.24),transparent 70%)}
+    .wrapped-slide{
+      border-color:rgba(255,255,255,.18);
+      background:
+        radial-gradient(circle at 50% 0%,rgba(var(--accent-rgb),.26),transparent 36%),
+        radial-gradient(circle at 90% 88%,rgba(var(--accent2-rgb),.12),transparent 32%),
+        linear-gradient(155deg,rgba(255,255,255,.095),rgba(255,255,255,.025)),
+        linear-gradient(155deg,#0a172b,#030916 72%);
+      box-shadow:0 34px 92px rgba(0,0,0,.58),inset 0 1px 0 rgba(255,255,255,.16),0 0 0 1px rgba(var(--accent-rgb),.055);
+    }
+    .wrapped-bar{background:rgba(255,255,255,.14)}
+    .wrapped-bar i{background:linear-gradient(90deg,#f5b942,#ffe7a7,#60a5fa);box-shadow:0 0 18px rgba(245,185,66,.55)}
+    .wrapped-close{background:rgba(6,17,31,.58);border-color:rgba(255,255,255,.18)}
+    .wrapped-replay{background:rgba(6,17,31,.48);border-color:rgba(255,255,255,.24)}
+    .wrapped-share{
+      color:#071d3a;background:linear-gradient(115deg,#f5b942 0%,#ffd979 55%,#fff0bd 100%);
+      border:1px solid rgba(255,255,255,.36);box-shadow:0 12px 30px rgba(245,185,66,.20);
+    }
+    .wrapped-share:disabled{color:#071d3a;opacity:.58}
+
+    @media(max-width:800px){
+      .pulse-hero{border-radius:24px;padding:20px}
+      .pulse-kpis{gap:10px}
+      .pulse-kpi{padding:13px;border-radius:17px}
+      .wrapped-banner{padding:16px 17px;gap:12px;border-radius:20px}
+      .wrapped-banner .wb-icon{width:44px;height:44px;border-radius:14px}
+      .wrapped-banner::after{right:52px;top:12px;font-size:22px}
+    }
+
 </style>
 </head>
 <body>
@@ -5308,13 +5422,18 @@ function buildClassifichePersonHighlight(kind,icon,title,person,value,label,stat
   const small=document.createElement('small'); small.textContent=label; val.appendChild(small); copy.appendChild(val);
   personWrap.appendChild(copy); card.appendChild(personWrap); return card;
 }
+function classificheHighlightStatus(){
+  // Le card mobile restano una fotografia della situazione corrente finché
+  // il torneo è aperto; diventano definitive solo a torneo concluso.
+  return isTournamentComplete()?'Finale':'Attuale';
+}
 function buildClassificheHighlights(){
   if(isPlayerSearchActive() || norm(state.search)) return null;
   const mvp=currentMvpOfTournament();
   const keeper=wrappedBestKeeper();
   const scorers=classificheTopScorers(5);
   if(!mvp && !keeper && !scorers.length) return null;
-  const finalStatus=isTournamentComplete()?'Finale':'Attuale';
+  const finalStatus=classificheHighlightStatus();
   const wrap=document.createElement('div'); wrap.className='classifiche-highlights'; wrap.setAttribute('aria-label','Protagonisti del torneo');
   const mvpCard=buildClassifichePersonHighlight('mvp','⭐','MVP del torneo',mvp,mvp?.points||0,'punti MVP',finalStatus);
   if(mvpCard) wrap.appendChild(mvpCard);
@@ -6240,7 +6359,7 @@ const wrappedState={
   slides:[], index:0, timer:null, barEls:[], paused:false, slideDuration:5000,
   videoBlob:null, videoReady:false, videoAbort:null, videoRecorder:null,
   videoStream:null, videoFrameTimer:null, exportHost:null, exportHostOwner:null,
-  html2canvasPromise:null,
+  html2canvasPromise:null, videoStartedAt:0, videoStatusText:'📲 Condividi',
   // Permettono alla generazione del video di continuare in background anche
   // dopo che l'utente ha chiuso l'overlay: videoSlidesSignature identifica i
   // dati con cui è stata avviata la generazione corrente/ultima, activeShareBtn
@@ -6267,18 +6386,34 @@ function wrappedIsMobileDevice(){
   const iPadOS=navigator.platform==='MacIntel' && navigator.maxTouchPoints>1;
   return mobileUa || iPadOS;
 }
+function wrappedVideoShareFormat(){
+  // Verifica insieme formato registrabile e formato realmente condivisibile.
+  // Il vecchio probe controllava sempre e solo MP4 anche quando MediaRecorder
+  // avrebbe poi prodotto WebM: su alcuni browser il pulsante risultava quindi
+  // disponibile ma il file finale non era condivisibile.
+  if(!navigator.canShare || !window.MediaRecorder) return null;
+  const candidates=[
+    {recorder:'video/mp4;codecs=h264',fileType:'video/mp4',ext:'mp4'},
+    {recorder:'video/mp4',fileType:'video/mp4',ext:'mp4'},
+    {recorder:'video/webm;codecs=vp9',fileType:'video/webm',ext:'webm'},
+    {recorder:'video/webm',fileType:'video/webm',ext:'webm'}
+  ];
+  for(const candidate of candidates){
+    try{
+      if(MediaRecorder.isTypeSupported && !MediaRecorder.isTypeSupported(candidate.recorder)) continue;
+      const probe=new File([new Blob(['x'],{type:candidate.fileType})],'probe.'+candidate.ext,{type:candidate.fileType});
+      if(navigator.canShare({files:[probe]})) return candidate;
+    }catch(e){}
+  }
+  return null;
+}
 function wrappedCanShareFiles(){
-  // Mostra il pulsante "Condividi" solo se il browser supporta davvero la
-  // condivisione nativa di file video (navigator.share + canShare con files):
-  // su desktop questa API non esiste o non accetta file, quindi il pulsante
-  // resta nascosto invece di offrire un download "muto" senza spiegazione.
+  // Mostra il pulsante solo quando il browser mobile può registrare e condividere
+  // davvero almeno uno dei formati che useremo per il Wrapped.
   if(!wrappedIsMobileDevice()) return false;
   if(!navigator.share || !navigator.canShare) return false;
   if(!window.MediaRecorder || !HTMLCanvasElement.prototype.captureStream) return false;
-  try{
-    const probe=new File([new Blob(['x'],{type:'video/mp4'})],'probe.mp4',{type:'video/mp4'});
-    return navigator.canShare({files:[probe]});
-  }catch(e){ return false; }
+  return !!wrappedVideoShareFormat();
 }
 function wrappedAbortError(){
   try{ return new DOMException('Generazione Wrapped annullata','AbortError'); }
@@ -6299,6 +6434,29 @@ function wrappedAwaitWithAbort(promise,signal){
       error=>{ cleanup(); reject(error); }
     );
   });
+}
+function wrappedTimeoutError(label){
+  const error=new Error((label||'Operazione Wrapped')+' oltre il tempo massimo');
+  error.name='TimeoutError';
+  return error;
+}
+function wrappedWithTimeout(promise,ms,label,signal){
+  const guarded=wrappedAwaitWithAbort(Promise.resolve(promise),signal);
+  if(!ms || ms<=0) return guarded;
+  return new Promise((resolve,reject)=>{
+    let settled=false;
+    const finish=(fn,value)=>{ if(settled) return; settled=true; clearTimeout(timer); fn(value); };
+    const timer=setTimeout(()=>finish(reject,wrappedTimeoutError(label)),ms);
+    guarded.then(value=>finish(resolve,value),error=>finish(reject,error));
+  });
+}
+function wrappedUpdateShareStatus(text,disabled=true){
+  wrappedState.videoStatusText=text||'📲 Condividi';
+  const btn=wrappedState.activeShareBtn;
+  if(btn && btn.isConnected){
+    btn.disabled=!!disabled;
+    btn.innerHTML=wrappedState.videoStatusText;
+  }
 }
 function wrappedAbortableDelay(ms,signal){
   return new Promise((resolve,reject)=>{
@@ -6338,6 +6496,8 @@ function wrappedCancelVideoGeneration(){
   wrappedRemoveExportHost();
   wrappedState.videoBlob=null;
   wrappedState.videoReady=false;
+  wrappedState.videoStartedAt=0;
+  wrappedState.videoStatusText='📲 Condividi';
 }
 function wrappedCleanupHtml2CanvasContainers(owner){
   const containers=owner && owner._wrappedHtml2CanvasContainers;
@@ -6371,14 +6531,23 @@ function wrappedEnsureHtml2Canvas(signal){
     wrappedState.html2canvasPromise=new Promise((resolve,reject)=>{
       let script=document.querySelector('script[data-wrapped-html2canvas="1"]');
       const onLoad=()=>{
+        if(script) script.dataset.wrappedLoaded='1';
         if(typeof window.html2canvas==='function') resolve(window.html2canvas);
-        else reject(new Error('html2canvas non disponibile dopo il caricamento'));
+        else{
+          wrappedState.html2canvasPromise=null;
+          if(script) script.remove();
+          reject(new Error('html2canvas non disponibile dopo il caricamento'));
+        }
       };
       const onError=()=>{
         wrappedState.html2canvasPromise=null;
         if(script) script.remove();
         reject(new Error('Impossibile caricare html2canvas'));
       };
+      if(script && script.dataset.wrappedLoaded==='1' && typeof window.html2canvas!=='function'){
+        script.remove();
+        script=null;
+      }
       if(script){
         script.addEventListener('load',onLoad,{once:true});
         script.addEventListener('error',onError,{once:true});
@@ -6396,16 +6565,23 @@ function wrappedEnsureHtml2Canvas(signal){
       document.head.appendChild(script);
     });
   }
-  return wrappedAwaitWithAbort(wrappedState.html2canvasPromise,signal);
+  return wrappedWithTimeout(wrappedState.html2canvasPromise,7000,'Caricamento html2canvas',signal).catch(error=>{
+    if(error && error.name==='TimeoutError'){
+      wrappedState.html2canvasPromise=null;
+      const stale=document.querySelector('script[data-wrapped-html2canvas="1"]');
+      if(stale && typeof window.html2canvas!=='function') stale.remove();
+    }
+    throw error;
+  });
 }
 async function wrappedPrimeSlideAssets(slide,signal){
   const d=slide.data||{};
   const assets=slide._wrappedAssets||(slide._wrappedAssets={});
   const resolveSafe=async(type,names)=>{
     try{
-      return await wrappedAwaitWithAbort(
+      return await wrappedWithTimeout(
         resolveImageForNames(type,(names||[]).filter(Boolean),{priority:'high',eager:true,fetchPriority:'high'}),
-        signal
+        4500,'Risoluzione immagine Wrapped',signal
       );
     }catch(error){
       if(error && error.name==='AbortError') throw error;
@@ -6503,7 +6679,8 @@ function wrappedWaitForDomIdle(root,signal,idleMs=120,maxMs=1200){
 }
 async function wrappedWaitForExportAssets(frame,signal){
   if(document.fonts && document.fonts.ready){
-    await wrappedAwaitWithAbort(document.fonts.ready,signal);
+    try{ await wrappedWithTimeout(document.fonts.ready,3500,'Caricamento font Wrapped',signal); }
+    catch(error){ if(error&&error.name==='AbortError') throw error; }
   }
   await wrappedWaitForDomIdle(frame,signal,150,1800);
   const images=[...frame.querySelectorAll('img')];
@@ -6578,25 +6755,36 @@ async function wrappedCaptureSlideFromDom(slide,html2canvasFn,signal,owner){
   // wrapper viene annullato: il tracker rimuove subito eventuali iframe DOM
   // rimasti e resta attivo fino alla conclusione reale di html2canvas.
   Promise.resolve(capturePromise).then(stopTracking,stopTracking);
-  const captured=await wrappedAwaitWithAbort(capturePromise,signal);
+  let captured;
+  try{
+    captured=await wrappedWithTimeout(capturePromise,6500,'Cattura grafica slide '+(slide.type||''),signal);
+  }catch(error){
+    // html2canvas su Safari/iOS può restare pendente senza reject: il timeout
+    // sblocca la pipeline e lascia usare il renderer canvas di fallback.
+    stopTracking();
+    throw error;
+  }
   wrappedThrowIfAborted(signal);
   return captured;
 }
 function wrappedLoadImageSafe(src){
   // Le immagini usate dal fallback vengono anche decodificate prima di essere
-  // consegnate al renderer: la registrazione non parte mai con foto o loghi
-  // ancora in fase di decoding.
+  // consegnate al renderer. Un watchdog evita che una risorsa lenta blocchi
+  // l'intero video su Safari mobile.
   return new Promise(resolve=>{
     if(!src){ resolve(null); return; }
     const img=new Image();
+    let done=false;
+    const finish=value=>{ if(done) return; done=true; clearTimeout(timer); resolve(value); };
+    const timer=setTimeout(()=>finish(null),4500);
     if(/^https?:/i.test(src)) img.crossOrigin='anonymous';
     img.onload=async()=>{
       if(img.decode){
-        try{ await img.decode(); }catch(e){}
+        try{ await Promise.race([img.decode(),new Promise(r=>setTimeout(r,1200))]); }catch(e){}
       }
-      resolve(img);
+      finish(img);
     };
-    img.onerror=()=>resolve(null);
+    img.onerror=()=>finish(null);
     img.src=src;
   });
 }
@@ -6620,9 +6808,9 @@ async function wrappedDrawSlideOnCanvas(ctx,slide,w,h){
   const d=slide.data;
   ctx.clearRect(0,0,w,h);
 
-  // Sfondo: stesso gradiente scuro/viola/oro usato nell'overlay del Wrapped.
+  // Sfondo: palette premium navy/oro coerente con l'overlay del Wrapped.
   const bg=ctx.createLinearGradient(0,0,w,h);
-  bg.addColorStop(0,'#0b0b14'); bg.addColorStop(1,'#1a1030');
+  bg.addColorStop(0,'#030916'); bg.addColorStop(1,'#15132f');
   ctx.fillStyle=bg; ctx.fillRect(0,0,w,h);
 
   const cx=w/2;
@@ -6766,9 +6954,9 @@ function wrappedDrawVideoBackground(ctx,w,h,timeMs,currentType,nextType,mix){
   const r=blend(0),g=blend(1),bl=blend(2);
 
   const base=ctx.createLinearGradient(0,0,w,h);
-  base.addColorStop(0,'#040713');
-  base.addColorStop(.48,'#10112a');
-  base.addColorStop(1,'#050816');
+  base.addColorStop(0,'#030916');
+  base.addColorStop(.48,'#07172f');
+  base.addColorStop(1,'#0d1024');
   ctx.fillStyle=base;
   ctx.fillRect(0,0,w,h);
 
@@ -6982,7 +7170,10 @@ async function wrappedPreRenderVideoSlides(slides,html2canvasFn,signal,controlle
   // Risoluzione e decoding preventivi: nessuna registrazione parte finche'
   // tutte le immagini necessarie non sono state caricate o dichiarate assenti.
   await wrappedAwaitWithAbort(Promise.all(slides.map(slide=>wrappedPrimeSlideAssets(slide,signal))),signal);
-  if(document.fonts && document.fonts.ready) await wrappedAwaitWithAbort(document.fonts.ready,signal);
+  if(document.fonts && document.fonts.ready){
+    try{ await wrappedWithTimeout(document.fonts.ready,3500,'Caricamento font Wrapped',signal); }
+    catch(error){ if(error&&error.name==='AbortError') throw error; }
+  }
 
   for(let i=0;i<slides.length;i++){
     wrappedThrowIfAborted(signal);
@@ -6990,10 +7181,7 @@ async function wrappedPreRenderVideoSlides(slides,html2canvasFn,signal,controlle
     // (il Wrapped può essere visto e chiuso mentre il video continua a prepararsi
     // in background). L'unico modo per interromperla è l'AbortController (signal).
     const slide=slides[i];
-    const shareBtn=wrappedState.activeShareBtn;
-    if(shareBtn && shareBtn.isConnected){
-      shareBtn.innerHTML=`⏳ Preparo ${i+1}/${slides.length}…`;
-    }
+    wrappedUpdateShareStatus(`⏳ Preparo ${i+1}/${slides.length}…`,true);
     const output=document.createElement('canvas');
     output.width=W; output.height=H;
     const outputCtx=output.getContext('2d',{alpha:true});
@@ -7009,6 +7197,7 @@ async function wrappedPreRenderVideoSlides(slides,html2canvasFn,signal,controlle
       }catch(error){
         if(error && error.name==='AbortError') throw error;
         console.warn('Wrapped: cattura DOM fallita, uso il renderer fallback.',slide.type,error);
+        if(error && error.name==='TimeoutError') html2canvasFn=null;
       }finally{
         wrappedRemoveExportHost(controller);
       }
@@ -7046,6 +7235,10 @@ function wrappedRunVideoFrameLoop(ctx,renderedSlides,durationMs,signal,track){
       if(signal && signal.aborted){ onAbort(); return; }
       const elapsed=Math.min(durationMs,performance.now()-startedAt);
       wrappedDrawVideoFrame(ctx,renderedSlides,elapsed);
+      if(frame%24===0){
+        const pct=Math.max(1,Math.min(99,Math.round((elapsed/durationMs)*100)));
+        wrappedUpdateShareStatus(`⏳ Registro video ${pct}%…`,true);
+      }
       if(track && typeof track.requestFrame==='function'){
         try{ track.requestFrame(); }catch(e){}
       }
@@ -7076,9 +7269,10 @@ async function wrappedPrepareVideoInBackground(signature){
   wrappedState.videoAbort=controller;
   wrappedState.videoBlob=null;
   wrappedState.videoReady=false;
+  wrappedState.videoStartedAt=Date.now();
   wrappedState.videoSlidesSignature=signature||null;
   const btn=()=>wrappedState.activeShareBtn;
-  if(btn() && btn().isConnected){ btn().disabled=true; btn().innerHTML='⏳ Preparo immagini e font…'; }
+  wrappedUpdateShareStatus('⏳ Preparo immagini e font…',true);
 
   let stream=null;
   let recorder=null;
@@ -7100,7 +7294,7 @@ async function wrappedPrepareVideoInBackground(signature){
     );
     wrappedThrowIfAborted(signal);
 
-    const W=1080,H=1920,FPS=30,PER_SLIDE_MS=WRAPPED_VIDEO_PER_SLIDE_MS;
+    const W=1080,H=1920,FPS=24,PER_SLIDE_MS=WRAPPED_VIDEO_PER_SLIDE_MS;
     const canvas=document.createElement('canvas');
     canvas.width=W; canvas.height=H;
     const ctx=canvas.getContext('2d',{alpha:false,desynchronized:false});
@@ -7112,10 +7306,10 @@ async function wrappedPrepareVideoInBackground(signature){
     stream=canvas.captureStream(FPS);
     wrappedState.videoStream=stream;
     const track=stream.getVideoTracks()[0]||null;
-    const mimeType=['video/mp4;codecs=h264','video/mp4','video/webm;codecs=vp9','video/webm']
-      .find(t=>MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(t))||'';
-    const recorderOptions={videoBitsPerSecond:9000000};
-    if(mimeType) recorderOptions.mimeType=mimeType;
+    const shareFormat=wrappedVideoShareFormat();
+    if(!shareFormat) throw new Error('Nessun formato video registrabile e condivisibile');
+    const mimeType=shareFormat.recorder;
+    const recorderOptions={videoBitsPerSecond:6500000,mimeType};
     recorder=new MediaRecorder(stream,recorderOptions);
     wrappedState.videoRecorder=recorder;
 
@@ -7130,9 +7324,9 @@ async function wrappedPrepareVideoInBackground(signature){
       recorder.addEventListener('error',ev=>reject(ev.error||new Error('Errore avvio MediaRecorder')),{once:true});
     });
 
-    if(btn() && btn().isConnected) btn().innerHTML='⏳ Registro il video…';
+    wrappedUpdateShareStatus('⏳ Avvio registrazione…',true);
     recorder.start(500);
-    await wrappedAwaitWithAbort(started,signal);
+    await wrappedWithTimeout(started,5000,'Avvio MediaRecorder',signal);
 
     // Secondo disegno esplicito della copertina: evita il primo frame nero sui
     // Safari che non campionano il contenuto gia' presente prima di recorder.start().
@@ -7156,26 +7350,20 @@ async function wrappedPrepareVideoInBackground(signature){
       await wrappedAbortableDelay(34,signal);
     }
     recorder.stop();
-    await wrappedAwaitWithAbort(finished,signal);
+    await wrappedWithTimeout(finished,8000,'Chiusura MediaRecorder',signal);
     wrappedThrowIfAborted(signal);
     if(!chunks.length) throw new Error('Il video generato e\' vuoto');
 
-    const finalType=mimeType&&mimeType.includes('mp4')?'video/mp4':'video/webm';
+    const finalType=shareFormat.fileType;
     wrappedState.videoBlob=new Blob(chunks,{type:finalType});
     wrappedState.videoReady=true;
-    if(btn() && btn().isConnected){
-      btn().disabled=false;
-      btn().innerHTML='📲 Condividi';
-      btn().onclick=()=>wrappedShareVideo(btn());
-    }
+    wrappedUpdateShareStatus('📲 Condividi',false);
+    if(btn() && btn().isConnected) btn().onclick=()=>wrappedShareVideo(btn());
   }catch(error){
     if(!error || error.name!=='AbortError'){
       console.error('Wrapped: generazione video non riuscita.',error);
-      if(btn() && btn().isConnected){
-        btn().disabled=false;
-        btn().innerHTML='↻ Riprova la preparazione';
-        btn().onclick=()=>wrappedPrepareVideoInBackground(wrappedState.videoSlidesSignature);
-      }
+      wrappedUpdateShareStatus('↻ Riprova la preparazione',false);
+      if(btn() && btn().isConnected) btn().onclick=()=>wrappedPrepareVideoInBackground(wrappedState.videoSlidesSignature);
     }
   }finally{
     wrappedRemoveExportHost(controller);
@@ -7189,7 +7377,10 @@ async function wrappedPrepareVideoInBackground(signature){
     if(stream) stream.getTracks().forEach(track=>{ try{ track.stop(); }catch(e){} });
     if(wrappedState.videoRecorder===recorder) wrappedState.videoRecorder=null;
     if(wrappedState.videoStream===stream) wrappedState.videoStream=null;
-    if(wrappedState.videoAbort===controller) wrappedState.videoAbort=null;
+    if(wrappedState.videoAbort===controller){
+      wrappedState.videoAbort=null;
+      wrappedState.videoStartedAt=0;
+    }
   }
 }
 function wrappedShareVideo(btn){
@@ -7333,12 +7524,16 @@ function openWrapped(){
 
     const signature=wrappedSlidesSignature(slides);
     const sameData=signature!==null && signature===wrappedState.videoSlidesSignature;
-    const stillGenerating=!!(wrappedState.videoAbort && !wrappedState.videoAbort.signal.aborted);
+    let stillGenerating=!!(wrappedState.videoAbort && !wrappedState.videoAbort.signal.aborted);
+    if(stillGenerating && wrappedState.videoStartedAt && Date.now()-wrappedState.videoStartedAt>90000){
+      wrappedCancelVideoGeneration();
+      stillGenerating=false;
+    }
 
     if(sameData && wrappedState.videoReady && wrappedState.videoBlob){
       // Il video era già pronto da prima (creato mentre il Wrapped era stato
       // chiuso e poi riaperto): il tasto Condividi è utilizzabile da subito.
-      shareBtn.innerHTML='📲 Condividi';
+      wrappedUpdateShareStatus('📲 Condividi',false);
       shareBtn.onclick=()=>wrappedShareVideo(shareBtn);
     } else if(sameData && stillGenerating){
       // Generazione già avviata in precedenza e ancora in corso: la lasciamo
@@ -7346,7 +7541,7 @@ function openWrapped(){
       // aggiornerà da solo (vedi wrappedPrepareVideoInBackground) man mano
       // che la preparazione avanza, fino a diventare cliccabile.
       shareBtn.disabled=true;
-      shareBtn.innerHTML='⏳ Preparo il video…';
+      shareBtn.innerHTML=wrappedState.videoStatusText||'⏳ Preparo il video…';
     } else {
       // Nessuna generazione utilizzabile in corso (dati diversi, mai avviata,
       // o interrotta da un errore): (ri)parte da zero. Avviata subito dopo che
