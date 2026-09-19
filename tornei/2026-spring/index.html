@@ -1639,7 +1639,7 @@
     .pulse-mini-logo{width:27px;height:27px;flex:0 0 27px;border-radius:50%;object-fit:contain;background:#fff;padding:2px;border:1px solid var(--line)}
     .pulse-empty{padding:14px;border:1px dashed var(--line);border-radius:14px;color:var(--muted);font-size:11px;text-align:center}
     .pulse-records{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.pulse-record{display:flex;gap:10px;align-items:flex-start;padding:11px;border:1px solid var(--line);border-radius:15px;background:var(--soft);color:var(--ink);font:inherit;text-align:left;appearance:none;min-width:0}.pulse-record.is-clickable{cursor:pointer;transition:transform .15s ease,border-color .15s ease}.pulse-record.is-clickable:hover{transform:translateY(-1px);border-color:rgba(15,90,168,.4)}.pulse-record-icon{font-size:20px;line-height:1}.pulse-record-copy{min-width:0}.pulse-record-copy small{display:block;color:var(--muted);font-size:9px;font-weight:850;text-transform:uppercase;letter-spacing:.05em}.pulse-record-copy b{display:block;margin-top:3px;color:var(--ink);font-size:12px;line-height:1.25}.pulse-record-copy span{display:block;margin-top:3px;color:var(--muted);font-size:10px;line-height:1.3}
-    .player-achievements{margin-top:14px;padding:14px;border:1px solid var(--line);border-radius:18px;background:linear-gradient(145deg,var(--soft),var(--panel))}.player-achievements h3{margin:0 0 10px;font-size:13px}.achievement-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.achievement-badge{display:flex;gap:9px;align-items:flex-start;padding:10px;border-radius:14px;border:1px solid var(--line);background:var(--panel);min-width:0}.achievement-badge.is-gold{border-color:rgba(245,185,66,.55);background:color-mix(in srgb,var(--panel) 88%,#f5b942 12%)}.achievement-icon{font-size:20px;line-height:1}.achievement-copy{min-width:0}.achievement-copy b{display:block;font-size:11px}.achievement-copy span{display:block;margin-top:3px;color:var(--muted);font-size:9px;line-height:1.35}
+    .player-achievements{margin-top:14px;padding:14px;border:1px solid var(--line);border-radius:18px;background:linear-gradient(145deg,var(--soft),var(--panel))}.player-achievements h3{margin:0 0 10px;font-size:13px}.achievement-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.achievement-badge{display:flex;gap:9px;align-items:flex-start;padding:10px;border-radius:14px;border:1px solid var(--line);background:var(--panel);min-width:0}.achievement-badge.is-gold{border-color:rgba(245,185,66,.55);background:color-mix(in srgb,var(--panel) 88%,#f5b942 12%)}.achievement-badge.is-silver{border-color:rgba(192,199,209,.55);background:color-mix(in srgb,var(--panel) 88%,#c0c7d1 12%)}.achievement-badge.is-bronze{border-color:rgba(205,127,50,.55);background:color-mix(in srgb,var(--panel) 88%,#cd7f32 12%)}.achievement-icon{font-size:20px;line-height:1}.achievement-copy{min-width:0}.achievement-copy b{display:block;font-size:11px}.achievement-copy span{display:block;margin-top:3px;color:var(--muted);font-size:9px;line-height:1.35}
     @media(max-width:800px){.pulse-title-row{display:block}.pulse-status{margin-top:12px}.pulse-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.pulse-grid{grid-template-columns:1fr}.pulse-records{grid-template-columns:1fr}.achievement-grid{grid-template-columns:1fr}.pulse-hero{padding:18px}.pulse-match{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr)}}
 
 
@@ -2220,11 +2220,24 @@ const CRALInsights=(()=>{
     };
   }
 
-  function consecutiveRoundStreak(rounds){
+  function consecutiveRoundStreak(rounds,restRounds){
+    // "restRounds" sono le giornate in cui la squadra del giocatore ha riposato
+    // (torneo a squadre dispari). Un buco tra due giornate a segno non deve
+    // interrompere la serie se tutte le giornate intermedie sono turni di
+    // riposo della squadra: il giocatore non ha avuto occasione di segnare,
+    // non ha "mancato" una partita.
+    const rest=restRounds instanceof Set ? restRounds : new Set((restRounds||[]).map(Number));
     const values=[...new Set((rounds||[]).map(roundNumber).filter(n=>n>0))].sort((a,b)=>a-b);
     let best=0,current=0,prev=null;
     values.forEach(n=>{
-      current=(prev!==null && n===prev+1)?current+1:1;
+      let continues=false;
+      if(prev!==null && n>prev){
+        continues=true;
+        for(let g=prev+1; g<n; g++){
+          if(!rest.has(g)){ continues=false; break; }
+        }
+      }
+      current=continues?current+1:1;
       best=Math.max(best,current); prev=n;
     });
     return best;
@@ -2242,21 +2255,25 @@ const CRALInsights=(()=>{
     const goalEntries=(player.goalEntries||[]).map(e=>({round:roundNumber(e.round??e.giornata),value:number(e.value)}));
     const scoringRounds=goalEntries.filter(e=>e.value>0).map(e=>e.round);
     const maxRoundGoals=goalEntries.reduce((max,e)=>Math.max(max,e.value),0);
-    const streak=consecutiveRoundStreak(scoringRounds);
+    const streak=consecutiveRoundStreak(scoringRounds,player.restRounds);
     const out=[];
     const add=(id,icon,title,description,level)=>out.push({id,icon,title,description,level:level||'bronze'});
 
+    // Livelli assegnati per importanza relativa al ruolo:
+    // gold   = leadership assoluta di una classifica (#1) o titolo di squadra
+    // silver = podio/eccellenza ricorrente ma non al vertice
+    // bronze = exploit puntuali o statistiche di costanza/presenza
     if(player.tournamentComplete && player.teamChampion) add('champion','🏆','Campione','Vincitore del torneo','gold');
     if(scorerRank===1 && goals>0) add('top-scorer','👑',player.tournamentComplete?'Capocannoniere':'Bomber del momento',goals+' gol nel torneo','gold');
     else if(scorerRank>1 && scorerRank<=3 && goals>0) add('scorer-podium','🥉','Podio bomber','#'+scorerRank+' nella classifica marcatori','silver');
-    if(goals>=10) add('double-digits','🎯','Doppia cifra',goals+' gol segnati','gold');
-    if(maxRoundGoals>=3) add('hat-trick','⚽','Tripletta',maxRoundGoals+' gol nella stessa giornata','silver');
+    if(goals>=10) add('double-digits','🎯','Doppia cifra',goals+' gol segnati','silver');
+    if(maxRoundGoals>=3) add('hat-trick','⚽','Tripletta',maxRoundGoals+' gol nella stessa giornata','bronze');
     if(streak>=3) add('on-fire','🔥','On fire','A segno per '+streak+' giornate consecutive','gold');
     if(mvpRank===1 && number(player.mvpPoints)>0) add('mvp-leader','⭐',player.tournamentComplete?'Re degli MVP':'Leader MVP','In vetta alla classifica MVP','gold');
     else if(mvpAwards>=3) add('mvp-serial','🌟','MVP seriale',mvpAwards+' giornate premiate','silver');
     if(keeperRank===1 && number(player.keeperPoints)>0) add('best-keeper','🧤',player.tournamentComplete?'Miglior portiere':'Leader portieri','In vetta alla classifica portieri','gold');
     else if(keeperAwards>=3) add('keeper-wall','🧱','Muro',keeperAwards+' giornate da miglior portiere','silver');
-    if(teamMatches>=3 && appearances>=teamMatches) add('always-there','💯','Sempre presente',appearances+' presenze su '+teamMatches+' partite','silver');
+    if(teamMatches>=3 && appearances>=teamMatches) add('always-there','💯','Sempre presente',appearances+' presenze su '+teamMatches+' partite','bronze');
 
     return out.slice(0,8);
   }
@@ -5240,6 +5257,7 @@ function buildPlayerAchievementData(data){
     mvpAwards:(data.mvp.entries||[]).length,
     keeperAwards:(data.keeper.entries||[]).filter(e=>e.source!=='classifica').length,
     goalEntries:(data.goals.entries||[]).map(e=>({round:e.giornata,value:e.value})),
+    restRounds:[...teamRestRounds(data.team)],
     tournamentComplete:isTournamentComplete(), teamChampion:teamRank===1
   });
 }
@@ -5249,7 +5267,7 @@ function playerAchievementsSection(data){
   catch(error){ console.warn('Achievement giocatore non disponibili:',error); return null; }
   if(!achievements.length) return null;
   const sec=document.createElement('div'); sec.className='player-achievements'; const h=document.createElement('h3'); h.textContent='🏅 Achievement'; sec.appendChild(h); const grid=document.createElement('div'); grid.className='achievement-grid';
-  achievements.forEach(a=>{ const badge=document.createElement('div'); badge.className='achievement-badge'+(a.level==='gold'?' is-gold':''); const icon=document.createElement('div'); icon.className='achievement-icon'; icon.textContent=a.icon; const copy=document.createElement('div'); copy.className='achievement-copy'; const b=document.createElement('b'); b.textContent=a.title; const span=document.createElement('span'); span.textContent=a.description; copy.appendChild(b); copy.appendChild(span); badge.appendChild(icon); badge.appendChild(copy); grid.appendChild(badge); }); sec.appendChild(grid); return sec;
+  achievements.forEach(a=>{ const badge=document.createElement('div'); const lvlClass=a.level==='gold'?'is-gold':(a.level==='silver'?'is-silver':'is-bronze'); badge.className='achievement-badge '+lvlClass; const icon=document.createElement('div'); icon.className='achievement-icon'; icon.textContent=a.icon; const copy=document.createElement('div'); copy.className='achievement-copy'; const b=document.createElement('b'); b.textContent=a.title; const span=document.createElement('span'); span.textContent=a.description; copy.appendChild(b); copy.appendChild(span); badge.appendChild(icon); badge.appendChild(copy); grid.appendChild(badge); }); sec.appendChild(grid); return sec;
 }
 
 function renderHome(){
@@ -8694,6 +8712,28 @@ function calendarioMatchStatusClass(status){
   if(status?.current) return 'is-calendar-current';
   if(status?.next) return 'is-calendar-next';
   return 'is-calendar-todo';
+}
+
+/* Giornate in cui una squadra ha riposato (tornei a squadre dispari),
+   lette dalla riga "Riposa: NomeSquadra" del calendario a blocchi.
+   Usate per non interrompere a torto le serie "consecutive" di un giocatore
+   quando la sua squadra ha semplicemente saltato il turno. */
+function teamRestRounds(team){
+  const rounds=new Set();
+  const teamKey=norm(team);
+  if(!teamKey) return rounds;
+  sectionFiles('calendario').forEach(f=>{
+    const raw=state.files[f]||'';
+    if(!isBlockCalendar(raw)) return;
+    parseBlockCalendar(raw).forEach(g=>{
+      const n=parseInt(giornataNumberFromText(g.label)||'',10);
+      if(!Number.isFinite(n)) return;
+      (g.partite||[]).forEach(p=>{
+        if(p.riposa && norm(p.riposa)===teamKey) rounds.add(n);
+      });
+    });
+  });
+  return rounds;
 }
 
 function calendarioNormalMatchCount(partite){
