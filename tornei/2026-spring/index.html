@@ -2267,7 +2267,10 @@ const CRALInsights=(()=>{
     if(scorerRank===1 && goals>0) add('top-scorer','👑',player.tournamentComplete?'Capocannoniere':'Bomber del momento',goals+' gol nel torneo','gold');
     else if(scorerRank>1 && scorerRank<=3 && goals>0) add('scorer-podium','🥉','Podio bomber','#'+scorerRank+' nella classifica marcatori','silver');
     if(goals>=10) add('double-digits','🎯','Doppia cifra',goals+' gol segnati','silver');
-    if(maxRoundGoals>=3) add('hat-trick','⚽','Tripletta',maxRoundGoals+' gol nella stessa giornata','bronze');
+    if(maxRoundGoals>=3){
+      const multiGoalTitle=maxRoundGoals===3?'Tripletta':maxRoundGoals===4?'Poker':maxRoundGoals===5?'Cinquina':(maxRoundGoals+' gol in una giornata');
+      add('hat-trick','⚽',multiGoalTitle,maxRoundGoals+' gol nella stessa giornata','bronze');
+    }
     if(streak>=3) add('on-fire','🔥','On fire','A segno per '+streak+' giornate consecutive','gold');
     if(mvpRank===1 && number(player.mvpPoints)>0) add('mvp-leader','⭐',player.tournamentComplete?'Re degli MVP':'Leader MVP','In vetta alla classifica MVP','gold');
     else if(mvpAwards>=3) add('mvp-serial','🌟','MVP seriale',mvpAwards+' giornate premiate','silver');
