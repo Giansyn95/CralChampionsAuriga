@@ -2269,7 +2269,8 @@ const CRALInsights=(()=>{
     if(goals>=10) add('double-digits','🎯','Doppia cifra',goals+' gol segnati','silver');
     if(maxRoundGoals>=3){
       const multiGoalTitle=maxRoundGoals===3?'Tripletta':maxRoundGoals===4?'Poker':maxRoundGoals===5?'Cinquina':(maxRoundGoals+' gol in una giornata');
-      add('hat-trick','⚽',multiGoalTitle,maxRoundGoals+' gol nella stessa giornata','bronze');
+      const multiGoalDesc=maxRoundGoals<=5?(maxRoundGoals+' gol nella stessa giornata'):'Prestazione da record in una singola giornata';
+      add('hat-trick','⚽',multiGoalTitle,multiGoalDesc,'bronze');
     }
     if(streak>=3) add('on-fire','🔥','On fire','A segno per '+streak+' giornate consecutive','gold');
     if(mvpRank===1 && number(player.mvpPoints)>0) add('mvp-leader','⭐',player.tournamentComplete?'Re degli MVP':'Leader MVP','In vetta alla classifica MVP','gold');
@@ -3831,12 +3832,15 @@ function tooltipTargetIsActionable(target){
 }
 function isPlayerTooltipExcluded(el){
   if(!el) return false;
-  // I nomi giocatore devono aprire subito la scheda al click/tap, anche se troncati.
-  // Escludiamo quindi sia il bottone .player-link sia la cella persona che lo contiene,
-  // altrimenti su mobile il tooltip intercetterebbe il primo tap.
-  if(el.closest('.player-link')) return true;
-  const personCell=el.closest('td[data-col-role="person"]');
-  return !!(personCell && personCell.querySelector('.player-link'));
+  // I nomi giocatore E squadra sono link di navigazione primari: devono aprire
+  // subito la scheda al click/tap, anche se troncati. Escludiamo quindi sia i
+  // bottoni .player-link/.team-link sia la cella persona/squadra che li contiene,
+  // altrimenti su mobile il tooltip intercetterebbe il primo tap e, essendo un
+  // discendente (non un antenato) dell'elemento troncato, nessun tap successivo
+  // riuscirebbe mai a "passare" per aprire la scheda.
+  if(el.closest('.player-link,.team-link')) return true;
+  const linkCell=el.closest('td[data-col-role="person"],td[data-col-role="team"]');
+  return !!(linkCell && linkCell.querySelector('.player-link,.team-link'));
 }
 document.addEventListener('click',(ev)=>{
   if(!isTouchTooltipMode()) return;
