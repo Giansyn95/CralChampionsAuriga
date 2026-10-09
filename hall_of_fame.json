@@ -1,0 +1,59 @@
+{
+ "versione": 1,
+ "firma": [
+  "2026-spring"
+ ],
+ "data": {
+  "editions": 1,
+  "history": [
+   {
+    "tournament": {
+     "id": "2026-spring",
+     "anno": "2026",
+     "stagione": "Primavera",
+     "nome": "Primavera",
+     "url": "tornei/2026-spring/",
+     "ordine": 20261
+    },
+    "champion": "Auriga Juniors",
+    "topScorer": "Saracino Gianvito",
+    "scorerGoals": 17,
+    "topMvp": "De Toma Nicola",
+    "mvpValue": 13,
+    "topKeeper": "Iacobellis PT",
+    "keeperValue": 7
+   }
+  ],
+  "firstChampion": {
+   "name": "Auriga Juniors",
+   "value": "2026",
+   "tournament": {
+    "id": "2026-spring",
+    "anno": "2026",
+    "stagione": "Primavera",
+    "nome": "Primavera",
+    "url": "tornei/2026-spring/",
+    "ordine": 20261
+   }
+  },
+  "allTimeScorer": {
+   "name": "Saracino Gianvito",
+   "value": 17,
+   "firstRank": 20261,
+   "firstLabel": "2026"
+  },
+  "allTimeMvp": {
+   "name": "De Toma Nicola",
+   "value": 13,
+   "firstRank": 20261,
+   "firstLabel": "2026"
+  },
+  "allTimeKeeper": {
+   "name": "Iacobellis PT",
+   "value": 7,
+   "firstRank": 20261,
+   "firstLabel": "2026"
+  }
+ },
+ "generatoIl": "2026-10-09T21:30:46.046Z"
+}

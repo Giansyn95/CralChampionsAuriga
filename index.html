@@ -145,6 +145,47 @@
       .hero-sub{font-size:13px;line-height:1.35}
       .theme-btn{width:40px;height:40px;border-radius:13px;font-size:19px}
     }
+
+    /* Hall of Fame: skeleton, ricerca, schede comprimibili, animazioni leggere */
+    .hall-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+    .hall-skel{display:grid;gap:10px}.hall-skel-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+    .hall-skel i{display:block;height:104px;border-radius:18px;background:linear-gradient(100deg,var(--soft) 30%,color-mix(in srgb,var(--soft) 55%,var(--panel)) 50%,var(--soft) 70%);background-size:220% 100%;animation:hallShimmer 1.3s linear infinite}
+    .hall-skel .hall-skel-card{height:132px}
+    @keyframes hallShimmer{from{background-position:130% 0}to{background-position:-30% 0}}
+    @keyframes hallIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+    .hall-record{animation:hallIn .38s cubic-bezier(.2,.7,.2,1) both}
+    .hall-record:nth-child(2){animation-delay:.05s}.hall-record:nth-child(3){animation-delay:.10s}.hall-record:nth-child(4){animation-delay:.15s}
+    .hall-tools{display:flex;align-items:center;gap:10px;margin:0 0 12px}
+    .hall-search{flex:1;min-width:0;min-height:44px;padding:10px 14px;border:1px solid var(--line);border-radius:14px;background:var(--soft);color:var(--ink);font:inherit;font-size:14px}
+    .hall-search::placeholder{color:var(--muted)}.hall-search:focus-visible{outline-offset:1px}
+    .hall-count{color:var(--muted);font-size:12px;font-weight:800;white-space:nowrap}
+    .hall-history{align-items:start}
+    .hall-edition{padding:0;overflow:hidden;content-visibility:auto;contain-intrinsic-size:auto 150px}
+    .hall-edition.hall-new{animation:hallIn .38s cubic-bezier(.2,.7,.2,1) both;animation-delay:calc(var(--i,0)*45ms)}
+    .hall-edition>summary{display:block;list-style:none;cursor:pointer;padding:15px;-webkit-tap-highlight-color:transparent}
+    .hall-edition>summary::-webkit-details-marker{display:none}
+    .hall-edition>summary:focus-visible{outline-offset:-3px;border-radius:18px}
+    .hall-edition>summary .hall-edition-top{margin-bottom:0}
+    .hall-edition[open]>summary .hall-edition-top{margin-bottom:10px}
+    .hall-edition-right{display:flex;align-items:center;gap:8px}
+    .hall-chev{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:9px;background:var(--blue-soft);color:var(--blue);font-size:18px;font-weight:900;line-height:1;transition:transform .2s}
+    .hall-edition[open] .hall-chev{transform:rotate(90deg)}
+    .hall-peek{display:flex;align-items:center;gap:8px;margin-top:10px;min-width:0;font-size:12px}
+    .hall-peek i{font-style:normal;font-size:16px}.hall-peek span{color:var(--muted);font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:.04em}
+    .hall-peek b{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .hall-edition[open] .hall-peek{display:none}
+    .hall-edition-body{padding:0 15px 15px}
+    .hall-edition-link{min-height:36px;align-items:center}
+    .hall-more-wrap{display:flex;justify-content:center;margin-top:14px}.hall-more-wrap:empty{display:none}
+    .hall-empty .hall-retry{margin-top:12px}
+    @media(max-width:760px){
+      .hall-skel-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+      .hall-tools{flex-direction:column;align-items:stretch;gap:6px}
+      .hall-count{text-align:right}
+    }
+    @media(prefers-reduced-motion:reduce){
+      .hall-record,.hall-edition.hall-new,.hall-skel i{animation:none!important}
+    }
     @media(prefers-reduced-motion:reduce){
       *{transition:none!important;scroll-behavior:auto!important}
     }
@@ -227,7 +268,8 @@
             <div><h2>Hall of Fame</h2><p id="hallSubtitle">La memoria sportiva del CRAL Champions Auriga.</p></div>
             <button class="hall-close" id="hallCloseBtn" type="button" aria-label="Chiudi Hall of Fame">×</button>
           </div>
-          <div id="hallContent"><div class="hall-loading">Caricamento record storici…</div></div>
+          <div id="hallContent" aria-busy="true"><div class="hall-skel" aria-hidden="true"><div class="hall-skel-grid"><i></i><i></i><i></i><i></i></div><i class="hall-skel-card"></i></div><span class="hall-sr">Caricamento record storici…</span></div>
+          <div class="hall-sr" id="hallLive" role="status" aria-live="polite"></div>
         </div>
       </section>
 
@@ -560,33 +602,112 @@
       if (open) panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     });
 
+    /* Hall of Fame: caricamento e rendering.
+       Dati, dal piu veloce al piu lento:
+       1) hall_of_fame.json: 1 sola richiesta, generato da GitHub Action (tools/genera_hall_of_fame.js).
+          Vale solo se la sua "firma" coincide con le edizioni concluse di tornei.json;
+       2) fallback: CSV di ogni edizione (4 file ciascuna, max 3 edizioni in parallelo),
+          calcolati dallo stesso motore CRALHallOfFame. Stesso risultato, solo piu lento.
+       Rendering: albo d'oro a pagine, schede comprimibili e ricerca quando le edizioni sono tante. */
     let hallConfig = null;
     let hallLoaded = false;
     let hallLoading = false;
+    let hallSnapPromise = null;
+    let hallDataPromise = null;
+    const HALL_PAGE = 6;       // edizioni mostrate per volta
+    const HALL_TOOLS_MIN = 5;  // da quante edizioni compare la ricerca
+    const HALL_SKELETON = '<div class="hall-skel" aria-hidden="true"><div class="hall-skel-grid"><i></i><i></i><i></i><i></i></div><i class="hall-skel-card"></i></div><span class="hall-sr">Caricamento record storici…</span>';
     const hallHtml = value => esc(value).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+    const hallNorm = v => String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+    const hallPlural = (n,one,many) => `${n} ${n===1?one:many}`;
     function hallBaseUrl(t){
       let base=esc(t.url || t.cartella || '');
       if(base && !base.endsWith('/')) base+='/';
       return base;
     }
     async function hallFetchText(url){
-      try{ const r=await fetch(url,{cache:'no-store'}); return r.ok?await r.text():''; }catch(e){ return ''; }
+      try{ const r=await fetch(url); return r.ok?await r.text():''; }catch(e){ return ''; }
     }
-    async function loadHallOfFame(){
-      if(hallLoaded||hallLoading) return; hallLoading=true;
-      const content=document.getElementById('hallContent');
-      const tornei=(hallConfig?.tornei||[]).filter(t=>t.attivo!==false && normalizzaStato(t.stato)==='concluso');
-      if(!tornei.length){ content.innerHTML='<div class="hall-empty">La Hall of Fame si popolerà automaticamente alla conclusione della prima edizione.</div>'; hallLoaded=true; hallLoading=false; return; }
-      const editions=await Promise.all(tornei.map(async t=>{
+    function hallConcluded(){
+      return (hallConfig?.tornei||[]).filter(t=>t.attivo!==false && normalizzaStato(t.stato)==='concluso');
+    }
+    const hallSignature = list => list.map(torneoKey).sort().join('|');
+    function hallSnapshot(list){
+      return hallSnapPromise || (hallSnapPromise=(async()=>{
+        try{
+          const r=await fetch('hall_of_fame.json',{cache:'no-cache'}); if(!r.ok) return null;
+          const j=await r.json();
+          if(!j || j.versione!==1 || !Array.isArray(j.firma) || !j.data || !Array.isArray(j.data.history)) return null;
+          return j.firma.slice().sort().join('|')===hallSignature(list) ? j.data : null;
+        }catch(e){ return null; }
+      })());
+    }
+    async function hallPool(items,limit,worker){
+      const out=new Array(items.length); let next=0;
+      await Promise.all(Array.from({length:Math.min(limit,items.length)},async()=>{
+        while(next<items.length){ const n=next++; out[n]=await worker(items[n]); }
+      }));
+      return out;
+    }
+    async function hallFromCsv(list){
+      let anyData=false;
+      const editions=await hallPool(list,3,async t=>{
         const base=hallBaseUrl(t)+'data/';
         const files=await Promise.all(['classifica_squadre.csv','classifica_marcatori.csv','classifica_mvp.csv','classifica_portieri.csv'].map(f=>hallFetchText(base+f)));
+        if(files.some(Boolean)) anyData=true;
         return {tournament:t,completed:true,standings:CRALHallOfFame.parseCsv(files[0]),scorers:CRALHallOfFame.parseCsv(files[1]),mvps:CRALHallOfFame.parseCsv(files[2]),keepers:CRALHallOfFame.parseCsv(files[3])};
-      }));
-      renderHallOfFame(CRALHallOfFame.build(editions)); hallLoaded=true; hallLoading=false;
+      });
+      if(!anyData) throw new Error('Dati Hall of Fame non raggiungibili');
+      return CRALHallOfFame.build(editions);
+    }
+    function hallLoad(){
+      return hallDataPromise || (hallDataPromise=(async()=>{
+        const list=hallConcluded();
+        return (await hallSnapshot(list)) || await hallFromCsv(list);
+      })().catch(e=>{ hallDataPromise=null; throw e; }));
+    }
+    // Precarica quando l'utente sta per aprire il pannello: l'apertura sembra istantanea.
+    function hallPrefetch(){
+      if(hallConfig && !hallLoaded && hallConcluded().length) hallLoad().catch(()=>{});
+    }
+    // A pagina pronta, in idle, scarica solo lo snapshot (1 file piccolo, mai i CSV).
+    function hallWarm(){
+      if(navigator.connection && navigator.connection.saveData) return;
+      const run=()=>{ const l=hallConcluded(); if(l.length) hallSnapshot(l); };
+      if('requestIdleCallback' in window) requestIdleCallback(run,{timeout:3000}); else setTimeout(run,1500);
+    }
+    async function loadHallOfFame(){
+      if(hallLoaded||hallLoading||!hallConfig) return; hallLoading=true;
+      const content=document.getElementById('hallContent');
+      try{
+        if(!hallConcluded().length){
+          content.innerHTML='<div class="hall-empty">La Hall of Fame si popolerà automaticamente alla conclusione della prima edizione.</div>';
+          hallLoaded=true; return;
+        }
+        renderHallOfFame(await hallLoad()); hallLoaded=true;
+      }catch(e){
+        content.innerHTML='<div class="hall-empty">Non riesco a caricare i record storici.<br><button class="secondary-btn hall-retry" type="button">Riprova</button></div>';
+        content.querySelector('.hall-retry').addEventListener('click',()=>{
+          hallSnapPromise=null; hallDataPromise=null;
+          content.innerHTML=HALL_SKELETON; content.setAttribute('aria-busy','true'); loadHallOfFame();
+        });
+      }finally{
+        hallLoading=false; content.removeAttribute('aria-busy');
+      }
     }
     function hallRecord(icon,label,item,suffix){
       if(!item||!item.name) return '';
       return `<div class="hall-record"><div class="hall-record-icon">${icon}</div><small>${label}</small><b>${hallHtml(item.name)}</b><span>${hallHtml(item.value)} ${suffix}</span></div>`;
+    }
+    function hallEditionHtml(item,open,i){
+      const t=item.tournament||{}; const season=esc(t.stagione||t.nome||'Edizione');
+      const rows=[];
+      if(item.champion) rows.push(`<div class="hall-edition-row"><i>🏆</i><div><small>Campione</small><b>${hallHtml(item.champion)}</b></div></div>`);
+      if(item.topScorer) rows.push(`<div class="hall-edition-row"><i>⚽</i><div><small>Capocannoniere</small><b>${hallHtml(item.topScorer)} · ${item.scorerGoals} gol</b></div></div>`);
+      if(item.topMvp) rows.push(`<div class="hall-edition-row"><i>⭐</i><div><small>MVP</small><b>${hallHtml(item.topMvp)} · ${item.mvpValue} pt</b></div></div>`);
+      if(item.topKeeper) rows.push(`<div class="hall-edition-row"><i>🧤</i><div><small>Miglior portiere</small><b>${hallHtml(item.topKeeper)} · ${item.keeperValue} pt</b></div></div>`);
+      const peek=item.champion?`<div class="hall-peek"><i aria-hidden="true">🏆</i><span>Campione</span><b>${hallHtml(item.champion)}</b></div>`:'';
+      return `<details class="hall-edition hall-new"${open?' open':''} style="--i:${i}"><summary><div class="hall-edition-top"><div><div class="hall-edition-year">${hallHtml(t.anno||'—')}</div><div class="hall-edition-name">${hallHtml(season)}</div></div><span class="hall-edition-right"><span class="archive-state stato-concluso">✓ Concluso</span><span class="hall-chev" aria-hidden="true">›</span></span></div>${peek}</summary><div class="hall-edition-body"><div class="hall-edition-list">${rows.join('')}</div>${t.url?`<a class="hall-edition-link" href="${hallHtml(t.url)}">Apri edizione ›</a>`:''}</div></details>`;
     }
     function renderHallOfFame(data){
       const content=document.getElementById('hallContent');
@@ -597,16 +718,53 @@
         hallRecord('⭐','Re MVP',data.allTimeMvp,'pt'),
         hallRecord('🧤','Portiere dei record',data.allTimeKeeper,'pt')
       ].filter(Boolean).join('');
-      const history=data.history.map(item=>{
-        const t=item.tournament||{}; const season=esc(t.stagione||t.nome||'Edizione');
-        const rows=[];
-        if(item.champion) rows.push(`<div class="hall-edition-row"><i>🏆</i><div><small>Campione</small><b>${hallHtml(item.champion)}</b></div></div>`);
-        if(item.topScorer) rows.push(`<div class="hall-edition-row"><i>⚽</i><div><small>Capocannoniere</small><b>${hallHtml(item.topScorer)} · ${item.scorerGoals} gol</b></div></div>`);
-        if(item.topMvp) rows.push(`<div class="hall-edition-row"><i>⭐</i><div><small>MVP</small><b>${hallHtml(item.topMvp)} · ${item.mvpValue} pt</b></div></div>`);
-        if(item.topKeeper) rows.push(`<div class="hall-edition-row"><i>🧤</i><div><small>Miglior portiere</small><b>${hallHtml(item.topKeeper)} · ${item.keeperValue} pt</b></div></div>`);
-        return `<article class="hall-edition"><div class="hall-edition-top"><div><div class="hall-edition-year">${hallHtml(t.anno||'—')}</div><div class="hall-edition-name">${hallHtml(season)}</div></div><span class="archive-state stato-concluso">✓ Concluso</span></div><div class="hall-edition-list">${rows.join('')}</div>${t.url?`<a class="hall-edition-link" href="${hallHtml(t.url)}">Apri edizione ›</a>`:''}</article>`;
-      }).join('');
-      content.innerHTML=(records?`<div class="hall-record-grid">${records}</div>`:'')+`<h3 class="hall-history-title">Albo d'oro</h3><div class="hall-history">${history||'<div class="hall-empty">Nessun dato storico disponibile.</div>'}</div>`;
+      const items=(data.history||[]).map(item=>{
+        const t=item.tournament||{};
+        return {item,q:hallNorm([t.anno,t.stagione,t.nome,item.champion,item.topScorer,item.topMvp,item.topKeeper].join(' '))};
+      });
+      const tools=items.length>=HALL_TOOLS_MIN;
+      content.innerHTML=(records?`<div class="hall-record-grid">${records}</div>`:'')
+        +`<h3 class="hall-history-title">Albo d'oro</h3>`
+        +(tools?`<div class="hall-tools"><input class="hall-search" id="hallSearch" type="search" placeholder="Cerca squadra, giocatore o anno" aria-label="Cerca nell'albo d'oro" autocomplete="off" enterkeyhint="search"><span class="hall-count" id="hallCount"></span></div>`:'')
+        +`<div class="hall-history" id="hallHistory"></div><div class="hall-more-wrap" id="hallMoreWrap"></div>`;
+      const box=document.getElementById('hallHistory'), more=document.getElementById('hallMoreWrap');
+      const count=document.getElementById('hallCount'), live=document.getElementById('hallLive');
+      let list=items, shown=0, query='', timer=0;
+      function status(){
+        const msg=query?hallPlural(list.length,'risultato','risultati'):`${Math.min(shown,list.length)} di ${hallPlural(list.length,'edizione','edizioni')}`;
+        if(count) count.textContent=msg;
+        if(live) live.textContent=query?msg:'';
+      }
+      function paint(reset){
+        if(reset){ box.innerHTML=''; shown=0; }
+        if(!list.length){
+          box.innerHTML=`<div class="hall-empty">${query?`Nessuna edizione trovata per “${hallHtml(query)}”.`:'Nessun dato storico disponibile.'}</div>`;
+          more.innerHTML=''; status(); return;
+        }
+        const from=shown, to=Math.min(list.length,from+HALL_PAGE);
+        box.insertAdjacentHTML('beforeend',list.slice(from,to).map((x,k)=>hallEditionHtml(x.item,list.length<=3||from+k===0,k)).join(''));
+        shown=to; const left=list.length-shown;
+        more.innerHTML=left>0?`<button class="secondary-btn hall-more" type="button">Mostra altre ${hallPlural(Math.min(left,HALL_PAGE),'edizione','edizioni')}</button>`:'';
+        status();
+      }
+      more.addEventListener('click',e=>{
+        if(!e.target.closest('.hall-more')) return;
+        const before=box.querySelectorAll('.hall-edition').length;
+        paint(false);
+        const first=box.querySelectorAll('.hall-edition')[before];
+        if(first) first.querySelector('summary').focus();
+      });
+      const input=document.getElementById('hallSearch');
+      if(input) input.addEventListener('input',()=>{
+        clearTimeout(timer);
+        timer=setTimeout(()=>{
+          query=input.value.trim();
+          const terms=hallNorm(query).split(/\s+/).filter(Boolean);
+          list=terms.length?items.filter(x=>terms.every(w=>x.q.includes(w))):items;
+          paint(true);
+        },120);
+      });
+      paint(true);
     }
     function openHallOfFame(updateHash=true){
       const panel=document.getElementById('hallPanel'),btn=document.getElementById('hallOpenBtn'); panel.hidden=false; btn.setAttribute('aria-expanded','true');
@@ -618,6 +776,7 @@
       if(updateHash && location.hash==='#hall-of-fame') history.pushState(null,'',location.pathname+location.search);
     }
     document.getElementById('hallOpenBtn').addEventListener('click',()=>openHallOfFame(true));
+    ['pointerenter','touchstart','focus'].forEach(ev=>document.getElementById('hallOpenBtn').addEventListener(ev,hallPrefetch,{passive:true}));
     document.getElementById('hallCloseBtn').addEventListener('click',()=>closeHallOfFame(true));
     window.addEventListener('hashchange',()=>{ if(location.hash==='#hall-of-fame') openHallOfFame(false); else if(!document.getElementById('hallPanel').hidden) closeHallOfFame(false); });
 
@@ -640,6 +799,8 @@
 
       renderArchivio(tornei, corrente, primoPiano);
       if(location.hash==='#hall-of-fame') setTimeout(()=>openHallOfFame(false),0);
+      else if(!document.getElementById('hallPanel').hidden) loadHallOfFame();
+      hallWarm();
     }
 
     initTheme();

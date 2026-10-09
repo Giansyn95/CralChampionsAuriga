@@ -6,7 +6,7 @@ Il progetto è composto da una singola pagina HTML che legge dati da file CSV e 
 
 ## Funzionalità
 
-- Storico tornei con Hall of Fame consultabile.
+- Storico tornei con Hall of Fame consultabile: record all-time, albo d'oro a pagine, schede comprimibili e ricerca per squadra, giocatore o anno quando le edizioni sono tante.
 - Home con KPI del torneo, grafici e stato di avanzamento.
 - Classifiche squadre, marcatori, MVP e portieri.
 - Statistiche giocatori, inclusa media gol per partita.
@@ -461,3 +461,12 @@ Per mantenere corretta l'associazione delle pagelle alle partite, aggiorna anche
 ```text
 CRAL AURIGA, Gianvito Saracino
 ```
+
+## Hall of Fame: come resta veloce con tante edizioni
+
+La landing legge `hall_of_fame.json` (1 sola richiesta) invece dei 4 CSV di ogni edizione.
+
+- Il file e generato da `tools/genera_hall_of_fame.js` tramite il workflow `genera-hall-of-fame.yml`, a ogni modifica di `tornei.json` o dei CSV di classifica. Usa lo stesso motore incorporato in `index.html`, quindi non esiste logica duplicata.
+- Lo snapshot vale solo se la sua `firma` (id delle edizioni concluse) coincide con `tornei.json`. Se manca, e vecchio o non e leggibile, la landing calcola tutto dai CSV (max 3 edizioni in parallelo): stesso risultato, solo piu lento.
+- Per rigenerarlo a mano: `node tools/genera_hall_of_fame.js`.
+- Albo d'oro: 6 edizioni per volta (`HALL_PAGE`), ricerca dalla quinta edizione (`HALL_TOOLS_MIN`), la piu recente aperta e le altre compresse.
