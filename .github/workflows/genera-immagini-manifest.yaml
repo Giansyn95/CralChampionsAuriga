@@ -1,0 +1,90 @@
+name: Genera manifest immagini
+
+# Genera tornei/<edizione>/immagini/manifest.json: elenco dei file realmente
+# presenti in immagini/squadre, immagini/giocatori e immagini/giocatori/thumb.
+# Il sito lo legge per caricare le foto da solo: basta caricare il file immagine,
+# senza aggiornare nessun elenco nel codice. Se il manifest manca, il sito usa
+# gli elenchi STATIC_*_IMAGE_KEYS gia presenti in index.html.
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    paths:
+      - 'tornei.json'
+      - 'tornei/**/immagini/**'
+      - 'tools/genera_immagini_manifest.js'
+      - '.github/workflows/genera-immagini-manifest.yml'
+  workflow_dispatch:
+
+# Stesso lock degli altri workflow che scrivono dati sul repository.
+concurrency:
+  group: cral-generated-data-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  build-image-manifest:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 20
+
+      - name: Genera manifest immagini
+        run: node tools/genera_immagini_manifest.js
+
+      - name: Commit manifest aggiornati
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          branch="${GITHUB_REF_NAME}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          commit_if_changed() {
+            git add -A -- tornei
+            if git diff --cached --quiet; then
+              return 1
+            fi
+            git commit -m "Aggiorna manifest immagini"
+          }
+
+          if ! commit_if_changed; then
+            echo "### Manifest immagini" >> "$GITHUB_STEP_SUMMARY"
+            echo "- ✅ Gia allineato: nessuna modifica da pubblicare." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          if git push origin "HEAD:$branch"; then
+            echo "### Manifest immagini" >> "$GITHUB_STEP_SUMMARY"
+            echo "- ✅ Manifest aggiornati e pubblicati su \`$branch\`." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          # I manifest sono interamente derivati dai file immagine: se il branch
+          # e avanzato basta ripartire dall'ultimo commit remoto e rigenerare.
+          echo "::warning title=Branch aggiornato durante il push::Rigenero sull'ultimo $branch."
+          git fetch origin "$branch"
+          git reset --hard "origin/$branch"
+          node tools/genera_immagini_manifest.js
+
+          if commit_if_changed; then
+            git push origin "HEAD:$branch"
+            echo "### Manifest immagini" >> "$GITHUB_STEP_SUMMARY"
+            echo "- ✅ Rigenerato sull'ultimo \`$branch\` e pubblicato al secondo tentativo." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "### Manifest immagini" >> "$GITHUB_STEP_SUMMARY"
+            echo "- ✅ Dopo l'aggiornamento del branch i manifest erano gia allineati." >> "$GITHUB_STEP_SUMMARY"
+          fi
