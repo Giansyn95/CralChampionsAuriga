@@ -2740,9 +2740,10 @@ function sectionTextFiles(kind){ return Object.keys(state.files).filter(f=>!stat
    IMMAGINI
    ══════════════════════════════════ */
 
-/* Immagini statiche realmente presenti nel repo.
-   Evita centinaia di 404: il browser non puo elencare una cartella su GitHub Pages,
-   quindi non proviamo piu estensioni/nomi a caso per ogni giocatore. */
+/* Elenchi di riserva delle immagini presenti nel repo (mantenuti dal pannello admin).
+   Il caricamento normale e automatico: vedi immagini/manifest.json piu sotto.
+   Questi elenchi servono solo se il manifest manca o non e leggibile. Evitano centinaia
+   di 404: il browser non puo elencare una cartella su GitHub Pages. */
 const STATIC_PLAYER_IMAGE_KEYS=new Set([
   'arenamichele','detomanicola','fiorellagiacomo','menolascinanicolandrea',
   'saracinogianvito','spinolasalvatore','turipaolo'
@@ -2751,7 +2752,54 @@ const STATIC_TEAM_IMAGE_KEYS=new Set([
   'aurigajuniors','blackjack','blackjackii','blackjackjogabonitoii',
   'boteball','fcstealthydribblers','stealthydribblers','outofofficefc'
 ]);
+/* ══ CARICAMENTO AUTOMATICO IMMAGINI ══
+   immagini/manifest.json (generato da tools/genera_immagini_manifest.js dalla GitHub Action)
+   elenca i file realmente presenti in immagini/squadre, immagini/giocatori e
+   immagini/giocatori/thumb. Il sito li usa direttamente: niente elenchi da aggiornare
+   a mano e nessun 404 da tentativi. Se il manifest manca o non e leggibile restano
+   validi gli elenchi STATIC_*_IMAGE_KEYS qui sopra (compatibili con il pannello admin). */
+const IMAGE_MANIFEST={teams:new Map(),players:new Map(),thumbs:new Map()};
+function imageKeyFromFile(file){ return norm(String(file||'').replace(/\.[a-z0-9]+$/i,'')); }
+async function loadImageManifest(){
+  try{
+    const r=await fetchWithTimeout('immagini/manifest.json',{cache:'no-cache'});
+    if(!r.ok) return false;
+    const j=await r.json();
+    if(!j || j.versione!==1) return false;
+    const fill=(map,list,dir)=>(Array.isArray(list)?list:[]).forEach(f=>{
+      const k=imageKeyFromFile(f);
+      if(k && !map.has(k)) map.set(k,'immagini/'+dir+encodeURIComponent(String(f)));
+    });
+    fill(IMAGE_MANIFEST.teams,j.squadre,'squadre/');
+    fill(IMAGE_MANIFEST.players,j.giocatori,'giocatori/');
+    fill(IMAGE_MANIFEST.thumbs,j.giocatoriThumb,'giocatori/thumb/');
+    return true;
+  }catch(e){ return false; }
+}
+const imageManifestReady=loadImageManifest();
+function manifestImageCandidatesFor(type,name){
+  const keys=[norm(name)];
+  if(type==='player'){
+    // "Mario Rossi" e "Rossi Mario" indicano lo stesso file (cognomenome.webp).
+    const parts=smartSpace(name).split(/\s+/).filter(Boolean);
+    if(parts.length>=2) keys.push(norm(parts.slice().reverse().join('')));
+  }
+  for(const k of keys){
+    if(!k) continue;
+    if(type==='team'){
+      if(IMAGE_MANIFEST.teams.has(k)) return [IMAGE_MANIFEST.teams.get(k)];
+    }else{
+      const out=[];
+      if(IMAGE_MANIFEST.players.has(k)) out.push(IMAGE_MANIFEST.players.get(k));
+      if(IMAGE_MANIFEST.thumbs.has(k)) out.push(IMAGE_MANIFEST.thumbs.get(k));
+      if(out.length) return out;
+    }
+  }
+  return [];
+}
 function staticImageCandidatesFor(type,key){
+  const fromManifest=manifestImageCandidatesFor(type,key);
+  if(fromManifest.length) return fromManifest;
   const k=norm(key);
   if(type==='player' && STATIC_PLAYER_IMAGE_KEYS.has(k)){
     // Le foto giocatore possono stare nella cartella principale oppure in thumb/.
@@ -14287,6 +14335,7 @@ async function loadAuto(fresh){
 
     let list=[...BOOT_FILES];
     const manifestResult=await defaultFetches.get('manifest.csv');
+    await imageManifestReady; // gia in corso da inizio pagina: nessun ritardo percepibile
     if(!isCurrentDataLoad(generation) || signal.aborted) return;
     if(manifestResult && manifestResult.status==='fulfilled'){
       const mt=manifestResult.value.txt;
