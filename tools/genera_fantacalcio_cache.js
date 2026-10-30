@@ -538,7 +538,7 @@ async function buildOne(check, browser) {
     payload._meta = cacheMeta(check, payload);
 
     fs.mkdirSync(path.dirname(outPath), { recursive: true });
-    fs.writeFileSync(outPath, JSON.stringify(payload, null, 2) + '\n', 'utf8');
+    fs.writeFileSync(outPath, JSON.stringify(payload) + '\n', 'utf8');
 
     const validated = readAndValidateExistingCache(config, check);
     console.log('Cache Fantacalcio generata e certificata: ' + toRepoRelative(outPath));
