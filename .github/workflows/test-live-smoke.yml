@@ -19,7 +19,7 @@ concurrency:
 jobs:
   live-smoke:
     name: Live Chromium + Safari/WebKit + iPhone
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7

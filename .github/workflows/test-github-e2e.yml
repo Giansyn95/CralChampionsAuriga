@@ -22,7 +22,7 @@ concurrency:
 jobs:
   guard:
     name: Conferma sicurezza
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Valida conferma
         env:
@@ -35,7 +35,7 @@ jobs:
   github-e2e:
     name: Atomic commit + mirror + binari + rollback
     needs: guard
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     env:
       GH_TOKEN: ${{ github.token }}

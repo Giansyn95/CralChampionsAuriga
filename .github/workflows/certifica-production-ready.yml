@@ -21,7 +21,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   guard:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - env:
           CONFIRM: ${{ inputs.conferma }}
@@ -29,7 +29,7 @@ jobs:
   quality:
     name: Suite completa locale
     needs: guard
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v7
@@ -53,7 +53,7 @@ jobs:
   live:
     name: Sito pubblicato
     needs: guard
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7
@@ -88,7 +88,7 @@ jobs:
   github-real:
     name: GitHub API reale su branch sandbox
     needs: guard
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     env:
       GH_TOKEN: ${{ github.token }}
@@ -103,7 +103,7 @@ jobs:
     name: PRODUCTION READY
     if: always()
     needs: [quality, live, github-real]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - env:
           QUALITY: ${{ needs.quality.result }}

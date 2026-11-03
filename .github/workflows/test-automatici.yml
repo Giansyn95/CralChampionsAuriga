@@ -27,7 +27,7 @@ concurrency:
 jobs:
   static-unit:
     name: Integrità, sintassi e unit test
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
@@ -45,7 +45,7 @@ jobs:
   browser:
     name: Frontend Chromium + Firefox + WebKit + iPhone
     needs: static-unit
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v7
@@ -71,7 +71,7 @@ jobs:
   admin-functional:
     name: Admin funzionale con GitHub API simulate
     needs: static-unit
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7
@@ -98,7 +98,7 @@ jobs:
     name: QUALITY GATE
     if: always()
     needs: [static-unit, browser, admin-functional]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Verifica esito complessivo
         env:
