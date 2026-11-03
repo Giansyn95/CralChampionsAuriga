@@ -3,7 +3,15 @@
 <html lang="it">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#eef3f9" />
+  <meta name="color-scheme" content="light dark" />
+  <script>
+    /* Applica il tema salvato prima del primo paint: niente flash chiaro per chi usa il tema scuro. */
+    (function(){try{var s=localStorage.getItem('cral_theme');var d=s==='dark'||(s===null&&window.matchMedia('(prefers-color-scheme:dark)').matches);
+    document.documentElement.setAttribute('data-theme',d?'dark':'light');
+    var m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute('content',d?'#0d1520':'#eef3f9');}catch(e){}})();
+  </script>
 
   <title>CRAL Champions Auriga</title>
   <meta name="description" content="Tutte le edizioni del torneo aziendale CRAL Champions Auriga: torneo corrente, ultime edizioni e archivio storico." />
@@ -22,14 +30,15 @@
       --red:#b42318; --shadow:rgba(7,29,58,.10); --focus:#ffcf5a;
     }
     [data-theme="dark"]{
-      --bg:#0d1520; --panel:#162033; --ink:#e2eaf5; --muted:#8fa4be; --line:#243450;
+      --bg:#0d1520; --panel:#162033; --ink:#e2eaf5; --muted:#a9bad1; --line:#243450;
       --blue:#67a2ff; --blue-soft:rgba(103,162,255,.14); --dark:#0a1628; --soft:#1a2d47;
       --gold:#f5b942; --green:#34d399; --green-soft:rgba(52,211,153,.14);
       --red:#f87171; --shadow:rgba(0,0,0,.35); --focus:#ffe08a;
     }
 
     *{box-sizing:border-box}
-    html{scroll-behavior:smooth}
+    html{scroll-behavior:smooth;color-scheme:light;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+    [data-theme="dark"]{color-scheme:dark}
     body{margin:0;font-family:'Inter',Arial,Helvetica,sans-serif;background:var(--bg);color:var(--ink);transition:background .3s,color .3s}
     a{color:inherit;text-decoration:none}
     button{font:inherit}
@@ -237,6 +246,74 @@
       .hall-record.hall-champ b{font-size:21px}
       .hall-record:last-child:nth-child(even){grid-column:1/-1}
     }
+
+    /* Mobile polish v3
+       Rifinitura per smartphone. Le regole del teaser Hall of Fame protette dai test
+       (griglia 64px, .hall-copy{display:contents}, ecc.) restano invariate sopra:
+       qui si sovrascrive solo l'aspetto, mantenendo struttura e dimensioni. */
+    a,button{-webkit-tap-highlight-color:transparent}
+    .current-card .current-subtitle{margin:0 0 10px;color:#e4eefc;font-size:16px;font-weight:600;line-height:1.35;max-width:620px}
+    .current-card .current-subtitle[hidden]{display:none}
+    .section-title{display:flex;align-items:center;gap:12px;min-width:0}
+    .section-icon{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:14px;background:var(--blue-soft);border:1px solid rgba(15,90,168,.22);color:var(--blue)}
+    [data-theme="dark"] .section-icon{border-color:rgba(103,162,255,.32)}
+    .section-icon svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+    .section-head p:empty{display:none}
+    .archive-empty{border-style:solid;background:var(--soft)}
+    .archive-empty strong{display:block;margin-bottom:4px;color:var(--ink);font-size:15px}
+    .archive-empty span{display:block;max-width:34ch;margin:0 auto;font-size:13px;line-height:1.45}
+    [data-theme="dark"] .hall-copy p{color:#b9c8dc}
+
+    @media(hover:none){
+      .archive-card:hover{transform:none;box-shadow:0 6px 18px var(--shadow);border-color:var(--line)}
+      .primary-btn:hover{transform:none;box-shadow:0 10px 26px rgba(245,185,66,.30)}
+      .secondary-btn:hover,.theme-btn:hover{transform:none}
+      .hall-open-btn:hover{background:transparent}
+    }
+    .archive-card:active,.primary-btn:active,.secondary-btn:active,.theme-btn:active{transform:scale(.98)}
+
+    @media(max-width:760px){
+      .wrap{padding:max(12px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) max(20px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left))}
+      .layout{gap:14px}
+      .hero{margin-bottom:14px}
+
+      /* Header: logo, titolo e tema sulla stessa riga; sottotitolo a tutta larghezza e max 2 righe */
+      .hero-inner{grid-template-columns:auto minmax(0,1fr) auto;align-items:center;column-gap:12px;row-gap:10px}
+      .brand,.brand>div:last-child{display:contents}
+      .hero-logo{grid-column:1;grid-row:1}
+      .hero h1{grid-column:2;grid-row:1;align-self:center}
+      .theme-btn{grid-column:3;grid-row:1;width:44px;height:44px;align-self:center;justify-self:end}
+      .hero-sub{grid-column:1/-1;grid-row:2;margin:0;font-size:13px;line-height:1.45;color:#cfe0f7;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;overflow:hidden}
+
+      /* Edizione in primo piano: titolo breve in evidenza, dettagli sotto */
+      .current-card{gap:10px}
+      .current-year{font-size:52px}
+      .eyebrow{max-width:100%;white-space:normal;line-height:1.3;font-size:11px;letter-spacing:.05em;border-radius:14px;padding:6px 11px;margin-bottom:10px}
+      .current-card h2{font-size:clamp(30px,9.4vw,38px);margin-bottom:6px}
+      .current-card .current-subtitle{font-size:14.5px;margin-bottom:10px}
+      .current-card p{font-size:14.5px;line-height:1.5}
+      .primary-btn{min-height:50px;font-size:17px}
+
+      /* Hall of Fame: i 4 contenuti sono informativi, non pulsanti -> lista 2x2 senza bordi */
+      .hall-feature-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:2px 10px;margin-top:2px;padding:8px 0 0;overflow:visible;border-top:1px solid rgba(245,185,66,.20)}
+      .hall-feature{flex:initial;justify-content:flex-start;gap:8px;min-height:30px;padding:0;border:0;border-radius:0;background:none;color:var(--ink);font-size:12.5px;font-weight:700;line-height:1.2;text-align:left;white-space:normal}
+      .hall-feature b{display:inline-flex;flex:0 0 auto;align-items:center;justify-content:center;width:26px;height:26px;border-radius:9px;background:rgba(245,185,66,.16);border:1px solid rgba(245,185,66,.34);font-size:13.5px;line-height:1}
+
+      /* Archivio */
+      .card{padding:16px;border-radius:20px}
+      .section-head{margin-bottom:12px}
+      .section-head h2{font-size:24px}
+      .section-head p{font-size:13.5px}
+      .archive-card{min-height:0;padding:16px 16px 14px}
+      .archive-year{font-size:38px}
+      .archive-title{font-size:26px}
+      .archive-desc{margin:8px 0 18px;font-size:13.5px}
+    }
+    @media(max-width:360px){
+      .current-card h2{font-size:30px}
+      .hall-feature{font-size:12px;gap:7px}
+      .section-icon{width:40px;height:40px}
+    }
   </style>
 </head>
 
@@ -274,6 +351,7 @@
           <div>
             <div class="eyebrow" id="currentLabel">🔥 Edizione in corso</div>
             <h2 id="currentTitle">Torneo attuale</h2>
+            <p class="current-subtitle" id="currentSubtitle" hidden></p>
             <p id="currentDesc">Classifiche, calendario, risultati e statistiche.</p>
             <div class="current-meta" id="currentMeta"></div>
             <a class="primary-btn" id="currentBtn" href="#">Accedi a questa edizione ›</a>
@@ -324,15 +402,18 @@
       <section aria-labelledby="archiveTitle">
         <div class="card">
           <div class="section-head">
-            <div>
-              <h2 id="archiveTitle">Archivio edizioni</h2>
-              <p id="archiveIntro">Le ultime edizioni sono in primo piano. Lo storico completo resta ad un click.</p>
+            <div class="section-title">
+              <span class="section-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path d="M3.5 12a8.5 8.5 0 1 0 2.6-6.1L3.5 8.5"/><path d="M3.5 3.8v4.7h4.7"/><path d="M12 7.6V12l3 1.9"/></svg></span>
+              <div>
+                <h2 id="archiveTitle">Archivio edizioni</h2>
+                <p id="archiveIntro">Le ultime edizioni in primo piano, lo storico completo a un tocco.</p>
+              </div>
             </div>
             <p id="archiveCount" aria-live="polite"></p>
           </div>
 
           <div class="archive-grid" id="featuredArchiveGrid" aria-label="Ultime edizioni in primo piano"></div>
-          <div class="archive-empty" id="archiveEmpty">Nessuna edizione passata presente in archivio.</div>
+          <div class="archive-empty" id="archiveEmpty"><strong>Nessuna edizione precedente</strong><span>Quando un torneo si conclude, classifiche e statistiche restano consultabili qui.</span></div>
 
           <div class="archive-actions" id="olderArchiveActions" hidden>
             <button class="secondary-btn" id="olderArchiveBtn" type="button" aria-expanded="false" aria-controls="olderArchivePanel">
@@ -504,6 +585,8 @@
       const btn = document.getElementById('btnTheme');
       btn.textContent = dark ? '☀️' : '🌙';
       btn.title = dark ? 'Passa al tema chiaro' : 'Passa al tema scuro';
+      const themeMeta = document.querySelector('meta[name="theme-color"]');
+      if (themeMeta) themeMeta.setAttribute('content', dark ? '#0d1520' : '#eef3f9');
       if (save) localStorage.setItem('cral_theme', dark ? 'dark' : 'light');
     }
     document.getElementById('btnTheme').addEventListener('click', () => applyTheme(document.documentElement.getAttribute('data-theme') !== 'dark'));
@@ -542,6 +625,13 @@
       });
     }
 
+    // "Spring Champions - Torneo di calcio a 5 presso X" -> nome breve + dettaglio.
+    // Senza separatore il titolo resta intero e il dettaglio non viene mostrato.
+    function splitTitolo(titolo){
+      const m = esc(titolo).match(/^(.{3,}?)\s+[-–—:]\s+(.{3,})$/);
+      return m ? { main: m[1].trim(), detail: m[2].trim() } : { main: esc(titolo).trim(), detail: '' };
+    }
+
     function renderCorrente(t){
       const stato = normalizzaStato(t.stato);
       const stagione = esc(t.stagione);
@@ -551,7 +641,11 @@
 
       document.getElementById('currentSection').hidden = false;
       document.getElementById('currentLabel').textContent = (stato === 'in-corso' ? '🔥 Edizione in corso' : '📌 Edizione in primo piano') + seasonLabel;
-      document.getElementById('currentTitle').textContent = torneoTitle;
+      const parts = splitTitolo(torneoTitle);
+      document.getElementById('currentTitle').textContent = parts.main;
+      const subEl = document.getElementById('currentSubtitle');
+      subEl.textContent = parts.detail;
+      subEl.hidden = !parts.detail;
       document.getElementById('currentDesc').textContent = descrizioneEdizione(t);
       document.getElementById('currentYear').textContent = esc(t.anno || '—');
       document.getElementById('currentSeason').textContent = '';
@@ -606,6 +700,9 @@
       return a;
     }
 
+    const ARCHIVE_INTRO_DEFAULT = 'Le ultime edizioni in primo piano, lo storico completo a un tocco.';
+    const ARCHIVE_INTRO_EMPTY = 'Qui trovi tutte le edizioni concluse del torneo.';
+
     function renderArchivio(tornei, corrente, primoPiano){
       const archivio = sortTornei(tornei.filter(t => t.attivo !== false && torneoKey(t) !== torneoKey(corrente || {})));
       const featured = archivio.slice(0, primoPiano);
@@ -623,6 +720,7 @@
       olderGrid.innerHTML = '';
       panel.hidden = true;
       btn.setAttribute('aria-expanded', 'false');
+      document.getElementById('archiveIntro').textContent = archivio.length ? ARCHIVE_INTRO_DEFAULT : ARCHIVE_INTRO_EMPTY;
 
       if (!archivio.length){
         empty.style.display = 'block';
