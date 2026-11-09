@@ -11,19 +11,10 @@
 <link rel="preconnect" href="https://raw.githubusercontent.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@600;700&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
 
-<!--
-  Logo Admin: parte immediatamente dal repository GitHub Pages, senza attendere
-  admin.js -> tornei.json -> raw.githubusercontent.com.
-  Il path coincide con il logo attualmente dichiarato in tornei.json.
--->
-<link rel="preload"
-      href="../tornei/2026-spring/immagini/logo_cral.png"
-      as="image"
-      type="image/png"
-      fetchpriority="high">
-
-<link rel="stylesheet" href="./admin.css">
-<link rel="stylesheet" href="./mobile-fix.css?v=13">
+<!-- Numero di build unico: a ogni modifica ai file admin cambia SOLO questo valore
+     (stesso su tutti gli asset qui sotto). Il bootstrap lo legge dal proprio URL. -->
+<link rel="stylesheet" href="./admin.css?v=2026-11-09">
+<link rel="stylesheet" href="./mobile-fix.css?v=2026-11-09">
 
 <!--
   Mostra subito il logo locale come background del brand-mark.
@@ -82,8 +73,8 @@
 </head>
 <body>
 <div id="app" class="app-shell" aria-live="polite"></div>
-<script src="./mobile-fix-v40.js?v=44"></script>
-<script src="./admin-pro-v4.js?v=8"></script>
-<script type="module" src="./admin-boot-v30.js?v=33"></script>
+<script src="./mobile-fix-v40.js?v=2026-11-09"></script>
+<script src="./admin-pro-v4.js?v=2026-11-09"></script>
+<script type="module" src="./admin-boot-v30.js?v=2026-11-09"></script>
 </body>
 </html>
