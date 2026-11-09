@@ -15471,8 +15471,14 @@ initTheme(); cralNavInit(); renderTabs(); updateTitle(); tryLoadLogo(); loadAuto
 function serviceWorkerCandidates(){
   const out=[];
   const add=url=>{ const href=new URL(url,location.href).href; if(!out.includes(href)) out.push(href); };
-  if(location.hostname.endsWith('.github.io')){
-    const first=(location.pathname.split('/').filter(Boolean)[0]||'').trim();
+  /* Primo tentativo: la radice del sito, ricavata dalla cartella "tornei" nel percorso.
+     Vale sia per il sito di progetto (/NomeRepo/tornei/...) sia per quello di organizzazione (/tornei/...),
+     cosi il percorso giusto e il primo provato e non si generano 404 in console. */
+  const segs=location.pathname.split('/').filter(Boolean);
+  const idx=segs.indexOf('tornei');
+  if(idx>=0) add(location.origin+'/'+segs.slice(0,idx).concat('sw.js').join('/'));
+  else if(location.hostname.endsWith('.github.io')){
+    const first=(segs[0]||'').trim();
     if(first) add(location.origin+'/'+first+'/sw.js');
   }
   add('sw.js'); add('../sw.js'); add('../../sw.js'); add('../../../sw.js');
