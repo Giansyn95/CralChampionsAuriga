@@ -207,7 +207,7 @@
           b.type='button';
           b.appendChild(document.createTextNode(`${icon} ${label}`));
           if (id==='publish' && state.pending.size) b.appendChild(el('span','pending-pill',state.pending.size));
-          b.addEventListener('click',()=>{state.active=id;render()});
+          b.addEventListener('click',()=>{state.status=null;state.active=id;render()});
           side.appendChild(b);
         });
       });
@@ -223,7 +223,7 @@
         });
         mobile.appendChild(og);
       });
-      mobile.addEventListener('change',()=>{state.active=mobile.value;render()});
+      mobile.addEventListener('change',()=>{state.status=null;state.active=mobile.value;render()});
       mobileWrap.appendChild(mobile);
       side.prepend(mobileWrap);
     };

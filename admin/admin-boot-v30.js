@@ -7,7 +7,8 @@
  */
 
 const BASE = new URL('./', import.meta.url);
-const VERSION = '32';
+// Numero di build: letto dal ?v= con cui index.html carica questo file (unico punto da aggiornare).
+const VERSION = new URL(import.meta.url).searchParams.get('v') || 'dev';
 
 function replaceOnce(source, needle, replacement, label) {
   const index = source.indexOf(needle);

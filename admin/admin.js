@@ -469,7 +469,7 @@ function renderRankingTable(main,model,{title,kind,emptyText,info=''}){
   const card=el('div','card ranking-card');card.appendChild(el('h3','',title));if(info)card.appendChild(messageBox('info',info));
   const file=sectionFiles(model,kind)[0];const parsed=file?.parsed;const rows=kind==='classifica_squadre'?(model.standings||[]):(parsed?.objects||[]);const headers=parsed?.headers||[];
   if(!rows.length||!headers.length){card.appendChild(el('p','muted',emptyText));main.appendChild(card);return}
-  const wrap=el('div','table-wrap');const table=el('table','data-table');table.dataset.ranking=kind;const th=el('tr');headers.forEach(h=>th.appendChild(el('th','',h)));const thead=el('thead');thead.appendChild(th);table.appendChild(thead);const tb=el('tbody');rows.forEach(r=>{const tr=el('tr');headers.forEach(h=>tr.appendChild(el('td','',r[h]??'')));tb.appendChild(tr)});table.appendChild(tb);wrap.appendChild(table);card.appendChild(wrap);main.appendChild(card)
+  const shown=headers.filter(h=>rows.some(r=>String(r[h]??'').trim()!==''));const wrap=el('div','table-wrap');const table=el('table','data-table');table.dataset.ranking=kind;const th=el('tr');shown.forEach(h=>th.appendChild(el('th','',h)));const thead=el('thead');thead.appendChild(th);table.appendChild(thead);const tb=el('tbody');rows.forEach(r=>{const tr=el('tr');shown.forEach(h=>tr.appendChild(el('td','',r[h]??'')));tb.appendChild(tr)});table.appendChild(tb);wrap.appendChild(table);card.appendChild(wrap);main.appendChild(card)
 }
 function renderClassifiche(main){
   main.appendChild(pageHead('Classifiche','Anteprima completa delle classifiche che verranno pubblicate: squadre, capocannonieri, MVP e portieri. Le modifiche in sospeso sono incluse nella vista.'));
