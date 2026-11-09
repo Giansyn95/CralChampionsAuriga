@@ -314,6 +314,36 @@
       .hall-feature{font-size:12px;gap:7px}
       .section-icon{width:40px;height:40px}
     }
+    /* Light mode: schede Hall of Fame, Archivio e pannello Hall in blu navy come header e
+       edizione in primo piano (niente piu bianco). Si ridefiniscono le variabili solo dentro
+       le schede, cosi testi, chip e card interne si adattano da sole. La dark mode non cambia. */
+    [data-theme="light"] :is(.hall-teaser,.card,.hall-panel){
+      --panel:rgba(255,255,255,.08); --soft:rgba(255,255,255,.07); --line:rgba(255,255,255,.18);
+      --ink:#f2f7ff; --muted:#c3d3e8; --blue:#8ab8ff; --blue-soft:rgba(138,184,255,.18);
+      --green:#34d399; --green-soft:rgba(52,211,153,.16); --shadow:rgba(7,29,58,.28);
+      color:var(--ink);
+      background:radial-gradient(circle at 92% 8%,rgba(245,185,66,.22),transparent 40%),linear-gradient(135deg,#071d3a 0%,#1a4a8a 100%);
+      border-color:rgba(255,255,255,.14);
+      box-shadow:0 18px 48px rgba(7,29,58,.25);
+    }
+    [data-theme="light"] .hall-teaser{border-color:rgba(245,185,66,.5)}
+    [data-theme="light"] .hall-panel{border-color:rgba(245,185,66,.35);border-top:3px solid var(--gold)}
+    [data-theme="light"] .hall-copy .eyebrow{color:var(--gold)}
+    [data-theme="light"] .hall-copy p{color:#c9d8ee}
+    [data-theme="light"] .hall-open-btn{color:var(--gold)}
+    [data-theme="light"] .hall-open-btn:hover{background:rgba(245,185,66,.18)}
+    [data-theme="light"] :is(.hall-panel,.card) .hall-record-icon,
+    [data-theme="light"] :is(.hall-panel,.card) .hall-record span,
+    [data-theme="light"] :is(.hall-panel,.card) .hall-edition-year,
+    [data-theme="light"] :is(.hall-panel,.card) .hall-edition-row i,
+    [data-theme="light"] :is(.hall-panel,.card) .hall-peek i{color:var(--gold)}
+    [data-theme="light"] .hall-record.hall-champ{background:radial-gradient(circle at 92% 10%,rgba(245,185,66,.34),transparent 38%),linear-gradient(135deg,#0a2447,#1f5aa3);border:1px solid rgba(255,255,255,.14)}
+    [data-theme="light"] .card .archive-state.stato-in-corso{color:var(--gold)}
+    [data-theme="light"] .card .section-icon{border-color:rgba(138,184,255,.32)}
+    [data-theme="light"] .card .secondary-btn{background:rgba(255,255,255,.10);color:#fff;border-color:rgba(255,255,255,.22);box-shadow:none}
+    [data-theme="light"] .card .secondary-btn:hover{background:rgba(255,255,255,.18);border-color:var(--gold)}
+    [data-theme="light"] .card .archive-card:hover{border-color:var(--gold)}
+    @media(hover:none){[data-theme="light"] .card .archive-card:hover{border-color:var(--line)}}
   </style>
 </head>
 
